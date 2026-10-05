@@ -1,0 +1,562 @@
+{
+  "sessionId": "pptx_1790998394310_ca0be745",
+  "fileName": "FME FY27 Priorities (shared to partner).pptx",
+  "mode": "ipqc_bilingual",
+  "sourceLanguage": "en",
+  "targetLanguage": "vi",
+  "createdAt": "2026-10-03T03:33:14.657Z",
+  "slideCount": 4,
+  "totalPairs": 75,
+  "harvestedCount": 0,
+  "slides": [
+    {
+      "slideIndex": 1,
+      "title": "Our Purpose | Deliver Innovation and make great Product today while evolving man",
+      "pairs": [
+        {
+          "id": "s1_p0",
+          "sourceText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "translatedText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p1",
+          "sourceText": "Deliver Product & Innovation",
+          "translatedText": "Deliver Product & Innovation",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p2",
+          "sourceText": "Develop and scale new chemistries and",
+          "translatedText": "Develop and scale new chemistries and",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p3",
+          "sourceText": "underfoot solutions (rubbers, foams)",
+          "translatedText": "Underfoot solutions (rubbers, foams)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p4",
+          "sourceText": "Modernize Manufacturing",
+          "translatedText": "Modernize Manufacturing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p5",
+          "sourceText": "Reset overall modernization approach",
+          "translatedText": "Reset overall modernization approach",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p6",
+          "sourceText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "translatedText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p7",
+          "sourceText": "Elevate Product Quality",
+          "translatedText": "Elevate Product Quality",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p8",
+          "sourceText": "Deliver and scale new products, innovations, and methods of make",
+          "translatedText": "Deliver and scale new products, innovations, and methods of make",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p10",
+          "sourceText": "Ensure clear ownership and drive Factory quality performance with robust plans & actions to deliver product & manufacturing excellence.",
+          "translatedText": "Ensure clear ownership and drive Factory quality performance with robust plans & actions to deliver product & manufacturing excellence.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p11",
+          "sourceText": "Create and drive plans against top opportunities by and across Partners and Factories.",
+          "translatedText": "Create and drive plans against top opportunities by and across Partners and Factories.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p12",
+          "sourceText": "Ensure product readiness; Own and lead manufacturing readiness; early communication/escalation (no surprises)",
+          "translatedText": "Ensure product readiness; Own and lead manufacturing readiness; early communication/escalation (no surprises)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p13",
+          "sourceText": "Regularly monitor and manage factory and partner quality progress and performance. Achieve consistently high and accurate quality (95% PPC/BV) across all factories.",
+          "translatedText": "Regularly monitor and manage factory and partner quality progress and performance. Achieve consistently high and accurate quality (95% PPC/BV) across all factories.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p14",
+          "sourceText": "Create sharing and collaboration forums to catalyze actions",
+          "translatedText": "Create sharing and collaboration forums to catalyze actions",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p15",
+          "sourceText": "Support Network sourcing; create regular Sourcing connections and ensure new capabilities are built successfully on time",
+          "translatedText": "Support Network sourcing; create regular Sourcing connections and ensure new capabilities are built successfully on time",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p16",
+          "sourceText": "Implement initiatives to strengthen factory mfg methods and systems (ISQ, FTT & HFPA accuracy, BV/PPC, standards, best practices).",
+          "translatedText": "Implement initiatives to strengthen factory mfg methods and systems (ISQ, FTT & HFPA accuracy, BV/PPC, standards, best practices).",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p17",
+          "sourceText": "Optimize (Lean) & Standardize",
+          "translatedText": "Optimize (Lean) & Standardize",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p18",
+          "sourceText": "Automate (including low cost solutions)",
+          "translatedText": "Automate (including low cost solutions)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p19",
+          "sourceText": "Enable Digitalization & intelligence",
+          "translatedText": "Enable Digitalization & intelligence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p20",
+          "sourceText": "Drive engineering solutions, standards, best practices for product and mfg excellence",
+          "translatedText": "Drive engineering solutions, standards, best practices for product and mfg excellence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p21",
+          "sourceText": "Drive engineering solutions, systems (QMS) and operational best practices to ensure highest quality in manufacturing and execution.",
+          "translatedText": "Drive engineering solutions, systems (QMS) and operational best practices to ensure highest quality in manufacturing and execution.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p24",
+          "sourceText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "translatedText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 2,
+      "title": "Our Purpose | Deliver Innovation and make great Product today while evolving man",
+      "pairs": [
+        {
+          "id": "s2_p0",
+          "sourceText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "translatedText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p1",
+          "sourceText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "translatedText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p2",
+          "sourceText": "Deliver Product & Innovation",
+          "translatedText": "Deliver Product & Innovation",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p3",
+          "sourceText": "Develop and scale new chemistries and",
+          "translatedText": "Develop and scale new chemistries and",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p4",
+          "sourceText": "underfoot solutions (rubbers, foams)",
+          "translatedText": "Underfoot solutions (rubbers, foams)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p5",
+          "sourceText": "Highlighted Action Plan (to be updated)",
+          "translatedText": "Highlighted Action Plan (to be updated)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p6",
+          "sourceText": "Deliver and scale new products, innovations, and methods of make",
+          "translatedText": "Deliver and scale new products, innovations, and methods of make",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p7",
+          "sourceText": "Ensure product readiness; Own and lead manufacturing readiness; early communication/escalation (no surprises)",
+          "translatedText": "Ensure product readiness; Own and lead manufacturing readiness; early communication/escalation (no surprises)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p8",
+          "sourceText": "Support Network sourcing; create regular Sourcing connections and ensure new capabilities are built successfully on time",
+          "translatedText": "Support Network sourcing; create regular Sourcing connections and ensure new capabilities are built successfully on time",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p9",
+          "sourceText": "Drive engineering solutions, standards, best practices for product and mfg excellence",
+          "translatedText": "Drive engineering solutions, standards, best practices for product and mfg excellence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p11",
+          "sourceText": "LC materials, SIP-006, Super IP, ReactX, Fewer Better Material,…",
+          "translatedText": "LC materials, SIP-006, Super IP, ReactX, Fewer Better Material,…",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p12",
+          "sourceText": "Mech-001, Off Court 2.0, AM Femme, Rejuven 8,…",
+          "translatedText": "Mech-001, Off Court 2.0, AM Femme, Rejuven 8, …",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p13",
+          "sourceText": "Meaningful manufacturing feedbacks (optimization, LCA, material, machine,…), timely execution of techpack.",
+          "translatedText": "Meaningful manufacturing feedbacks (optimization, LCA, material, machine,…), timely execution of techpack.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p14",
+          "sourceText": "MFG early engagement, seamless transition between Dev/Comm/Prod. Product Exception alignment, risk identification and communication to FPI/IM. Seasonal review for all models (incl. F) in SPA.",
+          "translatedText": "MFG early engagement, seamless transition between Dev/Comm/Prod. Product Exception alignment, risk identification and communication to FPI/IM. Seasonal review for all models (incl. F) in SPA.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p15",
+          "sourceText": "Transfer-in, transfer-out, multisource execution. Internal transfer with consistency.",
+          "translatedText": "Transfer-in, transfer-out, multisource execution. Internal transfer with consistency.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p16",
+          "sourceText": "Partner’s LRCP execution.",
+          "translatedText": "Partner’s LRCP execution.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p17",
+          "sourceText": "Clear standards and continuous improvement until production. Best practice compliance.",
+          "translatedText": "Clear standards and continuous improvement until production. Best practice compliance.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p18",
+          "sourceText": "Engineering solutions, tool/jigs, Kaizen, optimization, LCA, automation,..",
+          "translatedText": "Engineering solutions, tool/jigs, Kaizen, optimization, LCA, automation,..",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p20",
+          "sourceText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "translatedText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 3,
+      "title": "Our Purpose | Deliver Innovation and make great Product today while evolving man",
+      "pairs": [
+        {
+          "id": "s3_p0",
+          "sourceText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "translatedText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p1",
+          "sourceText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "translatedText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p2",
+          "sourceText": "Elevate Product Quality",
+          "translatedText": "Elevate Product Quality",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p3",
+          "sourceText": "Ensure clear ownership and drive Factory quality performance with robust plans & actions to deliver product & manufacturing excellence.",
+          "translatedText": "Ensure clear ownership and drive Factory quality performance with robust plans & actions to deliver product & manufacturing excellence.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p4",
+          "sourceText": "Regularly monitor and manage factory and partner quality progress and performance. Achieve consistently high and accurate quality (95% PPC/BV) across all factories.",
+          "translatedText": "Regularly monitor and manage factory and partner quality progress and performance. Achieve consistently high and accurate quality (95% PPC/BV) across all factories.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p5",
+          "sourceText": "Implement initiatives to strengthen factory mfg methods and systems (ISQ, FTT & HFPA accuracy, BV/PPC, standards, best practices).",
+          "translatedText": "Implement initiatives to strengthen factory mfg methods and systems (ISQ, FTT & HFPA accuracy, BV/PPC, standards, best practices).",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p6",
+          "sourceText": "Drive engineering solutions, systems (QMS) and operational best practices to ensure highest quality in manufacturing and execution.",
+          "translatedText": "Drive engineering solutions, systems (QMS) and operational best practices to ensure highest quality in manufacturing and execution.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p8",
+          "sourceText": "Highlighted Action Plan (to be updated)",
+          "translatedText": "Highlighted Action Plan (to be updated)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p9",
+          "sourceText": "Quality review & focuses via Quarterly Quality Performance (QQP), Quarter Business Review (QBR), regular connections.",
+          "translatedText": "Quality review & focuses via Quarterly Quality Performance (QQP), Quarter Business Review (QBR), regular connections.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p10",
+          "sourceText": "Nike & Factory LT PPC calibration, monitoring and weekly analysis. Close-loop improvement, benchmarking & proliferation.",
+          "translatedText": "Nike & Factory LT PPC calibration, monitoring and weekly analysis. Close-loop improvement, benchmarking & proliferation.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p11",
+          "sourceText": "Quick response and prevention to Product Issue (PI) & Market feedback (DR, Inbound) Calibrate quality metrics: accurate, meaningful, timely, actionable.",
+          "translatedText": "Quick response and prevention to Product Issue (PI) & Market feedback (DR, Inbound) Calibrate quality metrics: accurate, meaningful, timely, actionable.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p12",
+          "sourceText": "Design with engineering solutions for manufacturing and consistent quality. Culture of quality, leadership engagement & commitment.",
+          "translatedText": "Design with engineering solutions for manufacturing and consistent quality. Culture of quality, leadership engagement & commitment.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p13",
+          "sourceText": "BV audit program (Indonesia for now) – implementation, action plan to meet expectation.",
+          "translatedText": "BV audit program (Indonesia for now) – implementation, action plan to meet expectation.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p14",
+          "sourceText": "Quality checking: Training/certification/calibration.",
+          "translatedText": "Quality checking: Training/certification/calibration.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p15",
+          "sourceText": "Standardized Inspection/ Audit Manual.",
+          "translatedText": "Standardized Inspection/ Audit Manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p16",
+          "sourceText": "Tooling BP, Tooling maintenance, Tooling Life Cycle management.",
+          "translatedText": "Tooling BP, Tooling maintenance, Tooling Life Cycle management.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p17",
+          "sourceText": "MQAA calibration, DR mapping, and mold/RSL chemical risk management.",
+          "translatedText": "MQAA calibration, DR mapping, and mold/RSL chemical risk management.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p19",
+          "sourceText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "translatedText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 4,
+      "title": "Our Purpose | Deliver Innovation and make great Product today while evolving man",
+      "pairs": [
+        {
+          "id": "s4_p0",
+          "sourceText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "translatedText": "Our Purpose | Deliver Innovation and make great Product today while evolving manufacturing for the future",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p1",
+          "sourceText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "translatedText": "Footwear Manufacturing Engineering FY27 Priorities",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p2",
+          "sourceText": "Modernize Manufacturing",
+          "translatedText": "Modernize Manufacturing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p3",
+          "sourceText": "Reset overall modernization approach",
+          "translatedText": "Reset overall modernization approach",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p4",
+          "sourceText": "Highlighted Action Plan (to be updated)",
+          "translatedText": "Highlighted Action Plan (to be updated)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p5",
+          "sourceText": "Create and drive plans against top opportunities by and across Partners and Factories.",
+          "translatedText": "Create and drive plans against top opportunities by and across Partners and Factories.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p6",
+          "sourceText": "Create sharing and collaboration forums to catalyze actions",
+          "translatedText": "Create sharing and collaboration forums to catalyze actions",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p7",
+          "sourceText": "Optimize (Lean) & Standardize",
+          "translatedText": "Optimize (Lean) & Standardize",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p8",
+          "sourceText": "Automate (including low cost solutions)",
+          "translatedText": "Automate (including low cost solutions)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p9",
+          "sourceText": "Enable Digitalization & intelligence",
+          "translatedText": "Enable Digitalization & intelligence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p11",
+          "sourceText": "Modernization landscaping quarterly check-in.",
+          "translatedText": "Modernization landscaping quarterly check-in.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p12",
+          "sourceText": "Optimization – culture, dashboard, resource, captured value-add, early stages. Automate: Auto Roughing, AAL, Semi-auto printing, AI inspection,… Digitalization programs",
+          "translatedText": "Optimization – culture, dashboard, resource, captured value-add, early stages. Automate: Auto Roughing, AAL, Semi-auto printing, AI inspection, … Digitalization programs",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p13",
+          "sourceText": "Low-cost automation (LCA) roadmap/tracking/application. Computer stitching seasonal tracking.",
+          "translatedText": "Low-cost automation (LCA) roadmap/tracking/application. Computer stitching seasonal tracking.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p14",
+          "sourceText": "Tech workshop/sharing (Digital, AI, LCA,…). X-factory benchmarking. SLM – Metal printing tech readiness and application.",
+          "translatedText": "Tech workshop/sharing (Digital, AI, LCA,…). X-factory benchmarking. SLM – Metal printing tech readiness and application.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p15",
+          "sourceText": "New method of make exploration.",
+          "translatedText": "New method of make exploration.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p17",
+          "sourceText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "translatedText": "Build Team Excellence. Amplify Collaborative Partnerships",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    }
+  ]
+}

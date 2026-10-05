@@ -1,0 +1,4294 @@
+{
+  "sessionId": "pptx_1790927217147_647f113d",
+  "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC manual-EN.pptx",
+  "mode": "ipqc_bilingual",
+  "sourceLanguage": "vi",
+  "targetLanguage": "en",
+  "createdAt": "2026-10-02T07:47:14.092Z",
+  "slideCount": 17,
+  "totalPairs": 597,
+  "harvestedCount": 0,
+  "slides": [
+    {
+      "slideIndex": 1,
+      "title": "FA25 NIKE SB ZOOM NYJAH 4",
+      "pairs": [
+        {
+          "id": "s1_p0",
+          "sourceText": "FA25 NIKE SB ZOOM NYJAH 4",
+          "translatedText": "FA25 NIKE SB ZOOM NYJAH 4",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p1",
+          "sourceText": "IPQC MANUAL",
+          "translatedText": "IPQC MANUAL",
+          "isTitle": true,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 2,
+      "title": "NIKE SB ZOOM NYJAH 4",
+      "pairs": [
+        {
+          "id": "s2_p0",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p1",
+          "sourceText": "Model name",
+          "translatedText": "Model name",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p2",
+          "sourceText": "Cutting die",
+          "translatedText": "Cutting die",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p3",
+          "sourceText": "Pic",
+          "translatedText": "Pic",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p4",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p6",
+          "sourceText": "SB-077",
+          "translatedText": "SB-077",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p8",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p10",
+          "sourceText": "SB-077-A",
+          "translatedText": "SB-077-A",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p13",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p15",
+          "sourceText": "SB-077-P",
+          "translatedText": "SB-077-P",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p18",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p19",
+          "sourceText": "SB-077-C",
+          "translatedText": "SB-077-C",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p21",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p22",
+          "sourceText": "SB-077-A-1",
+          "translatedText": "SB-077-A-1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p24",
+          "sourceText": "Model name",
+          "translatedText": "Model name",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p25",
+          "sourceText": "Cutting die",
+          "translatedText": "Cutting die",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p26",
+          "sourceText": "Pic",
+          "translatedText": "Pic",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p27",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p29",
+          "sourceText": "SB-077-p-1",
+          "translatedText": "SB-077-p-1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p31",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p33",
+          "sourceText": "SB-077-C-1",
+          "translatedText": "SB-077-C-1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p35",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p37",
+          "sourceText": "SB-077-C-2",
+          "translatedText": "SB-077-C-2",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 3,
+      "title": "Cutting Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s3_p0",
+          "sourceText": "Cutting Inspection Strategy",
+          "translatedText": "Cutting Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p9",
+          "sourceText": "Cutting",
+          "translatedText": "Cutting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p10",
+          "sourceText": "Swoosh quality",
+          "translatedText": "Swoosh quality",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p11",
+          "sourceText": "1. Check logo silk screen printing even, fit with film pattern. Accept  +-0.5mm off position as picture in QA manual",
+          "translatedText": "1. Check logo silk screen printing even, fit with film pattern. Accept +-0.5mm off position as picture in QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p12",
+          "sourceText": "*For SB-077-A:",
+          "translatedText": "*For SB-077-A:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p13",
+          "sourceText": "After paint printing, check if logo color same the sample shoe, aligns logo fit with the pattern film, and no color bleeding, over painting or unclear paint.",
+          "translatedText": "After paint printing, check if logo color same the sample shoe, aligns logo fit with the pattern film, and no color bleeding, over painting or unclear paint.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p14",
+          "sourceText": "Due to the design, accept unsmooth swoosh edge, black dots, black hidden logo by upper material, over painting follow QA manual",
+          "translatedText": "Due to the design, accept unsmooth swoosh edge, black dots, black hidden logo by upper material, over painting follow QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p15",
+          "sourceText": "*Đối với SB-077-P",
+          "translatedText": "*For SB-077-P",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p16",
+          "sourceText": "Kiểm tra logo in sơn trước khi gắn liệu không được dơ, ố , không được in nổi bọt khí",
+          "translatedText": "Checked screen-printed logo before fix mtl, not dirty, stained, not embossed air bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p17",
+          "sourceText": "*Đối với SB-077-A-1",
+          "translatedText": "*For SB-077-A-1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p18",
+          "sourceText": "Do thiết kế bề mặt Tip quarter không bằng phẳng chấp nhận mức độ tiêu chuẩn logo in sơn không suôn, chảy sơn nền sau khi nosew như hình QA manual cập nhật",
+          "translatedText": "Due to the uneven surface design of the Tip quarter, quality standard tolerances are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p19",
+          "sourceText": "2.Logo edge over painting",
+          "translatedText": "2. Logo edge over painting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p20",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p21",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p23",
+          "sourceText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "translatedText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p24",
+          "sourceText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "translatedText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p25",
+          "sourceText": "Over cementt after nosew/HF",
+          "translatedText": "Over cementt after nosew/HF",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p26",
+          "sourceText": "1.Ensure the pizza pan is fully equipped with pins. Pizza pan/heat insulation sheet must be clean. Apply an extra piece of heat insulation tape at the eyestay area of the middle piece to reduce uneven eyestay visibility after nosew pressing. (For smaller sizes, pizza pan presses 3 material pieces at once.)",
+          "translatedText": "1.Ensure the pizza pan is fully equipped with pins. Pizza pan/heat insulation sheet must be clean. Apply an extra piece of heat insulation tape at the eyestay area of the middle piece to reduce uneven eyestay visibility after nosew pressing. (For smaller sizes, pizza pan presses 3 material pieces at once.)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p27",
+          "sourceText": "2. Attach material follow PFC sequence",
+          "translatedText": "2. Attach material follow PFC sequence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p28",
+          "sourceText": "3.Note: During each application, peel off the protective film from only one RB Vamp piece at a time to keep the adhesive surface clean.",
+          "translatedText": "3.Note: During each application, peel off the protective film from only one RB Vamp piece at a time to keep the adhesive surface clean.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p29",
+          "sourceText": "Wear gloves during operation and fully remove the protective film before attaching the RB Vamp to the mesh upper.\nPlace material fit with pin holes on the pizza pan/positioning jig. \n4. Check the material quality after nosew, no overflow, no bond gap/delamination",
+          "translatedText": "Wear gloves during operation and fully remove the protective film before attaching the RB Vamp to the mesh upper.\nPlace material fit with pin holes on the pizza pan/positioning jig. \n4. Check the material quality after nosew, no overflow, no bond gap/delamination",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p30",
+          "sourceText": "Acceptable: Deviation of the logo to eyestay distance within ±1mm, as shown in the updated QA manual",
+          "translatedText": "Acceptable: Deviation of the logo to eyestay distance within ±1mm, as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p31",
+          "sourceText": "* For SB-077-P",
+          "translatedText": "* For SB-077-P",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p32",
+          "sourceText": "Before nosew, check if the printing logo is dirty, stain or air bubble",
+          "translatedText": "Before nosew, check if the printing logo is dirty, stain or air bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p33",
+          "sourceText": "*Đối với SB-077-A-1:",
+          "translatedText": "*For SB-077-A-1:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p34",
+          "sourceText": "Do tính chất liệu, chấp nhận sắc độ tip quarter khác màu như hình QA manual cập nhật",
+          "translatedText": "Natural material, accept quarter tip color color inconsistency as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p35",
+          "sourceText": "1. The temperature doesn’t follow PFC",
+          "translatedText": "1. The temperature doesn’t follow PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p36",
+          "sourceText": "2.Nosew components over cement after pressing",
+          "translatedText": "2.Nosew components over cement after pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p37",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p38",
+          "sourceText": "Position off after Nosew/HF",
+          "translatedText": "Position off after Nosew/HF",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p39",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p41",
+          "sourceText": "Nosew bond gap",
+          "translatedText": "Nosew bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p42",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p44",
+          "sourceText": "Nosew air bubble",
+          "translatedText": "Nosew air bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p45",
+          "sourceText": "Nosew bao không",
+          "translatedText": "Nosew bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p46",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 4,
+      "title": "Cutting Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s4_p0",
+          "sourceText": "Cutting Inspection Strategy",
+          "translatedText": "Cutting Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p9",
+          "sourceText": "Cutting",
+          "translatedText": "Cutting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p10",
+          "sourceText": "Cutting holes quality",
+          "translatedText": "Cutting holes quality",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p11",
+          "sourceText": "1.Check the cutting die fit with film pattern, cutting board status/ pressure of machine follow standard",
+          "translatedText": "1.Check the cutting die fit with film pattern, cutting board status/ pressure of machine follow standard",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p12",
+          "sourceText": "2. Place material follow pin on cutting die",
+          "translatedText": "2. Place material follow pin on cutting die",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p13",
+          "sourceText": "3. Check after cutting, punching holes isn’t deformed, off position. Material must be clear",
+          "translatedText": "3. Check after cutting, punching holes isn’t deformed, off position. Material must be clear",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p14",
+          "sourceText": "Poor cutting board",
+          "translatedText": "Poor cutting board",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p15",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p16",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p17",
+          "sourceText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "translatedText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p18",
+          "sourceText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "translatedText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p19",
+          "sourceText": "Definition after process",
+          "translatedText": "Definition after process",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p20",
+          "sourceText": "*Nosew on vamp",
+          "translatedText": "*Nosew on vamp",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p21",
+          "sourceText": "1.Check time/temp/pressure of machine follow PFC :",
+          "translatedText": "1.Check time/temp/pressure of machine follow PFC :",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p22",
+          "sourceText": "2. Attach vamp material follow pin holes on mold.",
+          "translatedText": "2. Attach vamp material follow pin holes on mold.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p23",
+          "sourceText": "3. Check after nosew, definition is clear and no off position",
+          "translatedText": "3. Check after nosew, definition is clear and no off position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p24",
+          "sourceText": "*Vac tech eco fill process:",
+          "translatedText": "*Vac tech eco fill process:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p25",
+          "sourceText": "Chemical mixing: Mix 100% SC-90A  with 15% SC-90B in a sufficient quantity to ensure effective moisture retention and prevent premature adhesive drying. Make sure to mix thoroughly until a uniform solution is achieved",
+          "translatedText": "Chemical mixing: Mix 100% SC-90A  with 15% SC-90B in a sufficient quantity to ensure effective moisture retention and prevent premature adhesive drying. Make sure to mix thoroughly until a uniform solution is achieved",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p26",
+          "sourceText": "2. Use a syringe to fill chemical into the HF groove and to avoid overflow, apply chemical following the pressing position, making sure the glue level is even with the groove.\nDon’t underfill, as this will cause the definition not form properly.",
+          "translatedText": "2. Use a syringe to fill chemical into the HF groove and to avoid overflow, apply chemical following the pressing position, making sure the glue level is even with the groove.\nDon’t underfill, as this will cause the definition not form properly.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p27",
+          "sourceText": "To avoid over flow lead to x-ray",
+          "translatedText": "To avoid over flow lead to x-ray",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p28",
+          "sourceText": "Accept this cosmetic with:",
+          "translatedText": "Accept this cosmetic with:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p29",
+          "sourceText": "*Vac tech eco fill +/-0.5mm than the HF line depth",
+          "translatedText": "*Vac tech eco fill +/-0.5mm than the HF line depth",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p30",
+          "sourceText": "*5-7mm without vac tech eco fill at 2 side",
+          "translatedText": "*5-7mm without vac tech eco fill at 2 side",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p31",
+          "sourceText": "*Small bubble after drying.",
+          "translatedText": "*Small bubble after drying.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p32",
+          "sourceText": "Use a tool to pull the glue to maintain the desired adhesion without getting too much glue",
+          "translatedText": "Use a tool to pull the glue to maintain the desired adhesion without getting too much glue",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p33",
+          "sourceText": "*Drying process:",
+          "translatedText": "*Drying process:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p34",
+          "sourceText": "After drying, the material must be completely dry.",
+          "translatedText": "After drying, the material must be completely dry.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p35",
+          "sourceText": "Place the dried material in a basket with separator paper to prevent glue transfer to vamp. Store in a natural environment for 12 hours to air-dry (Note the drying time on the basket)",
+          "translatedText": "Place the dried material in a basket with separator paper to prevent glue transfer to vamp. Store in a natural environment for 12 hours to air-dry (Note the drying time on the basket)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p36",
+          "sourceText": "Lack of chemical",
+          "translatedText": "Lack of chemical",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p37",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p38",
+          "sourceText": "Component edge inconsistent",
+          "translatedText": "Component edge inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p39",
+          "sourceText": "1. Check the cutting die is sharp, fit with film pattern",
+          "translatedText": "1. Check the cutting die is sharp, fit with film pattern",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p40",
+          "sourceText": "2. Check the board surface is smooth",
+          "translatedText": "2. Check the board surface is smooth",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p41",
+          "sourceText": "3. Check place material fit with pin holes",
+          "translatedText": "3. Check place material fit with pin holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p42",
+          "sourceText": "4. Check after cutting, material edge is consistent and no hairy edge",
+          "translatedText": "4. Check after cutting, material edge is consistent and no hairy edge",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p43",
+          "sourceText": "Accept +-1mm inconsistent distance embroidery logo to eyestay edge , hairy edge eyestay as picture in QA manual",
+          "translatedText": "Accept +-1mm inconsistent distance embroidery logo to eyestay edge, hairy edge eyestay as picture in QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p44",
+          "sourceText": "Poor cutting board",
+          "translatedText": "Poor cutting board",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p45",
+          "sourceText": "Thớt chặt nhừ",
+          "translatedText": "Cutting board sucks",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p46",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p47",
+          "sourceText": "Hairy/burned edge of material",
+          "translatedText": "Hairy/burned edge of material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p48",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 5,
+      "title": "Cutting Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s5_p0",
+          "sourceText": "Cutting Inspection Strategy",
+          "translatedText": "Cutting Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p4",
+          "sourceText": "BInspection Result",
+          "translatedText": "BInspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p9",
+          "sourceText": "Cutting",
+          "translatedText": "Cutting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p10",
+          "sourceText": "Color migration",
+          "translatedText": "Color migration",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p11",
+          "sourceText": "Đổi màu/Ẩn màu",
+          "translatedText": "Change color/color migration",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p12",
+          "sourceText": "SB-077-C-1",
+          "translatedText": "SB-077-C-1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p13",
+          "sourceText": "22/9/2026",
+          "translatedText": "22/9/2026",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p14",
+          "sourceText": "1.Kiểm tra bộ vị mặt trước sau khi phun sơn về màu sắc giống giày mẫu, sơn phải đều rõ, không lem màu",
+          "translatedText": "1. Check component vamp after spraying to have the same color as sample shoes, paint must be clearly consistent, not color bleeding",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p15",
+          "sourceText": "2. Kiểm tra máy có được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "2. Check that the machine has the correct temperature/time/ pressure nosew PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p16",
+          "sourceText": "3. .Kiểm tra mặt giày sau khi ép nosew  vị trí tip-quarter không bị ẩn màu, mức độ ẩn màu được chấp nhận như hình QA manual cập nhật",
+          "translatedText": "3. .Check upper after press nosew placement tip-quarter is not affected by color migration, color migration level is accepted as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p17",
+          "sourceText": "Mặt truóc bị ẩn màu sau khi ép nosew",
+          "translatedText": "The front face is color migration after the press nosew",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p18",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p19",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p20",
+          "sourceText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "translatedText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p21",
+          "sourceText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "translatedText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 6,
+      "title": "Stitching Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s6_p0",
+          "sourceText": "Stitching Inspection Strategy",
+          "translatedText": "Stitching Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p9",
+          "sourceText": "Stitching",
+          "translatedText": "Stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p10",
+          "sourceText": "Collar lining shape",
+          "translatedText": "Collar lining shape",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p11",
+          "sourceText": "*Stitching collar:",
+          "translatedText": "*Stitching collar:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p12",
+          "sourceText": "1.Check stitching collar lining and collar must edge even and follow stitching process",
+          "translatedText": "1.Check stitching collar lining and collar must edge even and follow stitching process",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p13",
+          "sourceText": "2.Spraying cement evenly,  spray cement collar/collar lining 2cm away from eyestay to avoid hot-melt overflowing after BPM",
+          "translatedText": "2.Spraying cement evenly,  spray cement collar/collar lining 2cm away from eyestay to avoid hot-melt overflowing after BPM",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p14",
+          "sourceText": "3.Check after turning/hammering, collar is smooth and no wrinkle",
+          "translatedText": "3.Check after turning/hammering, collar is smooth and no wrinkle",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p15",
+          "sourceText": "*Fixed stitching collar :",
+          "translatedText": "*Fixed stitching collar :",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p16",
+          "sourceText": "1. Place the collar lining right at the beginning of the collar edge and sew along the edge of the collar. Stitch 6-7 stitches on each side, SPI 9-10 to fix the collar lining",
+          "translatedText": "1. Place the collar lining right at the beginning of the collar edge and sew along the edge of the collar. Stitch 6-7 stitches on each side, SPI 9-10 stitches/inch to fix the collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p17",
+          "sourceText": "2. Check after stitching the collar lining edge is smooth and consistent",
+          "translatedText": "2. Check after stitching the collar lining edge is smooth and consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p18",
+          "sourceText": "Due to the design and material properties, accept gap at collar lining and wrinkle as picture",
+          "translatedText": "Due to the design and material properties, accept gap at collar lining and wrinkle as picture",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p19",
+          "sourceText": "QA manual updated",
+          "translatedText": "QA manual updated",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p20",
+          "sourceText": "1.Stitching margin inconsistent",
+          "translatedText": "1.Stitching margin inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p21",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p22",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p23",
+          "sourceText": "Weekly QR%>98% delete that item’s inspection, record other defect if not in the inspection list.",
+          "translatedText": "Weekly QR%>98% delete that item’s inspection, record other defect if not in the inspection list.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p24",
+          "sourceText": "Tongue shape",
+          "translatedText": "Tongue shape",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p25",
+          "sourceText": "1.Check joint stitching top tongue and bottom tongue with margin 2.5mm, SPI 11-12",
+          "translatedText": "1. Check joint stitching top tongue and bottom tongue with margin 2.5mm, SPI 11-12 stitches/inch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p26",
+          "sourceText": "2.Attach foam correct marking",
+          "translatedText": "2.Attach foam correct marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p27",
+          "sourceText": "3.After hammering, tongue must smooth and no wrinkle",
+          "translatedText": "3.After hammering, tongue must smooth and no wrinkle",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p28",
+          "sourceText": "Inconsistent margin 2mm",
+          "translatedText": "Inconsistent margin 2mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p29",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p30",
+          "sourceText": "Tongue stitch position",
+          "translatedText": "Tongue stitch position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p31",
+          "sourceText": "1.Place tongue and upper fit with jig, correct marking",
+          "translatedText": "1.Place tongue and upper fit with jig, correct marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p32",
+          "sourceText": "3. Check after stitching tongue/tongue pull tab isn’t off center, margin 2mm, 9-10 SPI.",
+          "translatedText": "3. Check after stitching tongue/tongue pull tab isn’t off center, margin 2mm, SPI 9-10 stitches/inch.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p33",
+          "sourceText": "Accept inconsistent distance embroidery logo to eyestay edge +_1mm",
+          "translatedText": "Accept inconsistent distance embroidery logo to eyestay edge +_1mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p34",
+          "sourceText": "Place tongue not follow marking",
+          "translatedText": "Place tongue not follow marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p35",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p36",
+          "sourceText": "Stitching margin/SPI",
+          "translatedText": "Stitching margin/SPI",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p37",
+          "sourceText": "1.Check speed/SPI/margin setting if follow PFC",
+          "translatedText": "1. Check speed/SPI/margin setting if follow PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p38",
+          "sourceText": "2.Check worker operation",
+          "translatedText": "2.Check worker operation",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p39",
+          "sourceText": "3.Make sure stitching line no broken thread/run off stitching, margin/SPI must follow PFC",
+          "translatedText": "3. Make sure stitching line no broken thread/run off stitching, margin/SPI must follow PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p40",
+          "sourceText": "2.Stitching margin inconsistent",
+          "translatedText": "2.Stitching margin inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p41",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 7,
+      "title": "Stitching Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s7_p0",
+          "sourceText": "Stitching Inspection Strategy",
+          "translatedText": "Stitching Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p9",
+          "sourceText": "Stitching",
+          "translatedText": "Stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p10",
+          "sourceText": "Zigzag stitching",
+          "translatedText": "Zigzag stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p11",
+          "sourceText": "1.Place material must fit notches for zigzag stitching",
+          "translatedText": "1.Place material must fit notches for zigzag stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p12",
+          "sourceText": "2.Check if margin 2.5mm, 7-8 stitches/inch, not be run-off/skip stitching",
+          "translatedText": "2.Check if margin 2.5mm, SPI 7-8 stitches/inch, not be run-off/skip stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p13",
+          "sourceText": "Stitching zigzag not follow notches",
+          "translatedText": "Stitching zigzag not follow notches",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p14",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p15",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p16",
+          "sourceText": "Weekly QR%>98% delete that item’s inspection, record other defect if not in the inspection list.",
+          "translatedText": "Weekly QR%>98% delete that item’s inspection, record other defect if not in the inspection list.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p17",
+          "sourceText": "Heel pull tab is off center",
+          "translatedText": "Heel pull tab is off center",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p18",
+          "sourceText": "1. Check that the heel pull tab deco line on the strap are not misaligned.\nDue to material characteristics, a deviation of ±0.5mm is acceptable as shown in the updated QA manual.",
+          "translatedText": "1. Check that the heel pull tab deco line on the strap are not misaligned.\nDue to material characteristics, a deviation of ±0.5mm is acceptable as shown in the updated QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p19",
+          "sourceText": "2. When placing the heel part into the template: the collar seam must align with the positioning mark on the template, the zigzag seam at the heel should be centered.",
+          "translatedText": "2. When placing the heel part into the template: the collar seam must align with the positioning mark on the template, the zigzag seam at the heel should be centered.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p20",
+          "sourceText": "The heel pull tab placement should maintain a 6mm distance from the decorative stitching to the stitching seam as per the pattern.",
+          "translatedText": "The heel pull tab placement should maintain a 6mm distance from the decorative stitching to the stitching seam as per the pattern.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p21",
+          "sourceText": "3. After stitching the heel pull tab must straight, stitching margin is 1.5mm as per the pattern, 9-10 SPI, no skipped stitches, broken thread, or run off stitching",
+          "translatedText": "3. After stitching the heel pull tab must straight, stitching margin is 1.5mm as per the pattern, SPI 9-10 stitches/inch, no skipped stitches, broken thread, or run off stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p22",
+          "sourceText": "A deviation of ±1mm from the deco stitching to the heel pull tab stitching is acceptable per the QA manual.",
+          "translatedText": "A deviation of ±1mm from the deco stitching to the heel pull tab stitching is acceptable per the QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p23",
+          "sourceText": "*Stitching the heel pull tab to the collar:",
+          "translatedText": "*Stitching the heel pull tab to the collar:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p24",
+          "sourceText": "Ensure the stitch follows margin 2mm, heel pull tab must be centered on the collar.",
+          "translatedText": "Ensure the stitch follows margin 2mm, heel pull tab must be centered on the collar.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p25",
+          "sourceText": "3. After stitching, the strap should be straight, centered, stitched with 9–10 SPI, no run off stitching, and the strap length should be exactly 30mm.",
+          "translatedText": "3. After stitching, the strap should be straight, centered, stitched with 9–SPI 10 stitches/inch, no run off stitching, and the strap length should be exactly 30mm.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p26",
+          "sourceText": "Place heel pull tab not follow marking",
+          "translatedText": "Place heel pull tab not follow marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p27",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p28",
+          "sourceText": "Punching holes",
+          "translatedText": "Punching holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p29",
+          "sourceText": "1. Check the tool punching is suitable, the be must is sharp and not deformed",
+          "translatedText": "1. Check the tool punching is suitable, the be must is sharp and not deformed",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p30",
+          "sourceText": "2. Check the punching of the Eyestay hole is straight, the hole is not broken or deformed",
+          "translatedText": "2. Check the punching of the Eyestay hole is straight, the hole is not broken or deformed",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p31",
+          "sourceText": "1. Place tool punching incorrect location",
+          "translatedText": "1. Place tool punching incorrect location",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p32",
+          "sourceText": "C Grade if can’t fix",
+          "translatedText": "C Grade if can’t fix",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p33",
+          "sourceText": "Swoosh quality",
+          "translatedText": "Swoosh quality",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p34",
+          "sourceText": "*For SB-077-A",
+          "translatedText": "*For SB-077-A",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p35",
+          "sourceText": "Check if the paint printing logo color matches the sample shoe, logo fit with the pattern film, and no paint bleeding, over painting, unclear paint, or peeled of paint.",
+          "translatedText": "Check if the paint printing logo color matches the sample shoe, logo fit with the pattern film, and no paint bleeding, over painting, unclear paint, or peeled of paint.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p36",
+          "sourceText": "Due to the design, accept unsmooth swoosh edge, black dots, black hidden swoosh by upper, over painting follow QA manual.",
+          "translatedText": "Due to the design, accept unsmooth swoosh edge, black dots, black hidden swoosh by upper, over painting follow QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 8,
+      "title": "Assembly Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s8_p0",
+          "sourceText": "Assembly Inspection Strategy",
+          "translatedText": "Assembly Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p9",
+          "sourceText": "Assembly",
+          "translatedText": "Assembly",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p10",
+          "sourceText": "Collar shape",
+          "translatedText": "Collar shape",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p11",
+          "sourceText": "1. Check that the hot/cold mold setting conditions are correct and follow the PFC\n2. When placing upper into the mold, ensure the heel/heel pull tab is straight and aligned with the center of the laser. The heel must reach the mold’s positioning stopper. The upper should be clamped and pulled tight to fit snugly to the mold.\n3. After BPM, check that the heel and heel pull tab are straight, the collar is smooth, collar lining isn’t wrinkled or has glue overflow. The molded heel should have a 3D curve matching the sample shoe.\nDue to material characteristics, a slight wrinkle on the collar lining is acceptable as shown in the updated QA manual.",
+          "translatedText": "1. Check that the hot/cold mold setting conditions are correct and follow the PFC\n2. When placing upper into the mold, ensure the heel/heel pull tab is straight and aligned with the center of the laser. The heel must reach the mold’s positioning stopper. The upper should be clamped and pulled tight to fit snugly to the mold.\n3. After BPM, check that the heel and heel pull tab are straight, the collar is smooth, collar lining isn’t wrinkled or has glue overflow. The molded heel should have a 3D curve matching the sample shoe.\nDue to material characteristics, a slight wrinkle on the collar lining is acceptable as shown in the updated QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p12",
+          "sourceText": "2.Heel shaping not reach marking",
+          "translatedText": "2.Heel shaping not reach marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p13",
+          "sourceText": "4.Upper off center after inserting last",
+          "translatedText": "4.Upper off center after inserting last",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p14",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p15",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p16",
+          "sourceText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "translatedText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p17",
+          "sourceText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "translatedText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p18",
+          "sourceText": "Wrinkle collar lining",
+          "translatedText": "Wrinkle collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p19",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p20",
+          "sourceText": "Tip/heel height inconsistent",
+          "translatedText": "Tip/heel height inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p21",
+          "sourceText": "1.Insert last follow notches, seat lasting hit dot standard",
+          "translatedText": "1.Insert last follow notches, seat lasting hit dot standard",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p22",
+          "sourceText": "2.Check if gauge marking/cementing/attaching follow marking",
+          "translatedText": "2.Check if gauge marking/cementing/attaching follow marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p23",
+          "sourceText": "1.Kiểm tra vô phom có ngay tâm định vị không, ép gót có tới nút định vị",
+          "translatedText": "1. Check whether lasting has notch upper marking, seat lasting has corks upper marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p24",
+          "sourceText": "2.Kiểm tra đườg vẽ chỉ,quét keo,dán đế có ngay tiêu chuẩn định vị",
+          "translatedText": "2. Check the lines gauge marking, cementing, bottom attaching and have quality standard upper marking right away",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p25",
+          "sourceText": "Seat lasting not reach the last dot",
+          "translatedText": "Seat lasting not reach the last dot",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p26",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p28",
+          "sourceText": "Components of pair inconsistent",
+          "translatedText": "Components of pair inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p29",
+          "sourceText": "1. Check if strobel stitching/lasting follow notch, even edge",
+          "translatedText": "1. Check if strobel stitching/lasting follow notch, even edge",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p30",
+          "sourceText": "2.Check gauge marking/cementing/attaching operation if follow gauge marking line",
+          "translatedText": "2.Check gauge marking/cementing/attaching operation if follow gauge marking line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p31",
+          "sourceText": "1. Kiểm tra may trung đế ,vô phom có ngay tâm, định vị",
+          "translatedText": "1. Check strobel stitching, lasting and immediately have notch, upper marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p32",
+          "sourceText": "2.Kiểm tra vẽ chỉ , quét keo và dán đế có khớp đường vẽ  định vị không",
+          "translatedText": "2. Check if gauge marking, cementing and bottom attaching have fit line drawing upper marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p33",
+          "sourceText": "3.Gauge marking un-matched with tip/heel dot",
+          "translatedText": "3.Gauge marking un-matched with tip/heel dot",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p34",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p35",
+          "sourceText": "Wrinkle toe cap",
+          "translatedText": "Wrinkle toe cap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p36",
+          "sourceText": "1.Place upper on tip shaping mold must correct marking",
+          "translatedText": "1.Place upper on tip shaping mold must correct marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p37",
+          "sourceText": "2.Check if gathering stitching follow notches, margin 2mm and fit with jig 3.Stitching strobel/insert last must follow notches/marking, tip shape must smooth, no wrinkle, lump after inserting last",
+          "translatedText": "2.Check if gathering stitching follow notches, margin 2mm and fit with jig 3.Stitching strobel/insert last must follow notches/marking, tip shape must smooth, no wrinkle, lump after inserting last",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p38",
+          "sourceText": "2.Gathering stitching margin inconsistent",
+          "translatedText": "2.Gathering stitching margin inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p39",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p40",
+          "sourceText": "Wrinkle upper",
+          "translatedText": "Wrinkle upper",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p41",
+          "sourceText": "1.Stitching strobel/inserting last follow marking",
+          "translatedText": "1.Stitching strobel/inserting last follow marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p42",
+          "sourceText": "2.Quarter must straight, no wrinkle, extruded after lacing",
+          "translatedText": "2.Quarter must straight, no wrinkle, extruded after lacing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p43",
+          "sourceText": "1.Stitching strobel not follow notch",
+          "translatedText": "1.Stitching strobel not follow notch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p45",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 9,
+      "title": "Assembly Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s9_p0",
+          "sourceText": "Assembly Inspection Strategy",
+          "translatedText": "Assembly Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p9",
+          "sourceText": "Assembly",
+          "translatedText": "Assembly",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p11",
+          "sourceText": "Tongue shape",
+          "translatedText": "Tongue shape",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p12",
+          "sourceText": "1. Before lacing, check and straighten the tongue and tongue lining to avoid wrinkles or folds.\n2. Make sure all eyelets are evenly aligned before lacing to ensure the upper fits snugly to the last.",
+          "translatedText": "1. Before lacing, check and straighten the tongue and tongue lining to avoid wrinkles or folds.\n2. Make sure all eyelets are evenly aligned before lacing to ensure the upper fits snugly to the last.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p14",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p15",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p16",
+          "sourceText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "translatedText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p17",
+          "sourceText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "translatedText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p18",
+          "sourceText": "Over buffing",
+          "translatedText": "Over buffing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p19",
+          "sourceText": "1.Check if gauge marking line visible clearly",
+          "translatedText": "1.Check if gauge marking line visible clearly",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p20",
+          "sourceText": "2.Check if buffing follow marking line",
+          "translatedText": "2.Check if buffing follow marking line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p21",
+          "sourceText": "3.Cementing/attaching follow marking",
+          "translatedText": "3.Cementing/attaching follow marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p22",
+          "sourceText": "Attaching bottom not reach buffing line",
+          "translatedText": "Attaching bottom not reach buffing line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p23",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p24",
+          "sourceText": "Wrinkle TR& lump",
+          "translatedText": "Wrinkle TR& lump",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p25",
+          "sourceText": "1.Done BPM process follow standard about tempt/time/pressure",
+          "translatedText": "1.Done BPM process follow standard about tempt/time/pressure",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p26",
+          "sourceText": "2.Heel melting cement completely, sticky, no wrinke/lump after shaping",
+          "translatedText": "2.Heel melting cement completely, sticky, no wrinke/lump after shaping",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p27",
+          "sourceText": "3.Heel hit dot standard, no x-ray after seat lasting",
+          "translatedText": "3.Heel hit dot standard, no x-ray after seat lasting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p29",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p30",
+          "sourceText": "Nosew bond gap",
+          "translatedText": "Nosew bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p31",
+          "sourceText": "1.Check if nosew bond gap/delaminate on upper",
+          "translatedText": "1.Check if nosew bond gap/delaminate on upper",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p32",
+          "sourceText": "2.Time/temperature of heating oven follow PFC",
+          "translatedText": "2.Time/temperature of heating oven follow PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p33",
+          "sourceText": "3.Place lasted upper correct way after cementing",
+          "translatedText": "3.Place lasted upper correct way after cementing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p34",
+          "sourceText": "*Đối với SB-077-A-1",
+          "translatedText": "*For SB-077-A-1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p35",
+          "sourceText": "Kiểm tra thành phẩm mặt giày Tip quarter không hở keo nosew. Do tính chất liệu, chấp nhận mức độ trắng các lỗ trang trí và biên tip quarter, tràn keo các lỗ trang trí, và mức độ Tip quarter  khác màu như hình QA manual cập nhật",
+          "translatedText": "Check out the finished upper Tipquarter no nosew bond gap. Natural material, accepts whitening at perforation holes and tip quarter edges, cement overflow at perforation holes, and color inconsistency Tipquarter levels as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p36",
+          "sourceText": "*Đối với SB-077-P-1:",
+          "translatedText": "*For SB-077-P-1:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p37",
+          "sourceText": "Do có in 1 lớp keo trên bề mặt liệu vamp vị trí Tip quarter có dao động khác màu nên  chấp nhận mức độ dao động  khác màu trên thành phẩm  và logo được đi chung không cần phối như hình QA manual cập nhật",
+          "translatedText": "Because there is printing top coating on surface, the placement Tipquarter vamp has color shade variation, so accept the level of color shade variation on finished product and swoosh used together without color matching as shown in the updated QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p38",
+          "sourceText": "Nosew peel off on upper tróc/bao không",
+          "translatedText": "Nosew peel off on upper peel/cover no",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p40",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p41",
+          "sourceText": "Nosew bubble",
+          "translatedText": "Nosew bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p42",
+          "sourceText": "Nosew bao không",
+          "translatedText": "Nosew bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p44",
+          "sourceText": "Tip off center",
+          "translatedText": "Tip off center",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p45",
+          "sourceText": "1.Check if strobel stitching&insert last must follow notch",
+          "translatedText": "1.Check if strobel stitching&insert last must follow notch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p46",
+          "sourceText": "2.Gauge marking/cementing/attaching must follow standard",
+          "translatedText": "2.Gauge marking/cementing/attaching must follow standard",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p47",
+          "sourceText": "2.Heel off center after inserting last",
+          "translatedText": "2.Heel off center after inserting last",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p48",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p49",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p50",
+          "sourceText": "Heel off center",
+          "translatedText": "Heel off center",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 10,
+      "title": "Assembly Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s10_p0",
+          "sourceText": "Assembly Inspection Strategy",
+          "translatedText": "Assembly Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p9",
+          "sourceText": "Assembly",
+          "translatedText": "Assembly",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p10",
+          "sourceText": "Webbing off center",
+          "translatedText": "Webbing off center",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p11",
+          "sourceText": "1. Check place upper on mold correct pin holes, make sure heel pull tab iss middle of laser light",
+          "translatedText": "1. Check place upper on mold correct pin holes, make sure heel pull tab iss middle of laser light",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p12",
+          "sourceText": "2. Check strobe stitching, insert last reach marking",
+          "translatedText": "2. Check strobe stitching, insert last reach marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p13",
+          "sourceText": "3. Check the manual adjustment of the upper using hands to ensure the heel strap stays straight and centered with the heel pin, to avoid misaligned \"NIKE\" logo on the heel clip.\nDue to material characteristics, heel pull tab and NIKE logo misalignment within ±1mm is acceptable, as per the updated QA manual.",
+          "translatedText": "3. Check the manual adjustment of the upper using hands to ensure the heel strap stays straight and centered with the heel pin, to avoid misaligned \"NIKE\" logo on the heel clip.\nDue to material characteristics, heel pull tab and NIKE logo misalignment within ±1mm is acceptable, as per the updated QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p14",
+          "sourceText": "Heel pull tab isn’t correct position when BPM",
+          "translatedText": "Heel pull tab isn’t correct position when BPM",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p15",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p16",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p17",
+          "sourceText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "translatedText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p18",
+          "sourceText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "translatedText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p19",
+          "sourceText": "Sockliner position",
+          "translatedText": "Sockliner position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p20",
+          "sourceText": "1.Check if roll cement 50% width of sockliner at heel .Due to the 3D design of the sockliner, some uneven glue spread is acceptable, as shown in the updated QA manual.",
+          "translatedText": "1.Check if roll cement 50% width of sockliner at heel .Due to the 3D design of the sockliner, some uneven glue spread is acceptable, as shown in the updated QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p21",
+          "sourceText": "2.After insertion and pressing, the sockliner must be in the correct position, with no off position or extruded material.",
+          "translatedText": "2.After insertion and pressing, the sockliner must be in the correct position, with no off position or extruded material.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p23",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p24",
+          "sourceText": "Over cement",
+          "translatedText": "Over cement",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p25",
+          "sourceText": "1.Check gauge marking line if clear",
+          "translatedText": "1.Check gauge marking line if clear",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p26",
+          "sourceText": "2.Check cementing operation if follow marking line",
+          "translatedText": "2.Check cementing operation if follow marking line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p27",
+          "sourceText": "3.Check attaching operation",
+          "translatedText": "3.Check attaching operation",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p28",
+          "sourceText": "2.Worker apply cement over marking line",
+          "translatedText": "2.Worker apply cement over marking line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p29",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p30",
+          "sourceText": "Cleanness",
+          "translatedText": "Cleanness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p31",
+          "sourceText": "1.Check upper cleanness",
+          "translatedText": "1.Check upper cleanness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p32",
+          "sourceText": "2.Check conveyor cleanness",
+          "translatedText": "2.Check conveyor cleanness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p33",
+          "sourceText": "3.Check operation",
+          "translatedText": "3.Check operation",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p34",
+          "sourceText": "2.Dirty conveyor",
+          "translatedText": "2.Dirty conveyor",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p35",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p36",
+          "sourceText": "Bond gap at bottom",
+          "translatedText": "Bond gap at bottom",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p37",
+          "sourceText": "1.Check if unit soles have bond gap after received",
+          "translatedText": "1.Check if unit soles have bond gap after received",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p38",
+          "sourceText": "2.Check temp/ time of heating oven follow PFC standard",
+          "translatedText": "2.Check temp/ time of heating oven follow PFC standard",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p39",
+          "sourceText": "3.Check if unit soles have bond gap on finished shoe",
+          "translatedText": "3.Check if unit soles have bond gap on finished shoe",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p40",
+          "sourceText": "Midsole&Outsole have bond gap",
+          "translatedText": "Midsole&Outsole have bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p41",
+          "sourceText": "3%",
+          "translatedText": "3%",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 11,
+      "title": "Assembly Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s11_p0",
+          "sourceText": "Assembly Inspection Strategy",
+          "translatedText": "Assembly Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p2",
+          "sourceText": "Potential  Item",
+          "translatedText": "Potential  Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p3",
+          "sourceText": "Inspection Focuses",
+          "translatedText": "Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p4",
+          "sourceText": "Inspection Result",
+          "translatedText": "Inspection Result",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p5",
+          "sourceText": "Inspection Q’ty",
+          "translatedText": "Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p6",
+          "sourceText": "Stop",
+          "translatedText": "Stop",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p7",
+          "sourceText": "Line",
+          "translatedText": "Line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p8",
+          "sourceText": "Adjustment",
+          "translatedText": "Adjustment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p9",
+          "sourceText": "Assembly",
+          "translatedText": "Assembly",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p10",
+          "sourceText": "Midsole/Outsole to upper bond gap",
+          "translatedText": "Midsole/Outsole to upper bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p11",
+          "sourceText": "1.Check if buffing follow gauge marking line, use cleaning tool to clean the dust",
+          "translatedText": "1.Check if buffing follow gauge marking line, use cleaning tool to clean the dust",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p12",
+          "sourceText": "2.Apply 2015K must reach marking",
+          "translatedText": "2.Apply 2015K must reach marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p13",
+          "sourceText": "3.Apply primer/cement reach marking",
+          "translatedText": "3.Apply primer/cement reach marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p14",
+          "sourceText": "4.Attaching bottom follow SOP and follow cementing line",
+          "translatedText": "4.Attaching bottom follow SOP and follow cementing line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p15",
+          "sourceText": "Due to material property, accept 1mm over cement, accept exposed cement dot/line through heel clip as QA manual",
+          "translatedText": "Due to material property, accept 1mm over cement, accept exposed cement dot/line through heel clip as QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p16",
+          "sourceText": "4.Worker attach bottom over cementing line",
+          "translatedText": "4.Worker attach bottom over cementing line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p17",
+          "sourceText": "12 pairs / 1hour",
+          "translatedText": "12 pairs / 1hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p18",
+          "sourceText": "3%",
+          "translatedText": "3%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p19",
+          "sourceText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "translatedText": "1.Weekly QR>98% Inspect 12pcs(-50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p20",
+          "sourceText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "translatedText": "2.Weekly QR<90% Inspect 36 pcs(+50%)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p21",
+          "sourceText": "Rocking",
+          "translatedText": "Rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p22",
+          "sourceText": "1.Check gauge marking line is clear, cementing follow gauge marking lien",
+          "translatedText": "1.Check gauge marking line is clear, cementing follow gauge marking lien",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p23",
+          "sourceText": "2.Check the attaching operation follow marking",
+          "translatedText": "2.Check the attaching operation follow marking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p24",
+          "sourceText": "3.Check machine, pressure of machine follow PFC",
+          "translatedText": "3.Check machine, pressure of machine follow PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p25",
+          "sourceText": "4.Check if bottom is deformed before attaching",
+          "translatedText": "4.Check if bottom is deformed before attaching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p26",
+          "sourceText": "2.Worker attach bottom inconsistent",
+          "translatedText": "2.Worker attach bottom inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p27",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p28",
+          "sourceText": "Sole attachment",
+          "translatedText": "Sole attachment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p29",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p30",
+          "sourceText": "Yellowing",
+          "translatedText": "Yellowing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p31",
+          "sourceText": "1.Check if upper& bottom yellowing",
+          "translatedText": "1.Check if upper& bottom yellowing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p32",
+          "sourceText": "2.Check if upper& bottom yellowing when finished shoe",
+          "translatedText": "2.Check if upper& bottom yellowing when finished shoe",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p33",
+          "sourceText": "1.upper /bottom yellowing",
+          "translatedText": "1.upper /bottom yellowing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p34",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p35",
+          "sourceText": "Swoosh quality",
+          "translatedText": "Swoosh quality",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p36",
+          "sourceText": "Check the time and temp of heating oven follow PFC:",
+          "translatedText": "Check the time and temp of heating oven follow PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p37",
+          "sourceText": "* For SB-077-A:",
+          "translatedText": "* For SB-077-A:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p38",
+          "sourceText": "1. Check the upper if the logo paint printing is peeled of paint",
+          "translatedText": "1. Check the upper if the logo paint printing is peeled of paint",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p39",
+          "sourceText": "2. Check the finished shoe if the logo paint printing is peeled of paint",
+          "translatedText": "2. Check the finished shoe if the logo paint printing is peeled of paint",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p40",
+          "sourceText": "* For SB-077-A:",
+          "translatedText": "* For SB-077-A:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p41",
+          "sourceText": "Check the finished shoe if the screen printing logo is bubbles",
+          "translatedText": "Check the finished shoe if the screen printing logo is bubbles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p42",
+          "sourceText": "1. Upper peeled of paint",
+          "translatedText": "1. Upper peeled of paint",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p43",
+          "sourceText": "2. Logo is bubbles",
+          "translatedText": "2. Logo is bubbles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p44",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p45",
+          "sourceText": "Color migration",
+          "translatedText": "Color migration",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p46",
+          "sourceText": "Đổi màu/Ẩn màu",
+          "translatedText": "Change color/color migration",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p48",
+          "sourceText": "1.Kiểm tra nhiệt độ/thời gian máy sấy phải đúng theo PFC.",
+          "translatedText": "1. Check the dryer temperature/time according to PFC.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p49",
+          "sourceText": "2.Kiểm tra thành phẩm mặt giày không được ẩn màu. Mức độ ẩn màu được chấp nhận như hinh QA manual cập nhật",
+          "translatedText": "2. Check finished upper not color migration. Color migration level is accepted as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p50",
+          "sourceText": "Mặt giày ép nosew bị ẩn màu",
+          "translatedText": "Upper press nosew gets color migration",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p51",
+          "sourceText": "5%",
+          "translatedText": "5%",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 12,
+      "title": "HFPA Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s12_p0",
+          "sourceText": "HFPA Inspection Strategy",
+          "translatedText": "HFPA Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p2",
+          "sourceText": "Inspection Item",
+          "translatedText": "Inspection Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p3",
+          "sourceText": "Action",
+          "translatedText": "Action",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p4",
+          "sourceText": "Total Inspection Q’ty",
+          "translatedText": "Total Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p5",
+          "sourceText": "DR Level",
+          "translatedText": "DR Level",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p6",
+          "sourceText": "Moderate",
+          "translatedText": "Moderate",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p7",
+          "sourceText": "Normal",
+          "translatedText": "Normal",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p8",
+          "sourceText": "HFPA",
+          "translatedText": "HFPA",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p9",
+          "sourceText": "Damaged lace/wrong lacing",
+          "translatedText": "Damaged lace/wrong lacing",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p10",
+          "sourceText": "Over 1 pieces re-inspection",
+          "translatedText": "Over 1 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p11",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p13",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p14",
+          "sourceText": "Midsole/Outsole to upper bond gap",
+          "translatedText": "Midsole/Outsole to upper bond gap",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p15",
+          "sourceText": "Over 1 pieces re-inspection",
+          "translatedText": "Over 1 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p16",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p17",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p19",
+          "sourceText": "Tip/heel height inconsistent",
+          "translatedText": "Tip/heel height inconsistent",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p20",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p21",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p23",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p24",
+          "sourceText": "Rocking",
+          "translatedText": "Rocking",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p25",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p26",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p28",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p29",
+          "sourceText": "Sole attachment",
+          "translatedText": "Sole attachment",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p30",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p31",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p32",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p34",
+          "sourceText": "Over buffing",
+          "translatedText": "Over buffing",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p35",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p36",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p37",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p39",
+          "sourceText": "Wrinkle TR& lump",
+          "translatedText": "Wrinkle TR& lump",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p40",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p41",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p43",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p44",
+          "sourceText": "Webbing off center",
+          "translatedText": "Webbing off center",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p45",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p46",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p48",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p49",
+          "sourceText": "Components inconsistent",
+          "translatedText": "Components inconsistent",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p50",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p51",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p53",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p54",
+          "sourceText": "Over cement",
+          "translatedText": "Over cement",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p55",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p56",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p58",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p59",
+          "sourceText": "Cleanness",
+          "translatedText": "Cleanness",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p60",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p61",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p63",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p64",
+          "sourceText": "Tip off center",
+          "translatedText": "Tip off center",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p65",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p66",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p68",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p69",
+          "sourceText": "heel off center",
+          "translatedText": "heel off center",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p70",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p71",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p73",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p74",
+          "sourceText": "Collar shape",
+          "translatedText": "Collar shape",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p75",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p76",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p78",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p79",
+          "sourceText": "Sockliner position",
+          "translatedText": "Sockliner position",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p80",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p81",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p83",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p84",
+          "sourceText": "Wrinkle collar lining",
+          "translatedText": "Wrinkle collar lining",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p85",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p86",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p88",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p89",
+          "sourceText": "Wrinkle toe cap",
+          "translatedText": "Wrinkle toe cap",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p90",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p91",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p93",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p94",
+          "sourceText": "Wrinkle upper",
+          "translatedText": "Wrinkle upper",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p95",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p96",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p98",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p99",
+          "sourceText": "Tongue shape",
+          "translatedText": "Tongue shape",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s12_p100",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p101",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p103",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 13,
+      "title": "HFPA Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s13_p0",
+          "sourceText": "HFPA Inspection Strategy",
+          "translatedText": "HFPA Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p1",
+          "sourceText": "Building",
+          "translatedText": "Building",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p2",
+          "sourceText": "Inspection Item",
+          "translatedText": "Inspection Item",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p3",
+          "sourceText": "Action",
+          "translatedText": "Action",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p4",
+          "sourceText": "Total Inspection Q’ty",
+          "translatedText": "Total Inspection Q’ty",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p5",
+          "sourceText": "DR Level",
+          "translatedText": "DR Level",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p6",
+          "sourceText": "Moderate",
+          "translatedText": "Moderate",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p7",
+          "sourceText": "Normal",
+          "translatedText": "Normal",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p8",
+          "sourceText": "HFPA",
+          "translatedText": "HFPA",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p9",
+          "sourceText": "Bond gap at bottom",
+          "translatedText": "Bond gap at bottom",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s13_p10",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p11",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p13",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p14",
+          "sourceText": "Yellowing",
+          "translatedText": "Yellowing",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s13_p15",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p16",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p18",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p19",
+          "sourceText": "Swoosh quality",
+          "translatedText": "Swoosh quality",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s13_p20",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p21",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p23",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p24",
+          "sourceText": "Nosew bond gap",
+          "translatedText": "Nosew bond gap",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s13_p25",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p26",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p28",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p29",
+          "sourceText": "Nosew air bubble",
+          "translatedText": "Nosew air bubble",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s13_p30",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p31",
+          "sourceText": "≥24 pairs/hour",
+          "translatedText": "≥24 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p33",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p34",
+          "sourceText": "Color migration-Đổi màu/Ẩn màu",
+          "translatedText": "Color migration-Đổi màu/Ẩn màu",
+          "isTitle": false,
+          "isInspectionItem": true
+        },
+        {
+          "id": "s13_p35",
+          "sourceText": "Over 3 pieces re-inspection",
+          "translatedText": "Over 3 pieces re-inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p36",
+          "sourceText": "≥31 pairs/hour",
+          "translatedText": "≥31 pairs/hour",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p38",
+          "sourceText": "v",
+          "translatedText": "V",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 14,
+      "title": "Cutting Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s14_p0",
+          "sourceText": "Cutting Inspection Strategy",
+          "translatedText": "Cutting Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p1",
+          "sourceText": "IPQC Cutting Inspection Focuses",
+          "translatedText": "IPQC Cutting Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p2",
+          "sourceText": "SB-077-A-1",
+          "translatedText": "SB-077-A-1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p3",
+          "sourceText": "Chất lượng logo in sơn khi kiểm tra cần chú ý",
+          "translatedText": "Screen-printed logo quality requires attention during inspection",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p4",
+          "sourceText": "Kiểm tra bộ vị logo sau khi in sơn về màu sắc giống giày mẫu, logo in khớp với rập film, không lem/ố mờ sơn, tróc sơn.",
+          "translatedText": "Check component swoosh after paint printing has the same color as sample shoes, swoosh printed fit with pallet film, no smudges/faded paint, paint peeled off.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p5",
+          "sourceText": "Do thiết kế bề mặt Tip quarter không bằng phẳng chấp nhận mức độ tiêu chuẩn logo in sơn không suôn, chảy sơn nền sau khi nosew như hình QA manual cập nhật",
+          "translatedText": "Due to the uneven surface design of the Tip quarter, quality standard tolerances are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p6",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p7",
+          "sourceText": "Logo không suôn",
+          "translatedText": "Swoosh is not smooth",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p8",
+          "sourceText": "cạnh biên Logo không suôn",
+          "translatedText": "Swoosh edge is not smooth",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p9",
+          "sourceText": "Chảy sơn nền",
+          "translatedText": "Bleeding background paint",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p10",
+          "sourceText": "Tiêu chuẩn QA manual ok",
+          "translatedText": "Quality standard QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p11",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 15,
+      "title": "Inspection strategy",
+      "pairs": [
+        {
+          "id": "s15_p0",
+          "sourceText": "Inspection strategy",
+          "translatedText": "Inspection strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p1",
+          "sourceText": "IPQC  Inspection Focuses:",
+          "translatedText": "IPQC  Inspection Focuses:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p2",
+          "sourceText": "*Để đảm bảo Tip-quarter sau khi  nosew không hở keo phải đảm bảo làm đúng theo lưu trình  PFC như sau :",
+          "translatedText": "*For make sure Tip-quarter after nosew without bond gap, make sure must follow the PFC process as follows:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p3",
+          "sourceText": "TIP-QUARTER mặt dưới quét  nước thuốc/keo  tại gia công đế -> chuyển khâu chặt dán mặt trước trang trí-> Ép nosew -> chuyển  in xoa (in sơn Logo)  -> về chặt vòng trong -> Mài xù",
+          "translatedText": "TIP-QUARTER down side apply priming/cement at stockfit -> switch to tightly apply cement vamp u'lay-> press nosew -> switch to upper marking (paint printing swoosh) -> return to inner frame cutting -> pre buffing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p4",
+          "sourceText": "->Làm sạch và quét keo-> Ép nosew mặt trước ->Chặt vòng trong mặt trước",
+          "translatedText": "->Clean and cementing->press nosew vamp ->cutting vamp inside",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p5",
+          "sourceText": "Đối với SB-077-A-1 hình thể FQ1273-003",
+          "translatedText": "For SB-077-A-1 form FQ1273-003",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p6",
+          "sourceText": "Tránh tình trạng tip quarter bị hở keo nosew, khác màu khi kiểm cần chú ý",
+          "translatedText": "Avoid the situation where tip quarter is bond gap nosew, color inconsistency when checking note rod",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p7",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at perforation holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p8",
+          "sourceText": "Tiêu chuẩn QA manual ok",
+          "translatedText": "Quality standard QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p11",
+          "sourceText": "Tip-quarter bị nhạt màu và trắng các lỗ trang trí",
+          "translatedText": "Tip-quarter color fading and whitening at perforation holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p12",
+          "sourceText": "*Thành phẩm",
+          "translatedText": "*Finished product",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p13",
+          "sourceText": "3.Kiểm tra thành phẩm mặt giày Tip quarter không hở keo nosew. Do tính chất liệu, chấp nhận mức độ trắng các lỗ trang trí và biên tip quarter, tràn keo các lỗ trang trí, và mức độ Tip quarter  khác màu như hình QA manual cập nhật",
+          "translatedText": "3. Check finished upper Tipquarter no nosew bond gap. Natural material, accepts whitening at perforation holes and tip quarter edges, cement overflow at perforation holes, and color inconsistency Tipquarter levels as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p14",
+          "sourceText": "Tiêu chuẩn khác màu QA manual ok",
+          "translatedText": "Quality standard color inconsistency QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p15",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p17",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p18",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Press nosew vamp",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p19",
+          "sourceText": "1. Kiểm tra máy có được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "1. Check whether the machine to align temperature / time / pressure machine nosew correct PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p20",
+          "sourceText": "2.Kiểm tra sau khi ép các lỗ trang trí trên vamp không được bao không, hở keo, tràn keo, tip quarter không dính tạp liệu.",
+          "translatedText": "2. Check after press that the perforation holes on the vamp is not covered, bond gap, overflow cement, tip quarter are not sticky impurities.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p21",
+          "sourceText": "Do tính chất liệu, chấp nhận sắc độ tip quarter khác màu như hình QA manual cập nhật",
+          "translatedText": "Natural material, accept quarter tip color color inconsistency as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p22",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p23",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 16,
+      "title": "Inspection strategy",
+      "pairs": [
+        {
+          "id": "s16_p0",
+          "sourceText": "Inspection strategy",
+          "translatedText": "Inspection strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p1",
+          "sourceText": "IPQC  Inspection Focuses:",
+          "translatedText": "IPQC  Inspection Focuses:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p2",
+          "sourceText": "*Để đảm bảo Tip-quarter sau khi  nosew  không hở keo/bao không và test nosew đạt phải đảm bảo làm đúng theo lưu trình in sơn theo  PFC như sau :",
+          "translatedText": "*To make sure Tip-quarter after the nosew is not bond gap/cover is not and the nosew test is make sure, follow the paint printing procedure according to PFC as follows:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p3",
+          "sourceText": "Mặt trước  in sơn logo -> in 1 lớp keo 2400-40 (SB)  vị trí tip-quarter",
+          "translatedText": "Vamp paint printing swoosh -> printing top coating 2400-40 (SB) placement tip-quarter",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p4",
+          "sourceText": "Đối với SB-077-P-1 Tránh tình trạng tip quarter bị hở keo nosew/bao không, khác màu khi kiểm cần chú ý",
+          "translatedText": "For SB-077-P-1 Avoid the situation where tip quarter is bond gap now/cover, color inconsistency when checking need note",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p5",
+          "sourceText": "*Thành phẩm",
+          "translatedText": "*Finished product",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p6",
+          "sourceText": "4.Kiểm tra thành phẩm mặt giày Tip quarter không hở keo nosew/bao không.",
+          "translatedText": "4. Check finished upper Tipquarter no nosew bond gap/bag.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p7",
+          "sourceText": "Do tính chất liệu, chấp nhận mức độ trắng các lỗ trang trí và biên tip quarter, tràn keo các lỗ trang trí, và do có in 1 lớp keo trên bề mặt liệu Tip quarter sau khi in keo bị khác màu nên  chấp nhận thành phẩm mức độ dao động khác màu và logo được đi chung không cần phối như hình QA manual cập nhật",
+          "translatedText": "Natural material, accepts whitening at perforation holes and tip quarter edges, cement overflow at perforation holes, and because there is printing top coating on surface, Tip quarter material after printing cement is color inconsistency so it accepts finished product level color shade variation and swoosh used together without color matching as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p8",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Press nosew vamp",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p9",
+          "sourceText": "1.Trước khi đặt vamp mesh vào bàn nosew kiểm tra vị trí tip-quarter in keo màu sắc liệu có khác màu. Mức độ dao động khác màu vị trí tip-quarter được chấp nhận như hình QA manual",
+          "translatedText": "1. Before placing the vamp mesh on the nosew table, check whether the placement tip-quarter in cement color is present in color inconsistency. The color shade variation placement tip-quarter level is acceptable as shown in the QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p10",
+          "sourceText": "2. Kiểm tra máy có được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "2. Check that the machine has the correct temperature/time/ pressure nosew PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p11",
+          "sourceText": "3.Kiểm tra sau khi ép các lỗ trang trí trên vamp không được bao không, hở keo, tràn keo, tip quarter không dính tạp liệu.",
+          "translatedText": "3. Check after press that the perforation holes on the vamp is not covered, bond gap, overflow cement, tip quarter are not sticky impurities.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p12",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p14",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p15",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p16",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p17",
+          "sourceText": "Tiêu chuẩn khác màu QA manual ok",
+          "translatedText": "Quality standard color inconsistency QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p18",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p19",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p20",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at perforation holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p21",
+          "sourceText": "Logo khác màu",
+          "translatedText": "Swoosh color inconsistency",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p22",
+          "sourceText": "Tip-quarter khác màu",
+          "translatedText": "Tip-quarter color variation",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p23",
+          "sourceText": "Tiêu chuẩn QA manual ok",
+          "translatedText": "Quality standard QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 17,
+      "title": "Cutting Inspection Strategy",
+      "pairs": [
+        {
+          "id": "s17_p0",
+          "sourceText": "Cutting Inspection Strategy",
+          "translatedText": "Cutting Inspection Strategy",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p1",
+          "sourceText": "IPQC Cutting Inspection Focuses",
+          "translatedText": "IPQC Cutting Inspection Focuses",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p2",
+          "sourceText": "*SB-077-C-1 :Tránh tình trạng tip quarter bị hở keo nosew/bao không và bị ẩn màu sau khi nosew khi kiểm cần chú ý",
+          "translatedText": "*SB-077-C-1: Avoid the situation where quarter tip gets bond gap nosew/empty and gets color migration after nosew when checking note lever",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p3",
+          "sourceText": "1.Kiểm tra bộ vị mặt trước sau khi phun sơn về màu sắc giống giày mẫu, sơn phải đều rõ, không lem",
+          "translatedText": "1. Check component vamp after spraying to have the same color as sample shoes, the paint must be consistent clear, no smudges",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p4",
+          "sourceText": "2.Kiểm tra vùng  tip-quarter phải được in đầy đủ keo, không được thiếu tránh tình trạng sau khi nosew bị bao không và test nosew không đạt",
+          "translatedText": "2. Check that the tip-quarter area must be fully printed with cement, not missing to avoid the situation where the tip-quarter is empty and test the tipw defective",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p5",
+          "sourceText": "3. Kiểm tra máy có được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "3. Check that the machine has the correct temperature/time/ pressure nosew PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p6",
+          "sourceText": "4.Kiểm tra sau khi ép các lỗ trang trí trên vamp không được bao không, hở keo, tràn keo, tip quarter không dính tạp liệu",
+          "translatedText": "4. Check after press the perforation holes on the vamp is not covered, bond gap, overflow cement, tip quarter are not sticky impurities",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p7",
+          "sourceText": "*Để đảm bảo Tip-quarter sau khi  nosew  không hở keo/bao không và test nosew đạt phải đảm bảo làm đúng theo lưu trình in sơn theo  PFC như sau :",
+          "translatedText": "*To make sure Tip-quarter after the nosew is not bond gap/cover is not and the nosew test is make sure, follow the paint printing procedure according to PFC as follows:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p8",
+          "sourceText": "Mặt trước  in sơn logo -> in 1 lớp keo 2400NC-40 (SB)  vị trí tip-quarter",
+          "translatedText": "Vamp paint printing swoosh -> printing top coating 2400NC-40 (SB) placement tip-quarter",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p9",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p10",
+          "sourceText": "*Thành phẩm",
+          "translatedText": "*Finished product",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p11",
+          "sourceText": "5.Kiểm tra thành phẩm mặt giày Tip quarter không hở keo nosew/bao không.",
+          "translatedText": "5. Check finished upper Tipquarter no nosew bond gap/bag.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p12",
+          "sourceText": "Do tính chất liệu, chấp nhận mức độ trắng các lỗ trang trí và biên tip quarter, tràn keo các lỗ trang trí, tip-quarter không được ẩn màu Chấp nhận tip-quarter mức độ ẩn màu như hình QA manual cập nhật",
+          "translatedText": "Natural material, accept whitening at perforation holes and tip quarter edges, cement overflow at perforation holes, tip-quarter not allowed color migration Accept tip-quarter level color migration as shown QA manual updated",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p13",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at perforation holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p14",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p15",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p17",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p18",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p20",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p21",
+          "sourceText": "Tip quarter bị ẩn màu",
+          "translatedText": "Tip quarter gets color migration",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p24",
+          "sourceText": "Logo bị bao không",
+          "translatedText": "Swoosh is covered",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p25",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    }
+  ]
+}

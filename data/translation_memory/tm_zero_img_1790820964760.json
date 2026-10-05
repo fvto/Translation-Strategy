@@ -1,0 +1,26 @@
+{
+  "sessionId": "tm_zero_img_1790820964760",
+  "fileName": "Image_Check_SOP.pptx",
+  "mode": "ipqc_bilingual",
+  "sourceLanguage": "vi",
+  "targetLanguage": "en",
+  "createdAt": "2026-10-01T02:16:04.760Z",
+  "slideCount": 1,
+  "totalPairs": 1,
+  "harvestedCount": 0,
+  "slides": [
+    {
+      "slideIndex": 1,
+      "title": "Slide with Media",
+      "pairs": [
+        {
+          "id": "p1",
+          "sourceText": "Hình dạng mũi",
+          "translatedText": "Tip shape",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    }
+  ]
+}

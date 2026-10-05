@@ -1,0 +1,33 @@
+{
+  "sessionId": "test_session_1790932033300",
+  "fileName": "Test_SOP_01.pptx",
+  "mode": "ipqc_bilingual",
+  "sourceLanguage": "vi",
+  "targetLanguage": "en",
+  "createdAt": "2026-10-02T09:07:13.301Z",
+  "slideCount": 1,
+  "totalPairs": 2,
+  "harvestedCount": 2,
+  "slides": [
+    {
+      "slideIndex": 1,
+      "title": "HFPA Cutting Inspection Strategy",
+      "pairs": [
+        {
+          "id": "p1",
+          "sourceText": "*Ép lạnh: thời gian 15\"",
+          "translatedText": "*Cold pressing: time 15\"",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "p2",
+          "sourceText": "Chất lượng logo in sơn khi kiểm tra cần chú ý",
+          "translatedText": "Painted logo quality key inspection points",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    }
+  ]
+}

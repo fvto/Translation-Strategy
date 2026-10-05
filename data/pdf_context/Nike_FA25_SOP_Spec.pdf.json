@@ -1,0 +1,384 @@
+{
+  "fileName": "Nike_FA25_SOP_Spec.pdf",
+  "totalPages": 1,
+  "totalCharacters": 272,
+  "extractedAt": "2026-10-05T09:25:21.373Z",
+  "imageShieldActive": true,
+  "imagesExtracted": 0,
+  "sections": [
+    {
+      "page": 1,
+      "snippet": "Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\nNắp gót đúc : Molded heel counter cap\nĐường viền lưỡi gà : Tongue binding trim\nĐộ bám dính đế : Outsole bond adhesion\nKiểm tra độ gập ghềnh và bọt khí ở phần dán đế.\nQuy trình: Quét keo và dán mos theo tiêu chuẩn QAM."
+    }
+  ],
+  "harvestedTerms": [
+    {
+      "sourceTerm": "Nắp gót đúc",
+      "targetTerm": "Molded heel counter cap",
+      "category": "Assembly",
+      "context": "Trang 1: Nắp gót đúc : Molded heel counter cap",
+      "definition": "Trích xuất từ tài liệu PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Đường viền lưỡi gà",
+      "targetTerm": "Tongue binding trim",
+      "category": "Assembly",
+      "context": "Trang 1: Đường viền lưỡi gà : Tongue binding trim",
+      "definition": "Trích xuất từ tài liệu PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Độ bám dính đế",
+      "targetTerm": "Outsole bond adhesion",
+      "category": "Assembly",
+      "context": "Trang 1: Độ bám dính đế : Outsole bond adhesion",
+      "definition": "Trích xuất từ tài liệu PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "thao Nike FA25",
+      "targetTerm": "Thao nike FA25 standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Trang 1",
+      "targetTerm": "Trang 1 standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Hướng dẫn",
+      "targetTerm": "Instruction",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "thao Nike",
+      "targetTerm": "Thao nike standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Nike FA25",
+      "targetTerm": "Nike FA25 standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Trang",
+      "targetTerm": "Trang standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "SOP",
+      "targetTerm": "SOP standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "thao",
+      "targetTerm": "Thao standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Nike",
+      "targetTerm": "Nike standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "FA25",
+      "targetTerm": "FA25 standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Hướng dẫn SOP lắp ráp giày thể thao Nike FA25\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Molded heel counter",
+      "targetTerm": "Molded heel counter standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Molded heel counter cap",
+      "targetTerm": "Molded heel counter cap standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Molded heel",
+      "targetTerm": "Molded heel standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "heel counter cap",
+      "targetTerm": "Heel counter cap standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Molded",
+      "targetTerm": "Molded standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "heel counter",
+      "targetTerm": "Heel counter standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "counter cap",
+      "targetTerm": "Counter cap standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "heel",
+      "targetTerm": "Heel standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "cap",
+      "targetTerm": "Cap standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nắp gót đúc : Molded heel counter cap\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tongue binding trim",
+      "targetTerm": "Tongue binding trim standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Đường viền lưỡi gà : Tongue binding trim\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "lưỡi gà",
+      "targetTerm": "Tongue",
+      "category": "Assembly",
+      "context": "Trang 1: \"Đường viền lưỡi gà : Tongue binding trim\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Đường viền",
+      "targetTerm": "Binding line",
+      "category": "Assembly",
+      "context": "Trang 1: \"Đường viền lưỡi gà : Tongue binding trim\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "viền lưỡi",
+      "targetTerm": "Tongue binding",
+      "category": "Assembly",
+      "context": "Trang 1: \"Đường viền lưỡi gà : Tongue binding trim\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tongue",
+      "targetTerm": "Tongue standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Đường viền lưỡi gà : Tongue binding trim\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "binding trim",
+      "targetTerm": "Binding trim standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Đường viền lưỡi gà : Tongue binding trim\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "trim",
+      "targetTerm": "Trim standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Đường viền lưỡi gà : Tongue binding trim\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Outsole bond adhesion",
+      "targetTerm": "Outsole bond adhesion standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ bám dính đế : Outsole bond adhesion\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Outsole bond",
+      "targetTerm": "Outsole bond standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ bám dính đế : Outsole bond adhesion\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Outsole",
+      "targetTerm": "Outsole standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ bám dính đế : Outsole bond adhesion\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "bond adhesion",
+      "targetTerm": "Bond adhesion standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ bám dính đế : Outsole bond adhesion\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "bond",
+      "targetTerm": "Bond standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ bám dính đế : Outsole bond adhesion\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "adhesion",
+      "targetTerm": "Adhesion standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ bám dính đế : Outsole bond adhesion\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Kiểm tra",
+      "targetTerm": "Check",
+      "category": "Assembly",
+      "context": "Trang 1: \"Kiểm tra độ gập ghềnh và bọt khí ở phần dán đế.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "tra",
+      "targetTerm": "Tra standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Kiểm tra độ gập ghềnh và bọt khí ở phần dán đế.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "dán",
+      "targetTerm": "Attach",
+      "category": "Assembly",
+      "context": "Trang 1: \"Kiểm tra độ gập ghềnh và bọt khí ở phần dán đế.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Quy trình",
+      "targetTerm": "Process",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "mos theo",
+      "targetTerm": "Mos theo standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "tiêu chuẩn",
+      "targetTerm": "Condition",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Quy",
+      "targetTerm": "Quy standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "keo",
+      "targetTerm": "Keo standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "mos",
+      "targetTerm": "Mos standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "theo",
+      "targetTerm": "According to",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "QAM",
+      "targetTerm": "QAM standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Quy trình: Quét keo và dán mos theo tiêu chuẩn QAM.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Nike_FA25_SOP_Spec.pdf",
+      "page": 1
+    }
+  ]
+}

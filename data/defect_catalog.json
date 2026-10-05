@@ -1,0 +1,4028 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-10-03T08:55:00Z",
+  "sources": [
+    "defect threshold , mã lỗi.pdf",
+    "Defective Name 1234VN.pdf"
+  ],
+  "thresholdStandards": [
+    {
+      "code": "0011",
+      "itemNo": 1,
+      "nameEn": "Lace cleanness",
+      "nameVi": "Dây giày dính keo",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0015",
+      "itemNo": 2,
+      "nameEn": "Blooming",
+      "nameVi": "Đế cao su nổi váng trắng",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0022",
+      "itemNo": 3,
+      "nameEn": "Cleanness",
+      "nameVi": "Vệ sinh",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0025",
+      "itemNo": 4,
+      "nameEn": "Yellowing",
+      "nameVi": "Biến vàng",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0027",
+      "itemNo": 5,
+      "nameEn": "Bottom Cosmetic",
+      "nameVi": "Ngoại quan đế",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0033",
+      "itemNo": 6,
+      "nameEn": "Contamination​ Stain, dirt, mark​ IP Cosmetic",
+      "nameVi": "Ngoại quan đế trung 1 Ngoại quan PU",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0055",
+      "itemNo": 7,
+      "nameEn": "PU Cosmetic",
+      "nameVi": "101 Contamination​ Stain, dirt, mark​ 0033 IP Cosmetic Ngoại quan đế trung 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0062",
+      "itemNo": 8,
+      "nameEn": "Material color shade",
+      "nameVi": "Liệu khác màu",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0094",
+      "itemNo": 9,
+      "nameEn": "Color migration",
+      "nameVi": "Đổi màu/Ẩn màu",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0126",
+      "itemNo": 10,
+      "nameEn": "Color matching",
+      "nameVi": "Phối màu liệu",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0023",
+      "itemNo": 11,
+      "nameEn": "Moldy",
+      "nameVi": "Nổi mốc",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0017",
+      "itemNo": 12,
+      "nameEn": "Bottom long/short",
+      "nameVi": "Đế dài/ngắn",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0018",
+      "itemNo": 13,
+      "nameEn": "Toe off center",
+      "nameVi": "Mũi méo",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0019",
+      "itemNo": 14,
+      "nameEn": "Toe collapse",
+      "nameVi": "Mũi bị gãy",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0030",
+      "itemNo": 15,
+      "nameEn": "X-Ray",
+      "nameVi": "Cộm",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0031",
+      "itemNo": 16,
+      "nameEn": "Wrinkle upper",
+      "nameVi": "Nhăn mặt giày",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0032",
+      "itemNo": 17,
+      "nameEn": "Wrinkle bottom",
+      "nameVi": "Nhăn đế",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0034",
+      "itemNo": 18,
+      "nameEn": "Heel off center",
+      "nameVi": "Gót méo",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0038",
+      "itemNo": 19,
+      "nameEn": "Tongue shape",
+      "nameVi": "Hình dạng lưỡi giày",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0039",
+      "itemNo": 20,
+      "nameEn": "Tongue off center",
+      "nameVi": "Lưỡi méo",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0131",
+      "itemNo": 21,
+      "nameEn": "Webbing weaving quality",
+      "nameVi": "Chất lượng dây đai",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0040",
+      "itemNo": 22,
+      "nameEn": "Webbing off center",
+      "nameVi": "Dây đai méo",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0057",
+      "itemNo": 23,
+      "nameEn": "Waterfall/collar shape",
+      "nameVi": "Hình dạng vòng cổ",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0063",
+      "itemNo": 24,
+      "nameEn": "Definition after process",
+      "nameVi": "0057 Waterfall/collar shape Hình dạng vòng cổ 2 Moderate(2)",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0065",
+      "itemNo": 25,
+      "nameEn": "wrinkle collar lining",
+      "nameVi": "Nhăn lót vòng cổ",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0068",
+      "itemNo": 26,
+      "nameEn": "Toe cap shape",
+      "nameVi": "Hình dạng mũi",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0076",
+      "itemNo": 27,
+      "nameEn": "Collapse vamp",
+      "nameVi": "Mặt trước bị gãy",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0077",
+      "itemNo": 28,
+      "nameEn": "Wrinkle heel",
+      "nameVi": "Nhăn gót",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0082",
+      "itemNo": 29,
+      "nameEn": "Wrinkle/ Poor shape, Heel shape",
+      "nameVi": "se vamp | Mặt trước bị gãy | | 2 | Moderate(2) |",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0083",
+      "itemNo": 30,
+      "nameEn": "Crease/ creased, or Wrinkle collar",
+      "nameVi": "Wrinkle/ Poor shape, 0082 Heel shape Hình dạng gót/thẳng 2 Moderate(2)",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0086",
+      "itemNo": 31,
+      "nameEn": "​Mis-shape​ wrinkling​ Tongue logo off center Trang",
+      "nameVi": "102 Crease/ creased, or Wrinkle collar Nhăn vòng cổ 2 Moderate(2)",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0087",
+      "itemNo": 32,
+      "nameEn": "Wrinkle tongue",
+      "nameVi": "Nhăn lưỡi",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0090",
+      "itemNo": 33,
+      "nameEn": "Collar pillow/bootie shape",
+      "nameVi": "Hình dạng vòng cổ trên",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0091",
+      "itemNo": 34,
+      "nameEn": "Eyestay off center",
+      "nameVi": "Ô dê méo/cao thấp",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0092",
+      "itemNo": 35,
+      "nameEn": "Shoe deform",
+      "nameVi": "Giày biến dạng",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0096",
+      "itemNo": 36,
+      "nameEn": "Quarter folding",
+      "nameVi": "Cuốn biên eo",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0097",
+      "itemNo": 37,
+      "nameEn": "Fold U-shape eyestay",
+      "nameVi": "Cuốn biên ô dê",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0099",
+      "itemNo": 38,
+      "nameEn": "Heel folding",
+      "nameVi": "Cuốn biên gót",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0102",
+      "itemNo": 39,
+      "nameEn": "Wrinkle TR& lump",
+      "nameVi": "Nhăn/Cộm TR",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0103",
+      "itemNo": 40,
+      "nameEn": "Wrinkle toe cap",
+      "nameVi": "Nhăn mũi",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0105",
+      "itemNo": 41,
+      "nameEn": "Wrinkle lining",
+      "nameVi": "Nhăn lót",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0107",
+      "itemNo": 42,
+      "nameEn": "Toe spring",
+      "nameVi": "Độ cong/vênh mũi",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0110",
+      "itemNo": 43,
+      "nameEn": "Quarter TPU high/low",
+      "nameVi": "TPU eo cao thấp",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0113",
+      "itemNo": 44,
+      "nameEn": "Trace on upper",
+      "nameVi": "Ngấn trên mặt giày",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0115",
+      "itemNo": 45,
+      "nameEn": "Deformed bottom",
+      "nameVi": "Đế biến dạng",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0120",
+      "itemNo": 46,
+      "nameEn": "Eyestay/Collar Opening",
+      "nameVi": "pper | Ngấn trên mặt giày | | 2 | Moderate(2) |",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0140",
+      "itemNo": 47,
+      "nameEn": "Strap collapses",
+      "nameVi": "0120 Eyestay/Collar Opening Độ mở ô dê/vòng cổ 2 Moderate(2)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0141",
+      "itemNo": 48,
+      "nameEn": "Moire effect on vamp",
+      "nameVi": "Sớ liệu không thẳng",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0016",
+      "itemNo": 49,
+      "nameEn": "Sole attachment",
+      "nameVi": "Dán đế không đạt",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0035",
+      "itemNo": 50,
+      "nameEn": "Heel/Tip height inconsistent",
+      "nameVi": "on vamp | Sớ liệu không thẳng | | 3 | Minor(>2) |",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0036",
+      "itemNo": 51,
+      "nameEn": "Components inconsistent",
+      "nameVi": "0035 Heel/Tip height inconsistent Mũi/gót cao thấp 2 Moderate(2)",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0048",
+      "itemNo": 52,
+      "nameEn": "Mismatching Rocking between L&R",
+      "nameVi": "Độ ổn định",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0084",
+      "itemNo": 53,
+      "nameEn": "Line up upper&bottom",
+      "nameVi": "Mặt giày&đế khớp định vị 2 e.g. heel A l i g n m e n t h e i g h t K/c giữa đ ư ờ n g m a y tr a n g trí & đường",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0078",
+      "itemNo": 54,
+      "nameEn": "L+ R S y m m e t ry​ dif fe r e n c e, vamp length,",
+      "nameVi": "d á n đ ế k h ô n g đ ề u Dán đế gợn sóng",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0079",
+      "itemNo": 55,
+      "nameEn": "Cupsole with wavy edge",
+      "nameVi": "Dán đế gợn sóng",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0085",
+      "itemNo": 56,
+      "nameEn": "mudguard Distance logo to bite line K/c",
+      "nameVi": "từ logo đến đường dán đế không đều 2 height and etc​​ K/c giữa đường may trang trí & nút xỏ",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0088",
+      "itemNo": 57,
+      "nameEn": "Distance between deco stitching&eyelet",
+      "nameVi": "K/c giữa đường may trang trí & nút xỏ",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0136",
+      "itemNo": 58,
+      "nameEn": "Strap height inconsistent",
+      "nameVi": "dây không đều",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0020",
+      "itemNo": 59,
+      "nameEn": "High, uneven, Over cement Keo cao",
+      "nameVi": "dây không đều",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0053",
+      "itemNo": 60,
+      "nameEn": "Nosew over cement",
+      "nameVi": "Nosew lem keo",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0112",
+      "itemNo": 61,
+      "nameEn": "Hot-melt over flow",
+      "nameVi": "Tràn keo nóng chảy",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0042",
+      "itemNo": 62,
+      "nameEn": "Standard:",
+      "nameVi": "Hở keo giữ đến trung/đế lớn và",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0043",
+      "itemNo": 63,
+      "nameEn": "Bond Gap​ incomplete​",
+      "nameVi": "mặt giày Dài <10 mm và Rộng <2mm: 2 đôi",
+      "threshold": "",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0046",
+      "itemNo": 64,
+      "nameEn": "Nosew bubble",
+      "nameVi": "Nosew bao không/hở keo",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0075",
+      "itemNo": 65,
+      "nameEn": "Nosew bonding",
+      "nameVi": "Nosew hở leo",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0095",
+      "itemNo": 66,
+      "nameEn": "HFW bonding",
+      "nameVi": "HFW hở keo",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0124",
+      "itemNo": 67,
+      "nameEn": "TPU bonding",
+      "nameVi": "TPU hở keo",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0028",
+      "itemNo": 68,
+      "nameEn": "Thread end",
+      "nameVi": "Đầu chỉ",
+      "threshold": "3",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0037",
+      "itemNo": 69,
+      "nameEn": "Stitching margin/SPI May",
+      "nameVi": "cách biên,cách kim",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0044",
+      "itemNo": 70,
+      "nameEn": "Missing stitching",
+      "nameVi": "May thiếu",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0045",
+      "itemNo": 71,
+      "nameEn": "Loose stitching",
+      "nameVi": "Lỏng chỉ",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0066",
+      "itemNo": 72,
+      "nameEn": "​Loose thread missed stitches,",
+      "nameVi": "đế ngoài 2 ​Loose thread missed stitches,",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0067",
+      "itemNo": 73,
+      "nameEn": "Computer stitching",
+      "nameVi": "May vi tính",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0070",
+      "itemNo": 74,
+      "nameEn": "Double stitching",
+      "nameVi": "May 2 kim",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0071",
+      "itemNo": 75,
+      "nameEn": "Strap stitching NIKE Defect HI Re-inspection standard Group NO Code Description​ Defect Type Type​ Code defect type",
+      "nameVi": "May dây quai Tên lỗi Số lỗi cần tái chế",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0072",
+      "itemNo": 76,
+      "nameEn": "Box stitching",
+      "nameVi": "May hình hộp",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0080",
+      "itemNo": 77,
+      "nameEn": "Inconsistent collar topline May",
+      "nameVi": "cách biên vòng cổ không đều",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0089",
+      "itemNo": 78,
+      "nameEn": "Elastic band stitching",
+      "nameVi": "May dây thun",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0093",
+      "itemNo": 79,
+      "nameEn": "Binding",
+      "nameVi": "Bọc viền",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0098",
+      "itemNo": 80,
+      "nameEn": "Deco-stitching",
+      "nameVi": "Đường may trang trí",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0109",
+      "itemNo": 81,
+      "nameEn": "Broken or Magwire position",
+      "nameVi": "Vị trí dây magwire",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0111",
+      "itemNo": 82,
+      "nameEn": "TPU strap position Stitching/ missed stitches,",
+      "nameVi": "Vị trí dây TPU",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0118",
+      "itemNo": 83,
+      "nameEn": "loose thread Folding",
+      "nameVi": "Cuốn biên",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0119",
+      "itemNo": 84,
+      "nameEn": "​Loose thread ends​ Stitching curve",
+      "nameVi": "Độ bo không đều",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0127",
+      "itemNo": 85,
+      "nameEn": "Close seam line unstraight",
+      "nameVi": "hông đều | | |",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0129",
+      "itemNo": 86,
+      "nameEn": "points in one line at heel Trung",
+      "nameVi": "0127 Close seam line unstraight Đường may nối không thẳng 2 Moderate(2)",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0130",
+      "itemNo": 87,
+      "nameEn": "Serge stitching",
+      "nameVi": "May 4 kim 6 chỉ",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0134",
+      "itemNo": 88,
+      "nameEn": "Embroidery stitching",
+      "nameVi": "Thêu vi tính",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0135",
+      "itemNo": 89,
+      "nameEn": "Blanket stitch",
+      "nameVi": "May blanket / vắt sổ",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0143",
+      "itemNo": 90,
+      "nameEn": "Broken thread/Run off stitching",
+      "nameVi": "Đứt chỉ/sụp mí",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0144",
+      "itemNo": 91,
+      "nameEn": "Stitching wrong component May sai",
+      "nameVi": "0143 Broken thread/Run off stitching Đứt chỉ/sụp mí 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0021",
+      "itemNo": 92,
+      "nameEn": "Over buffing",
+      "nameVi": "Mài cao",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0029",
+      "itemNo": 93,
+      "nameEn": "Hairy/Flash Damaged",
+      "nameVi": "Biên liệu Rách liệu/Tưa liệu",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0047",
+      "itemNo": 94,
+      "nameEn": "Damaged/scratch",
+      "nameVi": "Rách/tưa liệu",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0060",
+      "itemNo": 95,
+      "nameEn": "Rip/​ high",
+      "nameVi": "Dây hư (xước)/xỏ dây sai（dây xoắn) 1 107 Rip/​ high",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0061",
+      "itemNo": 96,
+      "nameEn": "High Buffing​ inconsistent Trimming",
+      "nameVi": "Cắt biên không đạt",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0104",
+      "itemNo": 97,
+      "nameEn": "Damaged MS",
+      "nameVi": "Hư đế trung",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0125",
+      "itemNo": 98,
+      "nameEn": "Broken TPU",
+      "nameVi": "TPU bị bể",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9013",
+      "itemNo": 99,
+      "nameEn": "Damaged material/delamination",
+      "nameVi": "Liệu hư/ Tách lớp 1 Internal",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0058",
+      "itemNo": 100,
+      "nameEn": "defects, Interior ​ Sockliner position 108 (including length",
+      "nameVi": "Vị trí đệm giày",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0069",
+      "itemNo": 101,
+      "nameEn": "short/long Sockliner quality",
+      "nameVi": "Chất lượng đệm giày 1 /wavy​",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0014",
+      "itemNo": 102,
+      "nameEn": "Over painting",
+      "nameVi": "Bù sơn lem sơn",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0024",
+      "itemNo": 103,
+      "nameEn": "Color bleeding Excessive",
+      "nameVi": "Lem màu",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0056",
+      "itemNo": 104,
+      "nameEn": "Paint peeled off Poor Quality ​ paint/",
+      "nameVi": "Tróc sơn",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0101",
+      "itemNo": 105,
+      "nameEn": "Spray/Paint​ chipping/ Jump man logo quality",
+      "nameVi": "róc sơn | 1 | Critical(1) |",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0114",
+      "itemNo": 106,
+      "nameEn": "Jumpman logo position",
+      "nameVi": "109 Spray/Paint​ chipping/ 0101 Jump man logo quality Chất lượng logo Jumpman 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0138",
+      "itemNo": 107,
+      "nameEn": "Rubber tar delamination Cao su",
+      "nameVi": "0114 Jumpman logo position Vị trí logo Jumpman 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0139",
+      "itemNo": 108,
+      "nameEn": "Adding rubber tar inconsistent",
+      "nameVi": "Đắp bột cao su không đều",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9024",
+      "itemNo": 109,
+      "nameEn": "Airbag​",
+      "nameVi": "Chất lượng PU 1 110 Airbag​ /separation",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0054",
+      "itemNo": 110,
+      "nameEn": "/loss of air/flat​ Airbag quality/stain",
+      "nameVi": "Chất lượng túi khí/Dơ",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0009",
+      "itemNo": 111,
+      "nameEn": "Aglet deform",
+      "nameVi": "Đầu dây hư",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0010",
+      "itemNo": 112,
+      "nameEn": "Shoe lace length",
+      "nameVi": "Chiều dài dây giày",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0012",
+      "itemNo": 113,
+      "nameEn": "Metal",
+      "nameVi": "Giầy có kim loại",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0050",
+      "itemNo": 114,
+      "nameEn": "Hot-knife inconsistent",
+      "nameVi": "Đế cắt nóng không đạt",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0051",
+      "itemNo": 115,
+      "nameEn": "Model mixed",
+      "nameVi": "Sai hình thể",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0052",
+      "itemNo": 116,
+      "nameEn": "C/O label peeled off",
+      "nameVi": "Tem size tróc",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0059",
+      "itemNo": 117,
+      "nameEn": "Swoosh quality",
+      "nameVi": "Chất lượng logo",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0073",
+      "itemNo": 118,
+      "nameEn": "Eyelet",
+      "nameVi": "Nút xỏ dây",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0074",
+      "itemNo": 119,
+      "nameEn": "Punching",
+      "nameVi": "Lỗ đục",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0081",
+      "itemNo": 120,
+      "nameEn": "Other/ types not Lacing",
+      "nameVi": "Xỏ dây",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0100",
+      "itemNo": 121,
+      "nameEn": "by existing",
+      "nameVi": "Chất lượng dây xích khóa",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0108",
+      "itemNo": 122,
+      "nameEn": "codes​ Keychain quality",
+      "nameVi": "dây xích khóa | | |",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0117",
+      "itemNo": 123,
+      "nameEn": "Cutting holes quality",
+      "nameVi": "Phẩm chất lỗ chặt",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0121",
+      "itemNo": 124,
+      "nameEn": "Cutting direction",
+      "nameVi": "Hoa văn liệu",
+      "threshold": "2",
+      "severity": "Moderate",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0122",
+      "itemNo": 125,
+      "nameEn": "Others",
+      "nameVi": "Lỗi khác",
+      "threshold": "",
+      "severity": "",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0123",
+      "itemNo": 126,
+      "nameEn": "Functional shoe lace",
+      "nameVi": "Chức năng dây giày",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0132",
+      "itemNo": 127,
+      "nameEn": "The knot is reversed",
+      "nameVi": "0123 Functional shoe lace Chức năng dây giày 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0133",
+      "itemNo": 128,
+      "nameEn": "The label is upside down Tem",
+      "nameVi": "0123 Functional shoe lace Chức năng dây giày 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0137",
+      "itemNo": 129,
+      "nameEn": "Quality of cork",
+      "nameVi": "Phẩm chất đóng nút",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0142",
+      "itemNo": 130,
+      "nameEn": "TPU quality",
+      "nameVi": "Chất lượng TPU",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0001",
+      "itemNo": 131,
+      "nameEn": "Wrong style/size",
+      "nameVi": "Sai số/hình thể",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0002",
+      "itemNo": 132,
+      "nameEn": "Wrong inner box label",
+      "nameVi": "ze | | | Sai số/hình thể | 1 | Critical(1) |",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0003",
+      "itemNo": 133,
+      "nameEn": "Wrong hangtag/sticker Tem",
+      "nameVi": "0002 Wrong inner box label Dán tem hộp sai 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0004",
+      "itemNo": 134,
+      "nameEn": "Wrong carton label",
+      "nameVi": "Dán tem thùng sai",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0005",
+      "itemNo": 135,
+      "nameEn": "Stuffing paper inconsistent",
+      "nameVi": "Nhét giấy không đạt",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0006",
+      "itemNo": 136,
+      "nameEn": "Packing inconsistent",
+      "nameVi": "t giấy không đạt | | |",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0007",
+      "itemNo": 137,
+      "nameEn": "Damaged sticker/inner box",
+      "nameVi": "0006 Packing inconsistent Giấy gói/qui cách đóng gói không đạt 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0008",
+      "itemNo": 138,
+      "nameEn": "Label position inconsistent",
+      "nameVi": "0006 Packing inconsistent Giấy gói/qui cách đóng gói không đạt 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0106",
+      "itemNo": 139,
+      "nameEn": "Missing hanger",
+      "nameVi": "Thiếu móc treo",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "0128",
+      "itemNo": 140,
+      "nameEn": "Zipptie checking M i s s m a t c h l a b e l in g o n sh o e",
+      "nameVi": "Kiểm tra Zipptie",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9000",
+      "itemNo": 141,
+      "nameEn": "Other defect ty p e s n o t M i ss m a t c h o u t e r c a r to n",
+      "nameVi": "Size trên t h ù n g v à s i z e t rê n t e m UPC của",
+      "threshold": "",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9001",
+      "itemNo": 142,
+      "nameEn": "by e x is ti n g",
+      "nameVi": "Size trên g ià y v à s iz e tr ê n te m UPC của",
+      "threshold": "",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9002",
+      "itemNo": 143,
+      "nameEn": "M is si n g la bel on shoe or Outer carton and",
+      "nameVi": "n te m UPC của | | |",
+      "threshold": "",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9003",
+      "itemNo": 144,
+      "nameEn": "inn e r b o x",
+      "nameVi": "Thiếu tem trên giày thành phẩm/thùng/hộp",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9004",
+      "itemNo": 145,
+      "nameEn": "Miss Match Lot Number on Outer carton",
+      "nameVi": "9003 inn e r b o x Thiếu tem trên giày thành phẩm/thùng/hộp Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9005",
+      "itemNo": 146,
+      "nameEn": "Ou t e r c a rt o n w it h U P C Style No",
+      "nameVi": "U P C k h ô n g k h ớ p",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9006",
+      "itemNo": 147,
+      "nameEn": "Missing shoe component",
+      "nameVi": "Hình thể trên già y v à h ìn h t hể trên tem UPC",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9007",
+      "itemNo": 148,
+      "nameEn": "nu m b e r",
+      "nameVi": "k h ô n g k h ớ p",
+      "threshold": "",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9008",
+      "itemNo": 149,
+      "nameEn": "Label position inconsistent",
+      "nameVi": "Vị trí tem không đồng nhất",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9009",
+      "itemNo": 150,
+      "nameEn": "Insert footform/ Stuffing paper inconsistent",
+      "nameVi": "Nhét giấy/cung giày không đạt",
+      "threshold": "",
+      "severity": "Minor",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9010",
+      "itemNo": 151,
+      "nameEn": "Wrong special label/hangtag Sai tem",
+      "nameVi": "đặt biệt/tem treo",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    },
+    {
+      "code": "9011",
+      "itemNo": 152,
+      "nameEn": "Missing special label/hangtag",
+      "nameVi": "9010 Wrong special label/hangtag Sai tem đặt biệt/tem treo 1 Critical(1)",
+      "threshold": "1",
+      "severity": "Critical",
+      "source": "defect threshold , mã lỗi.pdf"
+    }
+  ],
+  "stageDefects": [
+    {
+      "code": "001_0001",
+      "stage": "Cutting",
+      "nameZh": "材料破損/脫層",
+      "nameEn": "Damaged material/delamination",
+      "nameVi": "Liệu hư/tách lớp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0002",
+      "stage": "Cutting",
+      "nameZh": "裁向",
+      "nameEn": "Cutting die placement",
+      "nameVi": "Hướng chặt không theo PFC",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0003",
+      "stage": "Cutting",
+      "nameZh": "缺角",
+      "nameEn": "Component edge inconsistent",
+      "nameVi": "Mép liệu không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0004",
+      "stage": "Cutting",
+      "nameZh": "材料邊緣(毛邊、燒焦...)",
+      "nameEn": "Hairy/burned edge of material",
+      "nameVi": "Mép liệu ( lông biên, cháy)",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0005",
+      "stage": "Cutting",
+      "nameZh": "定位孔不清楚",
+      "nameEn": "Notches not clear",
+      "nameVi": "Tâm và size không rõ ràng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0006",
+      "stage": "Cutting",
+      "nameZh": "印刷綫條歪,不清晰",
+      "nameEn": "Printing line unstraight,unclear In xoa",
+      "nameVi": "méo, không rõ 材料色差/變黃",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0007",
+      "stage": "Cutting",
+      "nameZh": "材料色差/變黃",
+      "nameEn": "Material yellowing/color shade",
+      "nameVi": "Liệu khác màu/biến vàng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0008",
+      "stage": "Cutting",
+      "nameZh": "",
+      "nameEn": "NOSEW&H/F后溢色 Color bleeding after process Nosew&HFW lem",
+      "nameVi": "màu sau khi ép",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0009",
+      "stage": "Cutting",
+      "nameZh": "",
+      "nameEn": "NOSEW&H/F后溢膠 Over cement after nosew/HF Nosew&HFW lem keo sau khi",
+      "nameVi": "ép",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0010",
+      "stage": "Cutting",
+      "nameZh": "立體效果差",
+      "nameEn": "Definition after process",
+      "nameVi": "Lập thể khác biệt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0011",
+      "stage": "Cutting",
+      "nameZh": "串段/分段錯誤",
+      "nameEn": "Mixed/wrong size group",
+      "nameVi": "Thế phân đoạn/Sai phân đoạn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0012",
+      "stage": "Cutting",
+      "nameZh": "髒污/黏膠",
+      "nameEn": "Cleanness",
+      "nameVi": "Vệ sinh",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0013",
+      "stage": "Cutting",
+      "nameZh": "",
+      "nameEn": "NOSEW&H/F后脫層 Delamed after Nosew/HF Nosew&HFW",
+      "nameVi": "tách lớp sau khi ép NOSEW&H/F位置移位",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0014",
+      "stage": "Cutting",
+      "nameZh": "NOSEW&H/F位置移位",
+      "nameEn": "Position off after Nosew/HF Nosew&HFW",
+      "nameVi": "lệch vị sau khi ép",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0015",
+      "stage": "Cutting",
+      "nameZh": "紋路",
+      "nameEn": "Cutting direction",
+      "nameVi": "Hoa văn trên liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0017",
+      "stage": "Cutting",
+      "nameZh": "Logo 品質",
+      "nameEn": "Swoosh quality",
+      "nameVi": "Chất lượng logo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0018",
+      "stage": "Cutting",
+      "nameZh": "預磨",
+      "nameEn": "Buffing",
+      "nameVi": "Mài",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0019",
+      "stage": "Cutting",
+      "nameZh": "冲孔品质",
+      "nameEn": "Cutting holes quality",
+      "nameVi": "Phẩm chất lỗ chặt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0020",
+      "stage": "Cutting",
+      "nameZh": "顔色配雙",
+      "nameEn": "Color matching",
+      "nameVi": "Phối màu liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0021",
+      "stage": "Cutting",
+      "nameZh": "皮料毛邊",
+      "nameEn": "Hairy edge",
+      "nameVi": "Mép liệu da bị lông biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0022",
+      "stage": "Cutting",
+      "nameZh": "削皮",
+      "nameEn": "Skiving",
+      "nameVi": "Lạng da",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0023",
+      "stage": "Cutting",
+      "nameZh": "NOSEW&H/F后脱胶",
+      "nameEn": "Nosew/HFW bond gap",
+      "nameVi": "Nosew/HFW hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0024",
+      "stage": "Cutting",
+      "nameZh": "掉漆",
+      "nameEn": "Paint peeled off",
+      "nameVi": "Tróc sơn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0025",
+      "stage": "Cutting",
+      "nameZh": "色移",
+      "nameEn": "Color migration",
+      "nameVi": "Đổi màu/Ẩn màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0026",
+      "stage": "Cutting",
+      "nameZh": "",
+      "nameEn": "Jump man logo品質 Jump man logo quality",
+      "nameVi": "Chất lượng logo Jumpman",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0027",
+      "stage": "Cutting",
+      "nameZh": "Size票变形",
+      "nameEn": "Deformed CO label",
+      "nameVi": "Tem size biến dạng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0028",
+      "stage": "Cutting",
+      "nameZh": "橡膠吐霜",
+      "nameEn": "Blooming",
+      "nameVi": "-cao su nổi váng trắng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0029",
+      "stage": "Cutting",
+      "nameZh": "鞋墊品質",
+      "nameEn": "Sockliner quality",
+      "nameVi": "Phẩm chất đệm giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0030",
+      "stage": "Cutting",
+      "nameZh": "材料错误",
+      "nameEn": "Wrong material",
+      "nameVi": "Sai liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0031",
+      "stage": "Cutting",
+      "nameZh": "No-sew 包空",
+      "nameEn": "Nosew air bubble",
+      "nameVi": "Nosew bao không",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0032",
+      "stage": "Cutting",
+      "nameZh": "片皮板",
+      "nameEn": "Skving jig",
+      "nameVi": "Rập lạng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0033",
+      "stage": "Cutting",
+      "nameZh": "其他",
+      "nameEn": "Others",
+      "nameVi": "Lỗi khác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0034",
+      "stage": "Cutting",
+      "nameZh": "溢色",
+      "nameEn": "Color bleeding",
+      "nameVi": "Lem màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0035",
+      "stage": "Cutting",
+      "nameZh": "印刷歪益",
+      "nameEn": "Printing out of position",
+      "nameVi": "In sơn bị lệch",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0036",
+      "stage": "Cutting",
+      "nameZh": "CO标签破掉",
+      "nameEn": "Peeled off CO Label",
+      "nameVi": "Tem CO bị tróc",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0037",
+      "stage": "Cutting",
+      "nameZh": "鞋面裁切不均",
+      "nameEn": "Slice vamp inconsistent",
+      "nameVi": "Lạng mặt trước không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0038",
+      "stage": "Cutting",
+      "nameZh": "帶子塌陷",
+      "nameEn": "Strap collapses",
+      "nameVi": "Gãy Strap",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "001_0039",
+      "stage": "Cutting",
+      "nameZh": "TPU 品質",
+      "nameEn": "TPU quality",
+      "nameVi": "Chất lượng TPU",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0001",
+      "stage": "Stitching",
+      "nameZh": "線頭",
+      "nameEn": "Thread end",
+      "nameVi": "Đầu chỉ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0002",
+      "stage": "Stitching",
+      "nameZh": "鞋舌形狀",
+      "nameEn": "Tongue shape",
+      "nameVi": "Hình dạng lưỡi giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0003",
+      "stage": "Stitching",
+      "nameZh": "車不密合",
+      "nameEn": "Loose stitching",
+      "nameVi": "Lỏng chỉ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0004",
+      "stage": "Stitching",
+      "nameZh": "領口歪斜",
+      "nameEn": "Collar off center",
+      "nameVi": "Vòng cổ méo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0005",
+      "stage": "Stitching",
+      "nameZh": "續鞋頭/後跟",
+      "nameEn": "Gathering stitching",
+      "nameVi": "May rút mũi/gót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0006",
+      "stage": "Stitching",
+      "nameZh": "車後套",
+      "nameEn": "Counter stitching",
+      "nameVi": "May gót nhựa",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0007",
+      "stage": "Stitching",
+      "nameZh": "破損/抽纱",
+      "nameEn": "Damaged/scratch",
+      "nameVi": "Rách/tưa liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0008",
+      "stage": "Stitching",
+      "nameZh": "斷線",
+      "nameEn": "Broken thread",
+      "nameVi": "Đứt chỉ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0009",
+      "stage": "Stitching",
+      "nameZh": "車線溢色",
+      "nameEn": "Thread color bleeding",
+      "nameVi": "Chỉ lem màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0010",
+      "stage": "Stitching",
+      "nameZh": "針距",
+      "nameEn": "SPI (stitch per inch)",
+      "nameVi": "Cách kim không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0011",
+      "stage": "Stitching",
+      "nameZh": "車制部件位置",
+      "nameEn": "Stitching off marking",
+      "nameVi": "May sai định vị",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0012",
+      "stage": "Stitching",
+      "nameZh": "鞋面皺褶",
+      "nameEn": "Wrinkle upper",
+      "nameVi": "Mặt giày nhăn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0013",
+      "stage": "Stitching",
+      "nameZh": "重針不良",
+      "nameEn": "Back-stitch",
+      "nameVi": "Lại mũi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0014",
+      "stage": "Stitching",
+      "nameZh": "底面线松紧度",
+      "nameEn": "Loose/tight bobin thread",
+      "nameVi": "Chỉ dưới lỏng,chặt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0015",
+      "stage": "Stitching",
+      "nameZh": "边距",
+      "nameEn": "Stitching margin",
+      "nameVi": "Cách biên không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0016",
+      "stage": "Stitching",
+      "nameZh": "清潔度",
+      "nameEn": "Cleanness",
+      "nameVi": "Vệ sinh",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0017",
+      "stage": "Stitching",
+      "nameZh": "車反不良",
+      "nameEn": "Close seam",
+      "nameVi": "May nối không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0018",
+      "stage": "Stitching",
+      "nameZh": "領口形狀",
+      "nameEn": "Collar shape",
+      "nameVi": "Hình dạng vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0019",
+      "stage": "Stitching",
+      "nameZh": "變黃",
+      "nameEn": "Yellowing",
+      "nameVi": "Biến vàng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0020",
+      "stage": "Stitching",
+      "nameZh": "織帶歪",
+      "nameEn": "Webbing off center",
+      "nameVi": "Dây đai méo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0021",
+      "stage": "Stitching",
+      "nameZh": "色差",
+      "nameEn": "Material color shade",
+      "nameVi": "Liệu khác màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0028",
+      "stage": "Stitching",
+      "nameZh": "4針6綫",
+      "nameEn": "Serge stitching",
+      "nameVi": "May 4 kim 6 chi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0029",
+      "stage": "Stitching",
+      "nameZh": "落針",
+      "nameEn": "Run off stitching",
+      "nameVi": "Sụp mí",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0030",
+      "stage": "Stitching",
+      "nameZh": "立體效果差",
+      "nameEn": "Definition after process",
+      "nameVi": "Lập thể khác biệt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0031",
+      "stage": "Stitching",
+      "nameZh": "Logo 品質",
+      "nameEn": "Swoosh quality",
+      "nameVi": "Chất lượng logo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0032",
+      "stage": "Stitching",
+      "nameZh": "車飾綫",
+      "nameEn": "Deco-stitching",
+      "nameVi": "Đường may trang trí",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0033",
+      "stage": "Stitching",
+      "nameZh": "Logo 位置",
+      "nameEn": "Swoosh position",
+      "nameVi": "Vị trí logo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0034",
+      "stage": "Stitching",
+      "nameZh": "内里皱褶",
+      "nameEn": "Wrinkle lining",
+      "nameVi": "Nhăn lót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0035",
+      "stage": "Stitching",
+      "nameZh": "修邊",
+      "nameEn": "Trimming",
+      "nameVi": "Cắt biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0036",
+      "stage": "Stitching",
+      "nameZh": "Nosew 脫膠",
+      "nameEn": "Nosew bond gap",
+      "nameVi": "Nosew hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0037",
+      "stage": "Stitching",
+      "nameZh": "電腦車",
+      "nameEn": "Computer stitching",
+      "nameVi": "May vi tính",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0038",
+      "stage": "Stitching",
+      "nameZh": "鞋頭雙針",
+      "nameEn": "Double stitching",
+      "nameVi": "May 2 kim",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0039",
+      "stage": "Stitching",
+      "nameZh": "車魔術拉帶",
+      "nameEn": "Strap stitching",
+      "nameVi": "May dây quai",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0040",
+      "stage": "Stitching",
+      "nameZh": "車盒形",
+      "nameEn": "Box stitching",
+      "nameVi": "May hình hộp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0041",
+      "stage": "Stitching",
+      "nameZh": "眼扣",
+      "nameEn": "Eyelet",
+      "nameVi": "Nút xỏ dây",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0042",
+      "stage": "Stitching",
+      "nameZh": "冲孔",
+      "nameEn": "Punching",
+      "nameVi": "Lỗ đục",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0043",
+      "stage": "Stitching",
+      "nameZh": "弧度不順",
+      "nameEn": "Stitching curve",
+      "nameVi": "Độ bo không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0044",
+      "stage": "Stitching",
+      "nameZh": "車鞋舌位置",
+      "nameEn": "Tongue stitch position",
+      "nameVi": "May vị trí lưỡi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0045",
+      "stage": "Stitching",
+      "nameZh": "车領口邊距大小",
+      "nameEn": "Inconsistent collar topline",
+      "nameVi": "May cách biên vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0046",
+      "stage": "Stitching",
+      "nameZh": "貼泡棉位置",
+      "nameEn": "Foam attaching position",
+      "nameVi": "Vị trí dán mút",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0047",
+      "stage": "Stitching",
+      "nameZh": "翻轉領口&捶平",
+      "nameEn": "Collar turning& hammering",
+      "nameVi": "Lộn vòng cổ&dập bằng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0048",
+      "stage": "Stitching",
+      "nameZh": "噴熱熔膠",
+      "nameEn": "Hotmelt spraying",
+      "nameVi": "Phun keo nóng chảy",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0049",
+      "stage": "Stitching",
+      "nameZh": "眼套歪斜",
+      "nameEn": "Eyestay off center",
+      "nameVi": "Ô dê méo/cao thấp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0050",
+      "stage": "Stitching",
+      "nameZh": "车松紧带",
+      "nameEn": "Elastic band stitching",
+      "nameVi": "May dây thun",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0051",
+      "stage": "Stitching",
+      "nameZh": "领口上形状",
+      "nameEn": "Collar pillow/bootie shape",
+      "nameVi": "Hình dạng vòng cổ trên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0052",
+      "stage": "Stitching",
+      "nameZh": "飾綫與眼孔間距",
+      "nameEn": "Distance deco-stitch to eyelet",
+      "nameVi": "Khoảng cách đường may trang trí và nút xỏ dây",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0053",
+      "stage": "Stitching",
+      "nameZh": "车领口内外形状",
+      "nameEn": "Stitching collar in/out shape",
+      "nameVi": "May hình dạng vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0054",
+      "stage": "Stitching",
+      "nameZh": "车后跟饰片",
+      "nameEn": "Stitching heel decoration",
+      "nameVi": "May trang trí gót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0055",
+      "stage": "Stitching",
+      "nameZh": "掉漆",
+      "nameEn": "Paint peeled off",
+      "nameVi": "Tróc sơn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0056",
+      "stage": "Stitching",
+      "nameZh": "飛織面品質",
+      "nameEn": "Fly Knit quality",
+      "nameVi": "Phẩm chất mặt giày đan",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0057",
+      "stage": "Stitching",
+      "nameZh": "眼套滚边",
+      "nameEn": "Fold U-shape eyestay",
+      "nameVi": "Cuốn biên ô dê",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0058",
+      "stage": "Stitching",
+      "nameZh": "後跟型狀",
+      "nameEn": "Heel shape",
+      "nameVi": "Hình dạng gót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0059",
+      "stage": "Stitching",
+      "nameZh": "後跟部件對齊",
+      "nameEn": "Heel stitching line up",
+      "nameVi": "Đường may nối gót thẳng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0060",
+      "stage": "Stitching",
+      "nameZh": "Magwire位置",
+      "nameEn": "Magwire position",
+      "nameVi": "Vị trí dây magwire",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0061",
+      "stage": "Stitching",
+      "nameZh": "车萬能",
+      "nameEn": "Zigzag stitching",
+      "nameVi": "May zigzag",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0062",
+      "stage": "Stitching",
+      "nameZh": "Logo 字位置",
+      "nameEn": "Logo letter position",
+      "nameVi": "Vị trí chữ logo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0063",
+      "stage": "Stitching",
+      "nameZh": "车腰片上高低",
+      "nameEn": "车腰片上高低",
+      "nameVi": "May eo cao thấp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0064",
+      "stage": "Stitching",
+      "nameZh": "领口包边",
+      "nameEn": "Collar binding",
+      "nameVi": "Bọc viền vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0065",
+      "stage": "Stitching",
+      "nameZh": "车眼孔拉带位置",
+      "nameEn": "车眼孔拉带位置",
+      "nameVi": "May vị trí dây xỏ dây",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0066",
+      "stage": "Stitching",
+      "nameZh": "車反綫與眼套織帶邊對齊",
+      "nameEn": "line up",
+      "nameVi": "nối thẳng hàng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0067",
+      "stage": "Stitching",
+      "nameZh": "电绣",
+      "nameEn": "Embroidery stitching",
+      "nameVi": "Thêu vi tính",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0068",
+      "stage": "Stitching",
+      "nameZh": "腰片滚边",
+      "nameEn": "Quarter folding",
+      "nameVi": "Cuốn biên eo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0069",
+      "stage": "Stitching",
+      "nameZh": "后跟滚边",
+      "nameEn": "Heel folding",
+      "nameVi": "Cuốn biên gót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0071",
+      "stage": "Stitching",
+      "nameZh": "色移",
+      "nameEn": "Color migration",
+      "nameVi": "Đổi màu/Ẩn màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0072",
+      "stage": "Stitching",
+      "nameZh": "Jump man logo 品質",
+      "nameEn": "Jump man logo quality",
+      "nameVi": "Chất lượng logo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0073",
+      "stage": "Stitching",
+      "nameZh": "鞋头压线",
+      "nameEn": "Vamp fix notch stitching",
+      "nameVi": "May dằn mũi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0074",
+      "stage": "Stitching",
+      "nameZh": "鞋面有痕迹",
+      "nameEn": "Trace on upper",
+      "nameVi": "Ngấn trên mặt giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0075",
+      "stage": "Stitching",
+      "nameZh": "溢色",
+      "nameEn": "Color bleeding",
+      "nameVi": "Lem màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0076",
+      "stage": "Stitching",
+      "nameZh": "車舌布標歪",
+      "nameEn": "Woven label off center",
+      "nameVi": "Tem trang trí lưỡi méo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0077",
+      "stage": "Stitching",
+      "nameZh": "滚边",
+      "nameEn": "Folding",
+      "nameVi": "Cuốn biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0078",
+      "stage": "Stitching",
+      "nameZh": "包边",
+      "nameEn": "Binding",
+      "nameVi": "Bọc viền",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0079",
+      "stage": "Stitching",
+      "nameZh": "其他",
+      "nameEn": "Others",
+      "nameVi": "Lỗi khác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0080",
+      "stage": "Stitching",
+      "nameZh": "鞋带功能/鞋面",
+      "nameEn": "upper",
+      "nameVi": "giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0081",
+      "stage": "Stitching",
+      "nameZh": "外观鞋带",
+      "nameEn": "Cosmetic of lace",
+      "nameVi": "Ngoại quan dây giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0082",
+      "stage": "Stitching",
+      "nameZh": "鞋带分段",
+      "nameEn": "Shoe lace size group",
+      "nameVi": "Phân đoạn dây giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0083",
+      "stage": "Stitching",
+      "nameZh": "织带长度不一致",
+      "nameEn": "Inconsistent webbing length",
+      "nameVi": "Chiều dài dây đai",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0084",
+      "stage": "Stitching",
+      "nameZh": "穿鞋帶",
+      "nameEn": "Lacing",
+      "nameVi": "Xỏ dây",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0085",
+      "stage": "Stitching",
+      "nameZh": "顔色配雙",
+      "nameEn": "Color matching",
+      "nameVi": "Phối màu liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0086",
+      "stage": "Stitching",
+      "nameZh": "部位对称",
+      "nameEn": "Components symmetry",
+      "nameVi": "Bộ vị đối xứng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0088",
+      "stage": "Stitching",
+      "nameZh": "鞋舌皺",
+      "nameEn": "Wrinkle tongue",
+      "nameVi": "Nhăn lưỡi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0089",
+      "stage": "Stitching",
+      "nameZh": "领口与眼套间距",
+      "nameEn": "Distance collar to eyestay",
+      "nameVi": "Khoảng cách vòng cổ& ô",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0090",
+      "stage": "Stitching",
+      "nameZh": "冲孔与眼套间距",
+      "nameEn": "eyestay",
+      "nameVi": "dê",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0091",
+      "stage": "Stitching",
+      "nameZh": "織帶品質",
+      "nameEn": "Webbing weaving quality",
+      "nameVi": "Chất lượng dây đai",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0092",
+      "stage": "Stitching",
+      "nameZh": "材料错误",
+      "nameEn": "Wrong material",
+      "nameVi": "Sai liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0093",
+      "stage": "Stitching",
+      "nameZh": "车错部件",
+      "nameEn": "Stitching wrong component",
+      "nameVi": "May sai bộ vị",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0094",
+      "stage": "Stitching",
+      "nameZh": "",
+      "nameEn": "Knot 標放反 The knot is reversed",
+      "nameVi": "Dóng nút bị ngược hướng 布標車錯正反面",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0095",
+      "stage": "Stitching",
+      "nameZh": "布標車錯正反面",
+      "nameEn": "The label is upside down",
+      "nameVi": "Tem bị ngược mặt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0096",
+      "stage": "Stitching",
+      "nameZh": "串段/分段錯誤",
+      "nameEn": "Mixed/wrong size group",
+      "nameVi": "Thế phân đoạn/Sai phân",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0097",
+      "stage": "Stitching",
+      "nameZh": "毛邊",
+      "nameEn": "Hairy edge",
+      "nameVi": "đLoiệạun lông biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0098",
+      "stage": "Stitching",
+      "nameZh": "H/F后脱胶",
+      "nameEn": "HFW bond gap",
+      "nameVi": "HFW hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0099",
+      "stage": "Stitching",
+      "nameZh": "Blanket 針車",
+      "nameEn": "Blanket stitch",
+      "nameVi": "",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0100",
+      "stage": "Stitching",
+      "nameZh": "",
+      "nameEn": "NOSEW&H/F位置移位 Position off after Nosew/HF Nosew&HFW",
+      "nameVi": "lệch vị sau",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0101",
+      "stage": "Stitching",
+      "nameZh": "打扣品质",
+      "nameEn": "Quality of cork",
+      "nameVi": "kPhhiẩ mép chất đóng nút",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0102",
+      "stage": "Stitching",
+      "nameZh": "串型體",
+      "nameEn": "Wrong style",
+      "nameVi": "Sai hình thể",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0103",
+      "stage": "Stitching",
+      "nameZh": "TPU 与 包边距离大小",
+      "nameEn": "ring",
+      "nameVi": "viền",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0104",
+      "stage": "Stitching",
+      "nameZh": "包边压线",
+      "nameEn": "Binding fix notch stitching",
+      "nameVi": "May dằn bọc viền",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0105",
+      "stage": "Stitching",
+      "nameZh": "材料破損/脫層",
+      "nameEn": "材料破損/脫層",
+      "nameVi": "Liệu hư/tách lớp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0106",
+      "stage": "Stitching",
+      "nameZh": "针孔",
+      "nameEn": "Needle holes",
+      "nameVi": "Lỗ kim",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0107",
+      "stage": "Stitching",
+      "nameZh": "冲孔品质",
+      "nameEn": "Cutting holes quality",
+      "nameVi": "Phẩm chất lỗ chặt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "003_0108",
+      "stage": "Stitching",
+      "nameZh": "错号碼",
+      "nameEn": "Wrong size",
+      "nameVi": "Sai số",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0001",
+      "stage": "Stockfitting",
+      "nameZh": "脫膠",
+      "nameEn": "Bond gap",
+      "nameVi": "Hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0002",
+      "stage": "Stockfitting",
+      "nameZh": "破損",
+      "nameEn": "Damaged",
+      "nameVi": "Hư",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0003",
+      "stage": "Stockfitting",
+      "nameZh": "脫漆",
+      "nameEn": "Paint peeled off",
+      "nameVi": "Tróc sơn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0004",
+      "stage": "Stockfitting",
+      "nameZh": "串型體/號碼",
+      "nameEn": "Wrong style/size",
+      "nameVi": "Sai hình thể/sai số",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0005",
+      "stage": "Stockfitting",
+      "nameZh": "變形",
+      "nameEn": "Bottom shape",
+      "nameVi": "Hình dạng đế",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0006",
+      "stage": "Stockfitting",
+      "nameZh": "變黃",
+      "nameEn": "Yellowing",
+      "nameVi": "Biến vàng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0007",
+      "stage": "Stockfitting",
+      "nameZh": "溢色",
+      "nameEn": "Color bleeding",
+      "nameVi": "Lem màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0008",
+      "stage": "Stockfitting",
+      "nameZh": "底長",
+      "nameEn": "Long",
+      "nameVi": "Đế dài",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0009",
+      "stage": "Stockfitting",
+      "nameZh": "底短",
+      "nameEn": "Short",
+      "nameVi": "Đế ngắn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0010",
+      "stage": "Stockfitting",
+      "nameZh": "修邊",
+      "nameEn": "Trimming",
+      "nameVi": "Cắt biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0011",
+      "stage": "Stockfitting",
+      "nameZh": "清潔度",
+      "nameEn": "Cleanness",
+      "nameVi": "Vệ sinh",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0012",
+      "stage": "Stockfitting",
+      "nameZh": "氣泡",
+      "nameEn": "Air bubble",
+      "nameVi": "Phồng hơi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0013",
+      "stage": "Stockfitting",
+      "nameZh": "平穩度",
+      "nameEn": "Rocking",
+      "nameVi": "Độ gập ghềnh",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0014",
+      "stage": "Stockfitting",
+      "nameZh": "補漆不順",
+      "nameEn": "Paint uneven",
+      "nameVi": "Bù sơn không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0015",
+      "stage": "Stockfitting",
+      "nameZh": "溢膠",
+      "nameEn": "Over cement",
+      "nameVi": "Lem keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0016",
+      "stage": "Stockfitting",
+      "nameZh": "貼底",
+      "nameEn": "Bottom Attachment",
+      "nameVi": "Dán đế",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0017",
+      "stage": "Stockfitting",
+      "nameZh": "",
+      "nameEn": "Air bag",
+      "nameVi": "Airbag cosmetics",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0018",
+      "stage": "Stockfitting",
+      "nameZh": "色差",
+      "nameEn": "Color shade",
+      "nameVi": "Khác màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0019",
+      "stage": "Stockfitting",
+      "nameZh": "PU不良",
+      "nameEn": "PU quality",
+      "nameVi": "Chất lượng PU",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0020",
+      "stage": "Stockfitting",
+      "nameZh": "藥水外溢",
+      "nameEn": "Over primer",
+      "nameVi": "Lem nước thuốc",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0021",
+      "stage": "Stockfitting",
+      "nameZh": "毛边",
+      "nameEn": "Flashing",
+      "nameVi": "Biên liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0022",
+      "stage": "Stockfitting",
+      "nameZh": "膠不均匀",
+      "nameEn": "Cement uneven",
+      "nameVi": "Keo không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0023",
+      "stage": "Stockfitting",
+      "nameZh": "底热切不良",
+      "nameEn": "Hot-knife inconsistent",
+      "nameVi": "Đế cắt nóng không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0024",
+      "stage": "Stockfitting",
+      "nameZh": "大底裁断",
+      "nameEn": "OS cutting",
+      "nameVi": "Chặt đế lớn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0025",
+      "stage": "Stockfitting",
+      "nameZh": "溢漆",
+      "nameEn": "Over painting",
+      "nameVi": "Lem sơn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0026",
+      "stage": "Stockfitting",
+      "nameZh": "药水不均匀",
+      "nameEn": "Primer uneven",
+      "nameVi": "Nước thuốc không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0027",
+      "stage": "Stockfitting",
+      "nameZh": "空气袋窗口不均匀",
+      "nameEn": "Airbag window inconsistent",
+      "nameVi": "Cửa sổ túi khí không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0028",
+      "stage": "Stockfitting",
+      "nameZh": "刷胶/药水工具",
+      "nameEn": "Cementing/Primering tool",
+      "nameVi": "Công cụ quét keo/nước",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0029",
+      "stage": "Stockfitting",
+      "nameZh": "底凹陷",
+      "nameEn": "Bottom concave",
+      "nameVi": "Đế lõm",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0030",
+      "stage": "Stockfitting",
+      "nameZh": "包空",
+      "nameEn": "Delamination",
+      "nameVi": "Đế bao không",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0031",
+      "stage": "Stockfitting",
+      "nameZh": "底过期",
+      "nameEn": "Bottom overdue",
+      "nameVi": "Đế quá hạn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0032",
+      "stage": "Stockfitting",
+      "nameZh": "IP不良",
+      "nameEn": "Defective of IP",
+      "nameVi": "IP không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0033",
+      "stage": "Stockfitting",
+      "nameZh": "DP不良",
+      "nameEn": "Defective of DP",
+      "nameVi": "DP không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0034",
+      "stage": "Stockfitting",
+      "nameZh": "PU不良",
+      "nameEn": "Defective of PU",
+      "nameVi": "PU không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0035",
+      "stage": "Stockfitting",
+      "nameZh": "橡胶底厚度",
+      "nameEn": "Rubber thickness",
+      "nameVi": "Đế cao su mỏng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0036",
+      "stage": "Stockfitting",
+      "nameZh": "大底不良",
+      "nameEn": "Defective of OS",
+      "nameVi": "Đế lớn không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0037",
+      "stage": "Stockfitting",
+      "nameZh": "心形片位置",
+      "nameEn": "Heart shape fleck position",
+      "nameVi": "Vị trí hình trái tim",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0038",
+      "stage": "Stockfitting",
+      "nameZh": "其他",
+      "nameEn": "Others",
+      "nameVi": "Lỗi khác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0039",
+      "stage": "Stockfitting",
+      "nameZh": "拋光",
+      "nameEn": "Buffing",
+      "nameVi": "Mài",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0040",
+      "stage": "Stockfitting",
+      "nameZh": "字母/编号在OS logo上错规格",
+      "nameEn": "Letter/number on OS logo wrong specification",
+      "nameVi": "Chữ/Số trên logo đế lớn sai quy cách",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0041",
+      "stage": "Stockfitting",
+      "nameZh": "",
+      "nameEn": "OS logo 错位置 OS logo wrong position Logo",
+      "nameVi": "trên đế lớn sai vị trí",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0042",
+      "stage": "Stockfitting",
+      "nameZh": "鞋头翘度",
+      "nameEn": "Toe spring",
+      "nameVi": "Tình trạng mũi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0043",
+      "stage": "Stockfitting",
+      "nameZh": "夜光效果",
+      "nameEn": "Glow in the dark effect",
+      "nameVi": "Hiệu ứng phản quang",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "011_0044",
+      "stage": "Stockfitting",
+      "nameZh": "轉印剝離",
+      "nameEn": "Cold transfer peeled off",
+      "nameVi": "Tróc in chuyển",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0001",
+      "stage": "Assembly",
+      "nameZh": "掉漆",
+      "nameEn": "Paint peeled off",
+      "nameVi": "Tróc sơn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0002",
+      "stage": "Assembly",
+      "nameZh": "溢漆",
+      "nameEn": "Over painting",
+      "nameVi": "Lem sơn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0003",
+      "stage": "Assembly",
+      "nameZh": "橡膠吐霜",
+      "nameEn": "Blooming",
+      "nameVi": "Đế cao su nổi váng trắng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0004",
+      "stage": "Assembly",
+      "nameZh": "贴底外觀不良",
+      "nameEn": "Sole attachment",
+      "nameVi": "Dán đế không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0005",
+      "stage": "Assembly",
+      "nameZh": "底长/短",
+      "nameEn": "Bottom long/short",
+      "nameVi": "Đế dài/ngắn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0006",
+      "stage": "Assembly",
+      "nameZh": "鞋頭歪",
+      "nameEn": "Toe off center",
+      "nameVi": "Mũi méo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0007",
+      "stage": "Assembly",
+      "nameZh": "鞋頭塌陷",
+      "nameEn": "Toe collapse",
+      "nameVi": "Mũi giày bị gãy",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0008",
+      "stage": "Assembly",
+      "nameZh": "膠綫高",
+      "nameEn": "Over cement",
+      "nameVi": "Keo cao",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0009",
+      "stage": "Assembly",
+      "nameZh": "打粗綫外露",
+      "nameEn": "Over buffing",
+      "nameVi": "Mài cao",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0010",
+      "stage": "Assembly",
+      "nameZh": "清潔度",
+      "nameEn": "Cleanness",
+      "nameVi": "Vệ sinh",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0011",
+      "stage": "Assembly",
+      "nameZh": "發霉",
+      "nameEn": "Moldy",
+      "nameVi": "Nổi mốc",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0012",
+      "stage": "Assembly",
+      "nameZh": "溢色",
+      "nameEn": "Color bleeding",
+      "nameVi": "Lem màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0013",
+      "stage": "Assembly",
+      "nameZh": "變黃",
+      "nameEn": "Yellowing",
+      "nameVi": "Biến vàng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0014",
+      "stage": "Assembly",
+      "nameZh": "底外觀瑕疵",
+      "nameEn": "Bottom Cosmetic",
+      "nameVi": "Ngoại quan đế",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0015",
+      "stage": "Assembly",
+      "nameZh": "綫頭",
+      "nameEn": "Thread end",
+      "nameVi": "Đầu chỉ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0016",
+      "stage": "Assembly",
+      "nameZh": "毛邊",
+      "nameEn": "Hairy edge",
+      "nameVi": "Liệu lông biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0017",
+      "stage": "Assembly",
+      "nameZh": "鬼影",
+      "nameEn": "X-ray",
+      "nameVi": "Cộm",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0018",
+      "stage": "Assembly",
+      "nameZh": "鞋面皺褶",
+      "nameEn": "Wrinkle upper",
+      "nameVi": "Mặt giày nhăn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0019",
+      "stage": "Assembly",
+      "nameZh": "底皺褶",
+      "nameEn": "Wrinkle bottom",
+      "nameVi": "Đế nhăn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0020",
+      "stage": "Assembly",
+      "nameZh": "中底外觀瑕疵",
+      "nameEn": "IP Cosmetic",
+      "nameVi": "Ngoại quan đế trung",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0021",
+      "stage": "Assembly",
+      "nameZh": "後跟歪",
+      "nameEn": "Heel off center",
+      "nameVi": "Gót méo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0022",
+      "stage": "Assembly",
+      "nameZh": "鞋頭後跟高低",
+      "nameEn": "Heel/Tip height inconsistent",
+      "nameVi": "Mũi/gót cao thấp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0023",
+      "stage": "Assembly",
+      "nameZh": "對應部位大小",
+      "nameEn": "Components inconsistent",
+      "nameVi": "Bộ vị không đồng đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0024",
+      "stage": "Assembly",
+      "nameZh": "針邊距",
+      "nameEn": "Stitching margin/SPI",
+      "nameVi": "May cách biên,cách kim",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0025",
+      "stage": "Assembly",
+      "nameZh": "鞋舌形狀",
+      "nameEn": "Tongue shape",
+      "nameVi": "Hình dạng lưỡi giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0026",
+      "stage": "Assembly",
+      "nameZh": "鞋舌歪",
+      "nameEn": "Tongue off center",
+      "nameVi": "Lưỡi méo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0027",
+      "stage": "Assembly",
+      "nameZh": "織帶/拉帶(如:歪,脫落)",
+      "nameEn": "Webbing off center",
+      "nameVi": "Dây đai méo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0028",
+      "stage": "Assembly",
+      "nameZh": "鞋帶破損",
+      "nameEn": "Aglet deform",
+      "nameVi": "Đầu dây hư",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0029",
+      "stage": "Assembly",
+      "nameZh": "面與底脫膠",
+      "nameEn": "Midsole/Outsole to upper bond gap",
+      "nameVi": "Hở keo đế với mặt giày 大中底脫膠",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0030",
+      "stage": "Assembly",
+      "nameZh": "大中底脫膠",
+      "nameEn": "Bond gap at bottom",
+      "nameVi": "Hở keo giữa các chi tiết đế",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0031",
+      "stage": "Assembly",
+      "nameZh": "漏車",
+      "nameEn": "Missing stitching",
+      "nameVi": "May thiếu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0032",
+      "stage": "Assembly",
+      "nameZh": "車反不密合(底面綫松)",
+      "nameEn": "Loose stitching",
+      "nameVi": "Lỏng chỉ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0033",
+      "stage": "Assembly",
+      "nameZh": "No-sew 包空",
+      "nameEn": "Nosew bubble",
+      "nameVi": "Nosew bao không",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0034",
+      "stage": "Assembly",
+      "nameZh": "破損/抽纱",
+      "nameEn": "Damaged/scratch",
+      "nameVi": "Rách/Tưa liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0035",
+      "stage": "Assembly",
+      "nameZh": "平穩度",
+      "nameEn": "Rocking",
+      "nameVi": "Độ ổn định",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0036",
+      "stage": "Assembly",
+      "nameZh": "成品鞋變形",
+      "nameEn": "Shoe deform",
+      "nameVi": "Giày cong",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0037",
+      "stage": "Assembly",
+      "nameZh": "底熱切不良",
+      "nameEn": "Hot-knife inconsistent",
+      "nameVi": "Đế cắt nóng không đạt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0038",
+      "stage": "Assembly",
+      "nameZh": "串型體",
+      "nameEn": "Wrong style",
+      "nameVi": "Sai hình thể",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0039",
+      "stage": "Assembly",
+      "nameZh": "SIZE標脫落",
+      "nameEn": "Size label peeled off",
+      "nameVi": "Tem size tróc",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0040",
+      "stage": "Assembly",
+      "nameZh": "No-sew 溢膠",
+      "nameEn": "Nosew over cement",
+      "nameVi": "Nosew lem keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0041",
+      "stage": "Assembly",
+      "nameZh": "空气袋品质/污染",
+      "nameEn": "Airbag quality/stain",
+      "nameVi": "Tình trạng túi khí/dơ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0042",
+      "stage": "Assembly",
+      "nameZh": "PU品質",
+      "nameEn": "PU Cosmetic",
+      "nameVi": "Ngoại quan PU",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0043",
+      "stage": "Assembly",
+      "nameZh": "領口形狀",
+      "nameEn": "Collar shape",
+      "nameVi": "Hình dạng vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0044",
+      "stage": "Assembly",
+      "nameZh": "鞋頭翹度",
+      "nameEn": "Toe spring",
+      "nameVi": "Độ cong/vênh mũi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0045",
+      "stage": "Assembly",
+      "nameZh": "後跟形狀",
+      "nameEn": "Heel shape",
+      "nameVi": "Hình dạng gót/thẳng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0046",
+      "stage": "Assembly",
+      "nameZh": "車飾綫",
+      "nameEn": "Deco-stitching",
+      "nameVi": "Đường may trang trí",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0050",
+      "stage": "Assembly",
+      "nameZh": "紋路",
+      "nameEn": "Cutting direction",
+      "nameVi": "Hoa văn liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0051",
+      "stage": "Assembly",
+      "nameZh": "修邊",
+      "nameEn": "Trimming",
+      "nameVi": "Cắt biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0052",
+      "stage": "Assembly",
+      "nameZh": "鞋墊位置",
+      "nameEn": "Sockliner position",
+      "nameVi": "Vị trí đệm giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0053",
+      "stage": "Assembly",
+      "nameZh": "色差",
+      "nameEn": "Material color shade",
+      "nameVi": "Liệu khác màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0054",
+      "stage": "Assembly",
+      "nameZh": "立體效果差",
+      "nameEn": "Definition after process",
+      "nameVi": "Lập thể khác biệt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0056",
+      "stage": "Assembly",
+      "nameZh": "Logo 品質",
+      "nameEn": "Swoosh quality",
+      "nameVi": "Chất lượng logo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0057",
+      "stage": "Assembly",
+      "nameZh": "领口裏皱",
+      "nameEn": "Wrinkle collar lining",
+      "nameVi": "Nhăn lót vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0058",
+      "stage": "Assembly",
+      "nameZh": "车大底线",
+      "nameEn": "Outsole thread stitching",
+      "nameVi": "May đế ngoài",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0059",
+      "stage": "Assembly",
+      "nameZh": "電腦車",
+      "nameEn": "Computer stitching",
+      "nameVi": "May vi tính",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0060",
+      "stage": "Assembly",
+      "nameZh": "鞋頭形狀",
+      "nameEn": "Toe cap shape",
+      "nameVi": "Hình dạng mũi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0061",
+      "stage": "Assembly",
+      "nameZh": "鞋墊品質",
+      "nameEn": "Sockliner quality",
+      "nameVi": "Chất lượng đệm giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0062",
+      "stage": "Assembly",
+      "nameZh": "鞋頭雙針",
+      "nameEn": "Double stitching",
+      "nameVi": "May 2 kim",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0063",
+      "stage": "Assembly",
+      "nameZh": "車魔術拉帶",
+      "nameEn": "Strap stitching",
+      "nameVi": "May dây quai",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0064",
+      "stage": "Assembly",
+      "nameZh": "車盒形",
+      "nameEn": "Box stitching",
+      "nameVi": "May hình hộp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0065",
+      "stage": "Assembly",
+      "nameZh": "眼扣",
+      "nameEn": "Eyelet",
+      "nameVi": "Nút xỏ dây",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0066",
+      "stage": "Assembly",
+      "nameZh": "冲孔",
+      "nameEn": "Punching",
+      "nameVi": "Lỗ đục",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0067",
+      "stage": "Assembly",
+      "nameZh": "Nosew 脫膠",
+      "nameEn": "Nosew bond gap",
+      "nameVi": "Nosew hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0068",
+      "stage": "Assembly",
+      "nameZh": "错号碼",
+      "nameEn": "Wrong size",
+      "nameVi": "Sai số",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0069",
+      "stage": "Assembly",
+      "nameZh": "面前塌陷",
+      "nameEn": "Collapse vamp",
+      "nameVi": "Mặt trước bị gãy",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0070",
+      "stage": "Assembly",
+      "nameZh": "後跟皺褶",
+      "nameEn": "Wrinkle heel",
+      "nameVi": "Nhăn gót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0071",
+      "stage": "Assembly",
+      "nameZh": "飾綫與貼底綫間距",
+      "nameEn": "Distance deco-stitch to biteline K/c",
+      "nameVi": "đường may trang trí& đường",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0072",
+      "stage": "Assembly",
+      "nameZh": "貼底波浪形",
+      "nameEn": "Cupsole with wavy edge",
+      "nameVi": "dDáánn đđếế gợn sóng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0073",
+      "stage": "Assembly",
+      "nameZh": "车領口邊距大小",
+      "nameEn": "Inconsistent collar topline",
+      "nameVi": "May cách biên vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0074",
+      "stage": "Assembly",
+      "nameZh": "穿鞋帶",
+      "nameEn": "Lacing",
+      "nameVi": "Xỏ dây",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0075",
+      "stage": "Assembly",
+      "nameZh": "眼套歪斜",
+      "nameEn": "Eyestay off center",
+      "nameVi": "Ô dê méo/cao thấp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0076",
+      "stage": "Assembly",
+      "nameZh": "鞋面",
+      "nameEn": "Upper",
+      "nameVi": "Mặt giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0077",
+      "stage": "Assembly",
+      "nameZh": "车松紧带",
+      "nameEn": "Elastic band stitching",
+      "nameVi": "May dây thun",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0078",
+      "stage": "Assembly",
+      "nameZh": "领口上形状",
+      "nameEn": "Collar pillow/bootie shape",
+      "nameVi": "Hình dạng vòng cổ trên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0079",
+      "stage": "Assembly",
+      "nameZh": "飾綫與眼孔間距",
+      "nameEn": "Distance deco-stitch to eyelet K/c",
+      "nameVi": "đường may trang trí& nút xỏ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0080",
+      "stage": "Assembly",
+      "nameZh": "領口皺褶",
+      "nameEn": "Wrinkle collar",
+      "nameVi": "dNâhyăn vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0081",
+      "stage": "Assembly",
+      "nameZh": "後跟底分模綫與面對位",
+      "nameEn": "Line up upper & bottom",
+      "nameVi": "Mặt giày và đế khớp định vị",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0082",
+      "stage": "Assembly",
+      "nameZh": "",
+      "nameEn": "logo与底的间距 Distance logo to biteline K/c logo",
+      "nameVi": "đến đường dán đế",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0083",
+      "stage": "Assembly",
+      "nameZh": "鞋舌皱褶",
+      "nameEn": "Wrinkle tongue",
+      "nameVi": "Nhăn lưỡi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0084",
+      "stage": "Assembly",
+      "nameZh": "車舌布標歪",
+      "nameEn": "Woven label off center Tem trang",
+      "nameVi": "trí lưỡi méo 後跟部件對齊",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0085",
+      "stage": "Assembly",
+      "nameZh": "後跟部件對齊",
+      "nameEn": "Heel stitching line up",
+      "nameVi": "Đường may nối gót thẳng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0086",
+      "stage": "Assembly",
+      "nameZh": "包边",
+      "nameEn": "Binding",
+      "nameVi": "Bọc viền",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0087",
+      "stage": "Assembly",
+      "nameZh": "色移",
+      "nameEn": "Color migration",
+      "nameVi": "Đổi màu/Ẩn màu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0088",
+      "stage": "Assembly",
+      "nameZh": "H/F后脱胶",
+      "nameEn": "HFW bond gap",
+      "nameVi": "HFW hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0089",
+      "stage": "Assembly",
+      "nameZh": "腰片滚边",
+      "nameEn": "Quarter folding",
+      "nameVi": "Cuốn biên eo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0090",
+      "stage": "Assembly",
+      "nameZh": "眼套滚边",
+      "nameEn": "Fold U-shape eyestay",
+      "nameVi": "Cuốn biên ô dê",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0091",
+      "stage": "Assembly",
+      "nameZh": "后跟滚边",
+      "nameEn": "Heel folding",
+      "nameVi": "Cuốn biên gót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0093",
+      "stage": "Assembly",
+      "nameZh": "TR皺/鼓起",
+      "nameEn": "Wrinkle TR& lump",
+      "nameVi": "Nhăn/Cộm TR",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0094",
+      "stage": "Assembly",
+      "nameZh": "鞋头皱折",
+      "nameEn": "Wrinkle toe cap",
+      "nameVi": "Nhăn mũi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0096",
+      "stage": "Assembly",
+      "nameZh": "内里皱折",
+      "nameEn": "Wrinkle lining",
+      "nameVi": "Nhăn lót",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0098",
+      "stage": "Assembly",
+      "nameZh": "Magwire位置",
+      "nameEn": "Magwire position",
+      "nameVi": "Vị trí dây magwire",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0099",
+      "stage": "Assembly",
+      "nameZh": "",
+      "nameEn": "Jump man logo品質 Jump man logo quality",
+      "nameVi": "Chất lượng logo Jump man",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0100",
+      "stage": "Assembly",
+      "nameZh": "腰片TPU高低",
+      "nameEn": "Quarter TPU high/low",
+      "nameVi": "TPU eo cao thấp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0101",
+      "stage": "Assembly",
+      "nameZh": "",
+      "nameEn": "TPU strap position TPU strap position",
+      "nameVi": "Vị trí dây TPU",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0102",
+      "stage": "Assembly",
+      "nameZh": "热熔溢膠",
+      "nameEn": "Hot-melt over flow",
+      "nameVi": "Tràn keo nóng chảy",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0103",
+      "stage": "Assembly",
+      "nameZh": "断线/落針",
+      "nameEn": "Broken thread/Run off stitching",
+      "nameVi": "Đứt chỉ/sụp mí",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0104",
+      "stage": "Assembly",
+      "nameZh": "鞋面有痕迹",
+      "nameEn": "Trace on upper",
+      "nameVi": "Ngấn trên mặt giày",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0105",
+      "stage": "Assembly",
+      "nameZh": "Jumpman logo 位置",
+      "nameEn": "Jumpman logo position",
+      "nameVi": "Vị trí logo Jumpman",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0106",
+      "stage": "Assembly",
+      "nameZh": "底变形",
+      "nameEn": "Deformed bottom",
+      "nameVi": "Đế biến dạng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0107",
+      "stage": "Assembly",
+      "nameZh": "弧度不順",
+      "nameEn": "Stitching curve",
+      "nameVi": "Độ bo không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0108",
+      "stage": "Assembly",
+      "nameZh": "拖鞋脚背高度不一致",
+      "nameEn": "Distance strap lining to bottom K/c",
+      "nameVi": "dây quai đến đế 冲孔品质",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0110",
+      "stage": "Assembly",
+      "nameZh": "冲孔品质",
+      "nameEn": "Cutting holes quality",
+      "nameVi": "Phẩm chất lỗ chặt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0111",
+      "stage": "Assembly",
+      "nameZh": "滚边",
+      "nameEn": "Folding",
+      "nameVi": "Cuốn biên",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0112",
+      "stage": "Assembly",
+      "nameZh": "眼套/领口开口",
+      "nameEn": "Eyestay/Collar Opening",
+      "nameVi": "Độ mở ô dê/vòng cổ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0113",
+      "stage": "Assembly",
+      "nameZh": "其他",
+      "nameEn": "Others",
+      "nameVi": "Lỗi khác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0115",
+      "stage": "Assembly",
+      "nameZh": "鞋带功能在入楦头后",
+      "nameEn": "Function of Mechanism after lasting",
+      "nameVi": "Chức năng dây giày sau vô phom",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0116",
+      "stage": "Assembly",
+      "nameZh": "鞋带功能在拔楦头",
+      "nameEn": "Function of Mechanism before de-lasting",
+      "nameVi": "Chức năng dây giày trước tháo phom",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0117",
+      "stage": "Assembly",
+      "nameZh": "TPU 脱胶",
+      "nameEn": "TPU bonding",
+      "nameVi": "TPU hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0118",
+      "stage": "Assembly",
+      "nameZh": "TPU破",
+      "nameEn": "Broken TPU",
+      "nameVi": "TPU bị bể",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0119",
+      "stage": "Assembly",
+      "nameZh": "织带长度不一致",
+      "nameEn": "Inconsistent webbing length",
+      "nameVi": "Chiều dài dây đai",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0120",
+      "stage": "Assembly",
+      "nameZh": "顔色配雙",
+      "nameEn": "Color matching",
+      "nameVi": "Phối màu liệu",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0121",
+      "stage": "Assembly",
+      "nameZh": "车反不直",
+      "nameEn": "Close seam line unstraight",
+      "nameVi": "Đường may nối không thẳng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0122",
+      "stage": "Assembly",
+      "nameZh": "鞋舌包边",
+      "nameEn": "Tongue binding",
+      "nameVi": "Cuốn biên lưỡi",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0123",
+      "stage": "Assembly",
+      "nameZh": "领口与眼套间距",
+      "nameEn": "Distance collar to eyestay",
+      "nameVi": "Khoảng cách vòng cổ& ô dê",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0124",
+      "stage": "Assembly",
+      "nameZh": "織帶品質",
+      "nameEn": "Webbing weaving quality",
+      "nameVi": "Chất lượng dây đai",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0125",
+      "stage": "Assembly",
+      "nameZh": "4針6綫",
+      "nameEn": "Serge stitching",
+      "nameVi": "May 4 kim 6 chỉ",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0126",
+      "stage": "Assembly",
+      "nameZh": "B/材料的问题",
+      "nameEn": "B/Material Failure",
+      "nameVi": "B/Liệu hư",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0127",
+      "stage": "Assembly",
+      "nameZh": "B/大 & 中 底",
+      "nameEn": "B/Midsole & Outsole",
+      "nameVi": "B/Đế trung & Đế lớn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0128",
+      "stage": "Assembly",
+      "nameZh": "B/脱胶",
+      "nameEn": "B/Bonding/Bond gap",
+      "nameVi": "B/Hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0129",
+      "stage": "Assembly",
+      "nameZh": "B/外观",
+      "nameEn": "B/Cosmetic",
+      "nameVi": "B/Ngoại quan",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0130",
+      "stage": "Assembly",
+      "nameZh": "B/其他",
+      "nameEn": "B/Miscellaneous (Others)",
+      "nameVi": "B/Lỗi khác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0131",
+      "stage": "Assembly",
+      "nameZh": "B/针车的问题",
+      "nameEn": "B/Stitching",
+      "nameVi": "B/Lỗi do may",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0132",
+      "stage": "Assembly",
+      "nameZh": "B/空气袋",
+      "nameEn": "B/Airbag",
+      "nameVi": "B/Túi khí",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0133",
+      "stage": "Assembly",
+      "nameZh": "B/操作的问题",
+      "nameEn": "B/Workmanship",
+      "nameVi": "B/Thao tác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0134",
+      "stage": "Assembly",
+      "nameZh": "C/材料的问题",
+      "nameEn": "C/Material Failure",
+      "nameVi": "C/Liệu hư",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0135",
+      "stage": "Assembly",
+      "nameZh": "C/大 & 中底",
+      "nameEn": "C/Midsole & Outsole",
+      "nameVi": "C/Đế trung & Đế lớn",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0136",
+      "stage": "Assembly",
+      "nameZh": "C/脱胶",
+      "nameEn": "C/Bonding",
+      "nameVi": "C/Hở keo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0137",
+      "stage": "Assembly",
+      "nameZh": "C/外观",
+      "nameEn": "C/Cosmetic",
+      "nameVi": "C/Ngoại quan",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0138",
+      "stage": "Assembly",
+      "nameZh": "C/其他",
+      "nameEn": "C/Miscellaneous (Others)",
+      "nameVi": "C/Lỗi khác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0139",
+      "stage": "Assembly",
+      "nameZh": "C/这车的问题",
+      "nameEn": "C/Stitching",
+      "nameVi": "C/Lỗi do may",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0140",
+      "stage": "Assembly",
+      "nameZh": "C/空气袋",
+      "nameEn": "C/Airbag",
+      "nameVi": "C/Túi khí",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0141",
+      "stage": "Assembly",
+      "nameZh": "C/操作的问题",
+      "nameEn": "C/Workmanship",
+      "nameVi": "C/Thao tác",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0142",
+      "stage": "Assembly",
+      "nameZh": "夜光效果",
+      "nameEn": "Glow in the dark effect",
+      "nameVi": "Hiệu ứng phản quang",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0143",
+      "stage": "Assembly",
+      "nameZh": "轉印剝離",
+      "nameEn": "Cold transfer peeled off",
+      "nameVi": "Tróc in chuyển",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0144",
+      "stage": "Assembly",
+      "nameZh": "",
+      "nameEn": "Knot 標放反 The knot is reversed",
+      "nameVi": "Dóng nút bị ngược hướng 布標車錯正反面",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0145",
+      "stage": "Assembly",
+      "nameZh": "布標車錯正反面",
+      "nameEn": "The label is upside down",
+      "nameVi": "Tem bị ngược mặt",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0146",
+      "stage": "Assembly",
+      "nameZh": "電綉",
+      "nameEn": "Embroidery stitching",
+      "nameVi": "Thêu vi tính",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0147",
+      "stage": "Assembly",
+      "nameZh": "Blabket 針車",
+      "nameEn": "Blanket stitch",
+      "nameVi": "",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0148",
+      "stage": "Assembly",
+      "nameZh": "Logo 字位置",
+      "nameEn": "Logo letter position",
+      "nameVi": "Vị trí chữ logo",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0149",
+      "stage": "Assembly",
+      "nameZh": "帶子高度不一致",
+      "nameEn": "Strap height inconsistent",
+      "nameVi": "Vòng quai độ cao không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0150",
+      "stage": "Assembly",
+      "nameZh": "打扣品质",
+      "nameEn": "Quality of cork",
+      "nameVi": "Phẩm chất đóng nút",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0151",
+      "stage": "Assembly",
+      "nameZh": "橡胶脫層",
+      "nameEn": "Rubber tar delamination",
+      "nameVi": "Cao su tách lớp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0152",
+      "stage": "Assembly",
+      "nameZh": "加入橡胶粉不一致",
+      "nameEn": "Adding rubber tar inconsistent",
+      "nameVi": "Đắp bột cao su không đều",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0153",
+      "stage": "Assembly",
+      "nameZh": "帶子塌陷",
+      "nameEn": "Strap collapses",
+      "nameVi": "Gãy Strap",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0154",
+      "stage": "Assembly",
+      "nameZh": "鞋面布紋歪斜",
+      "nameEn": "Moire effect on vamp",
+      "nameVi": "Sớ liệu không thẳng",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0155",
+      "stage": "Assembly",
+      "nameZh": "TPU 品質",
+      "nameEn": "TPU quality",
+      "nameVi": "Chất lượng TPU",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0156",
+      "stage": "Assembly",
+      "nameZh": "材料破損/脫層",
+      "nameEn": "Damaged material/delamination",
+      "nameVi": "Liệu hư/tách lớp",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0157",
+      "stage": "Assembly",
+      "nameZh": "PU不良",
+      "nameEn": "PU Quality",
+      "nameVi": "Chất lượng PU",
+      "source": "Defective Name 1234VN.pdf"
+    },
+    {
+      "code": "004_0158",
+      "stage": "Assembly",
+      "nameZh": "车错部件",
+      "nameEn": "Stitching wrong component",
+      "nameVi": "May sai bộ vị",
+      "source": "Defective Name 1234VN.pdf"
+    }
+  ]
+}
