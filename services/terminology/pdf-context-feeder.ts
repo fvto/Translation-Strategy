@@ -31,6 +31,85 @@ export interface PdfFeedOptions {
 }
 
 /**
+ * Smart PDF text renderer that preserves word spacing and line breaks,
+ * preventing words from becoming glued/stuck together due to PDF font kerning offsets.
+ */
+function renderPdfPageWithSmartSpacing(pageData: any): Promise<string> {
+  const renderOptions = {
+    normalizeWhitespace: true,
+    disableCombineTextItems: false,
+  };
+
+  return pageData.getTextContent(renderOptions).then((textContent: any) => {
+    let lastY: number | undefined;
+    let lastX = 0;
+    let lastWidth = 0;
+    let text = "";
+
+    for (const item of textContent.items) {
+      const str = item.str;
+      if (!str) continue;
+
+      const currentX = item.transform[4];
+      const currentY = item.transform[5];
+      const itemWidth = item.width || 0;
+
+      if (lastY === undefined || Math.abs(currentY - lastY) > 3) {
+        // Line or paragraph break
+        if (text.length > 0 && !text.endsWith("\n")) {
+          if (lastY !== undefined && Math.abs(currentY - lastY) > 15) {
+            text += "\n\n";
+          } else {
+            text += "\n";
+          }
+        }
+        text += str;
+      } else {
+        // Same line: inspect distance to avoid stuck words
+        const gap = currentX - (lastX + lastWidth);
+        const prevEndsWithSpace = text.endsWith(" ") || text.endsWith("\t");
+        const currStartsWithSpace = str.startsWith(" ") || str.startsWith("\t");
+
+        if (!prevEndsWithSpace && !currStartsWithSpace) {
+          if (gap > 1.2 || gap < -20) {
+            text += " ";
+          } else {
+            const lastChar = text.slice(-1);
+            const firstChar = str.charAt(0);
+            if (
+              /[a-zA-Z0-9À-ỹ]/.test(lastChar) &&
+              /[a-zA-Z0-9À-ỹ(]/.test(firstChar) &&
+              gap > 0.3
+            ) {
+              text += " ";
+            }
+          }
+        }
+        text += str;
+      }
+
+      lastY = currentY;
+      lastX = currentX;
+      lastWidth = itemWidth;
+    }
+
+    return text;
+  });
+}
+
+/**
+ * Normalizes glued words and strictly enforces footwear term standards (e.g. Tip-quarter with hyphen).
+ */
+export function normalizeFootwearTermSpacing(term: string): string {
+  if (!term) return "";
+  return term
+    .replace(/\bTipquarter\b/g, "Tip-quarter")
+    .replace(/\btipquarter\b/g, "tip-quarter")
+    .replace(/\bTIPQUARTER\b/g, "TIP-QUARTER")
+    .replace(/\bTip\s+quarter\b/gi, (m) => (m[0] === "T" ? "Tip-quarter" : "tip-quarter"));
+}
+
+/**
  * Feeds textual context from a PDF into the Glossary system.
  * STRICT SECURITY GUARANTEE:
  * - Reads digital text layer ONLY via pdf-parse.
@@ -54,15 +133,20 @@ export async function feedPdfContextToGlossary(
     rawText = pdfBuffer.toString("utf8").replace(/^%PDF-MOCK[^\n]*\n/, "");
     totalPages = 1;
   } else {
-    // 1. Text-only extraction using pdf-parse (Zero image scanning)
+    // 1. Text-only extraction using pdf-parse with custom smart spacing renderer (Zero image scanning)
     // @ts-ignore
     const pdfParseModule = await import("pdf-parse");
     const pdfParse = (pdfParseModule as any).default || pdfParseModule;
-    const data = await pdfParse(pdfBuffer);
+    const data = await pdfParse(pdfBuffer, {
+      pagerender: renderPdfPageWithSmartSpacing,
+    });
 
     rawText = data.text || "";
     totalPages = data.numpages || 1;
   }
+
+  // Normalize any glued footwear terms in raw text
+  rawText = normalizeFootwearTermSpacing(rawText);
 
   if (rawText.trim().length < 20) {
     throw new Error(
@@ -122,6 +206,9 @@ export async function feedPdfContextToGlossary(
           tgt = p2;
         }
 
+        src = normalizeFootwearTermSpacing(src);
+        tgt = normalizeFootwearTermSpacing(tgt);
+
         if (src && tgt && src.toLowerCase() !== tgt.toLowerCase() && isSpecializedTermCandidate(src)) {
           const key = src.toLowerCase().trim();
           if (!candidateTermsMap.has(key) && !existingSourceSet.has(key)) {
@@ -151,13 +238,14 @@ export async function feedPdfContextToGlossary(
         for (let w = 0; w <= words.length - len; w++) {
           const phrase = words.slice(w, w + len).join(" ").replace(/^[^\wÀ-ỹ]+|[^\wÀ-ỹ]+$/g, "");
           if (isSpecializedTermCandidate(phrase)) {
-            const key = phrase.toLowerCase().trim();
+            const normalizedPhrase = normalizeFootwearTermSpacing(phrase);
+            const key = normalizedPhrase.toLowerCase().trim();
             if (!candidateTermsMap.has(key) && !existingSourceSet.has(key)) {
-              const suggestions = generateSuggestions(phrase, "", "Thuật ngữ chung (General)");
+              const suggestions = generateSuggestions(normalizedPhrase, "", "Thuật ngữ chung (General)");
               if (suggestions.length > 0 && suggestions[0].targetTerm) {
                 candidateTermsMap.set(key, {
-                  sourceTerm: phrase,
-                  targetTerm: suggestions[0].targetTerm,
+                  sourceTerm: normalizedPhrase,
+                  targetTerm: normalizeFootwearTermSpacing(suggestions[0].targetTerm),
                   category: defaultStage,
                   context: `Trang ${entry.pageNumber}: "${line.slice(0, 120)}"`,
                   definition: `Thuật ngữ đề xuất từ ngữ cảnh PDF: ${fileName}`,
@@ -221,11 +309,13 @@ ${sampleText.slice(0, 4000)}`;
               isSpecializedTermCandidate(item.sourceTerm) &&
               item.sourceTerm.toLowerCase() !== item.targetTerm.toLowerCase()
             ) {
-              const k = item.sourceTerm.toLowerCase().trim();
+              const normSrc = normalizeFootwearTermSpacing(item.sourceTerm.trim());
+              const normTgt = normalizeFootwearTermSpacing(item.targetTerm.trim());
+              const k = normSrc.toLowerCase().trim();
               if (!candidateTermsMap.has(k) && !existingSourceSet.has(k)) {
                 candidateTermsMap.set(k, {
-                  sourceTerm: item.sourceTerm.trim(),
-                  targetTerm: item.targetTerm.trim(),
+                  sourceTerm: normSrc,
+                  targetTerm: normTgt,
                   category: item.category || defaultStage,
                   context: `Trang ${item.page || 1}: ${item.context || ""}`,
                   definition: `AI trích xuất từ tài liệu PDF: ${fileName}`,

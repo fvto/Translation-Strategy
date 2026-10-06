@@ -18,6 +18,7 @@ trigger: always_on
    - Inspection criteria (CTQ) must use English noun phrase adjunct order: `[Component] shape` (e.g., `Tip shape`, `Toe shape`, `Collar shape`, `Heel shape`), NEVER imperative verb phrases like `Shape tip`.
    - Stitch density must strictly follow `SPI <number> stitches/inch` (e.g. `SPI 9-10 stitches/inch`, `SPI 10-12 stitches/inch`, `SPI 7-8 stitches/inch`). Never write just `<number> SPI` or bare `SPI <number>`.
    - **No-sew Terminology**: In footwear manufacturing SOPs, always write `No-sew` or `no-sew` with a hyphen. NEVER use `Nosew` or `nosew`.
+   - **Tip-quarter Terminology**: Always write `Tip-quarter` or `tip-quarter` with a hyphen. NEVER concatenate into `Tipquarter` or leave unhyphenated `Tip quarter`.
 
 4. **Continuous Glossary Hygiene**:
    - Never allow identical `sourceTerm === targetTerm` in database or glossary sync.

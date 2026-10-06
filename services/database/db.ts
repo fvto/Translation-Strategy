@@ -1030,8 +1030,18 @@ class Database {
 
   private syncJsonBackup(data: DatabaseSchema): void {
     try {
+      const sanitizedData = {
+        ...data,
+        settings: {
+          ...data.settings,
+          geminiApiKey: "",
+          googleApiKey: "",
+          openaiApiKey: "",
+          huggingFaceApiKey: "",
+        },
+      };
       const tempFile = `${DB_FILE}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
-      fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), "utf-8");
+      fs.writeFileSync(tempFile, JSON.stringify(sanitizedData, null, 2), "utf-8");
       try {
         fs.renameSync(tempFile, DB_FILE);
       } catch {

@@ -1,0 +1,828 @@
+{
+  "fileName": "hhyy.pdf",
+  "totalPages": 76,
+  "totalCharacters": 25003,
+  "extractedAt": "2026-10-06T01:02:19.904Z",
+  "imageShieldActive": true,
+  "imagesExtracted": 0,
+  "sections": [
+    {
+      "page": 1,
+      "snippet": "Season/DevStyleName:FA25NIKESBZOOMNYJAH4FQ1273CuttingDieSB-077\nStage:CFMFty/PCC:CV/VHLast:SB-20Colorwayname:FQ1273-500\nTD:V2\n\nTABLEOFCONTENT\nI.Productskeyfeaturescheckpoint/overview/ \nNhữngtrọngđiểmcủamãgiày\nII.Processkeyfeature/allowance/Nhữngquitrìnhquantrọng\n1.Cutting&Preparation/Chặt\n2.Stitching/May\n3.Assembly/Thànhhình\n4.Stockfitting/Giacôngđế\nIII.Bottomparts–phầnđế\n\nKEYFEATURECHECKPOINT\nBottom:nocrockingissueonfinishedsample \nBottom:giàythànhphẩmkhônggậpghềnh\nHeelpulltab:straightnotslant\nH"
+    },
+    {
+      "page": 2,
+      "snippet": "Issue/Vấnđề:\nTheRBparts(bottom/Upper)haveslightlyshiny\nBị bóngliệu \nSolution/Hướngcảithiện:\nWe'llacceptthiscosmetic\nchấpnhậntiêuchuẩnnhưtrênhình\nAccept\nAfterde-moldingAfterstockfit\nFinishedshoe\nAfterWashing\nPROCESSKEYFEATURE-STOCKFITTING/GIACÔNGĐẾ"
+    },
+    {
+      "page": 3,
+      "snippet": "Bottom:nocrockingissueonfinishedsample \nBottom:giàythànhphẩmkhônggậpghềnh\nHeelpulltab:straightnotslant\nHeelpulltab:thẳngkhôngđượcméo\nUpper:straightfollowlasted \nUpper:thẳngtheotâmlast\nCollarlining:nowrinkle \nCollarlining:khôngnhăn\nTongue:Ensureconsistentlengthand \nnottwisted.\nTongue:đảmbảotiêuchuẩnvề \nđộdàivàkhôngbịvặn\nPRODUCTKEYFEATURES"
+    },
+    {
+      "page": 4,
+      "snippet": "Season/DevStyleName:HO26NIKESBZOOMNYJAH4FQ1273CuttingDie:SB-077-P-1\nStage:CFMFty/PCC:CV/VHLast:SB-20ProCode:FQ1273-600TD:F4\n\nBottom:nocrockingissueonfinishedsample \nBottom:giàythànhphẩmkhônggậpghềnh\nHeelpulltab:straightnotslant\nHeelpulltab:thẳngkhôngđượcméo\nUpper:straightfollowlasted \nUpper:thẳngtheotâmlast\nCollarlining:nowrinkle \nCollarlining:khôngnhăn\nTongue:Ensureconsistentlengthand \nnottwisted.\nTongue:đảmbảotiêuchuẩnvề \nđộdàivàkhôngbịvặn\nPRODUCTKEYFEATURES\n\n1\n2\n3\nIssue/Vấnđề:\nInconsistentcol"
+    }
+  ],
+  "harvestedTerms": [
+    {
+      "sourceTerm": "Season/DevStyleName",
+      "targetTerm": "FA25NIKESBZOOMNYJAH4FQ1273CuttingDieSB-077",
+      "category": "Assembly",
+      "context": "Trang 1: Season/DevStyleName:FA25NIKESBZOOMNYJAH4FQ1273CuttingDieSB-077",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "TD",
+      "targetTerm": "V2",
+      "category": "Assembly",
+      "context": "Trang 1: TD:V2",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Bottom",
+      "targetTerm": "nocrockingissueonfinishedsample",
+      "category": "Assembly",
+      "context": "Trang 1: Bottom:nocrockingissueonfinishedsample",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "giàythànhphẩmkhônggậpghềnh",
+      "targetTerm": "Bottom",
+      "category": "Assembly",
+      "context": "Trang 1: Bottom:giàythànhphẩmkhônggậpghềnh",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Heelpulltab",
+      "targetTerm": "straightnotslant",
+      "category": "Assembly",
+      "context": "Trang 1: Heelpulltab:straightnotslant",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "thẳngkhôngđượcméo",
+      "targetTerm": "Heelpulltab",
+      "category": "Assembly",
+      "context": "Trang 1: Heelpulltab:thẳngkhôngđượcméo",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "thẳngtheotâmlast",
+      "targetTerm": "Upper",
+      "category": "Assembly",
+      "context": "Trang 1: Upper:thẳngtheotâmlast",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Collarlining",
+      "targetTerm": "nowrinkle",
+      "category": "Assembly",
+      "context": "Trang 1: Collarlining:nowrinkle",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "khôngnhăn",
+      "targetTerm": "Collarlining",
+      "category": "Assembly",
+      "context": "Trang 1: Collarlining:khôngnhăn",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tongue",
+      "targetTerm": "Ensureconsistentlengthand",
+      "category": "Assembly",
+      "context": "Trang 1: Tongue:Ensureconsistentlengthand",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "đảmbảotiêuchuẩnvềđộ",
+      "targetTerm": "Tongue",
+      "category": "Assembly",
+      "context": "Trang 1: Tongue:đảmbảotiêuchuẩnvềđộ",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "chấpnhậntiêuchuẩnnhưtrênhình",
+      "targetTerm": "acceptedthiscosmetic",
+      "category": "Assembly",
+      "context": "Trang 1: acceptedthiscosmetic-chấpnhậntiêuchuẩnnhưtrênhình",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "cuttingChặt",
+      "targetTerm": "PROCESSKEYFEATURE",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE-cuttingChặt",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Inkexposedandshinyafterno",
+      "targetTerm": "sewwith Vamprubber",
+      "category": "Assembly",
+      "context": "Trang 1: Inkexposedandshinyafterno-sewwith Vamprubber",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "2đầukhôngcókeotừ3-7mm",
+      "targetTerm": "3-7mmwithoutvactechecofillat2side",
+      "category": "Assembly",
+      "context": "Trang 1: 3-7mmwithoutvactechecofillat2side:2đầukhôngcókeotừ3-7mm",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "cóbongbóngnhỏsaukhisấy",
+      "targetTerm": "Smallbubbleafterdrying",
+      "category": "Assembly",
+      "context": "Trang 1: Smallbubbleafterdrying:cóbongbóngnhỏsaukhisấy",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "chặt",
+      "targetTerm": "PROCESSKEYFEATURE-Cutting",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE-Cutting-chặt",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "PROCESSKEYFEATURE",
+      "targetTerm": "Stitching/May",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE-Stitching/May",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Thànhhình",
+      "targetTerm": "PROCESSKEYFEATURE-Assembly",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE-Assembly-Thànhhình",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "nhănlótvòngcổ",
+      "targetTerm": "Collarliningiswrinling",
+      "category": "Assembly",
+      "context": "Trang 1: Collarliningiswrinling–nhănlótvòngcổ",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "ASSEMBLY /THÀNHHÌNH",
+      "targetTerm": "PROCESSKEYFEATURE",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE –ASSEMBLY /THÀNHHÌNH",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "ASSEMBLY/THÀNHHÌNH",
+      "targetTerm": "PROCESSKEYFEATURE",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE–ASSEMBLY/THÀNHHÌNH",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "eolõmnhẹ",
+      "targetTerm": "collapsedonthequarter",
+      "category": "Assembly",
+      "context": "Trang 1: collapsedonthequarter–eolõmnhẹ",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Issue/Vấnđề",
+      "targetTerm": "Inconsistencecosmeticat socklinerrollinghotmelt",
+      "category": "Assembly",
+      "context": "Trang 1: Issue/Vấnđề:Inconsistencecosmeticat socklinerrollinghotmelt",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "STOCKFITTING/giacôngđế",
+      "targetTerm": "PROCESSKEYFEATURE",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE-STOCKFITTING/giacôngđế",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Air",
+      "targetTerm": "bubble",
+      "category": "Assembly",
+      "context": "Trang 1: Air-bubble",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "operationissue",
+      "targetTerm": "Airbagcolorcontaminationtothebrush",
+      "category": "Assembly",
+      "context": "Trang 1: operationissue:Airbagcolorcontaminationtothebrush",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "lackingcement2",
+      "targetTerm": "3mmattheedge",
+      "category": "Assembly",
+      "context": "Trang 1: lackingcement2-3mmattheedge",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Xưởngđế",
+      "targetTerm": "PROCESSKEYFEATURE-BOTTOM",
+      "category": "Assembly",
+      "context": "Trang 1: PROCESSKEYFEATURE-BOTTOM-Xưởngđế",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Afterde",
+      "targetTerm": "moldingAfterstockfit",
+      "category": "Assembly",
+      "context": "Trang 2: Afterde-moldingAfterstockfit",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 2
+    },
+    {
+      "sourceTerm": "đảmbảotiêuchuẩnvề",
+      "targetTerm": "Tongue",
+      "category": "Assembly",
+      "context": "Trang 3: Tongue:đảmbảotiêuchuẩnvề",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 3
+    },
+    {
+      "sourceTerm": "CUTTING/CHẶT",
+      "targetTerm": "PROCESSKEYFEATURE",
+      "category": "Assembly",
+      "context": "Trang 4: PROCESSKEYFEATURE–CUTTING/CHẶT",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 4
+    },
+    {
+      "sourceTerm": "NOSEWASSEMBLY/ÉPNOSEWVÀTHÀNHHÌNH",
+      "targetTerm": "PROCESSKEYFEATURE",
+      "category": "Assembly",
+      "context": "Trang 4: PROCESSKEYFEATURE–NOSEWASSEMBLY/ÉPNOSEWVÀTHÀNHHÌNH",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 4
+    },
+    {
+      "sourceTerm": "đảmbảotiêuchuẩnvề độ",
+      "targetTerm": "Tongue",
+      "category": "Assembly",
+      "context": "Trang 4: Tongue:đảmbảotiêuchuẩnvề độ",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 4
+    },
+    {
+      "sourceTerm": "NOSEW/ÉPNOSEW",
+      "targetTerm": "PROCESSKEYFEATURE",
+      "category": "Assembly",
+      "context": "Trang 4: PROCESSKEYFEATURE–NOSEW/ÉPNOSEW",
+      "definition": "Trích xuất từ tài liệu PDF: hhyy.pdf",
+      "page": 4
+    },
+    {
+      "sourceTerm": "TD:V2",
+      "targetTerm": "TD:V2 standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"TD:V2\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "TABLEOFCONTENT",
+      "targetTerm": "TABLEOFCONTENT standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"TABLEOFCONTENT\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "KEYFEATURECHECKPOINT",
+      "targetTerm": "KEYFEATURECHECKPOINT standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"KEYFEATURECHECKPOINT\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Bottom:nocrockingissueonfinishedsample",
+      "targetTerm": "Bottom:nocrockingissueonfinishedsample standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Bottom:nocrockingissueonfinishedsample\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Heelpulltab:straightnotslant",
+      "targetTerm": "Heelpulltab:straightnotslant standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Heelpulltab:straightnotslant\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Upper:straightfollowlasted",
+      "targetTerm": "Upper:straightfollowlasted standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Upper:straightfollowlasted\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Collarlining:nowrinkle",
+      "targetTerm": "Collarlining:nowrinkle standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Collarlining:nowrinkle\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tongue:Ensureconsistentlengthand",
+      "targetTerm": "Tongue:ensureconsistentlengthand standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Tongue:Ensureconsistentlengthand\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "nottwisted",
+      "targetTerm": "Nottwisted standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"nottwisted.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "KEYFEATUREOVERVIEW",
+      "targetTerm": "KEYFEATUREOVERVIEW standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"KEYFEATUREOVERVIEW\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Accept",
+      "targetTerm": "Accept standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Accept\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Suggestion/Hướngcảithiện",
+      "targetTerm": "Suggestion",
+      "category": "Assembly",
+      "context": "Trang 1: \"Suggestion/Hướngcảithiện:\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Lastedupper",
+      "targetTerm": "Lastedupper standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Lastedupper\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "ZoomIn",
+      "targetTerm": "Zoomin standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"ZoomIn\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Whiteningat",
+      "targetTerm": "Whiteningat standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Whiteningat vamprubbervalleyMilkyattheholesofvamprubber\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Inkexposedandshinyafterno-sewwith",
+      "targetTerm": "Inkexposedandshinyafterno-sewwith standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Inkexposedandshinyafterno-sewwith Vamprubber\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Vamprubber",
+      "targetTerm": "Vamprubber standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Inkexposedandshinyafterno-sewwith Vamprubber\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Notaccept",
+      "targetTerm": "Notaccept standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Notaccept\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Swooshlogohaveatinydot",
+      "targetTerm": "Swooshlogohaveatinydot standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Swooshlogohaveatinydot-\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Swoooshaftersilkscreen",
+      "targetTerm": "Swoooshaftersilkscreen standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Swoooshaftersilkscreen\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tinyinkdotaccept",
+      "targetTerm": "Tinyinkdotaccept standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Tinyinkdotaccept\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "B)upperafterno-sewisinconsistenceshinyat",
+      "targetTerm": "B)upperafterno-sewisinconsistenceshinyat standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"B)upperafterno-sewisinconsistenceshinyat winmeltarea-mặtgiàysaukhinosewchảykeođậmnhạtkhácnhau\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "C)acceptedthis",
+      "targetTerm": "C)acceptedthis standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"C)acceptedthis cosmeticbutmustbeconsistency -chấpnhậntiêuchuẩnbóngnhẹnhưtrênhìnhnhưngphảiđềunhau.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "cosmeticbutmustbeconsistency",
+      "targetTerm": "Cosmeticbutmustbeconsistency standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"C)acceptedthis cosmeticbutmustbeconsistency -chấpnhậntiêuchuẩnbóngnhẹnhưtrênhìnhnhưngphảiđềunhau.\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Để",
+      "targetTerm": "In order to",
+      "category": "Assembly",
+      "context": "Trang 1: \"Để đảmbáo sứckéo, chấp nhậntiêuchuẩnnhưtrênhình\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Inconsistentshinyon1pieceafternosew",
+      "targetTerm": "Inconsistentshinyon1pieceafternosew standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Inconsistentshinyon1pieceafternosew\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Inconsistentshinyonfinishedshoe",
+      "targetTerm": "Inconsistentshinyonfinishedshoe standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Inconsistentshinyonfinishedshoe\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Issue/Vấnđề:Inconsistencecosmeticat",
+      "targetTerm": "Issue",
+      "category": "Assembly",
+      "context": "Trang 1: \"Issue/Vấnđề:Inconsistencecosmeticat vactechecofillprocess,bubbleafterdrying\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "vactechecofillprocess,bubbleafterdrying",
+      "targetTerm": "Vactechecofillprocess,bubbleafterdrying standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Issue/Vấnđề:Inconsistencecosmeticat vactechecofillprocess,bubbleafterdrying\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "3-7mm",
+      "targetTerm": "3-7mm standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"3-7mm\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "PROCESSKEYFEATURE-Stitching/May",
+      "targetTerm": "PROCESSKEYFEATURE-Stitching",
+      "category": "Assembly",
+      "context": "Trang 1: \"PROCESSKEYFEATURE-Stitching/May\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "We'llacceptthe+/-1mm",
+      "targetTerm": "We'llacceptthe+",
+      "category": "Assembly",
+      "context": "Trang 1: \"We'llacceptthe+/-1mm allowanceonfinishedshoe\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "allowanceonfinishedshoe",
+      "targetTerm": "Allowanceonfinishedshoe standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"We'llacceptthe+/-1mm allowanceonfinishedshoe\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Swooshlogohaveshrinkage",
+      "targetTerm": "Swooshlogohaveshrinkage standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Swooshlogohaveshrinkage\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "A:Toleranceontheheelpulltab",
+      "targetTerm": "A:toleranceontheheelpulltab standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"A:Toleranceontheheelpulltab:\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Eyestayfraying",
+      "targetTerm": "Eyestayfraying standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Eyestayfraying materialafterpunchingholelỗđụctưaliệu\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Solution/Hướngcảithiện",
+      "targetTerm": "Solution",
+      "category": "Assembly",
+      "context": "Trang 1: \"Solution/Hướngcảithiện:\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "We'llacceptthiscosmetic",
+      "targetTerm": "We'llacceptthiscosmetic standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"We'llacceptthiscosmetic\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "FrayingonVamp/ eyestay",
+      "targetTerm": "Frayingonvamp",
+      "category": "Assembly",
+      "context": "Trang 1: \"FrayingonVamp/ eyestay\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "FrayingonVamp",
+      "targetTerm": "Frayingonvamp standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"FrayingonVamp/ eyestay\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Frayingoneyestayhole",
+      "targetTerm": "Frayingoneyestayhole standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Frayingoneyestayhole\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "FrayingonQuarter",
+      "targetTerm": "Frayingonquarter standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"FrayingonQuarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "PROCESSKEYFEATURE–STITCHING/MAY",
+      "targetTerm": "Processkeyfeature–stitching",
+      "category": "Assembly",
+      "context": "Trang 1: \"PROCESSKEYFEATURE–STITCHING/MAY\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Khu",
+      "targetTerm": "Khu standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Khu vựcmũigiàylộđườngchỉmayđếtrungdo đếtrong\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "The",
+      "targetTerm": "The standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"The collarliningopenattopeyelet.Lótvòng cổhởraởchỗôdê\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "PROCESSKEYFEATURE –ASSEMBLY /THÀNHHÌNH",
+      "targetTerm": "Processkeyfeature –assembly",
+      "category": "Assembly",
+      "context": "Trang 1: \"PROCESSKEYFEATURE –ASSEMBLY /THÀNHHÌNH\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "PROCESSKEYFEATURE –ASSEMBLY",
+      "targetTerm": "Processkeyfeature –assembly standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"PROCESSKEYFEATURE –ASSEMBLY /THÀNHHÌNH\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "ASSEMBLY",
+      "targetTerm": "ASSEMBLY standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"PROCESSKEYFEATURE –ASSEMBLY /THÀNHHÌNH\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "doheelcliptrong",
+      "targetTerm": "Doheelcliptrong standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Thấyđườngkeo,đốmkeo doheelcliptrong\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "We'llacceptthe+/-1mmallowance",
+      "targetTerm": "We'llacceptthe+",
+      "category": "Assembly",
+      "context": "Trang 1: \"We'llacceptthe+/-1mmallowance\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "shiftingcausingtheNikeSB",
+      "targetTerm": "Shiftingcausingthenikesb standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"B.Heelpulltabis shiftingcausingtheNikeSB logoisinconsistent:dâyđaigótlệchsovớilogoNIKESB\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "PROCESSKEYFEATURE–ASSEMBLY/THÀNHHÌNH",
+      "targetTerm": "Processkeyfeature–assembly",
+      "category": "Assembly",
+      "context": "Trang 1: \"PROCESSKEYFEATURE–ASSEMBLY/THÀNHHÌNH\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Keocaokhu",
+      "targetTerm": "Keocaokhu standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Keocaokhu vựcheelclip,có đườngkeo trắngmỏngkhu vựcmặtgiàycao su\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "su",
+      "targetTerm": "Su standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Keocaokhu vựcheelclip,có đườngkeo trắngmỏngkhu vựcmặtgiàycao su\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Cementbleedingafterapplyonmesh",
+      "targetTerm": "Cementbleedingafterapplyonmesh standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Cementbleedingafterapplyonmesh\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "exposecement1mm",
+      "targetTerm": "exposecement1mm standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"exposecement1mm\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "biteline",
+      "targetTerm": "Biteline standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"biteline\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Cementbleeding",
+      "targetTerm": "Cementbleeding standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Cementbleeding\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "We'llacceptthiscosmeticfollowcfmsample",
+      "targetTerm": "We'llacceptthiscosmeticfollowcfmsample standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"We'llacceptthiscosmeticfollowcfmsample\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "LastedUpperFinishedshoes",
+      "targetTerm": "Lastedupperfinishedshoes standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"LastedUpperFinishedshoes\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "socklinerrollinghotmelt",
+      "targetTerm": "Socklinerrollinghotmelt standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Issue/Vấnđề:Inconsistencecosmeticat socklinerrollinghotmelt\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "45-50%width",
+      "targetTerm": "45-50%width standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"45-50%width\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Nocement",
+      "targetTerm": "Nocement standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Nocement\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "PROCESSKEYFEATURE-STOCKFITTING/giacôngđế",
+      "targetTerm": "PROCESSKEYFEATURE-STOCKFITTING",
+      "category": "Assembly",
+      "context": "Trang 1: \"PROCESSKEYFEATURE-STOCKFITTING/giacôngđế\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "RBparts",
+      "targetTerm": "Rbparts standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"RBparts\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: hhyy.pdf",
+      "page": 1
+    }
+  ]
+}

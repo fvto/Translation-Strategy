@@ -60,3 +60,27 @@ test("PDF Context Feeder - Rejects scanned PDFs without digital text layer", asy
     "Should reject scanned PDFs and refuse OCR for confidentiality"
   );
 });
+
+test("PDF Context Feeder - Normalizes glued Tipquarter and unhyphenated Tip quarter to Tip-quarter", async () => {
+  const samplePdfContent = `%PDF-MOCK-TIPQUARTER
+Trang 1: Tiêu chuẩn kiểm tra Tipquarter và Tip quarter
+Độ nhạt màu Tipquarter : Tipquarter color fading
+Độ lệch màu Tip quarter : Tip quarter color variation`;
+
+  const pdfBuffer = Buffer.from(samplePdfContent, "utf8");
+
+  const res = await feedPdfContextToGlossary(pdfBuffer, "Tipquarter_Spec.pdf", {
+    defaultStage: "Assembly",
+    autoSaveToReview: false,
+  });
+
+  // Verify that any candidate terms containing Tipquarter/Tip quarter have been normalized to Tip-quarter
+  for (const c of res.candidateTerms) {
+    assert.doesNotMatch(c.sourceTerm, /\bTipquarter\b/, "Source term must not contain glued Tipquarter");
+    assert.doesNotMatch(c.targetTerm, /\bTipquarter\b/, "Target term must not contain glued Tipquarter");
+    if (c.targetTerm.toLowerCase().includes("tip")) {
+      assert.match(c.targetTerm, /Tip-quarter/i, "Target term must use hyphenated Tip-quarter");
+    }
+  }
+});
+

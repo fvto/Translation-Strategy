@@ -269,6 +269,29 @@ export async function auditAndRepairPptxPostFlight(
         }
       }
 
+      // Auto-Repair stuck/unhyphenated "Tipquarter" or "Tip quarter" to standard hyphenated "Tip-quarter"
+      if (/\b(?:Tipquarter|tipquarter|TIPQUARTER|Tip\s+quarter|tip\s+quarter|TIP\s+QUARTER)\b/i.test(updated)) {
+        const fixed = updated
+          .replace(/\bTipquarter\b/g, "Tip-quarter")
+          .replace(/\btipquarter\b/g, "tip-quarter")
+          .replace(/\bTIPQUARTER\b/g, "TIP-QUARTER")
+          .replace(/\bTip\s+quarter\b/g, "Tip-quarter")
+          .replace(/\btip\s+quarter\b/g, "tip-quarter")
+          .replace(/\bTIP\s+QUARTER\b/g, "TIP-QUARTER");
+        if (fixed !== updated) {
+          xmlModified = true;
+          repairedCount++;
+          issues.push({
+            slide: filename,
+            type: "typo_repair",
+            message: "Auto-repaired stuck/unhyphenated 'Tipquarter'/'Tip quarter' to standard hyphenated 'Tip-quarter'",
+            targetText: fixed,
+            autoRepaired: true,
+          });
+          updated = fixed;
+        }
+      }
+
       // Auto-Refine technical phrasing using SOP Grammar & Polish Engine
       const polished = polishSopText(updated);
       if (polished !== updated) {
