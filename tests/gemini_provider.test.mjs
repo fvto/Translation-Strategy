@@ -130,3 +130,57 @@ test("Google NMT - honors the requested VI to EN direction for bilingual content
     globalThis.fetch = originalFetch;
   }
 });
+
+test("Gemini Provider - Automatically switches from 3.5-flash-lite to 3.5-flash on 429 limit", async () => {
+  const originalFetch = globalThis.fetch;
+  const calledModels = [];
+
+  globalThis.fetch = async (url) => {
+    const urlStr = String(url);
+    if (urlStr.includes("gemini-3.5-flash-lite")) {
+      calledModels.push("gemini-3.5-flash-lite");
+      return new Response(
+        JSON.stringify({ error: { message: "Resource exhausted for flash-lite. 429." } }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    if (urlStr.includes("gemini-3.5-flash")) {
+      calledModels.push("gemini-3.5-flash");
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  { text: JSON.stringify([{ id: "p1", translatedText: "Quality inspection" }]) }
+                ]
+              }
+            }
+          ]
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    return new Response(JSON.stringify({}), { status: 404 });
+  };
+
+  try {
+    const provider = new GeminiTranslationProvider("test_key", "gemini-3.5-flash-lite");
+    assert.equal(provider.getModel(), "gemini-3.5-flash-lite");
+
+    const res = await provider.translateBatch({
+      items: [{ id: "p1", sourceText: "Kiểm tra chất lượng" }],
+      sourceLanguage: "vi",
+      targetLanguage: "en",
+      approvedTerminology: [],
+    });
+
+    assert.ok(res.results.has("p1"));
+    assert.equal(res.results.get("p1"), "Quality inspection");
+    assert.deepEqual(calledModels, ["gemini-3.5-flash-lite", "gemini-3.5-flash"]);
+    assert.equal(provider.getModel(), "gemini-3.5-flash", "Active model must be promoted to gemini-3.5-flash");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+

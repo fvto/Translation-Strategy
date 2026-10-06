@@ -44,9 +44,17 @@ export class GeminiTranslationProvider implements TranslationProvider {
     this.model = model || process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
   }
 
+  getModel(): string {
+    return this.model;
+  }
+
+  setModel(model: string): void {
+    this.model = model;
+  }
+
   private getCandidateModels(): string[] {
     const envModel = process.env.GEMINI_MODEL || "";
-    const primary = envModel || this.model || "gemini-3.5-flash-lite";
+    const primary = this.model || envModel || "gemini-3.5-flash-lite";
     const candidates = [
       primary,
       "gemini-3.5-flash-lite",
@@ -69,7 +77,10 @@ export class GeminiTranslationProvider implements TranslationProvider {
     let lastError: Error | null = null;
     let successfulModel = this.model;
 
-    for (const currentModel of candidateModels) {
+    for (let modelIdx = 0; modelIdx < candidateModels.length; modelIdx++) {
+      const currentModel = candidateModels[modelIdx];
+      let rateLimitedOnModel = false;
+
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${key}`;
@@ -99,6 +110,19 @@ export class GeminiTranslationProvider implements TranslationProvider {
           if (res.status === 429) {
             const errJson = await res.json().catch(() => ({}));
             const errMsg = errJson.error?.message || `Gemini ${currentModel} returned ${res.status}`;
+            rateLimitedOnModel = true;
+
+            const remainingModels = candidateModels.slice(modelIdx + 1);
+            if (remainingModels.length > 0) {
+              const nextModel = remainingModels[0];
+              console.warn(
+                `[GeminiQuotaGuard] Model ${currentModel} reached rate limit (429). ` +
+                `Switching immediately to ${nextModel} instead of falling back to Google NMT.`
+              );
+              this.model = nextModel; // Permanently promote next model for this and subsequent requests
+              break; // Break attempt loop to move immediately to nextModel
+            }
+
             throw rateLimitError(errMsg);
           }
 
@@ -131,6 +155,7 @@ export class GeminiTranslationProvider implements TranslationProvider {
           );
 
           successfulModel = currentModel;
+          this.model = currentModel;
           return {
             translatedText: enforced.text,
             provider: `Google Gemini (${successfulModel})`,
@@ -139,10 +164,19 @@ export class GeminiTranslationProvider implements TranslationProvider {
           };
         } catch (err: any) {
           lastError = err;
-          if (err instanceof GeminiRateLimitError) throw err;
-          // If network or other non-rate error, try next candidate
+          if (err instanceof GeminiRateLimitError) {
+            const remainingModels = candidateModels.slice(modelIdx + 1);
+            if (remainingModels.length === 0) {
+              throw err;
+            }
+            break;
+          }
           break;
         }
+      }
+
+      if (rateLimitedOnModel) {
+        continue;
       }
     }
 
@@ -230,7 +264,10 @@ ${JSON.stringify(promptItems, null, 2)}`;
     let lastError: Error | null = null;
     let successfulModel = this.model;
 
-    for (const currentModel of candidateModels) {
+    for (let modelIdx = 0; modelIdx < candidateModels.length; modelIdx++) {
+      const currentModel = candidateModels[modelIdx];
+      let rateLimitedOnModel = false;
+
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${key}`;
@@ -261,6 +298,19 @@ ${JSON.stringify(promptItems, null, 2)}`;
           if (res.status === 429) {
             const errJson = await res.json().catch(() => ({}));
             const errMsg = errJson.error?.message || `Gemini ${currentModel} returned ${res.status}`;
+            rateLimitedOnModel = true;
+
+            const remainingModels = candidateModels.slice(modelIdx + 1);
+            if (remainingModels.length > 0) {
+              const nextModel = remainingModels[0];
+              console.warn(
+                `[GeminiQuotaGuard] Batch model ${currentModel} reached rate limit (429). ` +
+                `Switching immediately to ${nextModel} instead of falling back to Google NMT.`
+              );
+              this.model = nextModel; // Permanently promote next model for this and subsequent requests
+              break; // Break attempt loop to move immediately to nextModel
+            }
+
             throw rateLimitError(errMsg);
           }
 
@@ -320,6 +370,7 @@ ${JSON.stringify(promptItems, null, 2)}`;
           }
 
           successfulModel = currentModel;
+          this.model = currentModel;
           return {
             results,
             provider: `Google Gemini (${successfulModel})`,
@@ -328,9 +379,19 @@ ${JSON.stringify(promptItems, null, 2)}`;
           };
         } catch (err: any) {
           lastError = err;
-          if (err instanceof GeminiRateLimitError) throw err;
+          if (err instanceof GeminiRateLimitError) {
+            const remainingModels = candidateModels.slice(modelIdx + 1);
+            if (remainingModels.length === 0) {
+              throw err;
+            }
+            break;
+          }
           await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
         }
+      }
+
+      if (rateLimitedOnModel) {
+        continue;
       }
     }
 

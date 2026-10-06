@@ -831,22 +831,57 @@ export class PptxTranslatorService {
           hadRecentTransientError = true;
           if (err instanceof GeminiRateLimitError) {
             consecutiveQuotaHits++;
-            // Strategy 2: If retryAfterSeconds is specified or short, wait and retry
-            const shouldRetry = await retryAfterDelay((err as GeminiRateLimitError).retryAfterSeconds, progressPercent);
-            if (shouldRetry && consecutiveQuotaHits <= 3) {
-              console.log(`[QuotaGuard] Retrying batch ${currentBatch} after cooldown...`);
-              try {
-                batchRes = await activeProvider.translateBatch!({
-                  items: chunk,
-                  sourceLanguage,
-                  targetLanguage,
-                  approvedTerminology: approvedGlossary,
-                  context: stageContext,
+            // User Rule: If activeProvider is Gemini and using 3.5-flash-lite, switch to gemini-3.5-flash first!
+            if (activeProvider.name === "gemini") {
+              const gemini = activeProvider as any;
+              const currentModel = gemini.getModel?.() || "";
+              if (!currentModel.includes("3.5-flash") || currentModel.includes("lite")) {
+                console.warn(
+                  `[QuotaGuard] Switching Gemini model from ${currentModel || "3.5-flash-lite"} to gemini-3.5-flash...`
+                );
+                gemini.setModel?.("gemini-3.5-flash");
+                options?.onProgress?.({
+                  stage: "translating",
+                  progress: progressPercent,
+                  currentBatch,
+                  totalBatches,
+                  translatedItems: i,
+                  totalItems: itemsPendingTranslation.length,
+                  message: `🔄 Đạt hạn mức 3.5 Flash Lite, tự động chuyển sang Gemini 3.5 Flash...`,
                 });
-                consecutiveQuotaHits = 0; // reset on success
-                hadRecentTransientError = false;
-              } catch (retryQuotaErr) {
-                console.warn(`[QuotaGuard] Retry also encountered quota on batch ${currentBatch}. Delegating this batch to emergency NMT.`);
+                try {
+                  batchRes = await activeProvider.translateBatch!({
+                    items: chunk,
+                    sourceLanguage,
+                    targetLanguage,
+                    approvedTerminology: approvedGlossary,
+                    context: stageContext,
+                  });
+                  consecutiveQuotaHits = 0;
+                  hadRecentTransientError = false;
+                } catch (retryFlashErr) {
+                  console.warn(`[QuotaGuard] Retry with gemini-3.5-flash encountered error:`, retryFlashErr);
+                }
+              }
+            }
+
+            if (!batchRes || !batchRes.results || batchRes.results.size === 0) {
+              const shouldRetry = await retryAfterDelay((err as GeminiRateLimitError).retryAfterSeconds, progressPercent);
+              if (shouldRetry && consecutiveQuotaHits <= 3) {
+                console.log(`[QuotaGuard] Retrying batch ${currentBatch} after cooldown...`);
+                try {
+                  batchRes = await activeProvider.translateBatch!({
+                    items: chunk,
+                    sourceLanguage,
+                    targetLanguage,
+                    approvedTerminology: approvedGlossary,
+                    context: stageContext,
+                  });
+                  consecutiveQuotaHits = 0; // reset on success
+                  hadRecentTransientError = false;
+                } catch (retryQuotaErr) {
+                  console.warn(`[QuotaGuard] Retry also encountered quota on batch ${currentBatch}.`);
+                }
               }
             }
           } else {
@@ -883,12 +918,47 @@ export class PptxTranslatorService {
           }
         }
 
-        // Smart Failover: If this specific batch failed with Gemini, use Google NMT for THIS BATCH ONLY.
-        // DO NOT permanently disable Gemini for future batches! Subsequent batches will continue with Gemini after cooldown.
+        // Smart Failover: If activeProvider is Gemini, ensure gemini-3.5-flash is attempted BEFORE any Google NMT fallback!
+        if (!batchRes || !batchRes.results || batchRes.results.size === 0) {
+          if (activeProvider.name === "gemini") {
+            const gemini = activeProvider as any;
+            const currentModel = gemini.getModel?.() || "";
+            if (currentModel !== "gemini-3.5-flash") {
+              console.warn(
+                `[ModelFailover] Gemini model ${currentModel || "3.5-flash-lite"} failed on batch ${currentBatch}. ` +
+                `Switching to gemini-3.5-flash for this and all remaining batches (preventing Google NMT fallback).`
+              );
+              gemini.setModel?.("gemini-3.5-flash");
+              options?.onProgress?.({
+                stage: "translating",
+                progress: progressPercent,
+                currentBatch,
+                totalBatches,
+                translatedItems: i,
+                totalItems: itemsPendingTranslation.length,
+                message: `⚡ Tự động chuyển sang Gemini 3.5 Flash để tiếp tục xử lý gói ${currentBatch}...`,
+              });
+              try {
+                batchRes = await gemini.translateBatch!({
+                  items: chunk,
+                  sourceLanguage,
+                  targetLanguage,
+                  approvedTerminology: approvedGlossary,
+                  context: stageContext,
+                });
+                hadRecentTransientError = false;
+              } catch (flashErr) {
+                console.error(`Gemini 3.5 Flash retry failed:`, flashErr);
+              }
+            }
+          }
+        }
+
+        // Emergency Fallback: ONLY if all Gemini models (including 3.5 Flash) failed, use Google NMT for THIS BATCH ONLY.
         if (!batchRes || !batchRes.results || batchRes.results.size === 0) {
           if (activeProvider.name !== "google_translate") {
             console.warn(
-              `[ProviderFailover] Primary provider ${activeProvider.name} failed for batch ${currentBatch}. ` +
+              `[ProviderFailover] All Gemini models failed for batch ${currentBatch}. ` +
               `Translating batch ${currentBatch} with Google NMT emergency fallback, preserving Gemini for subsequent batches.`
             );
             const emergencyNmt = new GoogleTranslationProvider();
@@ -899,7 +969,7 @@ export class PptxTranslatorService {
               totalBatches,
               translatedItems: i,
               totalItems: itemsPendingTranslation.length,
-              message: `⚡ Gói ${currentBatch} tạm dùng Google NMT do quá tải; gói tiếp theo vẫn sẽ tiếp tục dùng Gemini.`,
+              message: `⚡ Gói ${currentBatch} tạm dùng Google NMT do quá tải toàn bộ Gemini; gói tiếp theo vẫn sẽ tiếp tục dùng Gemini.`,
             });
             try {
               batchRes = await emergencyNmt.translateBatch!({
