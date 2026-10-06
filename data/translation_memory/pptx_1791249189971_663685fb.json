@@ -4,10 +4,10 @@
   "mode": "ipqc_bilingual",
   "sourceLanguage": "vi",
   "targetLanguage": "en",
-  "createdAt": "2026-10-06T01:14:11.366Z",
+  "createdAt": "2026-10-06T01:35:18.875Z",
   "slideCount": 43,
   "totalPairs": 716,
-  "harvestedCount": 9,
+  "harvestedCount": 0,
   "slides": [
     {
       "slideIndex": 1,
@@ -232,7 +232,7 @@
         {
           "id": "s9_p9",
           "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap/rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -301,7 +301,7 @@
         {
           "id": "s10_p8",
           "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap/rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -377,7 +377,7 @@
         {
           "id": "s11_p8",
           "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap/rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -460,7 +460,7 @@
         {
           "id": "s12_p9",
           "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap/rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -529,7 +529,7 @@
         {
           "id": "s13_p8",
           "sourceText": "CTQ 8-Thành phẩm không hở keo,Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap, rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap, rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -605,7 +605,7 @@
         {
           "id": "s14_p8",
           "sourceText": "CTQ 8-Thành phẩm không hở keo,Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap, rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap, rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -653,7 +653,7 @@
         {
           "id": "s15_p4",
           "sourceText": "CTQ 3- Nosew không tràn keo /hở keo/bao không, mặt trước không dính bụi bẩn, ẩn màu",
-          "translatedText": "CTQ 3-Nosew free of cement overflow / bond gap / bubble, vamp free of dirt, hidden color",
+          "translatedText": "CTQ 3-Nosew free of cement overflow / bond gap / bubble, vamp free of dirt, color migration",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -681,7 +681,7 @@
         {
           "id": "s15_p8",
           "sourceText": "CTQ 8-Thành phẩm không hở keo,Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap, rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap, rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -764,7 +764,7 @@
         {
           "id": "s16_p9",
           "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
-          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "translatedText": "CTQ 8-Finished shoes free of bond gap/rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -1244,7 +1244,7 @@
         {
           "id": "s19_p24",
           "sourceText": "9h15’",
-          "translatedText": "9:15 a. M.",
+          "translatedText": "9'15\"",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -1633,7 +1633,7 @@
         {
           "id": "s22_p11",
           "sourceText": "Nhiệt độ dưới :130℃+-3          N/A",
-          "translatedText": "Under temperature: 130℃±3 N/A",
+          "translatedText": "Lower temperature: 130℃±3 N/A",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -1752,7 +1752,7 @@
         {
           "id": "s22_p34",
           "sourceText": "Bóng liệu nhẹ",
-          "translatedText": "Slight material luster",
+          "translatedText": "Slight shiny material",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -1828,7 +1828,7 @@
         {
           "id": "s23_p7",
           "sourceText": "May zizag gót phải bằng mí, không chòng biên để tránh dây đai may bị lệch, cộm",
-          "translatedText": "Heel zigzag stitching must be edge to edge, without overlapping edges to prevent the sewn webbing from being skewed or lumpy",
+          "translatedText": "Heel zigzag stitching must be edge to edge, without overlapping edges to prevent the sewn webbing from being skewed or x-ray",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -2294,7 +2294,7 @@
         {
           "id": "s26_p12",
           "sourceText": "*Định hình 3D mũi lạnh",
-          "translatedText": "*Tip cold shaping 3D shaping",
+          "translatedText": "*Tip cold 3D shaping",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -2593,7 +2593,7 @@
         {
           "id": "s28_p8",
           "sourceText": "mũi/inch",
-          "translatedText": "stitches/inch",
+          "translatedText": "mũi/inch",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -3011,7 +3011,7 @@
         {
           "id": "s30_p10",
           "sourceText": "May mỗi bên 6-7 mũi, cách kim 9-10 mũi/inch để cố định vị trí lót vòng cổ",
-          "translatedText": "Stitching 6-7 stitches on each side, 9-10 stitches distance from needle to fix at collar lining",
+          "translatedText": "Stitching 6-7 stitches on each side, SPI 9-10 stitches distance from needle to fix at collar lining",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -3240,7 +3240,7 @@
         {
           "id": "s32_p16",
           "sourceText": "3. Kiểm tra sau khi may lưỡi/dây đai lưỡi không méo, đúng cách biên 2mm, cách kim 9-10 mũi/inch.",
-          "translatedText": "3. Check after stitching tongue/webbing tongue is not distorted, correct margin 2mm, 9-10 stitches away from needle.",
+          "translatedText": "3. Check after stitching tongue/webbing tongue is not distorted, correct margin 2mm, SPI 9-10 stitches away from needle.",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -3615,7 +3615,7 @@
         {
           "id": "s35_p10",
           "sourceText": "2.Kiểm tra quét keo/nước thuốc phải đều, tới vị hết bề mặt của đế.",
-          "translatedText": "2. Check that cementing/priming must be consistent, reach marking must be surface of sole.",
+          "translatedText": "2. Check that cementing/priming must be consistent, reach marking must be surface of bottom.",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -3740,7 +3740,7 @@
         {
           "id": "s36_p6",
           "sourceText": "1.Kiểm tra mặt giày và đế phải cùng size",
-          "translatedText": "1. Check that upper and sole are the same size",
+          "translatedText": "1. Check that upper and bottom are the same size",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -3901,14 +3901,14 @@
         {
           "id": "s36_p36",
           "sourceText": "Thành phẩm không gập gềnh",
-          "translatedText": "The finished product is not bumpy",
+          "translatedText": "The finished product is not rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
         {
           "id": "s36_p37",
           "sourceText": "Thành phẩm bị gập gềnh",
-          "translatedText": "The finished product is bumpy",
+          "translatedText": "The finished product is rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4096,14 +4096,14 @@
         {
           "id": "s37_p27",
           "sourceText": "Thành phẩm không gập gềnh",
-          "translatedText": "The finished product is not bumpy",
+          "translatedText": "The finished product is not rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
         {
           "id": "s37_p28",
           "sourceText": "Thành phẩm bị gập gềnh",
-          "translatedText": "The finished product is bumpy",
+          "translatedText": "The finished product is rocking",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4319,7 +4319,7 @@
         {
           "id": "s38_p32",
           "sourceText": "Bóng liệu nhẹ",
-          "translatedText": "Slight material luster",
+          "translatedText": "Slight shiny material",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4430,7 +4430,7 @@
         {
           "id": "s39_p16",
           "sourceText": "5.Do thiết kế sau khi nosew bề mặt Tip quarter không bằng phẳng ảnh hưởng biên Logo  không suôn đều, bề mặt liệu Tip quarter sau khi ép khác màu, biên liệu trắng và tràn keo tại các lỗ trang trí như hình QA manual cập nhật",
-          "translatedText": "5. Due to design after nosew surface Tipquarter does not affect flat margin swoosh does not smoothly and evenly, surface Tipquarter material after press color different, material edge white and cement overflow at deco holes as shown QA manual updated",
+          "translatedText": "5. Due to design after nosew surface Tip quarter does not affect flat margin swoosh does not smoothly and evenly, surface Tip quarter material after press color different, material edge white and cement overflow at deco holes as shown QA manual updated",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4472,7 +4472,7 @@
         {
           "id": "s39_p23",
           "sourceText": "Tip quarter ép dính chắc",
-          "translatedText": "Tipquarter press high-adhesion",
+          "translatedText": "Tip quarter press high-adhesion",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4521,7 +4521,7 @@
         {
           "id": "s39_p30",
           "sourceText": "Bóng liệu nhẹ",
-          "translatedText": "Slight material luster",
+          "translatedText": "Slight shiny material",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4785,14 +4785,14 @@
         {
           "id": "s41_p9",
           "sourceText": "*Ép nóng : Nhiệt độ trên :130℃+-3 , dưới",
-          "translatedText": "*Hot press: Upper temperature:130℃+-3, below",
+          "translatedText": "*Hot press: Upper temperature:130℃+-3,",
           "isTitle": false,
           "isInspectionItem": false
         },
         {
           "id": "s41_p10",
           "sourceText": "125℃+-3,Thời gian : 45”, lực ép 80-85kg/cm2",
-          "translatedText": "125℃+-3, Time: 45”, pressure 80-85kg/cm2",
+          "translatedText": "Lower temperature 125℃+-3, Time: 45”, pressure 80-85kg/cm2",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4806,7 +4806,7 @@
         {
           "id": "s41_p13",
           "sourceText": "3.Kiểm tra sau khi ép các lỗ trang trí trên tip-quarter và logo không được bao không, tràn keo, tip quarter không dính tạp liệu.",
-          "translatedText": "3. Check after press that deco holes on tip-quarter and swoosh are not stuck on bubble, cement overflow, tip-quarter are not stuck on impurities.",
+          "translatedText": "3. Check after press that deco holes on tip-quarter and swoosh are not bubble, cement overflow, tip-quarter are not stuck on impurities.",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -4890,7 +4890,7 @@
         {
           "id": "s41_p26",
           "sourceText": "Bóng liệu nhẹ",
-          "translatedText": "Slight material luster",
+          "translatedText": "Slight shiny material",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -5140,14 +5140,14 @@
         {
           "id": "s43_p9",
           "sourceText": "*Ép nóng : Nhiệt độ trên :130℃+-5 , dưới",
-          "translatedText": "*Hot press: Upper temperature:130℃+-5, below",
+          "translatedText": "*Hot press: Upper temperature:130℃+-5,",
           "isTitle": false,
           "isInspectionItem": false
         },
         {
           "id": "s43_p10",
           "sourceText": "125℃+-5,Thời gian : 45”, lực ép 80-85kg/cm2",
-          "translatedText": "125℃+-5, Time: 45”, pressure 80-85kg/cm2",
+          "translatedText": "Lower temperature: 125℃+-5, Time: 45”, pressure 80-85kg/cm2",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -5161,7 +5161,7 @@
         {
           "id": "s43_p13",
           "sourceText": "3.Kiểm tra sau khi ép các lỗ trang trí trên tip-quarter và logo không được bao không, tràn keo, tip quarter không dính tạp liệu.",
-          "translatedText": "3. Check after press that deco holes on tip-quarter and swoosh are not stuck on bubble, cement overflow, tip-quarter are not stuck on impurities.",
+          "translatedText": "3. Check after press that deco holes on tip-quarter and swoosh are not bubble, cement overflow, tip-quarter are not stuck on impurities.",
           "isTitle": false,
           "isInspectionItem": false
         },
@@ -5238,7 +5238,7 @@
         {
           "id": "s43_p25",
           "sourceText": "Bóng liệu nhẹ",
-          "translatedText": "Slight material luster",
+          "translatedText": "Slight shiny material",
           "isTitle": false,
           "isInspectionItem": false
         },

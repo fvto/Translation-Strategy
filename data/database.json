@@ -97,6 +97,34 @@
   ],
   "terminology": [
     {
+      "id": "term_4d1f50644d74",
+      "sourceTerm": "Định hình 3D mũi lạnh",
+      "targetTerm": "Tip cold 3D shaping",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "review",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-06T01:35:18.891Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
+      "editHistory": [
+        {
+          "id": "hist_0b59ec96",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
       "id": "term_91511c54939b",
       "sourceTerm": "Thành phẩm giày hở keo",
       "targetTerm": "Finished shoe product bond gap",
@@ -113,8 +141,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_4113f408",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_61d257c0",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -141,8 +177,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_ec8d1d23",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_f23257f3",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -169,8 +213,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_d45de691",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_f6741ba1",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -197,8 +249,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_e0ac8f42",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_8930d83f",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -225,8 +285,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_4f1b07ae",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_41c319d9",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -253,8 +321,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_09d5f0bc",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_d5052ba1",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -650,8 +726,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-05T09:08:58.752Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_b048b3e8",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_1a464033",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -708,8 +792,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-09-25T09:00:54.085Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_be48c514",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_1b897bb6",
           "timestamp": "2026-10-06T01:14:11.334Z",
@@ -1315,8 +1407,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-02T09:45:21.059Z",
-      "updatedAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-06T01:35:18.891Z",
       "editHistory": [
+        {
+          "id": "hist_909af65b",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_66951b1f",
           "timestamp": "2026-10-06T01:14:11.334Z",

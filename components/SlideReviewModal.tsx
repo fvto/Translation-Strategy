@@ -166,6 +166,7 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
 
   const pillContainerRef = useRef<HTMLDivElement>(null);
   const activePillRef = useRef<HTMLButtonElement>(null);
+  const contentContainerRef = useRef<HTMLDivElement>(null);
 
   // Enable horizontal mouse-wheel scrolling over slide pills with 60fps momentum interpolation
   useEffect(() => {
@@ -212,7 +213,7 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
     };
   }, [isOpen, editedSlides]);
 
-  // Keep active slide pill centered into view when current slide changes
+  // Keep active slide pill centered into view and auto-scroll slide content to top
   useEffect(() => {
     if (activePillRef.current) {
       activePillRef.current.scrollIntoView({
@@ -221,7 +222,12 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
         inline: "center",
       });
     }
-  }, [currentSlideIndex]);
+
+    // Auto-scroll content back to top when switching slides
+    if (contentContainerRef.current) {
+      contentContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentSlideIndex, isOpen]);
 
   const slideNumbers = useMemo(() => {
     return editedSlides.map((s) => s.slideIndex);
@@ -515,7 +521,7 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
         )}
 
         {/* Content Body: Dual-Column Table */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <div ref={contentContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between text-xs text-slate-400 pb-1">
             <span className="font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
               <Layers className="w-4 h-4 text-blue-400" />
