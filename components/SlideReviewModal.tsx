@@ -16,6 +16,9 @@ import {
   Save,
   Check,
   RefreshCw,
+  ArrowRight,
+  BookmarkPlus,
+  AlertCircle,
 } from "lucide-react";
 import { PptxSlideData, PptxParagraph } from "./PptxTranslator";
 import {
@@ -23,6 +26,11 @@ import {
   getUserSlideEdits,
   applyEditsToSlides,
 } from "@/services/storage/slide-edits-storage";
+import { AnalyzedEditSuggestion } from "@/services/terminology/edit-analyzer";
+
+interface ActiveSuggestionState extends AnalyzedEditSuggestion {
+  applyToMatching: boolean;
+}
 
 interface SlideReviewModalProps {
   isOpen: boolean;
@@ -117,6 +125,11 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
   const [tempEditText, setTempEditText] = useState<string>("");
   const [saveToast, setSaveToast] = useState<string | null>(null);
   const [autoSaveNotice, setAutoSaveNotice] = useState<string | null>(null);
+
+  // Smart Terminology Suggestion & Learning
+  const [activeSuggestion, setActiveSuggestion] = useState<ActiveSuggestionState | null>(null);
+  const [isAnalyzingEdit, setIsAnalyzingEdit] = useState<boolean>(false);
+  const [isSavingGlossary, setIsSavingGlossary] = useState<boolean>(false);
 
   // Map of paragraphId -> user-edited text
   const [paragraphEdits, setParagraphEdits] = useState<Record<string, string>>({});
@@ -244,11 +257,15 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
     (pId: string, textOverride?: string) => {
       const finalText = textOverride !== undefined ? textOverride : tempEditText;
 
-      // Find current paragraph's original text for fallback mapping
+      // Find current paragraph's original text and previous translation
       let originalText = "";
+      let previousTranslation = "";
       editedSlides.forEach((s) => {
         const found = s.paragraphs.find((p) => p.id === pId);
-        if (found) originalText = found.originalText;
+        if (found) {
+          originalText = found.originalText;
+          previousTranslation = found.translatedText;
+        }
       });
 
       const updatedSlides = editedSlides.map((slide) => ({
@@ -284,9 +301,153 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
       // 3. Visual autosave feedback
       setAutoSaveNotice("Đã tự động lưu");
       setTimeout(() => setAutoSaveNotice(null), 2500);
+
+      // 4. Trigger terminology analysis to suggest adding to Glossary & learning
+      if (finalText.trim() !== previousTranslation.trim() && originalText.trim()) {
+        setIsAnalyzingEdit(true);
+        fetch("/api/terminology/analyze-edit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paragraphId: pId,
+            originalText,
+            oldTranslatedText: previousTranslation,
+            newTranslatedText: finalText,
+            deckSlides: updatedSlides.map((s) => ({
+              slideIndex: s.slideIndex,
+              paragraphs: s.paragraphs.map((p) => ({
+                id: p.id,
+                originalText: p.originalText,
+                translatedText: p.translatedText,
+              })),
+            })),
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.suggestion) {
+              setActiveSuggestion({
+                ...data.suggestion,
+                applyToMatching: (data.suggestion.occurrencesInDeck || 0) > 0,
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("[SlideReview] analyze-edit error:", err);
+          })
+          .finally(() => {
+            setIsAnalyzingEdit(false);
+          });
+      }
     },
     [editedSlides, paragraphEdits, tempEditText, fileName, onUpdateSlides]
   );
+
+  const handleLearnAndSaveGlossary = async () => {
+    if (!activeSuggestion) return;
+    setIsSavingGlossary(true);
+
+    try {
+      const res = await fetch("/api/glossary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceTerm: activeSuggestion.sourceTerm.trim(),
+          targetTerm: activeSuggestion.targetTerm.trim(),
+          sourceLanguage: "vi",
+          targetLanguage: "en",
+          category: activeSuggestion.category,
+          status: "approved",
+          context: `Slide ${currentSlide.slideIndex + 1}`,
+          definition: `Học tự động từ chỉnh sửa trực tiếp: ${activeSuggestion.reason}`,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Không thể lưu vào Glossary");
+      }
+
+      let propagatedCount = 0;
+      if (activeSuggestion.applyToMatching && activeSuggestion.matchingParagraphIds?.length) {
+        const matchingIdsSet = new Set(activeSuggestion.matchingParagraphIds);
+        const searchTarget = activeSuggestion.oldTerm?.trim();
+        const newTarget = activeSuggestion.targetTerm.trim();
+        const searchSource = activeSuggestion.sourceTerm.trim();
+
+        const updatedSlides = editedSlides.map((slide) => ({
+          ...slide,
+          paragraphs: slide.paragraphs.map((p) => {
+            if (matchingIdsSet.has(p.id)) {
+              let updatedText = p.translatedText;
+              let changed = false;
+
+              if (searchTarget && searchTarget.length >= 2) {
+                const escaped = searchTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                const regex = new RegExp(`\\b${escaped}\\b`, "gi");
+                if (regex.test(updatedText)) {
+                  updatedText = updatedText.replace(regex, newTarget);
+                  changed = true;
+                }
+              }
+
+              if (!changed && searchSource && p.originalText.toLowerCase().includes(searchSource.toLowerCase())) {
+                if (!updatedText.toLowerCase().includes(newTarget.toLowerCase())) {
+                  const spaced = newTarget.replace(/[\-_]/g, " ");
+                  const escapedSpaced = spaced.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                  const regexSpaced = new RegExp(`\\b${escapedSpaced}\\b`, "gi");
+                  if (regexSpaced.test(updatedText)) {
+                    updatedText = updatedText.replace(regexSpaced, newTarget);
+                    changed = true;
+                  }
+                }
+              }
+
+              if (changed) propagatedCount++;
+              return { ...p, translatedText: updatedText };
+            }
+            return p;
+          }),
+        }));
+
+        if (propagatedCount > 0) {
+          const newEdits = { ...paragraphEdits };
+          updatedSlides.forEach((s) => {
+            s.paragraphs.forEach((p) => {
+              if (matchingIdsSet.has(p.id)) {
+                newEdits[p.id] = p.translatedText;
+                if (p.originalText.trim()) {
+                  newEdits[`text_${p.originalText.trim()}`] = p.translatedText;
+                }
+              }
+            });
+          });
+
+          setEditedSlides(updatedSlides);
+          setParagraphEdits(newEdits);
+          onUpdateSlides?.(updatedSlides);
+          saveUserSlideEdits(
+            fileName,
+            newEdits,
+            updatedSlides,
+            initialAiTranslationsRef.current
+          );
+        }
+      }
+
+      setSaveToast(
+        propagatedCount > 0
+          ? `Đã thêm "${activeSuggestion.targetTerm}" vào Glossary & đồng bộ ${propagatedCount} vị trí trong toàn bộ bài!`
+          : `Đã thêm "${activeSuggestion.targetTerm}" vào Glossary thành công!`
+      );
+      setTimeout(() => setSaveToast(null), 3500);
+      setActiveSuggestion(null);
+    } catch (err: any) {
+      alert("Lỗi khi thêm vào Glossary: " + err.message);
+    } finally {
+      setIsSavingGlossary(false);
+    }
+  };
 
   const handleCancelEdit = () => {
     setActiveEditingId(null);
@@ -384,7 +545,7 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#0b101d] border border-slate-800 rounded-3xl w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-[#0b101d] border border-slate-800 rounded-3xl w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden relative">
         {/* Header */}
         <div className="p-4 sm:px-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
           <div className="flex items-center space-x-3">
@@ -413,6 +574,14 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Analyzing Terminology Pill */}
+            {isAnalyzingEdit && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 text-xs font-medium animate-pulse shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0 animate-spin" />
+                <span>Đang phân tích thuật ngữ...</span>
+              </div>
+            )}
+
             {/* Auto-saved badge */}
             <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-xs font-medium">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
@@ -701,6 +870,150 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Floating Smart Terminology Suggestion & Learning Card */}
+        {activeSuggestion && (
+          <div className="absolute bottom-20 right-6 z-50 w-[480px] max-w-[calc(100vw-3rem)] bg-slate-900/95 border border-indigo-500/50 rounded-2xl shadow-2xl p-4.5 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-5 duration-200">
+            {/* Top row */}
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>Phát Hiện Thuật Ngữ &amp; Đề Xuất Học Ngay</span>
+                    {activeSuggestion.isAlreadyInGlossary ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+                        ✓ Đã có trong Glossary
+                      </span>
+                    ) : (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium">
+                        ✨ Thuật ngữ SOP mới
+                      </span>
+                    )}
+                  </h4>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveSuggestion(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Đóng thông báo"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Reason explanation */}
+            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+              {activeSuggestion.reason}
+            </p>
+
+            {/* Editable term pair */}
+            <div className="mt-3 p-3 bg-slate-950/80 border border-slate-800/90 rounded-xl space-y-2.5">
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <label className="text-slate-400 font-medium block mb-1">
+                    Thuật ngữ Tiếng Việt (Nguồn):
+                  </label>
+                  <input
+                    type="text"
+                    value={activeSuggestion.sourceTerm}
+                    onChange={(e) =>
+                      setActiveSuggestion({ ...activeSuggestion, sourceTerm: e.target.value })
+                    }
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 font-medium block mb-1">
+                    Thuật ngữ Tiếng Anh (Đích):
+                  </label>
+                  <input
+                    type="text"
+                    value={activeSuggestion.targetTerm}
+                    onChange={(e) =>
+                      setActiveSuggestion({ ...activeSuggestion, targetTerm: e.target.value })
+                    }
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-indigo-300 font-bold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-800/80">
+                <span className="text-slate-400">Phân loại chuyên ngành:</span>
+                <select
+                  value={activeSuggestion.category}
+                  onChange={(e) =>
+                    setActiveSuggestion({ ...activeSuggestion, category: e.target.value as any })
+                  }
+                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="Bộ vị (Component)">Bộ vị (Component)</option>
+                  <option value="Quy trình (Process)">Quy trình (Process)</option>
+                  <option value="Lỗi chất lượng (CTQ Defect)">Lỗi chất lượng (CTQ Defect)</option>
+                  <option value="Vật liệu & Thông số (Material/Spec)">Vật liệu &amp; Thông số (Material/Spec)</option>
+                  <option value="Thuật ngữ chung (General)">Thuật ngữ chung (General)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Occurrences & Propagation in Deck */}
+            {(activeSuggestion.occurrencesInDeck || 0) > 0 && (
+              <div className="mt-2.5 flex items-start gap-2.5 text-xs text-slate-300 bg-indigo-950/40 border border-indigo-500/30 p-2.5 rounded-xl">
+                <input
+                  type="checkbox"
+                  id="applyToMatchingDeck"
+                  checked={activeSuggestion.applyToMatching}
+                  onChange={(e) =>
+                    setActiveSuggestion({
+                      ...activeSuggestion,
+                      applyToMatching: e.target.checked,
+                    })
+                  }
+                  className="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-0 bg-slate-800 border-slate-700 cursor-pointer"
+                />
+                <label htmlFor="applyToMatchingDeck" className="cursor-pointer leading-tight select-none">
+                  Đồng bộ chuẩn hóa cho <strong className="text-indigo-300 font-bold">{activeSuggestion.occurrencesInDeck} vị trí</strong> tương tự khác trong toàn bộ bài trình chiếu
+                </label>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="mt-3.5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveSuggestion(null)}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
+              >
+                Bỏ qua
+              </button>
+              <button
+                type="button"
+                onClick={handleLearnAndSaveGlossary}
+                disabled={isSavingGlossary}
+                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isSavingGlossary ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Đang ghi nhớ...</span>
+                  </>
+                ) : (
+                  <>
+                    <BookmarkPlus className="w-3.5 h-3.5 text-indigo-200" />
+                    <span>
+                      {activeSuggestion.isAlreadyInGlossary
+                        ? "Đồng bộ Slide & Cập nhật Glossary"
+                        : "Thêm vào Glossary & Học ngay"}
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
