@@ -267,7 +267,7 @@ ${JSON.stringify(promptItems, null, 2)}`;
           if (res.status === 503) {
             lastError = new Error(`Gemini ${currentModel} returned 503 (model overloaded)`);
             console.warn(`[GeminiBatch] ${currentModel} returned 503 (server overloaded). Attempt ${attempt + 1}/3...`);
-            await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+            await new Promise((r) => setTimeout(r, 2500 * (attempt + 1)));
             continue;
           }
 

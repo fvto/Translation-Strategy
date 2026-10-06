@@ -718,8 +718,8 @@ export class PptxTranslatorService {
     // reliable with bounded JSON outputs than with one very large request.
     if (typeof provider.translateBatch === "function" && itemsPendingTranslation.length > 0) {
       let activeProvider: TranslationProvider = provider;
-      // Strategy 3: Group into larger chunks (35 items) to reduce API calls by 50%, staying well under 15 RPM
-      const baseChunkSize = activeProvider.name === "airgapped" ? 50 : 35;
+      // Strategy 3: Group into larger chunks (40 items) to reduce API calls by 50%, staying well under 15 RPM
+      const baseChunkSize = activeProvider.name === "airgapped" ? 50 : 40;
       const lateChunkSize = activeProvider.name === "airgapped" ? 50 : 25;
 
       // Pre-compute totalBatches accounting for mixed chunk sizes so "gói X/Y" display is always correct.
@@ -735,6 +735,7 @@ export class PptxTranslatorService {
       let geminiQuotaFallbackActive = false;
       let quotaFallbackProgress = 30; // track where we were when quota hit
       let consecutiveQuotaHits = 0; // Strategy 2: track repeated quota signals
+      let hadRecentTransientError = false; // Adaptive pacing: lengthen delay to 5.5s after transient API spike
 
       // Strategy 2: Retry-before-fallback helper
       // Google Free Tier limits are on a 60-second sliding window.
@@ -801,9 +802,20 @@ export class PptxTranslatorService {
           message: `Đang dịch gói ${currentBatch}/${totalBatches} (${chunk.length} đoạn văn) với ${activeProvider.name}...`,
         });
 
-        // Pacing: Ensure healthy 2.5s delay between consecutive Gemini requests to stay strictly below Google's 15 RPM limit
+        // Pacing: Ensure healthy 4.5s (or 5.5s after error) delay between consecutive Gemini requests to stay strictly below Google's 15 RPM limit (~10-12 RPM maximum)
         if (batchIndex > 0 && activeProvider.name.toLowerCase().includes("gemini")) {
-          await new Promise((r) => setTimeout(r, 2500));
+          const pacingMs = hadRecentTransientError ? 5500 : 4500;
+          options?.onProgress?.({
+            stage: "translating",
+            progress: progressPercent,
+            currentBatch,
+            totalBatches,
+            translatedItems: i,
+            totalItems: itemsPendingTranslation.length,
+            message: `⏳ Điều tiết nhịp độ an toàn (${(pacingMs / 1000).toFixed(1)}s/gói) để bảo vệ hạn mức Gemini 15 RPM...`,
+          });
+          await new Promise((r) => setTimeout(r, pacingMs));
+          hadRecentTransientError = false; // Reset after successful cooldown wait
         }
 
         let batchRes: BatchTranslationResponse | null = null;
@@ -816,14 +828,13 @@ export class PptxTranslatorService {
             context: stageContext,
           });
         } catch (err) {
+          hadRecentTransientError = true;
           if (err instanceof GeminiRateLimitError) {
             consecutiveQuotaHits++;
-            // Strategy 2: If retryAfterSeconds is short (≤ 30s), wait and retry ONCE
-            // before permanently activating Google NMT fallback. This keeps Gemini active
-            // for the remaining batches instead of switching permanently on a transient spike.
+            // Strategy 2: If retryAfterSeconds is specified or short, wait and retry
             const shouldRetry = await retryAfterDelay((err as GeminiRateLimitError).retryAfterSeconds, progressPercent);
-            if (shouldRetry && consecutiveQuotaHits <= 2) {
-              console.log(`[QuotaGuard] Retrying batch ${currentBatch} after wait...`);
+            if (shouldRetry && consecutiveQuotaHits <= 3) {
+              console.log(`[QuotaGuard] Retrying batch ${currentBatch} after cooldown...`);
               try {
                 batchRes = await activeProvider.translateBatch!({
                   items: chunk,
@@ -833,39 +844,15 @@ export class PptxTranslatorService {
                   context: stageContext,
                 });
                 consecutiveQuotaHits = 0; // reset on success
+                hadRecentTransientError = false;
               } catch (retryQuotaErr) {
-                // Retry failed too — now permanently switch to NMT
-                if (retryQuotaErr instanceof GeminiRateLimitError) {
-                  activateQuotaFallback(retryQuotaErr, progressPercent);
-                  try {
-                    batchRes = await activeProvider.translateBatch!({
-                      items: chunk,
-                      sourceLanguage,
-                      targetLanguage,
-                      approvedTerminology: approvedGlossary,
-                      context: stageContext,
-                    });
-                  } catch (finalErr) {
-                    console.error(`Google NMT fallback error for batch ${currentBatch}:`, finalErr);
-                  }
-                }
-              }
-            } else {
-              activateQuotaFallback(err, progressPercent);
-              try {
-                batchRes = await activeProvider.translateBatch!({
-                  items: chunk,
-                  sourceLanguage,
-                  targetLanguage,
-                  approvedTerminology: approvedGlossary,
-                  context: stageContext,
-                });
-              } catch (fallbackErr) {
-                console.error(`Google NMT fallback error for batch ${currentBatch}:`, fallbackErr);
+                console.warn(`[QuotaGuard] Retry also encountered quota on batch ${currentBatch}. Delegating this batch to emergency NMT.`);
               }
             }
           } else {
-            console.warn(`Batch ${currentBatch} error, retrying in 2 smaller sub-chunks...`, err);
+            console.warn(`Batch ${currentBatch} error, retrying in 2 smaller sub-chunks with safe delay...`, err);
+            // Safe pacing before sub-chunk 1 to avoid bursting
+            await new Promise((r) => setTimeout(r, 3500));
             const half = Math.ceil(chunk.length / 2);
             try {
               const sub1 = await activeProvider.translateBatch!({
@@ -875,6 +862,8 @@ export class PptxTranslatorService {
                 approvedTerminology: approvedGlossary,
                 context: stageContext,
               });
+              // Safe pacing between sub-chunks
+              await new Promise((r) => setTimeout(r, 4000));
               const sub2 = await activeProvider.translateBatch!({
                 items: chunk.slice(half),
                 sourceLanguage,
@@ -887,20 +876,22 @@ export class PptxTranslatorService {
                 provider: activeProvider.name,
                 durationMs: 0,
               };
+              hadRecentTransientError = false;
             } catch (subErr) {
               console.error(`Sub-chunk retry error:`, subErr);
             }
           }
         }
 
-        // Immediate Failover: If active provider (e.g. Gemini) failed completely
+        // Smart Failover: If this specific batch failed with Gemini, use Google NMT for THIS BATCH ONLY.
+        // DO NOT permanently disable Gemini for future batches! Subsequent batches will continue with Gemini after cooldown.
         if (!batchRes || !batchRes.results || batchRes.results.size === 0) {
           if (activeProvider.name !== "google_translate") {
             console.warn(
               `[ProviderFailover] Primary provider ${activeProvider.name} failed for batch ${currentBatch}. ` +
-              `Switching to Google NMT immediately for this and all remaining batches.`
+              `Translating batch ${currentBatch} with Google NMT emergency fallback, preserving Gemini for subsequent batches.`
             );
-            activeProvider = new GoogleTranslationProvider();
+            const emergencyNmt = new GoogleTranslationProvider();
             options?.onProgress?.({
               stage: "translating",
               progress: progressPercent,
@@ -908,16 +899,17 @@ export class PptxTranslatorService {
               totalBatches,
               translatedItems: i,
               totalItems: itemsPendingTranslation.length,
-              message: `⚡ Engine gặp sự cố API — tự động chuyển sang Google NMT cho gói ${currentBatch} và các slide còn lại.`,
+              message: `⚡ Gói ${currentBatch} tạm dùng Google NMT do quá tải; gói tiếp theo vẫn sẽ tiếp tục dùng Gemini.`,
             });
             try {
-              batchRes = await activeProvider.translateBatch!({
+              batchRes = await emergencyNmt.translateBatch!({
                 items: chunk,
                 sourceLanguage,
                 targetLanguage,
                 approvedTerminology: approvedGlossary,
                 context: stageContext,
               });
+              hadRecentTransientError = true;
             } catch (fallbackBatchErr) {
               console.error(`Google NMT fallback failed for batch ${currentBatch}:`, fallbackBatchErr);
             }

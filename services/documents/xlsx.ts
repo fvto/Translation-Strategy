@@ -474,7 +474,7 @@ export class XlsxTranslatorService {
     let processedCount = translationMap.size;
     for (let cIdx = 0; cIdx < chunks.length; cIdx++) {
       if (cIdx > 0 && provider.name.toLowerCase().includes("gemini")) {
-        await new Promise((r) => setTimeout(r, 2500));
+        await new Promise((r) => setTimeout(r, 4500));
       }
       const chunk = chunks[cIdx];
       const items = chunk.map((text, idx) => ({ id: `xlsx_item_${cIdx}_${idx}`, sourceText: text }));

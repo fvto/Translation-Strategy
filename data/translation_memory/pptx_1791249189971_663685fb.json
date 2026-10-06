@@ -1,0 +1,5283 @@
+{
+  "sessionId": "pptx_1791249189971_663685fb",
+  "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+  "mode": "ipqc_bilingual",
+  "sourceLanguage": "vi",
+  "targetLanguage": "en",
+  "createdAt": "2026-10-06T01:14:11.366Z",
+  "slideCount": 43,
+  "totalPairs": 716,
+  "harvestedCount": 9,
+  "slides": [
+    {
+      "slideIndex": 1,
+      "title": "FA25 NIKE SB ZOOM NYJAH 4",
+      "pairs": [
+        {
+          "id": "s1_p0",
+          "sourceText": "FA25 NIKE SB ZOOM NYJAH 4",
+          "translatedText": "FA25 NIKE SB ZOOM NYJAH 4",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s1_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": true,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 2,
+      "title": "FA25 NIKE SB ZOOM NYJAH 4(SB-077-A)",
+      "pairs": [
+        {
+          "id": "s2_p0",
+          "sourceText": "FA25 NIKE SB ZOOM NYJAH 4(SB-077-A)",
+          "translatedText": "FA25 NIKE SB ZOOM NYJAH 4(SB-077-A)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 3,
+      "title": "SP26 NIKE SB ZOOM NYJAH 4(SB-077-P)",
+      "pairs": [
+        {
+          "id": "s3_p0",
+          "sourceText": "SP26 NIKE SB ZOOM NYJAH 4(SB-077-P)",
+          "translatedText": "SP26 NIKE SB ZOOM NYJAH 4(SB-077-P)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 4,
+      "title": "SP26 NIKE SB ZOOM NYJAH 4(SB-077-C)",
+      "pairs": [
+        {
+          "id": "s4_p0",
+          "sourceText": "SP26 NIKE SB ZOOM NYJAH 4(SB-077-C)",
+          "translatedText": "SP26 NIKE SB ZOOM NYJAH 4(SB-077-C)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 5,
+      "title": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-A-1)",
+      "pairs": [
+        {
+          "id": "s5_p0",
+          "sourceText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-A-1)",
+          "translatedText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-A-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s5_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 6,
+      "title": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-P-1)",
+      "pairs": [
+        {
+          "id": "s6_p0",
+          "sourceText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-P-1)",
+          "translatedText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-P-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s6_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 7,
+      "title": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-C-1)",
+      "pairs": [
+        {
+          "id": "s7_p0",
+          "sourceText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-C-1)",
+          "translatedText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-C-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s7_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 8,
+      "title": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-C-2)",
+      "pairs": [
+        {
+          "id": "s8_p0",
+          "sourceText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-C-2)",
+          "translatedText": "FA26 NIKE SB ZOOM NYJAH 4(SB-077-C-2)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s8_p1",
+          "sourceText": "ISQ INSPECTION FOCUSES",
+          "translatedText": "ISQ INSPECTION FOCUSES",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 9,
+      "title": "NIKE SB ZOOM NYJAH 4",
+      "pairs": [
+        {
+          "id": "s9_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4",
+          "translatedText": "NIKE SB ZOOM NYJAH 4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p3",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p4",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p5",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo, mặt trước không dính bụi bẩn",
+          "translatedText": "CTQ 3-Nosew free of cement overflow/bond gap, vamp free of dirt",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p6",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p7",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p8",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p9",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s9_p10",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 10,
+      "title": "NIKE SB ZOOM NYJAH 4(SB-077-A)",
+      "pairs": [
+        {
+          "id": "s10_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4(SB-077-A)",
+          "translatedText": "NIKE SB ZOOM NYJAH 4(SB-077-A)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p3",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p4",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo, mặt trước không dính bụi bẩn",
+          "translatedText": "CTQ 3-Nosew free of cement overflow/bond gap, vamp free of dirt",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p5",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p6",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p7",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p8",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p9",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s10_p10",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 11,
+      "title": "NIKE SB ZOOM NYJAH 4(SB-077-P)",
+      "pairs": [
+        {
+          "id": "s11_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4(SB-077-P)",
+          "translatedText": "NIKE SB ZOOM NYJAH 4(SB-077-P)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p3",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p4",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo/bao không, mặt trước không dính bụi bẩn",
+          "translatedText": "CTQ 3-Nosew free of cement overflow / bond gap / bubble, vamp free of dirt",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p5",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p6",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p7",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p8",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p9",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s11_p10",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 12,
+      "title": "NIKE SB ZOOM NYJAH 4 (SB-077-C)",
+      "pairs": [
+        {
+          "id": "s12_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4 (SB-077-C)",
+          "translatedText": "NIKE SB ZOOM NYJAH 4 (SB-077-C)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p3",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p4",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p5",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo, mặt trước không dính bụi bẩn",
+          "translatedText": "CTQ 3-Nosew free of cement overflow/bond gap, vamp free of dirt",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p6",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p7",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p8",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p9",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s12_p10",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 13,
+      "title": "NIKE SB ZOOM NYJAH 4(SB-077-A-1)",
+      "pairs": [
+        {
+          "id": "s13_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4(SB-077-A-1)",
+          "translatedText": "NIKE SB ZOOM NYJAH 4(SB-077-A-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p3",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p4",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo/bao không, mặt trước không dính bụi bẩn, khác màu",
+          "translatedText": "CTQ 3-Nosew free of cement overflow / bond gap / bubble, vamp free of dirt, color different",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p5",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p6",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p7",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p8",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo,Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap, rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p9",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s13_p10",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 14,
+      "title": "NIKE SB ZOOM NYJAH 4(SB-077-P-1)",
+      "pairs": [
+        {
+          "id": "s14_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4(SB-077-P-1)",
+          "translatedText": "NIKE SB ZOOM NYJAH 4(SB-077-P-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p3",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p4",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo/bao không, mặt trước không dính bụi bẩn, khác màu",
+          "translatedText": "CTQ 3-Nosew free of cement overflow / bond gap / bubble, vamp free of dirt, color different",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p5",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p6",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p7",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p8",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo,Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap, rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p9",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s14_p10",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 15,
+      "title": "NIKE SB ZOOM NYJAH 4(SB-077-C-1)",
+      "pairs": [
+        {
+          "id": "s15_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4(SB-077-C-1)",
+          "translatedText": "NIKE SB ZOOM NYJAH 4(SB-077-C-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p3",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p4",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo/bao không, mặt trước không dính bụi bẩn, ẩn màu",
+          "translatedText": "CTQ 3-Nosew free of cement overflow / bond gap / bubble, vamp free of dirt, hidden color",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p5",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p6",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p7",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p8",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo,Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap, rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p9",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s15_p10",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 16,
+      "title": "NIKE SB ZOOM NYJAH 4 (SB-077-C-2)",
+      "pairs": [
+        {
+          "id": "s16_p1",
+          "sourceText": "NIKE SB ZOOM NYJAH 4 (SB-077-C-2)",
+          "translatedText": "NIKE SB ZOOM NYJAH 4 (SB-077-C-2)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p2",
+          "sourceText": "ISQ STRATEGY-CTQ-CTP",
+          "translatedText": "ISQ STRATEGY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p3",
+          "sourceText": "CTQ -1 Lập thể mặt trước ép phải nổi",
+          "translatedText": "CTQ -1 Vamp 3D emboss must be consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p4",
+          "sourceText": "CTQ 6-May lưỡi đúng vị trí, lót lưỡi không nhăn",
+          "translatedText": "CTQ 6-Stitch tongue in correct position, tongue lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p5",
+          "sourceText": "CTQ 3- Nosew không tràn keo /hở keo, mặt trước không dính bụi bẩn",
+          "translatedText": "CTQ 3-Nosew free of cement overflow/bond gap, vamp free of dirt",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p6",
+          "sourceText": "CTQ 2-Lỗ trang trí mặt trước phải sạch",
+          "translatedText": "CTQ 2-Vamp deco holes must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p7",
+          "sourceText": "CTQ 4-Mũi, gót-dây đai gót thẳng",
+          "translatedText": "CTQ 4-Toe, heel - heel strap straight alignment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p8",
+          "sourceText": "CTQ 7-Hình dạng vòng cổ suôn đều/ lót vòng cổ không nhăn",
+          "translatedText": "CTQ 7-Collar opening shape smoothly and evenly / collar lining free of wrinkles",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p9",
+          "sourceText": "CTQ 8-Thành phẩm không hở keo/Gập ghềnh",
+          "translatedText": "CTQ 8-Finished goods free of bond gap/rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s16_p10",
+          "sourceText": "CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí",
+          "translatedText": "CTQ 5-Midsole stitching thread color correct, stitching lines smoothly and evenly, in correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 17,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s17_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p4",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Vamp nosew pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p6",
+          "sourceText": "1.Kiểm tra khuôn ép trên/dưới phải sạch sẽ, không bị nứt mẻ/biến dạng, khớp với rập film",
+          "translatedText": "1. Check upper/lower pressing mold must be clean, free of cracks/deformation, matching film pattern",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p8",
+          "sourceText": "2.Kiểm tra liệu và khuôn ép phải giống size.",
+          "translatedText": "2. Check material and pressing mold must be the same size.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p9",
+          "sourceText": "Gắn liệu mặt trước vào ngay lỗ đinh trên khuôn.",
+          "translatedText": "Fix vamp material onto the nail holes on the mold.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p10",
+          "sourceText": "Khuôn trên - dưới đúng size,đặt khớp lỗ định vị",
+          "translatedText": "Upper and lower molds in correct size, aligned with position holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p12",
+          "sourceText": "3.Kiểm tra nhiệt độ:",
+          "translatedText": "3.Check temperature:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p13",
+          "sourceText": "Khuôn trên:140℃",
+          "translatedText": "Upper mold: 140℃",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p14",
+          "sourceText": "Khuôn dưới:160℃",
+          "translatedText": "Lower mold: 160℃",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p15",
+          "sourceText": "Lực ép: 50kg/cm2",
+          "translatedText": "Pressure: 50 kg/cm2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p16",
+          "sourceText": "Thời gian nóng: 60”",
+          "translatedText": "Heating time: 60\"",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p17",
+          "sourceText": "Thời gian lạnh:60”",
+          "translatedText": "Cooling time: 60\"",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p18",
+          "sourceText": "Đặt khuôn vào phải ngay giữa máy ép nosew",
+          "translatedText": "Place the mold right in the center of the nosew pressing machine",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p20",
+          "sourceText": "4.Kiểm tra sau khi ép lập thể phải nổi đều, không được lệch vị",
+          "translatedText": "4. Check after 3D embossing, it must be consistent and free of off position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p22",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p23",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p24",
+          "sourceText": "Lập thể nổi đều và đồng nhất",
+          "translatedText": "Consistent and proper 3D emboss",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p25",
+          "sourceText": "Lập thể không nổi đều",
+          "translatedText": "Inconsistent 3D emboss",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p27",
+          "sourceText": "1.Lập thể mặt trước nổi đều",
+          "translatedText": "1. Vamp 3D emboss consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p28",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p29",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p32",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s17_p33",
+          "sourceText": "4",
+          "translatedText": "4",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 18,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s18_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p4",
+          "sourceText": "*Đổ keo:",
+          "translatedText": "*Pouring cement:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p5",
+          "sourceText": "1.Cân keo phải đúng theo tỉ lệ:",
+          "translatedText": "1. Weigh cement according to the correct ratio:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p6",
+          "sourceText": "Keo SC-90A : là 100%",
+          "translatedText": "SC-90A cement: 100%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p7",
+          "sourceText": "Keo SC-90B : là 15%",
+          "translatedText": "SC-90B cement: 15%",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p8",
+          "sourceText": "Trộn hóa chất: Trộn 100% SC-90A với 15% SC-90B với số lượng vừa đủ để đảm bảo giữ ẩm hiệu quả và ngăn ngừa keo khô sớm. Đảm bảo trộn kỹ vho đến khi đạt được dung dịch đồng nhất.",
+          "translatedText": "Chemical mixing: Mix 100% SC-90A with 15% SC-90B in a sufficient amount to ensure effective moisture retention and prevent premature cement drying. Ensure thorough mixing until a uniform solution is achieved.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p10",
+          "sourceText": "2.Sử dụng ống tiêm để bơm keo vào rãnh ép trên Vamp để tránh chảy keo ra ngoài",
+          "translatedText": "2. Use a syringe to inject cement into the pressing groove on the vamp to avoid adhesive bleeding",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p11",
+          "sourceText": "Bom keo theo vị trí ép của lập thể, đảm bảo lượng keo vừa đủ bằng mí với rảnh ép.",
+          "translatedText": "Inject cement according to the 3D emboss pressing position, ensuring a sufficient amount of cement edge even with the pressing groove.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p12",
+          "sourceText": "Không được bom thiếu keo để tránh lập thể không nổi.",
+          "translatedText": "Do not lack cement to avoid unembossed 3D effect.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p13",
+          "sourceText": "Không được tràn ra ngoài tránh bị cộm",
+          "translatedText": "Do not overflow to prevent lumpiness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p14",
+          "sourceText": "Chấp nhận mức độ theo QA manual cập nhật.",
+          "translatedText": "Accept level according to updated QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p15",
+          "sourceText": "*Keo cao hoặc thấp hơn rãnh +-0.5mm",
+          "translatedText": "*Over cement or lower groove +-0.5mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p16",
+          "sourceText": "*Hai đầu không có keo 5-7mm",
+          "translatedText": "*The two ends do not have the cement 5-7mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p17",
+          "sourceText": "*Có bong bóng nhỏ sau khi sấy.",
+          "translatedText": "*There are small bubbles after drying.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p18",
+          "sourceText": "Sử dụng dụng cụ để kéo keo nhằm duy trì độ bám dính mong muốn mà không bị quá nhiều keo",
+          "translatedText": "Use a tool to spread cement to maintain the desired bond strength without excess cement",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p20",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p21",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p22",
+          "sourceText": "1.Lập thể mặt trước nổi đều",
+          "translatedText": "1. Vamp 3D emboss consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p23",
+          "sourceText": "Đủ keo",
+          "translatedText": "Sufficient cement",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p24",
+          "sourceText": "Thiếu, tràn keo",
+          "translatedText": "Lack of cement, cement overflow",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p26",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p27",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s18_p28",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 19,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s19_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p6",
+          "sourceText": "*Sấy keo",
+          "translatedText": "*Cement drying",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p9",
+          "sourceText": "3.Liệu sau khi bom keo xong qua máy sấy với điều kiện nhiệt độ, thời gian theo pfc:",
+          "translatedText": "3. After cement spraying, pass the material through the drying machine under temperature and time conditions per PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p10",
+          "sourceText": "Nhiệt độ  50-60℃",
+          "translatedText": "Temperature 50-60℃",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p11",
+          "sourceText": "Thời gian 9-10’",
+          "translatedText": "Time 9-10'",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p15",
+          "sourceText": "4.Kiểm tra liệu sau khi sấy phải khô hoàn toàn.",
+          "translatedText": "4.Check that the material must be completely dry after drying.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p16",
+          "sourceText": "Liệu sau khi sấy được đặt vào rỗ, lót giấy ngăn cách để tránh dính keo lên mặt trước và được lưu trữ phơi khô trong môi trường tự nhiên trong 12h(ghi chú thời gian lên rỗ)",
+          "translatedText": "After drying, the material is placed in a pit, lined with separating paper to avoid sticking cement to vamp and dried by storage in a natural environment for 12 hours (note the pitting time).",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p18",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p19",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p20",
+          "sourceText": "1.Lập thể mặt trước nổi đều",
+          "translatedText": "1. Vamp 3D emboss consistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p21",
+          "sourceText": "Đều keo",
+          "translatedText": "Even cement",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p22",
+          "sourceText": "Thiếu keo, tràn keo",
+          "translatedText": "Lack of cement, over cement",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p24",
+          "sourceText": "9h15’",
+          "translatedText": "9:15 a. M.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p25",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s19_p26",
+          "sourceText": "4",
+          "translatedText": "4",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 20,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s20_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p4",
+          "sourceText": "* Chặt mặt trước",
+          "translatedText": "* Vamp cutting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p6",
+          "sourceText": "1.Kiểm tra dao khớp với rập film, các lỗ đinh trên dao không bị biến dạng, gãy",
+          "translatedText": "1. Check that the die matches the film pattern, and the nail holes on the die are not deformed or broken",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p7",
+          "sourceText": "(lỗ thông )",
+          "translatedText": "(through holes)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p10",
+          "sourceText": "2.Kiểm tra thớt thay đổi theo thời gian, thớt không nhừ",
+          "translatedText": "2.Check that the cutting board is changed regularly and is not excessively worn",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p12",
+          "sourceText": "3.Điều chỉnh lực ép máy chặt phù hợp để liệu đứt hoàn toàn",
+          "translatedText": "3. Adjust the cutting machine pressure properly so that the material is completely cut through",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p15",
+          "sourceText": "4.Kiểm tra đặt liệu vào khớp các lỗ đinh trên dao.",
+          "translatedText": "4. Check that the material is placed to fit the nail holes on the die.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p18",
+          "sourceText": "5. Kiểm tra sau khi chặt lỗ trang trí mặt trước không bị biến dạng, lệch, lỗ phải thông.",
+          "translatedText": "5. Check that after cutting, the vamp deco holes are not deformed or misaligned, and the holes must be clear.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p19",
+          "sourceText": "Liệu phải sạch sẽ",
+          "translatedText": "Material must be clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p21",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p22",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p23",
+          "sourceText": "2. Phẩm chất lỗ chặt trang trí mặt trước",
+          "translatedText": "2. Vamp deco cutting holes quality",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p24",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p25",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p26",
+          "sourceText": "Lỗ chặt đều, sạch sẽ",
+          "translatedText": "Cutting holes are even and clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p27",
+          "sourceText": "Lỗ không thông",
+          "translatedText": "Uncleared holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p29",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p36",
+          "sourceText": "4",
+          "translatedText": "4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s20_p37",
+          "sourceText": "5",
+          "translatedText": "5",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 21,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s21_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p4",
+          "sourceText": "*Gắn liệu mặt trước",
+          "translatedText": "*Fix vamp material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p5",
+          "sourceText": "1.Kiểm tra bàn nosew phải đầy đủ đinh ,bàn nosew/tấm cách nhiệt phải sạch sẽ và dán thêm giấy cách nhiệt tại vị trí ô dê của miếng liệu ở giữa để giảm mức độ ẩn ô dê không đều sau khi ép nosew(Đối với size nhỏ bàn nosew ép 3 miếng liệu)",
+          "translatedText": "1. Check that the nosew table must have enough nails, the nosew table/insulation sheet must be clean and apply add insulation paper at this position eyestay of the material in the middle to reduce the level of hiding eyestay inconsistent after press nosew (for small size press nosew table 3 pieces of material)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p7",
+          "sourceText": "2.Gắn liệu theo trình tự PFC",
+          "translatedText": "2. Fix material in PFC sequence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p8",
+          "sourceText": "Lưu ý:Thao tác mỗi lần dán chỉ lột giấy bảo vệ của 1 miếng Vamp RB /mỗi lần để đảm bảo mặt keo luôn sạch trước khi dán liệu",
+          "translatedText": "Note: Operation apply only peels off the protective paper of the one full pieces Vamp RB each time so that the make sure face of the cement is always clean before apply material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p9",
+          "sourceText": "Sử dụng găng tay khi thao tác và lột bỏ hoàn toàn giấy bảo vệ trước khi dán Vamp RB vào mặt giày mesh",
+          "translatedText": "Wear gloves during operation and completely remove the protective paper before applying the Vamp RB to the mesh upper.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p10",
+          "sourceText": "Đặt liệu khớp với lỗ đinh trên bàn ép/rập định vị. Các bộ vị phải đúng size số.",
+          "translatedText": "Place the material to fit the nail holes on the pressing table/positioning pattern. Components must be of the correct size.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p11",
+          "sourceText": "Dùng súng nóng cố định liệu trước khi ép",
+          "translatedText": "Use a heat gun to fix the material before pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p12",
+          "sourceText": "Chấp nhận thành phẩm khoảng cách từ logo đến ô dê lệch +-1mm như hinh QA manual cập nhật.",
+          "translatedText": "Finished products with a distance from the logo to the eyestay deviating by +-1mm are acceptable as updated in the QA manual image.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p14",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p15",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p16",
+          "sourceText": "Mặt trước ép dính chắc",
+          "translatedText": "Vamp is pressed with high-adhesion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p17",
+          "sourceText": "liệu sạch sẽ",
+          "translatedText": "Clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p18",
+          "sourceText": "Vamp bị bao không,tràn keo",
+          "translatedText": "Vamp has bubbles, cement overflow",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p19",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p20",
+          "sourceText": "Giấy bảo vệ Vamp chưa tháo sạch",
+          "translatedText": "Vamp protective paper is not completely peeled off",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p23",
+          "sourceText": "3.Vamp RB không hở keo/lem keo ,sạch sẽ",
+          "translatedText": "3. Vamp RB has no bond gap/over cement, clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p24",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s21_p25",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 22,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s22_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p4",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Vamp nosew pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p6",
+          "sourceText": "1. Sử dụng tấm silicon có độ cứng 20A",
+          "translatedText": "1. Use a silicone pad with 20A hardness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p8",
+          "sourceText": "2.Kiểm tra máy được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "2. Check that the nosew machine temperature/time/pressure are adjusted according to PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p9",
+          "sourceText": "*Ép nóng :                           *Ép lạnh:",
+          "translatedText": "*Hot press: *cold press:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p10",
+          "sourceText": "Nhiệt độ trên :155℃+_3          N/A",
+          "translatedText": "Upper temperature: 155℃±3 N/A",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p11",
+          "sourceText": "Nhiệt độ dưới :130℃+-3          N/A",
+          "translatedText": "Under temperature: 130℃±3 N/A",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p12",
+          "sourceText": "Thời gian : 30”                         15''",
+          "translatedText": "Time: 30\"                         15''",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p13",
+          "sourceText": "Lực ép : 55-60 kg/cm2",
+          "translatedText": "Pressure: 55-60 kg/cm2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p16",
+          "sourceText": "3.Kiểm tra sau khi ép các lỗ trang trí trên vamp không được bao không, tràn keo, vamp RB không dính tạp liệu.",
+          "translatedText": "3. Check after press, the deco holes on the vamp is not bubble, cement overflow, vamp RB is not stuck to impurities.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p17",
+          "sourceText": "Do tính chất liệu, chấp nhận mức độ bóng liệu nhẹ, lộ ô dê không đều, trắng các lỗ trang trí, đuôi logo không thẳng, và tràn keo các lỗ trang trí như hình QA manual cập nhật",
+          "translatedText": "Due to material characteristic, slight material luster, inconsistent eyestay exposure, whitening at deco holes, non-straight logo tail, and cement overflow at deco holes are acceptable as updated in the QA manual image",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p20",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p21",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p22",
+          "sourceText": "3.Vamp RB không hở keo/lem keo keo, sạch sẽ",
+          "translatedText": "3. Vamp RB has no bond gap/over cement, clean",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p23",
+          "sourceText": "Vamp RB ép bị bao không",
+          "translatedText": "Vamp RB has bubbles after pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p24",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p27",
+          "sourceText": "Vamp RB bị tràn keo",
+          "translatedText": "Vamp RB has cement overflow",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p28",
+          "sourceText": "Vamp RB ép dính chắc",
+          "translatedText": "Vamp RB is pressed with high-adhesion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p29",
+          "sourceText": "liệu sạch sẽ",
+          "translatedText": "Clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p30",
+          "sourceText": "Đuôi logo cong",
+          "translatedText": "Swoosh's tail is curved",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p31",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p32",
+          "sourceText": "Trắng các lỗ trang trí",
+          "translatedText": "Whitening at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p33",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p34",
+          "sourceText": "Bóng liệu nhẹ",
+          "translatedText": "Slight material luster",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p35",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p36",
+          "sourceText": "Lộ ô dê không đều",
+          "translatedText": "Expose eyestay inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s22_p38",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 23,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+      "pairs": [
+        {
+          "id": "s23_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p4",
+          "sourceText": "*May dây đai gót:",
+          "translatedText": "*Stitching heel strap:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p5",
+          "sourceText": "1.Điều chỉnh lập trình cách biên theo file rập 1.5mm ,cách kim 9-10 mũi/inch",
+          "translatedText": "1. Adjust programming margin according to pattern file 1.5mm, SPI 9-10 stitches/inch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p6",
+          "sourceText": "2.Kiểm tra trước khi may:",
+          "translatedText": "2. Check before sewing:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p7",
+          "sourceText": "May zizag gót phải bằng mí, không chòng biên để tránh dây đai may bị lệch, cộm",
+          "translatedText": "Heel zigzag stitching must be edge to edge, without overlapping edges to prevent the sewn webbing from being skewed or lumpy",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p8",
+          "sourceText": "Các đường trang trí trên dây đai phải nằm giữa Chấp nhận dây đai được lệch +-0.5mm như hình QA manual cập nhật.",
+          "translatedText": "Decorative lines on the webbing must be centered. Webbing deviation of +-0.5mm is acceptable as updated in the QA manual image.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p10",
+          "sourceText": "3.Đặt gót giày vào rập đảm bảo đường may đấu vòng cổ phải ngay định vị trên rập, đường may zigzag gót phải ngay giữa",
+          "translatedText": "3. Place the shoe heel onto the pattern, making sure the collar joint seam aligns with the position on the pattern, and the heel zigzag seam is in the middle",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p11",
+          "sourceText": "Đặt dây đai vào rập/gót giày đảm bảo khoảng cách từ đường trang trí dây đai đến đường may theo file rập cách 6mm",
+          "translatedText": "Place the webbing onto the pattern/shoe heel, ensuring the distance from the webbing decorative line to the seam is 6mm according to the pattern file",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p13",
+          "sourceText": "4.Kiểm tra dây đai gót sau khi may phải thẳng, cách biên đúng theo file rập 1.5mm, cách kim 9-10 mũi/inch, không được đứt chỉ, sụp mí, bỏ mũi.",
+          "translatedText": "4. Check that the heel webbing after sewing is straight, with a margin of 1.5mm according to the pattern file, SPI 9-10 stitches/inch, free of broken thread, run-off stitching, and skipped stitches.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p14",
+          "sourceText": "Chấp nhận khoảng cách từ đường may dây đai đến đường trang trí dây đai tiêu chuẩn lệch +-1mm như hình QA manual cập nhật",
+          "translatedText": "Standard distance from the webbing seam to the webbing decorative line allows a deviation of +-1mm as updated in the QA manual image",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p16",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p17",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p18",
+          "sourceText": "Dây đai gót thẳng",
+          "translatedText": "Straight heel strap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p19",
+          "sourceText": "Dây đai gót méo",
+          "translatedText": "Heel strap distorted",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p20",
+          "sourceText": "4. Dây đai gót thẳng",
+          "translatedText": "4. Straight heel strap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p21",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p22",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p23",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p24",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p25",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s23_p26",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 24,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+      "pairs": [
+        {
+          "id": "s24_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p1",
+          "sourceText": "fCRITICAL TO QUALITY",
+          "translatedText": "fCRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p5",
+          "sourceText": "*May dây đai gót vào vòng cổ",
+          "translatedText": "*Stitching heel strap into collar opening",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p7",
+          "sourceText": "1.Điều chỉnh cử máy đúng cách biên 2mm, cách kim 9-10 mũi/inch",
+          "translatedText": "1. Adjust the margin tool to a 2mm margin, SPI 9-10 stitches/inch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p11",
+          "sourceText": "2.Đặt biên dây đai vào bằng mí với biên vòng cổ",
+          "translatedText": "2. Align the edge of the webbing edge to edge with the collar opening edge",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p12",
+          "sourceText": "May theo đúng cách biên 2mm, đảm bảo dây đai phải nằm ngay tâm giữa vòng cổ",
+          "translatedText": "Sew according to the 2mm margin, ensuring the webbing is in the middle center of the collar opening",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p17",
+          "sourceText": "3.Kiểm tra sau khi may  dây đai gót phải thẳng ngay tâm với vòng cổ, đúng cách biên 2mm, 9-10 ũi/inch, không sụp mí và chiều dài dây đai gót đủ 30mm.",
+          "translatedText": "3. Check after stitching heel strap to align notch with collar opening, correct margin 2mm, 9-10 lines/inch, no run-off stitching and length of heel strap is 30mm.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p23",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p24",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p25",
+          "sourceText": "Dây đai thẳng",
+          "translatedText": "Straight webbing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p26",
+          "sourceText": "Dây đai méo, sụp mí",
+          "translatedText": "Webbing off center, run-off stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p27",
+          "sourceText": "4. Dây đai gót thẳng",
+          "translatedText": "4. Straight heel strap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p28",
+          "sourceText": "30mm",
+          "translatedText": "30mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p29",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p32",
+          "sourceText": "2mm",
+          "translatedText": "2mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p33",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s24_p36",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 25,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s25_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p4",
+          "sourceText": "* Inser last : Vô phom",
+          "translatedText": "* Insert last: Lasting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p6",
+          "sourceText": "1.Kiểm tra sử dụng last và mặt giày cùng size",
+          "translatedText": "1. Check that the last and upper are of the same size",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p10",
+          "sourceText": "2.Kiểm tra vô phom phải thấy hai  tâm , dùng đèn laze kiểm tra đường trung tâm đế trung phải thẳng.",
+          "translatedText": "2. Check during lasting that both centers are visible, use a laser light to check that the midsole center line is straight.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p14",
+          "sourceText": "3.Kiểm tra sau khi vô phom mũi gót thẳng, không nhăn",
+          "translatedText": "3. Check after lasting that the toe and heel are straight and free of wrinkle",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p15",
+          "sourceText": "Thao tác dùng tay điều chỉnh mặt giày để giữ gót/dây đai thẳng và ở giữa so với đinh gót để tránh thành phẩm dây đai và trang trí “NIKE” của heel clip bị méo",
+          "translatedText": "Operation use the adjusted upper hand to keep the heel/webbing straight and centered over the heel clip to avoid distortion of the finished webbing and “NIKE” decoration of the heel clip",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p17",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p18",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p19",
+          "sourceText": "4.Mũi/gót thẳng",
+          "translatedText": "4. Straight toe/heel",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p20",
+          "sourceText": "Gót /dây đai gót thẳng hàng",
+          "translatedText": "Heel / heel strap aligned",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p21",
+          "sourceText": "Gót /dây đai gót méo",
+          "translatedText": "Heel / heel strap off center",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p23",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p24",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p25",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p26",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p27",
+          "sourceText": "Dây đai gót thẳng hàng với “NIKE”",
+          "translatedText": "Heel strap aligned with “NIKE”",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s25_p28",
+          "sourceText": "Dây đai gót không thẳng hàng với “NIKE”",
+          "translatedText": "Heel strap not aligned with “NIKE”",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 26,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s26_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p4",
+          "sourceText": "*Định hình mũi",
+          "translatedText": "*Toe shaping",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p5",
+          "sourceText": "1.Kiểm tra cài đặt điều kiện khuôn ép phải đúng theo PFC",
+          "translatedText": "1. Check that condition pressing mold settings are correct according to PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p6",
+          "sourceText": "Khuôn nóng: 70-80℃",
+          "translatedText": "Hot mold: 70-80℃",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p7",
+          "sourceText": "Khuôn lạnh: dưới 40℃",
+          "translatedText": "Cold mold: below 40℃",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p8",
+          "sourceText": "Thời gian: 30”",
+          "translatedText": "Time: 30\"",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p9",
+          "sourceText": "*Định hình 3D mũi nóng :",
+          "translatedText": "*Hot tip 3D shaping:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p10",
+          "sourceText": "Đặt mặt giày vào khuôn ép nóng đảm bảo hai tâm mũi giày phải bằng biên với khuôn.",
+          "translatedText": "Place the upper into the hot pressing mold, ensuring the two toe centers are aligned edge to edge with the mold.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p12",
+          "sourceText": "*Định hình 3D mũi lạnh",
+          "translatedText": "*Tip cold shaping 3D shaping",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p13",
+          "sourceText": "1.Điều chỉnh khoảng cách giữa jig và khuôn lạnh sao cho khi ép biên của mũi được ôm vừa sát với khuôn, đèn bomb-sight ngay giữa khuôn",
+          "translatedText": "1. Adjust the distance between the jig and the cold mold so that during pressing, the tip edge fits closely with the mold, and the bomb-sight light is in the middle of the mold",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p14",
+          "sourceText": "Mặt giày và khuôn lạnh phải đúng size.",
+          "translatedText": "The upper and cold mold must be of the correct size.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p15",
+          "sourceText": "2.Đặt mặt giày vào chính xác ngay vạch định vị size trên jig, tâm của mũi giày phải nằm ngay giữa jig và đèn chiếu",
+          "translatedText": "2. Place the upper accurately at the size positioning line on the jig, the toe center must be in the middle of the jig and the projection light",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p16",
+          "sourceText": "Khi ép khuôn phải ôm sát mặt giày",
+          "translatedText": "When press the mold must hug tightly to upper",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p17",
+          "sourceText": "3.Kiểm tra sau khi ép mũi giày có hình dạng 3D giống với giày mẫu.",
+          "translatedText": "3. Check after pressing that the toe has a 3D shape matching the sample shoes.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p20",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p21",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p22",
+          "sourceText": "11T-14",
+          "translatedText": "11T-14",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p24",
+          "sourceText": "4. Hình dạng mũi suôn đều,không cộm",
+          "translatedText": "4. Tip shape smooth and evenly, free of lumps",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p25",
+          "sourceText": "Độ cong 3D mũi suôn đều",
+          "translatedText": "Smoothly and evenly 3D toe spring",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p26",
+          "sourceText": "Mũi bị gãy",
+          "translatedText": "Broken toe",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p29",
+          "sourceText": "11T-14#",
+          "translatedText": "11T-14#",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p30",
+          "sourceText": "14#",
+          "translatedText": "14#",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p31",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p32",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s26_p33",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 27,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s27_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p4",
+          "sourceText": "*May rút mũi:",
+          "translatedText": "*Gathering stitching:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p6",
+          "sourceText": "1. Điều chỉnh cử máy  may rút mũi 2mm",
+          "translatedText": "1. Adjust the gathering stitching machine guide by 2mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p10",
+          "sourceText": "2.May dây rút mũi ở bên trong của lót mặt trước,may phải theo tâm định vị, cách biên 2mm, cách kim 9-10 mũi/inch",
+          "translatedText": "2. Perform gathering stitching on the inside of the vamp lining, follow the position notches, maintain a 2mm margin, and SPI 9-10 stitches/inch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p11",
+          "sourceText": "Đường may suôn ,không lỏng,rối chỉ",
+          "translatedText": "Stitching line is smooth, not loose, twisted thread",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p12",
+          "sourceText": "Các nốt ở mũi phải may vừa sát không chồng mí hoặc quá lỏng để tránh tình trạng mũi bị nhăn sau khi vô phom.",
+          "translatedText": "The notes in tip must be close to stitching and not overlap or exceed loose to avoid the situation where tip becomes wrinkle after lasting.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p16",
+          "sourceText": "3.Sau khi may sử dụng rập kiểm tra độ cong mũi có đúng chuẩn",
+          "translatedText": "3. After stitching, use the jig to check if the toe spring meets the standard",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p22",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p23",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p24",
+          "sourceText": "4. Hình dạng mũi suôn đều,không nhăn",
+          "translatedText": "4. Smoothly and evenly tip shape, free of wrinkle",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p25",
+          "sourceText": "Rút mũi đều 2mm,khớp rập",
+          "translatedText": "Even 2mm gathering, jig fitting",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p26",
+          "sourceText": "Rút mũi cách biên lớn nhỏ",
+          "translatedText": "Uneven gathering margin",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p27",
+          "sourceText": "2mm",
+          "translatedText": "2mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p28",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p30",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p32",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s27_p34",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 28,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s28_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p5",
+          "sourceText": "*May bao trung đế",
+          "translatedText": "*Strobel stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p7",
+          "sourceText": "1.Điều chỉnh máy đúng cách biên 3mm, 9-10",
+          "translatedText": "1. Adjust the machine to the correct 3mm margin, SPI 9-10 stitches/inch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p8",
+          "sourceText": "mũi/inch",
+          "translatedText": "stitches/inch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p10",
+          "sourceText": "2.Do thiết kế là đế cao su trong nên:",
+          "translatedText": "2. Due to the clear rubber outsole design:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p11",
+          "sourceText": "Sử dụng màu chỉ may đế trung phải đúng  màu theo tỉ cào, tuyệt đối không được dùng bất kỳ màu chỉ nào khác để may.",
+          "translatedText": "Use the exact strobel thread color matching the color swatch; absolutely do not use any other thread color for stitching.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p13",
+          "sourceText": "3.Kiểm tra trung đế ,mặt giày phải cùng size.",
+          "translatedText": "3. Check that the strobel and upper are the same size.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p14",
+          "sourceText": "Đặt đế trung, mặt giày phải ngay tâm bằng mí",
+          "translatedText": "Align the strobel and upper to the center by edge",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p15",
+          "sourceText": "May theo đường định vị in trên đế trung.",
+          "translatedText": "Stitch along the positioning line printed on the strobel.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p16",
+          "sourceText": "Thao tác may suôn đều.",
+          "translatedText": "Smoothly and evenly stitching operation.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p18",
+          "sourceText": "4.Kiểm tra sau khi may đảm bảo tâm mặt giày và tâm đế trung khớp nhau. Đường chỉ may không lỏng ,rối chỉ.",
+          "translatedText": "4. Check after stitching to ensure the upper center and strobel center match. Thread line must be free of looseness or bird nesting.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p19",
+          "sourceText": "Do thiết kế nên chấp nhận thành phẩm lộ đường chỉ như hình QA manual cập nhật",
+          "translatedText": "Due to the design, exposed thread lines on the finished product are acceptable as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p22",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p23",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p24",
+          "sourceText": "5. Màu chỉ may đế trung đúng màu đường may suôn đều ,đúng vị trí",
+          "translatedText": "5. Correct strobel thread color, smoothly and evenly stitch line, correct position",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p25",
+          "sourceText": "Đế trung và mặt giày ngay tâm",
+          "translatedText": "Strobel and upper centered",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p26",
+          "sourceText": "Đế trung và mặt giày ngay tâm",
+          "translatedText": "Strobel and upper centered",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p27",
+          "sourceText": "QA manuall ok",
+          "translatedText": "QA manuall ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p30",
+          "sourceText": "3mm",
+          "translatedText": "3mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p31",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p32",
+          "sourceText": "Đúng chỉ",
+          "translatedText": "Correct thread",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p33",
+          "sourceText": "Sai chỉ",
+          "translatedText": "Wrong thread",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p34",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s28_p35",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 29,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+      "pairs": [
+        {
+          "id": "s29_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p3",
+          "sourceText": "t",
+          "translatedText": "t",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p4",
+          "sourceText": "*May lót vòng cổ",
+          "translatedText": "*Stitching collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p5",
+          "sourceText": "1. Kiểm tra cài đặt cử may đúng cách biên 3mm, 11-12 mũi/inch",
+          "translatedText": "1. Check the stitching guide setting for a 3mm margin, SPI 11-12 stitches/inch",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p6",
+          "sourceText": "2.Đặt  lót vòng cổ vào vòng cổ  ngay tâm, bằng mí",
+          "translatedText": "2. Place the collar lining onto the collar opening, centered and aligned by edge",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p7",
+          "sourceText": "3.Kiểm tra sau khi may may cách biên 3mm, 11-12 mũi/inch, không đứt chỉ, sụp mí",
+          "translatedText": "3. Check after stitching with a 3mm margin, SPI 11-12 stitches/inch, free of broken thread and slip stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p9",
+          "sourceText": "*Phun keo và dán mos vòng cổ",
+          "translatedText": "*Spray cement and attach collar cement foam",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p10",
+          "sourceText": "1.Mos vòng cổ lăn keo hai mặt 100%",
+          "translatedText": "1. Apply double-sided roll cementing 100% on collar cement foam",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p11",
+          "sourceText": "2. Phun keo đều tới vị theo pfc",
+          "translatedText": "2. Spray cement consistent reach marking according to pfc",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p12",
+          "sourceText": "*Chú ý không phun keo vòng cổ/lót vòng cổ cách ô dê 2cm để tránh sau khi định hình tràn keo lót",
+          "translatedText": "*Note not spray cement collar opening/collar lining 2cm away from eyestay to avoid after shaping cement overflow lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p13",
+          "sourceText": "3.Đặt dán mút vòng cổ đảm bảo lỗ định vị mút phải ngay tâm của vòng cổ",
+          "translatedText": "3. Attach collar cement foam ensuring the foam position holes are centered with the collar opening",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p15",
+          "sourceText": "*Lộn và dập bằng",
+          "translatedText": "*Folding & hammering",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p16",
+          "sourceText": "1.Lộn vòng cổ phải lộn tới vị, thao tác vuốt  lót thẳng và dán ngay tâm",
+          "translatedText": "1. Turn the collar inside out properly, smooth out the lining and attach it centrally",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p17",
+          "sourceText": "2.Điều chỉnh máy dập bằng 2 trụ dập phải sát  vòng cổ khi dập, dập bằng phải suôn đều",
+          "translatedText": "2. Adjust the hammering machine so the two hammering posts are close to the collar during hammering, and ensure smoothly and evenly hammering",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p18",
+          "sourceText": "Kiểm tra sau khi dập bằng vòng cổ phải suôn đều",
+          "translatedText": "Check after hammering that the collar must be smoothly and evenly",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p20",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p21",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p22",
+          "sourceText": "Lót vòng cổ suôn đều",
+          "translatedText": "Smoothly and evenly collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p23",
+          "sourceText": "Lót vòng cổ không suôn",
+          "translatedText": "Uneven collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p24",
+          "sourceText": "6. Hình dạng vòng cổ suôn đều",
+          "translatedText": "6. Smoothly and evenly collar shape",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p25",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p31",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p32",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p33",
+          "sourceText": "3mm",
+          "translatedText": "3mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p34",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p35",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p36",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p37",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s29_p38",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 30,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+      "pairs": [
+        {
+          "id": "s30_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p5",
+          "sourceText": "*May dằn vòng cổ",
+          "translatedText": "*Collar opening fixed stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p8",
+          "sourceText": "1.Trước khi may phải vuốt lót vòng cổ suôn đều và sát biên vòng cổ",
+          "translatedText": "1. Before stitching must swipe collar lining smoothly and evenly and close on margin collar opening",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p9",
+          "sourceText": "Đặt lót vòng cổ ngay vị trí đầu biên vòng cổ và may dằn theo biên vòng cổ.",
+          "translatedText": "Place collar lining right at the beginning of the collar opening edge and fixed stitching along the collar opening edge.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p10",
+          "sourceText": "May mỗi bên 6-7 mũi, cách kim 9-10 mũi/inch để cố định vị trí lót vòng cổ",
+          "translatedText": "Stitching 6-7 stitches on each side, 9-10 stitches distance from needle to fix at collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p14",
+          "sourceText": "2. Kiểm tra sau khi may biên lót vòng cố suôn đều, không lớn nhỏ",
+          "translatedText": "2. Check after the stitching liner ring is fixed to the smoothly and evenly, not too big or small",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p15",
+          "sourceText": "Do thiết kế, tính chất liệu chấp nhận mức độ thành phẩm lót hở, lót vòng cổ nhăn như hình QA manual cập nhật",
+          "translatedText": "Due to its design, the natural material accepts the level of open lining finished products, the wrinkled collar linning as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p18",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p19",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p20",
+          "sourceText": "6. Hình dạng vòng cổ suôn đều",
+          "translatedText": "6. Smoothly and evenly collar shape",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p21",
+          "sourceText": "Lót vòng cổ suôn đều",
+          "translatedText": "Smoothly and evenly collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p22",
+          "sourceText": "Lót vòng cổ không suôn",
+          "translatedText": "Uneven collar lining",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p23",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p24",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s30_p25",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 31,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+      "pairs": [
+        {
+          "id": "s31_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p5",
+          "sourceText": "*Cột dây:",
+          "translatedText": "*Lacing:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p9",
+          "sourceText": "1. Kiểm tra trước khi cột dây phải kéo thẳng lưỡi và điều chỉnh lưỡi/lót lưỡi thẳng để tránh thành phẩm lưỡi giày bị nhăn hoặc xếp ly",
+          "translatedText": "1. Check before lacing to straighten tongue and adjusted tongue/tongue lining straight to avoid finished product tongue shoes being wrinkle or pleated",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p13",
+          "sourceText": "2. Điều chỉnh các nấc xỏ dây phải đều trước khi cột để mặt  giày ôm sát phom",
+          "translatedText": "2. Adjusted, the straps must be threaded to consistent before tying so that upper hugs last closely.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p19",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p20",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p21",
+          "sourceText": "Lót lưỡi suôn đều",
+          "translatedText": "Liner tongue smoothly and evenly",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p22",
+          "sourceText": "7. Lót lưỡi không nhăn",
+          "translatedText": "7. Lining tongue free of wrinkle",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p23",
+          "sourceText": "Lót lưỡi nhăn",
+          "translatedText": "Liner tongue wrinkle",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p25",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s31_p26",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 32,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+      "pairs": [
+        {
+          "id": "s32_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-STITCHING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p5",
+          "sourceText": "*May đính lưỡi vào mặt giày",
+          "translatedText": "*Stitching attaches tongue to upper",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p7",
+          "sourceText": "1.Điều chỉnh lập trình máy đúng tiêu chuẩn cách biên 2mm, 9-10 mũi/inch",
+          "translatedText": "1. Adjusted correct machine programming quality standard margin 2mm, SPI 9-10 stitches/inch stitches",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p11",
+          "sourceText": "2.Đặt lưỡi và mặt giày vào khớp sát với biên rập.và ngay tâm định vị",
+          "translatedText": "2. Put tongue and upper into fit close with edge pallet. And right notch positioning",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p12",
+          "sourceText": "Đảm bảo lưỡi/mặt giày cùng size với rập may",
+          "translatedText": "Make sure tongue/upper are the same size as pallet stitching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p16",
+          "sourceText": "3. Kiểm tra sau khi may lưỡi/dây đai lưỡi không méo, đúng cách biên 2mm, cách kim 9-10 mũi/inch.",
+          "translatedText": "3. Check after stitching tongue/webbing tongue is not distorted, correct margin 2mm, 9-10 stitches away from needle.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p17",
+          "sourceText": "Chấp nhận khoảng cách từ logo thêu đến biên ô dê lệch +-1mm như hình QA manual cập nhật",
+          "translatedText": "Accept distance from swoosh embroidered to the edge eyestay deviation +-1mm as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p19",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p20",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p21",
+          "sourceText": "Lưỡi/dây đai lưỡi thẳng",
+          "translatedText": "Tongue/webbing tongue straight",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p22",
+          "sourceText": "Lưỡi/dây đai lưỡi méo",
+          "translatedText": "Tongue/webbing tongue distortion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p23",
+          "sourceText": "7. Đính lưỡi đúng vị trí",
+          "translatedText": "7. Attach tongue to at",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p24",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p25",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p26",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s32_p27",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 33,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s33_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p5",
+          "sourceText": "*Quét nước thuốc 2015K+2%B bộ vị mũi eo",
+          "translatedText": "*Applying primer 2015K+2%B component tip quarter",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p7",
+          "sourceText": "1.Kiểm tra công cụ quét phải thay đổi theo thời gian.",
+          "translatedText": "1. Test tool apply must change over time.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p10",
+          "sourceText": "2.Kiểm tra sử dụng dụng đúng nước thuốc (2015K+2%B) theo PFC",
+          "translatedText": "2. Check correct use of priming (2015K+2%B) according to PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p13",
+          "sourceText": "3.Dùng  cọ để quét 2015K+2%B toàn bộ vùng mũi eo cao su đã  mài, thao tác quét đều và tới định vị",
+          "translatedText": "3. Use a brush to apply 2015K+2%B the entire area of ​​ground rubber tip quarter, operation apply consistent and position it.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p14",
+          "sourceText": "*Chú ý: không được quét lem qua vùng mặt trước lưới tránh tình trạng mặt trước lưới không khô nước thuốc sau khi mặt trước lưới quét tiếp nước thuốc 111GN+4%1071 lên sẽ ảnh hưởng thành phẩm hở keo",
+          "translatedText": "*Note: Do not let apply bleeding pass through the vamp mesh area to avoid the situation where vamp mesh is not dry priming after vamp mesh apply continues priming 111GN+4%1071 will affect the finished product bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p18",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p19",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p20",
+          "sourceText": "Không hở keo",
+          "translatedText": "No bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p21",
+          "sourceText": "Hở keo",
+          "translatedText": "Bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p22",
+          "sourceText": "8.Hở keo",
+          "translatedText": "8. Bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p23",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p24",
+          "sourceText": "2015K+2%B",
+          "translatedText": "2015K+2%B",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p25",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s33_p26",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 34,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s34_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p5",
+          "sourceText": "*Quét nước thuốc 111GN+5%1071  quét bộ vị mặt trước lưới",
+          "translatedText": "*Applying primer 111GN+5%1071 apply component vamp mesh",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p7",
+          "sourceText": "1.Kiểm tra bàn chải quét  nước thuốc phải thay đổi theo thời gian.",
+          "translatedText": "1. Check that the applying primer brush must change over time.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p8",
+          "sourceText": "Sử dụng đúng nước thuốc (111GN +4%1071)theo PFC",
+          "translatedText": "Use the correct priming (111GN +4%1071) according to PFC",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p11",
+          "sourceText": "2.Kiểm tra quét 111GN+4%1071 quét toàn bộ mặt trước lưới phải đều theo đường vẽ, đặt biệt tại vị trí các góc nhọn của gót thao tác bàn chải xoay đều không  được lem để tránh tình trạng giày thành phẩm bị keo cao, đọng/thiếu nước thuốc sẽ bị hở keo.",
+          "translatedText": "2. Check apply 111GN+4%1071 apply all vamp mesh must be consistent according to the drawn line, especially at this position angles sharp heel of operation rotating brush consistent not bleeding to avoid the situation of finished shoe being over cement, stagnant/missing priming will be bond gap.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p12",
+          "sourceText": "Thành phẩm mức độ keo cao 1mm được chấp nhận như hinh QA manual cập nhật",
+          "translatedText": "Over cement 1mm level finished products are accepted as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p15",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p16",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p17",
+          "sourceText": "Quét đều nước thuốc",
+          "translatedText": "Apply consistent priming",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p18",
+          "sourceText": "Thiếu nước thuốc",
+          "translatedText": "Missing priming",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p19",
+          "sourceText": "8.Hở keo",
+          "translatedText": "8. Bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p20",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p24",
+          "sourceText": "Động nước thuốc",
+          "translatedText": "Priming Dynamic",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p25",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p26",
+          "sourceText": "111GN+4%1071",
+          "translatedText": "111GN+4%1071",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s34_p27",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 35,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s35_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p4",
+          "sourceText": "*Quét keo/nước thuốc đế:",
+          "translatedText": "*Outsole cementing:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p6",
+          "sourceText": "1.Công cụ quét phải thay đổi theo thời gian 30 phút/lần",
+          "translatedText": "1. Apply tool must be changed every 30 minutes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p10",
+          "sourceText": "2.Kiểm tra quét keo/nước thuốc phải đều, tới vị hết bề mặt của đế.",
+          "translatedText": "2. Check that cementing/priming must be consistent, reach marking must be surface of sole.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p11",
+          "sourceText": "*Chú ý : Do heel clip trong suốt nên quét keo phải quét tán đều keo, không quét động keo tránh tình trạng thành phẩm heel clip dễ nhìn thấy đường keo, đốm keo qua heel clip và bị hở keo ,lực kéo bond không đạt.",
+          "translatedText": "*Note: Because the heel clip is transparent, cementing must be apply with consistent, cement, not apply with cement to avoid the situation where the finished heel clip can easily see the cement line, cement spots through the heel clip and be bond gap, bonding, fail bond test.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p12",
+          "sourceText": "Do tính chất liệu, chấp nhận mức độ heel clip có đường keo, đốm keo như hình QA manual cập nhật",
+          "translatedText": "Due to material characteristic, accept heel clip level with cement lines, cement spots as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p15",
+          "sourceText": "3.Dùng đèn tím để kiểm tra keo ,nước thuốc đều ,tới vị.",
+          "translatedText": "3. Use purple light to check cement, priming, consistent, reach marking.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p18",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p19",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p20",
+          "sourceText": "Quét đều keo",
+          "translatedText": "Apply consistent cement",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p21",
+          "sourceText": "Quét keo đế /heel clip đọng keo",
+          "translatedText": "Cementing bottom /heel clip stagnated",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p22",
+          "sourceText": "8.Hở keo",
+          "translatedText": "8. Bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p23",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p25",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p26",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s35_p28",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 36,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s36_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p4",
+          "sourceText": "*Dán đế",
+          "translatedText": "*Bottom attaching",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p6",
+          "sourceText": "1.Kiểm tra mặt giày và đế phải cùng size",
+          "translatedText": "1. Check that upper and sole are the same size",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p8",
+          "sourceText": "2.Dán đế phải theo SOP",
+          "translatedText": "2. Bottom attaching must follow SOP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p9",
+          "sourceText": "Dán suôn đều theo đường quét keo",
+          "translatedText": "Apply smoothly and evenly follows cement line",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p10",
+          "sourceText": "Chú ý : Đặt heel clip vào mặt giày phải bằng mí với đường keo, đảm bảo chữ “Nike” trên heel clip phải nằm ngay giữa dây đai gót.",
+          "translatedText": "Note: Place the heel clip on the upper right edge even with the line cement, make sure the word \"Nike\" on the heel clip must be right in the middle of heel strap.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p11",
+          "sourceText": "Tại vị trí góc nhọn phải dán bằng mí với đường keo tránh tình trạng dán lắp đường keo thành phẩm bị hở keo, lồi đường keo thành phẩm bị keo cao và bị độ ổn định",
+          "translatedText": "At this position sharp right angle apply edge even with cement line to avoid the situation of apply installed with cement line, finished product has bond gap, convex line cement, finished product has over cement and rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p12",
+          "sourceText": "Dùng công cụ ấn chặt đế sau khi dán",
+          "translatedText": "Use tool press tightly sole after apply",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p14",
+          "sourceText": "3.Kiểm tra thành phẩm sau khi dán biên đế suôn đều không được hở keo hay keo cao.",
+          "translatedText": "3. Check the finished product after apply borders sole smoothly and evenly but is not bond gap or over cement.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p15",
+          "sourceText": "Chấp nhận mức độ keo cao 0.5mm, dây đai gót lệch +-1mm, đế lõm 2mm(với đế không gập gềnh) như hình QA manual cập nhật",
+          "translatedText": "Accept the level of over cement 0.5mm, heel strap deviation +-1mm, bottom concave 2mm (with sole not bumpy) as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p20",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p21",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p22",
+          "sourceText": "Thành phẩm giày hở keo",
+          "translatedText": "Finished shoe product bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p23",
+          "sourceText": "8.Hở keo/Độ ổn định",
+          "translatedText": "8. Bond gap/rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p24",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p25",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p26",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p27",
+          "sourceText": "4",
+          "translatedText": "4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p28",
+          "sourceText": "5",
+          "translatedText": "5",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p29",
+          "sourceText": "6",
+          "translatedText": "6",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p30",
+          "sourceText": "Thành phẩm giày không hở keo",
+          "translatedText": "Finished shoes are not bond gap",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p31",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p33",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p34",
+          "sourceText": "9",
+          "translatedText": "9",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p35",
+          "sourceText": "9",
+          "translatedText": "9",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p36",
+          "sourceText": "Thành phẩm không gập gềnh",
+          "translatedText": "The finished product is not bumpy",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p37",
+          "sourceText": "Thành phẩm bị gập gềnh",
+          "translatedText": "The finished product is bumpy",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p38",
+          "sourceText": "keo cao +1mm",
+          "translatedText": "Over cement +1mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p39",
+          "sourceText": "Dây đai méo +-1mm",
+          "translatedText": "Webbing off center +-1mm",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p40",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s36_p41",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 37,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+      "pairs": [
+        {
+          "id": "s37_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-ASSEMBLY",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p4",
+          "sourceText": "Ép máy:",
+          "translatedText": "Pressing machine",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p6",
+          "sourceText": "1.Để đảm bảo giày không hở keo và lực kéo bond đạt phải sử dụng đúng loại công cụ máy ép(được gia công bằng sắt) và khuôn ép(phần gót dày, có sẻ rảnh, đảm bảo khuôn ép phải đúng size)",
+          "translatedText": "1. To achieve make sure without bond gap and bonding bond, the correct type of machine tool must be used press (machined with iron) and pressing mold (heel part is thick, has free space, make sure pressing mold must be the right size)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p8",
+          "sourceText": "2.Điều chỉnh máy ép đảm bảo khi ép các cục pad máy phải ôm sát khuôn và mặt giày, để tránh thành phẩm sau khi ép gót bị bao không",
+          "translatedText": "2. Adjusted machine press make sure when press machine pads must hug the mold and upper closely, to avoid the finished product after seat lasting being bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p9",
+          "sourceText": "Điều kiện máy ép phải đúng theo pfc :(hai bên chân trái phải phải giống nhau )",
+          "translatedText": "Condition machine press must comply with pfc: (left and right legs must be the same)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p10",
+          "sourceText": "Lực ép 37-42kg",
+          "translatedText": "Pressure 37-42kg",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p11",
+          "sourceText": "Thời gian 20''",
+          "translatedText": "Time 20''",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p13",
+          "sourceText": "3.Kiểm tra đặt giày vào ngay định vị trên máy,đèn chiếu phải nằm giữa phom, mặt giày và khuôn phải đúng size",
+          "translatedText": "3. Check that the shoes are positioned right on the machine, the lights must be in the middle, last, upper and the mold must be the correct size.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p14",
+          "sourceText": "Điều chỉnh trụ máy ép sao cho trụ trước nằm giữa mặt trước ,trụ sau nằm giữa phom giày để tránh giày sau khi ép bị độ ổn định",
+          "translatedText": "Adjusted pillars press machine so that pillars before in the middle vamp, pillars after in the middle last shoes to avoid shoes after press being rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p15",
+          "sourceText": "Chấp nhận thành phẩm đế lõm 2mm như hình QA maual cập nhật.",
+          "translatedText": "Accept the finished product bottom concave 2mm as shown in the updated QA maual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p17",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p18",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p19",
+          "sourceText": "8.Hở keo/độ ổn định",
+          "translatedText": "8. Bond gap/rocking",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p21",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p22",
+          "sourceText": "Gót bị bao không",
+          "translatedText": "The heel is bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p23",
+          "sourceText": "Gót không bị bao không",
+          "translatedText": "Heels are not bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p24",
+          "sourceText": "9",
+          "translatedText": "9",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p25",
+          "sourceText": "9",
+          "translatedText": "9",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p26",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p27",
+          "sourceText": "Thành phẩm không gập gềnh",
+          "translatedText": "The finished product is not bumpy",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p28",
+          "sourceText": "Thành phẩm bị gập gềnh",
+          "translatedText": "The finished product is bumpy",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p29",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p30",
+          "sourceText": "9",
+          "translatedText": "9",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p31",
+          "sourceText": "9",
+          "translatedText": "9",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s37_p32",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 38,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s38_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p4",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Vamp nosew pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p6",
+          "sourceText": "1. Sử dụng tấm silicon có độ cứng 20A",
+          "translatedText": "1. Use a silicone pad with 20A hardness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p8",
+          "sourceText": "2.Kiểm tra máy được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "2. Check that the nosew machine temperature/time/pressure are adjusted according to PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p9",
+          "sourceText": "*Ép nóng :                           *Ép lạnh:",
+          "translatedText": "*Hot press: *cold press:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p10",
+          "sourceText": "Nhiệt độ trên :125℃+-3          N/A",
+          "translatedText": "Upper temperature:125℃+-3 N/A",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p11",
+          "sourceText": "Nhiệt độ dưới :125℃+-3          N/A",
+          "translatedText": "Temperature below: 125℃+-3 N/A",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p12",
+          "sourceText": "Thời gian : 45”                         20''",
+          "translatedText": "Time: 45” 20''",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p13",
+          "sourceText": "Lực ép : 80-85 kg/cm2",
+          "translatedText": "Pressure: 80-85 kg/cm2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p15",
+          "sourceText": "3.Kiểm tra sau khi ép các lỗ trang trí trên vamp/vị trí logo in sơn không được bao không, tràn keo, hở keo vamp RB không dính tạp liệu.",
+          "translatedText": "3. Check after press, deco holes on vamp/at screen-printed logo is not stuck bubble, cement overflow, bond gap vamp RB is not stuck to impurities.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p16",
+          "sourceText": "Do tính chất liệu, chấp nhận mức độ bóng liệu nhẹ, lộ ô dê không đều, trắng các lỗ trang trí, đuôi logo không thẳng, và tràn keo các lỗ trang trí như hình QA manual cập nhật",
+          "translatedText": "Due to material characteristic, slight material luster, inconsistent eyestay exposure, whitening at deco holes, non-straight logo tail, and cement overflow at deco holes are acceptable as updated in the QA manual image",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p19",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p20",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p21",
+          "sourceText": "3.Vamp RB không hở keo/lem keo keo/bao không, sạch sẽ(SB-077-P)",
+          "translatedText": "3. Vamp RB without bond gap/over cement cement/bubble, clean (SB-077-P)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p22",
+          "sourceText": "Vamp RB ép bị bao không",
+          "translatedText": "Vamp RB has bubbles after pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p23",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p25",
+          "sourceText": "Vamp RB bị tràn keo",
+          "translatedText": "Vamp RB has cement overflow",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p26",
+          "sourceText": "Vamp RB ép dính chắc",
+          "translatedText": "Vamp RB is pressed with high-adhesion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p27",
+          "sourceText": "liệu sạch sẽ",
+          "translatedText": "Clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p28",
+          "sourceText": "Đuôi logo cong",
+          "translatedText": "Swoosh's tail is curved",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p29",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p30",
+          "sourceText": "Trắng các lỗ trang trí",
+          "translatedText": "Whitening at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p31",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p32",
+          "sourceText": "Bóng liệu nhẹ",
+          "translatedText": "Slight material luster",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p33",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p34",
+          "sourceText": "Lộ ô dê không đều",
+          "translatedText": "Expose eyestay inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s38_p36",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 39,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s39_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p4",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Vamp nosew pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p5",
+          "sourceText": "1.Sử dụng tấm silicon có độ cứng 20A",
+          "translatedText": "1. Use silicon wafer with hardness 20A",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p7",
+          "sourceText": "2.Kiểm tra máy được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "2. Check that the nosew machine temperature/time/pressure are adjusted according to PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p8",
+          "sourceText": "*Ép nóng : Nhiệt độ trên :165℃+-3 , dưới",
+          "translatedText": "*Hot press: Upper temperature:165℃+-3, below",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p9",
+          "sourceText": "140℃+-3,Thời gian : 30”, lực ép 70-75kg/cm2",
+          "translatedText": "140℃+-3, Time: 30”, pressure 70-75kg/cm2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p10",
+          "sourceText": "* Ép lạnh: thời gian 15”",
+          "translatedText": "*Cold press: time 15\"",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p12",
+          "sourceText": "3.Kiểm tra Tip-quarter trước khi ép nosew logo in sơn có rõ nét, không lem sơn, tróc sơn.",
+          "translatedText": "3. Check Tip-quarter before press nosew screen-printed logo is clear, not over painting, paint peeled off.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p14",
+          "sourceText": "4.Kiểm tra sau khi ép các lỗ trang trí trên tip-quarter và biên tip-quarter không được bao không, tràn keo, hở keo, tip-quarter không dính tạp liệu.",
+          "translatedText": "4. Check after press that the deco holes on the tip-quarter and the tip-quarter border are not bubble, cement overflow, bond gap, the tip-quarter is not stuck to impurities.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p16",
+          "sourceText": "5.Do thiết kế sau khi nosew bề mặt Tip quarter không bằng phẳng ảnh hưởng biên Logo  không suôn đều, bề mặt liệu Tip quarter sau khi ép khác màu, biên liệu trắng và tràn keo tại các lỗ trang trí như hình QA manual cập nhật",
+          "translatedText": "5. Due to design after nosew surface Tipquarter does not affect flat margin swoosh does not smoothly and evenly, surface Tipquarter material after press color different, material edge white and cement overflow at deco holes as shown QA manual updated",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p18",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p19",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p20",
+          "sourceText": "3.Tip quarter không hở keo/lem keo keo/bao không, sạch sẽ, màu sắc phải giống nhau, (SB-077-A-1)",
+          "translatedText": "3. Tip quarter not bond gap/over cement cement/bubble, clean, color must be the same, (SB-077-A-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p21",
+          "sourceText": "Tip quarter ép bị bao không",
+          "translatedText": "Tip quarter press lost to bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p22",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p23",
+          "sourceText": "Tip quarter ép dính chắc",
+          "translatedText": "Tipquarter press high-adhesion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p24",
+          "sourceText": "liệu sạch sẽ",
+          "translatedText": "Clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p25",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p26",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p27",
+          "sourceText": "4",
+          "translatedText": "4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p28",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p29",
+          "sourceText": "Lộ ô dê không đều",
+          "translatedText": "Expose eyestay inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p30",
+          "sourceText": "Bóng liệu nhẹ",
+          "translatedText": "Slight material luster",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p31",
+          "sourceText": "Logo không suôn",
+          "translatedText": "Swoosh is not smooth",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p32",
+          "sourceText": "cạnh biên Logo không suôn",
+          "translatedText": "Swoosh edge is not smooth",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p33",
+          "sourceText": "Chảy sơn nền",
+          "translatedText": "Bleeding background paint",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p34",
+          "sourceText": "Tiêu chuẩn QA manual ok",
+          "translatedText": "Quality standard QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p35",
+          "sourceText": "Tiêu chuẩn QA  manual màu sắc tip quarter ok",
+          "translatedText": "Quality standard QA manual color tip quarter ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s39_p38",
+          "sourceText": "Tip-quarter bị nhạt màu và trắng các lỗ trang trí",
+          "translatedText": "Tip-quarter color fading and whitening at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 40,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s40_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p4",
+          "sourceText": "*Gắn liệu mặt trước",
+          "translatedText": "*Fix vamp material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p5",
+          "sourceText": "1.Bàn nosew phải đầy đủ đinh, bàn nosew/tấm cách nhiệt phải sạch sẽ và dán thêm giấy cách nhiệt tại vị trí ô dê của miếng liệu ở giữa để giảm mức độ ẩn ô dê không đều sau khi ép nosew(Đối với size nhỏ bàn nosew ép 3 miếng liệu)",
+          "translatedText": "1. The nosew table must be full of nails, the nosew table/insulation sheet must be clean and apply add insulation paper at this position eyestay of material in the middle to reduce the level of hiding eyestay inconsistent after press nosew (For small size press nosew table 3 pieces of material)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p6",
+          "sourceText": "2.Gắn liệu theo trình tự PFC",
+          "translatedText": "2. Fix material in PFC sequence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p7",
+          "sourceText": "Lưu ý:Thao tác mỗi lần dán chỉ lột giấy bảo vệ của 1 miếng Vamp RB /mỗi lần để đảm bảo mặt keo luôn sạch trước khi dán liệu",
+          "translatedText": "Note: Operation apply only peels off the protective paper of the one full pieces Vamp RB each time so that the make sure face of the cement is always clean before apply material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p8",
+          "sourceText": "Sử dụng găng tay khi thao tác và lột bỏ hoàn toàn giấy bảo vệ trước khi dán Vamp RB vào mặt giày mesh",
+          "translatedText": "Wear gloves during operation and completely remove the protective paper before applying the Vamp RB to the mesh upper.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p9",
+          "sourceText": "Trước khi đặt vamp mesh vào bàn nosew kiểm tra vị trí tip-quarter in keo màu sắc liệu có khác màu. Mức độ dao động khác màu vị trí tip-quarter được chấp nhận như hình QA manual cập nhật.",
+          "translatedText": "Before placing the vamp mesh on the nosew table, check whether at tip-quarter prints cement in color or not in color different. Color different variation at tip-quarter level is accepted as shown in updated QA manual.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p10",
+          "sourceText": "Đặt liệu khớp với lỗ đinh trên bàn ép/rập định vị. Các bộ vị phải đúng size số.",
+          "translatedText": "Place the material to fit the nail holes on the pressing table/positioning pattern. Components must be of the correct size.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p11",
+          "sourceText": "Dùng súng nóng cố định liệu trước khi ép",
+          "translatedText": "Use a heat gun to fix the material before pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p12",
+          "sourceText": "Chấp nhận thành phẩm khoảng cách từ logo đến ô dê lệch +-1mm như hinh QA manual cập nhật.",
+          "translatedText": "Finished products with a distance from the logo to the eyestay deviating by +-1mm are acceptable as updated in the QA manual image.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p14",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p15",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p16",
+          "sourceText": "Mặt trước, logo ép dính chắc",
+          "translatedText": "Vamp, swoosh press high-adhesion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p17",
+          "sourceText": "liệu sạch sẽ",
+          "translatedText": "Clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p18",
+          "sourceText": "Logo bị bao không",
+          "translatedText": "Swoosh suffered from bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p19",
+          "sourceText": "3.Tip quarter không hở keo/lem keo/bao không, sạch sẽ, màu sắc phải giống nhau,(SB-077-P-1)",
+          "translatedText": "3. Tip quarter not bond gap/over cement/bubble, clean, color must be the same, (SB-077-P-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p20",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p21",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p23",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p24",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s40_p25",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 41,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s41_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p4",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Vamp nosew pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p6",
+          "sourceText": "1. Sử dụng tấm silicon có độ cứng 20A",
+          "translatedText": "1. Use a silicone pad with 20A hardness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p8",
+          "sourceText": "2.Đảm bảo máy được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "2. Make sure machine gets adjusted temperature/time/ pressure machine nosew correct PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p9",
+          "sourceText": "*Ép nóng : Nhiệt độ trên :130℃+-3 , dưới",
+          "translatedText": "*Hot press: Upper temperature:130℃+-3, below",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p10",
+          "sourceText": "125℃+-3,Thời gian : 45”, lực ép 80-85kg/cm2",
+          "translatedText": "125℃+-3, Time: 45”, pressure 80-85kg/cm2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p11",
+          "sourceText": "* Ép lạnh: thời gian 20”",
+          "translatedText": "* Cold press: Time 20”",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p13",
+          "sourceText": "3.Kiểm tra sau khi ép các lỗ trang trí trên tip-quarter và logo không được bao không, tràn keo, tip quarter không dính tạp liệu.",
+          "translatedText": "3. Check after press that deco holes on tip-quarter and swoosh are not stuck on bubble, cement overflow, tip-quarter are not stuck on impurities.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p14",
+          "sourceText": "Do tính chất liệu, chấp nhận mức độ bóng liệu nhẹ, lộ ô dê không đều, trắng các lỗ trang trí, tràn keo các lỗ trang trí và do có in keo vị trí tip quarter có dao động khác màu. Chấp nhận mức độ dao động khác màu vị trí Tip quarter, logo được đi chung không cần phối như hình QA manual cập nhật",
+          "translatedText": "Due to material characteristic, accepts luster light material, expose eyestay inconsistent, whitening at deco holes, cement overflow at deco holes and due to printing cement at tip quarter has color different variation. Accept levels color different variation at Tip quarter, swoosh used together without color matching as shown in updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p16",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p17",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p18",
+          "sourceText": "3.Tip quarter không hở keo/lem keo keo/bao không, sạch sẽ, màu sắc phải giống nhau,(SB-077-P-1)",
+          "translatedText": "3. Tip quarter not bond gap/over cement cement/bubble, clean, color must be the same, (SB-077-P-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p19",
+          "sourceText": "Tip quarter ép bị bao không",
+          "translatedText": "Tip quarter press lost to bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p20",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p21",
+          "sourceText": "Vamp RB ép dính chắc",
+          "translatedText": "Vamp RB is pressed with high-adhesion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p22",
+          "sourceText": "liệu sạch sẽ",
+          "translatedText": "Clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p23",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p24",
+          "sourceText": "Trắng các lỗ trang trí",
+          "translatedText": "Whitening at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p25",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p26",
+          "sourceText": "Bóng liệu nhẹ",
+          "translatedText": "Slight material luster",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p27",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p28",
+          "sourceText": "Lộ ô dê không đều",
+          "translatedText": "Expose eyestay inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p30",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s41_p31",
+          "sourceText": "Tip-quarter khác màu",
+          "translatedText": "Tip-quarter color different variation",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 42,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s42_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p4",
+          "sourceText": "*Gắn liệu mặt trước",
+          "translatedText": "*Fix vamp material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p5",
+          "sourceText": "1.Bàn nosew phải đầy đủ đinh, bàn nosew/tấm cách nhiệt phải sạch sẽ và dán thêm giấy cách nhiệt tại vị trí ô dê của miếng liệu ở giữa để giảm mức độ ẩn ô dê không đều sau khi ép nosew(Đối với size nhỏ bàn nosew ép 3 miếng liệu)",
+          "translatedText": "1. The nosew table must be full of nails, the nosew table/insulation sheet must be clean and apply add insulation paper at this position eyestay of material in the middle to reduce the level of hiding eyestay inconsistent after press nosew (For small size press nosew table 3 pieces of material)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p6",
+          "sourceText": "2.Gắn liệu theo trình tự PFC",
+          "translatedText": "2. Fix material in PFC sequence",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p7",
+          "sourceText": "Lưu ý:Thao tác mỗi lần dán chỉ lột giấy bảo vệ của 1 miếng Vamp RB /mỗi lần để đảm bảo mặt keo luôn sạch trước khi dán liệu",
+          "translatedText": "Note: Operation apply only peels off the protective paper of the one full pieces Vamp RB each time so that the make sure face of the cement is always clean before apply material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p8",
+          "sourceText": "Sử dụng găng tay khi thao tác và lột bỏ hoàn toàn giấy bảo vệ trước khi dán Vamp RB vào mặt giày mesh",
+          "translatedText": "Wear gloves during operation and completely remove the protective paper before applying the Vamp RB to the mesh upper.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p9",
+          "sourceText": "Trước khi đặt vamp mesh vào bàn nosew kiểm tra vị trí tip-quarter in keo có đều keo, bộ vị vamp mesh phun sơn không được lem màu.",
+          "translatedText": "Before placing the vamp mesh on the nosew table, check whether at tip-quarter prints cement, consistent, cement, component vamp mesh can not be sprayed with paint.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p10",
+          "sourceText": "Đặt liệu khớp với lỗ đinh trên bàn ép/rập định vị. Các bộ vị phải đúng size số.",
+          "translatedText": "Place the material to fit the nail holes on the pressing table/positioning pattern. Components must be of the correct size.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p11",
+          "sourceText": "Dùng súng nóng cố định liệu trước khi ép.",
+          "translatedText": "Use hot gun fixed material before press.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p12",
+          "sourceText": "Chấp nhận thành phẩm khoảng cách từ logo đến ô dê lệch +-1mm như hinh QA manual cập nhật.",
+          "translatedText": "Finished products with a distance from the logo to the eyestay deviating by +-1mm are acceptable as updated in the QA manual image.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p14",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p15",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p16",
+          "sourceText": "Mặt trước, logo ép dính chắc liệu sạch sẽ",
+          "translatedText": "Vamp, swoosh press high-adhesion clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p17",
+          "sourceText": "Mặt trước liệu bị ẩn màu, Logo bị bao không",
+          "translatedText": "Will vamp be affected by color migration, swoosh will be affected by bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p18",
+          "sourceText": "3.Tip quarter không hở keo/lem keo/bao không, sạch sẽ, không ẩn màu(SB-077-C-1)",
+          "translatedText": "3. Tip quarter not bond gap/over cement/bubble, clean, not color migration(SB-077-C-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p19",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p20",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p23",
+          "sourceText": "NO",
+          "translatedText": "NO",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p25",
+          "sourceText": "In keo không đều",
+          "translatedText": "Print cement inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p26",
+          "sourceText": "OK",
+          "translatedText": "OK",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s42_p27",
+          "sourceText": "Mặt trước không lem màu, In đều keo",
+          "translatedText": "Vamp not color bleeding, Print consistent cement",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 43,
+      "title": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+      "pairs": [
+        {
+          "id": "s43_p0",
+          "sourceText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "translatedText": "ISQ NIKE SB ZOOM NYJAH 4-CUTTING",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p4",
+          "sourceText": "*Ép nosew mặt trước",
+          "translatedText": "*Vamp nosew pressing",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p6",
+          "sourceText": "1. Sử dụng tấm silicon có độ cứng 20A",
+          "translatedText": "1. Use a silicone pad with 20A hardness",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p8",
+          "sourceText": "2.Đảm bảo máy được điều chỉnh nhiệt độ /thời gian/ lực ép máy nosew đúng PFC :",
+          "translatedText": "2. Make sure machine gets adjusted temperature/time/ pressure machine nosew correct PFC:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p9",
+          "sourceText": "*Ép nóng : Nhiệt độ trên :130℃+-5 , dưới",
+          "translatedText": "*Hot press: Upper temperature:130℃+-5, below",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p10",
+          "sourceText": "125℃+-5,Thời gian : 45”, lực ép 80-85kg/cm2",
+          "translatedText": "125℃+-5, Time: 45”, pressure 80-85kg/cm2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p11",
+          "sourceText": "* Ép lạnh: thời gian 20”",
+          "translatedText": "* Cold press: Time 20”",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p13",
+          "sourceText": "3.Kiểm tra sau khi ép các lỗ trang trí trên tip-quarter và logo không được bao không, tràn keo, tip quarter không dính tạp liệu.",
+          "translatedText": "3. Check after press that deco holes on tip-quarter and swoosh are not stuck on bubble, cement overflow, tip-quarter are not stuck on impurities.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p14",
+          "sourceText": "Do tính chất liệu, chấp nhận mức độ bóng liệu nhẹ, lộ ô dê không đều, trắng các lỗ trang trí, tràn keo các lỗ trang trí và do vamp mesh có phun sơn có lem màu nhẹ. Chấp nhận mức độ ẩn màu vị trí Tip quarter như hình QA manual cập nhật",
+          "translatedText": "Due to material characteristic, accepts light material luster, expose eyestay inconsistent, whitening at deco holes, cement overflow at deco holes and due to spray mesh vamp has light color bleeding. Accept the color migration at Tipquarter level as shown in the updated QA manual",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p16",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p17",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p18",
+          "sourceText": "3.Tip quarter không hở keo/lem keo keo/bao không, sạch sẽ, không ẩn màu(SB-077-C-1)",
+          "translatedText": "3. Tip quarter not bond gap/over cement cement/bubble, clean, not color migration(SB-077-C-1)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p19",
+          "sourceText": "Tip quarter ép bị bao không",
+          "translatedText": "Tip quarter press lost to bubble",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p20",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p21",
+          "sourceText": "Vamp RB ép dính chắc",
+          "translatedText": "Vamp RB is pressed with high-adhesion",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p22",
+          "sourceText": "liệu sạch sẽ",
+          "translatedText": "Clean material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p23",
+          "sourceText": "Trắng các lỗ trang trí",
+          "translatedText": "Whitening at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p24",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p25",
+          "sourceText": "Bóng liệu nhẹ",
+          "translatedText": "Slight material luster",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p26",
+          "sourceText": "QA manual ok",
+          "translatedText": "QA manual ok",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p27",
+          "sourceText": "Lộ ô dê không đều",
+          "translatedText": "Expose eyestay inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p29",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p32",
+          "sourceText": "Tip quarter ẩn màu từ liệu Vamp mesh",
+          "translatedText": "Tipquarter color migration from Vamp mesh material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s43_p34",
+          "sourceText": "Tràn keo các lỗ trang trí",
+          "translatedText": "Cement overflow at deco holes",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    }
+  ]
+}
