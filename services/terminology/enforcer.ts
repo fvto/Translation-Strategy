@@ -60,8 +60,12 @@ const KNOWN_SYNONYM_PATTERNS: { [canonicalTargetLower: string]: RegExp } = {
   "operator": /\b(?:worker\s+operating|operation\s+staff|person\s+in\s+charge)\b/gi,
   "sole heating": /\b(?:(?:the\s+)?right\s+(?:foot|shoulder)|heating\s+(?:the\s+)?(?:sole|right\s+shoe)|heating\s+pads?|heat\s+exchanger|warm\s+sole)\b/gi,
   "smoothly and evenly": /\b(?:scanning\s+the\s+sole|smooth\s+and\s+(?:smooth|even)|evenly\s+smooth)\b/gi,
-  "sole attaching": /\b(?:work\s+on\s+the\s+sole|stick(?:ing)?\s+the\s+sole|sole\s+bonding|bonding\s+(?:the\s+)?sole)\b/gi,
   "cement line": /\b(?:glue\s+path|glue\s+line|glue\s+trace)\b/gi,
+  // Footwear Tooling, Mold & Plate Terminology VI -> EN
+  "top plate": /\b(?:top\s+(?:molds?|moulds?|toolings?)|upper\s+(?:molds?|moulds?|toolings?|plates?))\b/gi,
+  "bottom plate": /\b(?:bottom\s+(?:molds?|moulds?|toolings?)|lower\s+(?:molds?|moulds?|toolings?|plates?))\b/gi,
+  "pin holes": /\b(?:position(?:ing)?\s+holes?|locating\s+holes?|marking\s+holes?|guide\s+holes?|gauge\s+holes?)\b/gi,
+  "fit": /\b(?:align(?:ed)?\s+(?:with|to)|match(?:es|ed)?\s+with)\b/gi,
 
   // Footwear Defects EN -> VI
   "bọt khí": /(?<![\p{L}\p{N}])(?:bong\s+bóng(?:\s+khí)?|bọt)(?![\p{L}\p{N}])/giu,
@@ -164,6 +168,27 @@ export function enforceTerminologyCompliance(
         replacementText: fixedTolerance,
       });
       currentText = fixedTolerance;
+    }
+  }
+
+  // Proactive Compound Tooling Auto-Repair:
+  // e.g. "Khuôn trên - dưới" / "khuôn trên/dưới" -> "top and bottom plates"
+  if (
+    /\bkhuôn\s+trên\s*[-–—\/]\s*dưới\b/i.test(sourceText) ||
+    (/\bkhuôn\s+trên\b/i.test(sourceText) && /\b(?:khuôn\s+)?dưới\b/i.test(sourceText))
+  ) {
+    const compoundPlate = currentText.replace(
+      /\b(?:top\s+(?:and|&|-|\/)\s*bottom|upper\s+(?:and|&|-|\/)\s*lower)\s+(?:molds?|moulds?|plates?)\b/gi,
+      "top and bottom plates"
+    );
+    if (compoundPlate !== currentText) {
+      replacements.push({
+        sourceTerm: "khuôn trên - dưới",
+        expectedTarget: "top and bottom plates",
+        originalText: currentText,
+        replacementText: compoundPlate,
+      });
+      currentText = compoundPlate;
     }
   }
 

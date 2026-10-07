@@ -140,3 +140,28 @@ test('Poisoned generic stopword glossary mappings (such as vị trí -> at) are 
   assert.equal(text, 'Inspect sole position before applying cement.');
 });
 
+test('Compound tooling term (Khuôn trên - dưới) is automatically enforced as top and bottom plates without delivery errors', async () => {
+  translationCache.clear();
+  const textWithKhuon = 'Khuôn trên - dưới đúng size,đặt khớp lỗ định vị';
+  const provider = {
+    name: 'mock',
+    translateBatch: async ({ items }) => ({
+      results: new Map(items.map(i => [i.id, 'Top and bottom molds must be of the correct size, align with position holes'])),
+      provider: 'mock',
+      durationMs: 0
+    })
+  };
+  const result = await pptxTranslatorService.translate(await deck([textWithKhuon]), {
+    sourceLanguage: 'vi',
+    targetLanguage: 'en',
+    mode: 'replace_en',
+    fileName: 'khuon_safe.pptx',
+    translateMissingOnly: true,
+    selectedUnitIds: ['s1_p0'],
+    provider
+  });
+  const after = await JSZip.loadAsync(result.translatedBuffer);
+  const text = paragraphText(await after.file('ppt/slides/slide1.xml').async('string'));
+  assert.match(text, /top and bottom plates/i);
+});
+

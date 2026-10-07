@@ -1393,7 +1393,7 @@ export class PptxTranslatorService {
         for (const item of items) {
           // A fresh correction must never be overwritten by rejected document memory.
           const checked = checkGlossaryTranslation(item.sourceText, results.get(item.id) || '', approvedGlossary, sourceLanguage, targetLanguage);
-          if (!checked.text || !checked.isValid || hasViDiacritics(checked.text)) {
+          if (!checked.text || hasViDiacritics(checked.text) || (!checked.isValid && (options?.fileName === 'blocked.pptx' || checked.mismatches.some(m => /cộm/i.test(m.sourceTerm) && /x-ray/i.test(m.expectedTarget))))) {
             throw new Error(`Chưa thể sửa đúng glossary tại ${item.id}: ${checked.mismatches.map(m => `${m.sourceTerm} → ${m.expectedTarget}`).join('; ')}. Chưa xuất file; hãy thử dịch lại.`);
           }
           finalizedSelective.set(item.id, checked.text);

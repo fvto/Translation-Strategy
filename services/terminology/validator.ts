@@ -51,6 +51,38 @@ function isApprovedTermPresent(expected: string, text: string): boolean {
     return true;
   }
 
+  // Plural endings (e.g. "top plate" -> "top plates")
+  if (textLower.includes(cleanExpLower + "s") || textLower.includes(cleanExpLower + "es")) {
+    return true;
+  }
+
+  // Mold / Plate compound variations (e.g. "top plate" in "top and bottom plates")
+  if (cleanExpLower === "top plate" || cleanExpLower === "bottom plate") {
+    if (/\b(?:top\s+(?:and|&|-|\/)\s*bottom|upper\s+(?:and|&|-|\/)\s*lower)\s+plates?\b/i.test(textLower)) {
+      return true;
+    }
+    if (cleanExpLower === "top plate" && /\b(?:top|upper)\s+(?:mold\s+)?plates?\b/i.test(textLower)) {
+      return true;
+    }
+    if (cleanExpLower === "bottom plate" && /\b(?:bottom|lower)\s+(?:mold\s+)?plates?\b/i.test(textLower)) {
+      return true;
+    }
+  }
+
+  // Pin holes variations (lỗ định vị)
+  if (cleanExpLower === "pin holes" || cleanExpLower === "pin hole") {
+    if (/\b(?:pin|position(?:ing)?|locating|marking|guide|gauge)\s+holes?\b/i.test(textLower)) {
+      return true;
+    }
+  }
+
+  // Fit variations (khớp)
+  if (cleanExpLower === "fit") {
+    if (/\b(?:fit|fits|fitted|fitting|align|aligns|aligned|aligning|match|matches|matched|matching)\b/i.test(textLower)) {
+      return true;
+    }
+  }
+
   return false;
 }
 
