@@ -137,9 +137,15 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
   // Baseline untampered AI translations (for reset button and comparison)
   const initialAiTranslationsRef = useRef<Record<string, string>>({});
 
-  // Initialize and merge edits from localStorage whenever modal opens or slides update
+  // Track previous isOpen state to only initialize when modal transitions to open
+  const prevIsOpenRef = useRef(false);
+
+  // Initialize and merge edits from localStorage ONLY when modal transitions from closed to open
   useEffect(() => {
-    if (!slides || slides.length === 0) return;
+    const isOpening = isOpen && !prevIsOpenRef.current;
+    prevIsOpenRef.current = isOpen;
+
+    if (!isOpening || !slides || slides.length === 0) return;
 
     // 1. Populate baseline AI translations for any new paragraphs
     const baseline = { ...initialAiTranslationsRef.current };
@@ -154,28 +160,23 @@ export const SlideReviewModal: React.FC<SlideReviewModalProps> = ({
 
     // 2. Check localStorage for persistent edits
     const stored = getUserSlideEdits(fileName);
-    let activeEdits = { ...paragraphEdits };
+    const activeEdits = stored?.paragraphEdits && Object.keys(stored.paragraphEdits).length > 0
+      ? { ...stored.paragraphEdits }
+      : {};
 
-    if (stored && stored.paragraphEdits && Object.keys(stored.paragraphEdits).length > 0) {
-      activeEdits = { ...stored.paragraphEdits, ...activeEdits };
-      if (stored.initialAiTranslations) {
-        initialAiTranslationsRef.current = {
-          ...stored.initialAiTranslations,
-          ...initialAiTranslationsRef.current,
-        };
-      }
+    if (stored?.initialAiTranslations) {
+      initialAiTranslationsRef.current = {
+        ...stored.initialAiTranslations,
+        ...initialAiTranslationsRef.current,
+      };
     }
 
     setParagraphEdits(activeEdits);
 
-    // 3. Apply edits onto current slides
-    const { slides: merged, appliedCount } = applyEditsToSlides(slides, activeEdits);
+    // 3. Apply edits onto local modal slides (do not call onUpdateSlides to prevent render loops)
+    const { slides: merged } = applyEditsToSlides(slides, activeEdits);
     setEditedSlides(merged);
-
-    if (appliedCount > 0 && isOpen) {
-      onUpdateSlides?.(merged);
-    }
-  }, [slides, isOpen, fileName]);
+  }, [isOpen, slides, fileName]);
 
   const pillContainerRef = useRef<HTMLDivElement>(null);
   const activePillRef = useRef<HTMLButtonElement>(null);

@@ -4,6 +4,8 @@ import { DocumentProcessor, ExtractedDocument, ExtractedTermCandidate, DocumentT
 import { getTranslationProvider, TranslationProvider } from "../translation";
 import { db } from "../database/db";
 import { translationCache } from "../translation/cache";
+import { DocumentTranslationMemory, TranslationUnitWithMeta } from "../translation/document-tm";
+import { auditXlsxGaps, SmartAuditReport } from "../translation/smart-detector";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
 import { normalizeSpiTerminology } from "../translation/casing";
 
@@ -241,6 +243,9 @@ export interface XlsxTranslationOptions {
   targetLanguage?: string;
   provider?: string | TranslationProvider;
   mode?: XlsxTranslationMode;
+  fileName?: string;
+  translateMissingOnly?: boolean;
+  selectedCellIds?: string[];
   onProgress?: (progress: {
     stage: "extracting" | "translating" | "writing" | "done";
     percent: number;
@@ -270,6 +275,7 @@ export interface XlsxTranslationResult {
     originalText: string;
     translatedText: string;
   }[];
+  auditReport?: SmartAuditReport;
 }
 
 function colLetterToIndex(col: string): number {
@@ -429,8 +435,79 @@ export class XlsxTranslatorService {
     const translationMap = new Map<string, string>();
     const pendingTexts: string[] = [];
 
+    // Phase 1 & 2: Document-Wide Translation Memory Pre-scan across spreadsheet
+    const docTM = new DocumentTranslationMemory();
+    const allCellUnits: TranslationUnitWithMeta[] = cellsToTranslate.map((c) => ({
+      id: `xlsx_${c.sheetName}_${c.rowNumber}_${c.colNumber}`,
+      sourceText: c.originalText,
+      sheetName: c.sheetName,
+      cellAddress: c.address,
+      rowNumber: c.rowNumber,
+      colNumber: c.colNumber,
+    }));
+    docTM.initializeDocumentTM(allCellUnits, approvedGlossary);
+
+    // Phase 3: Translation Planning - pre-resolve exact matches from TM
+    const tmPlan = docTM.planTranslations(allCellUnits);
+    for (const [id, preTrans] of tmPlan.preResolved.entries()) {
+      const u = allCellUnits.find((it) => it.id === id);
+      if (u) {
+        translationMap.set(u.sourceText.trim(), preTrans);
+      }
+    }
+
+    let auditReport: SmartAuditReport | undefined;
+    const modifiedCellKeys = new Set<string>();
+
+    if (options?.translateMissingOnly) {
+      auditReport = await auditXlsxGaps(buffer, options?.fileName || "workbook.xlsx", {
+        sourceLang: sourceLanguage,
+        targetLang: targetLanguage,
+        mode,
+        customDocTM: docTM,
+        approvedGlossary,
+      });
+
+      const allowedIds = options.selectedCellIds ? new Set(options.selectedCellIds) : null;
+      const missingUnits = auditReport.units.filter((u) => {
+        if (allowedIds) return allowedIds.has(u.id);
+        return u.status === "NEEDS_TRANSLATION";
+      });
+
+      for (const u of auditReport.units) {
+        const key = `${u.location.sheetName}!${u.location.cellAddress}`;
+        if (u.status === "TM_REUSE" && u.suggestedTranslation) {
+          translationMap.set(u.sourceText.trim(), u.suggestedTranslation);
+          modifiedCellKeys.add(key);
+        } else if (u.status === "LOCKED_TERMINOLOGY" && u.suggestedTranslation) {
+          translationMap.set(u.sourceText.trim(), u.suggestedTranslation);
+          modifiedCellKeys.add(key);
+        }
+      }
+
+      for (const u of missingUnits) {
+        modifiedCellKeys.add(`${u.location.sheetName}!${u.location.cellAddress}`);
+      }
+    }
+
     // 2. Check TM and exact glossary matches
     for (const text of uniqueTexts) {
+      if (translationMap.has(text)) continue;
+
+      if (options?.translateMissingOnly) {
+        const cellsWithThisText = textToCells.get(text) || [];
+        const hasMissing = cellsWithThisText.some((c) => modifiedCellKeys.has(`${c.sheetName}!${c.address}`));
+        if (!hasMissing) {
+          continue;
+        }
+      }
+
+      const tmHit = docTM.lookup(text);
+      if (tmHit && (tmHit.status === "LOCKED" || tmHit.status === "APPROVED" || tmHit.status === "ESTABLISHED")) {
+        translationMap.set(text, tmHit.target);
+        continue;
+      }
+
       const normKey = text.toLowerCase().replace(/\s+/g, " ");
 
       // Exact approved glossary match
@@ -480,13 +557,16 @@ export class XlsxTranslatorService {
       const items = chunk.map((text, idx) => ({ id: `xlsx_item_${cIdx}_${idx}`, sourceText: text }));
       const chunkResults = new Map<string, string>();
 
+      const docConstraints = docTM.getPromptConstraints(items);
+      const effectiveGlossary = [...approvedGlossary, ...docConstraints];
+
       try {
         if (typeof provider.translateBatch === "function") {
           const res = await provider.translateBatch({
             items,
             sourceLanguage,
             targetLanguage,
-            approvedTerminology: approvedGlossary,
+            approvedTerminology: effectiveGlossary,
           });
           if (res?.results) {
             for (const [id, trans] of res.results.entries()) {
@@ -499,7 +579,7 @@ export class XlsxTranslatorService {
               sourceText: it.sourceText,
               sourceLanguage,
               targetLanguage,
-              approvedTerminology: approvedGlossary,
+              approvedTerminology: effectiveGlossary,
             });
             chunkResults.set(it.id, single.translatedText);
           }
@@ -512,7 +592,7 @@ export class XlsxTranslatorService {
               sourceText: it.sourceText,
               sourceLanguage,
               targetLanguage,
-              approvedTerminology: approvedGlossary,
+              approvedTerminology: effectiveGlossary,
             });
             chunkResults.set(it.id, single.translatedText);
           } catch {
@@ -528,7 +608,16 @@ export class XlsxTranslatorService {
 
         // Post-translation enforcement: Footwear SOP QA compliance + SPI normalization
         translated = enforceTerminologyCompliance(orig, translated, approvedGlossary, sourceLanguage, targetLanguage).text;
-        translated = normalizeSpiTerminology(translated);
+        const tmEnforced = docTM.enforceDocumentTM(orig, translated, sourceLanguage, targetLanguage);
+        translated = normalizeSpiTerminology(tmEnforced.text);
+
+        const cellRef = cellsToTranslate.find(c => c.originalText.trim() === orig.trim());
+        docTM.recordTranslation(
+          orig,
+          translated,
+          { sheet: cellRef?.sheetName, cell: cellRef?.address },
+          provider.name === "gemini" ? "GEMINI" : "GOOGLE_NMT"
+        );
 
         translationMap.set(orig, translated);
 
@@ -559,10 +648,14 @@ export class XlsxTranslatorService {
     if (mode === "replace_en") {
       // Mode 1: In-place replacement
       for (const target of cellsToTranslate) {
+        if (options?.translateMissingOnly && !modifiedCellKeys.has(`${target.sheetName}!${target.address}`)) {
+          continue;
+        }
         const worksheet = workbook.getWorksheet(target.sheetName);
         if (!worksheet) continue;
         const cell = worksheet.getCell(target.rowNumber, target.colNumber);
-        const translated = translationMap.get(target.originalText.trim()) || target.originalText;
+        const rawT = translationMap.get(target.originalText.trim()) || target.originalText;
+        const translated = docTM.enforceDocumentTM(target.originalText, rawT, sourceLanguage, targetLanguage).text;
 
         if (target.isRichText) {
           cell.value = translated;
@@ -616,7 +709,8 @@ export class XlsxTranslatorService {
             ) {
               enCell.value = cellVal;
             } else if (typeof cellVal === "string" && isTranslatableText(cellVal)) {
-              const trans = translationMap.get(cellVal.trim()) || cellVal;
+              const rawT = translationMap.get(cellVal.trim()) || cellVal;
+              const trans = docTM.enforceDocumentTM(cellVal, rawT, sourceLanguage, targetLanguage).text;
               enCell.value = trans;
               translatedCellsCount++;
             } else {
@@ -661,7 +755,8 @@ export class XlsxTranslatorService {
 
             const origStr = typeof origCell.value === "string" ? origCell.value : "";
             if (origStr && isTranslatableText(origStr)) {
-              const trans = translationMap.get(origStr.trim()) || origStr;
+              const rawT = translationMap.get(origStr.trim()) || origStr;
+              const trans = docTM.enforceDocumentTM(origStr, rawT, sourceLanguage, targetLanguage).text;
               newCell.value = trans;
               translatedCellsCount++;
 
@@ -723,6 +818,7 @@ export class XlsxTranslatorService {
         sheetsDuplicated: mode === "bilingual_sheets" ? sheetsDuplicated : undefined,
       },
       sampleTranslations,
+      auditReport,
     };
   }
 }

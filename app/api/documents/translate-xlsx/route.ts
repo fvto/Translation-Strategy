@@ -8,6 +8,7 @@ import { getTranslationProvider } from "@/services/translation";
 import { GoogleTranslationProvider } from "@/services/translation/google";
 import { GeminiTranslationProvider } from "@/services/translation/gemini";
 import { AntigravityCliTranslationProvider } from "@/services/translation/antigravity";
+import { auditXlsxGaps } from "@/services/translation/smart-detector";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -28,6 +29,15 @@ export async function POST(req: NextRequest) {
     const targetLanguage = (formData.get("targetLanguage") as string) || "en";
     const providerType = formData.get("provider") as string | null;
     const mode = ((formData.get("mode") as string) || "bilingual_columns") as XlsxTranslationMode;
+    const action = (formData.get("action") as string) || "translate";
+    const translateMissingOnly = formData.get("translateMissingOnly") === "true";
+    const selectedCellIdsRaw = formData.get("selectedCellIds") as string | null;
+    let selectedCellIds: string[] | undefined;
+    if (selectedCellIdsRaw) {
+      try {
+        selectedCellIds = JSON.parse(selectedCellIdsRaw);
+      } catch {}
+    }
 
     if (!file) {
       return NextResponse.json({ error: "No Excel (.xlsx) file provided" }, { status: 400 });
@@ -46,6 +56,22 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionId = `xlsx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+
+    if (action === "audit") {
+      const auditReport = await auditXlsxGaps(buffer, file.name, {
+        sourceLang: sourceLanguage,
+        targetLang: targetLanguage,
+        mode,
+      });
+
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        fileName: file.name,
+        action: "audit",
+        auditReport,
+      });
+    }
 
     let provider = getTranslationProvider();
     if (providerType === "antigravity_cli") {
@@ -87,6 +113,9 @@ export async function POST(req: NextRequest) {
               targetLanguage,
               provider,
               mode,
+              fileName: file.name,
+              translateMissingOnly,
+              selectedCellIds,
               onProgress: (progressUpdate) => {
                 sendEvent("progress", progressUpdate);
               },
@@ -129,6 +158,7 @@ export async function POST(req: NextRequest) {
               sampleTranslations: translationResult.sampleTranslations,
               durationMs: Date.now() - startTime,
               downloadUrl: `/api/documents/translate-xlsx/download?id=${sessionId}`,
+              auditReport: translationResult.auditReport,
             });
             controller.close();
           } catch (err: any) {
@@ -153,6 +183,9 @@ export async function POST(req: NextRequest) {
       targetLanguage,
       provider,
       mode,
+      fileName: file.name,
+      translateMissingOnly,
+      selectedCellIds,
     });
 
     const xlsxSession: XlsxSession = {
@@ -192,6 +225,7 @@ export async function POST(req: NextRequest) {
       sampleTranslations: translationResult.sampleTranslations,
       durationMs: Date.now() - startTime,
       downloadUrl: `/api/documents/translate-xlsx/download?id=${sessionId}`,
+      auditReport: translationResult.auditReport,
     });
   } catch (err: any) {
     console.error("[TranslateXLSX] Error:", err);

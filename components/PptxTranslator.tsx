@@ -29,9 +29,12 @@ import {
   Plus,
   Clock,
   Calendar,
+  Zap,
 } from "lucide-react";
 import { TranslationMemoryDrawer } from "./TranslationMemoryDrawer";
 import { SlideReviewModal } from "./SlideReviewModal";
+import { SmartAuditModal } from "./SmartAuditModal";
+import { SmartAuditReport } from "@/services/translation/smart-detector";
 import { QaAuditWidget } from "./QaAuditWidget";
 import { auditPresentationCompliance } from "@/services/qa/compliance-scorer";
 import { UnmappedTermItem } from "@/services/terminology/unmapped-detector";
@@ -121,6 +124,9 @@ export const PptxTranslator: React.FC = () => {
   const [isTmDrawerOpen, setIsTmDrawerOpen] = useState<boolean>(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [isSavingCustomSlides, setIsSavingCustomSlides] = useState<boolean>(false);
+  const [auditReport, setAuditReport] = useState<SmartAuditReport | null>(null);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState<boolean>(false);
+  const [isAuditing, setIsAuditing] = useState<boolean>(false);
 
   // Unmapped specialized terminology detection & suggestion states
   const [unmappedTerms, setUnmappedTerms] = useState<UnmappedTermItem[]>([]);
@@ -205,6 +211,36 @@ export const PptxTranslator: React.FC = () => {
     setBatchAddSuccessMessage(null);
   };
 
+  const runSmartAudit = async (selectedFile?: File) => {
+    const targetFile = selectedFile || file;
+    if (!targetFile) return;
+
+    setIsAuditing(true);
+    setProcessingStatus("Đang quét toàn diện cấu trúc tài liệu để phát hiện khoảng trống dịch thuật...");
+    const formData = new FormData();
+    formData.append("file", targetFile);
+    formData.append("action", "audit");
+    formData.append("sourceLanguage", srcLang);
+    formData.append("targetLanguage", tgtLang);
+    formData.append("mode", mode);
+
+    try {
+      const res = await fetch("/api/documents/translate-pptx", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.auditReport) {
+        setAuditReport(data.auditReport);
+        setIsAuditModalOpen(true);
+      }
+    } catch (e: any) {
+      console.error("Smart audit error:", e);
+    } finally {
+      setIsAuditing(false);
+    }
+  };
+
   const handleFileSelect = (selectedFile: File) => {
     if (!selectedFile.name.toLowerCase().endsWith(".pptx")) {
       alert("Vui lòng chọn file trình chiếu PowerPoint định dạng .pptx");
@@ -221,6 +257,8 @@ export const PptxTranslator: React.FC = () => {
     setAddedTermIds(new Set());
     setSelectedOptionsMap({});
     setBatchAddSuccessMessage(null);
+    // Proactively scan document gaps on import
+    runSmartAudit(selectedFile);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -230,7 +268,10 @@ export const PptxTranslator: React.FC = () => {
     }
   };
 
-  const executeAction = async (action: "crawl" | "translate") => {
+  const executeAction = async (
+    action: "crawl" | "translate",
+    options?: { translateMissingOnly?: boolean; selectedUnitIds?: string[] }
+  ) => {
     if (!file) return;
 
     setIsProcessing(true);
@@ -241,11 +282,15 @@ export const PptxTranslator: React.FC = () => {
       message:
         action === "crawl"
           ? "Đang khởi tạo & trích xuất cấu trúc văn bản..."
+          : options?.translateMissingOnly
+          ? "Đang dịch bổ sung CHỈ các phần còn thiếu (Translate Missing Only)..."
           : "Đang đọc cấu trúc file PowerPoint bằng Microsoft MarkItDown...",
     });
     setProcessingStatus(
       action === "crawl"
         ? "Đang cào dữ liệu slide, trích xuất cấu trúc văn bản..."
+        : options?.translateMissingOnly
+        ? "Đang dịch các phần còn thiếu, bảo toàn 100% bản dịch cũ..."
         : "Đang cào dữ liệu & dịch toàn bộ PowerPoint từ Tiếng Việt sang Tiếng Anh..."
     );
 
@@ -257,6 +302,12 @@ export const PptxTranslator: React.FC = () => {
     formData.append("provider", provider);
     formData.append("mode", mode);
     formData.append("stage", "all");
+    if (options?.translateMissingOnly) {
+      formData.append("translateMissingOnly", "true");
+      if (options.selectedUnitIds) {
+        formData.append("selectedUnitIds", JSON.stringify(options.selectedUnitIds));
+      }
+    }
 
     try {
       if (action === "translate") {
@@ -923,6 +974,17 @@ export const PptxTranslator: React.FC = () => {
             >
               <Eye className="w-4 h-4 text-blue-400" />
               <span>Chỉ cào cấu trúc slide</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (auditReport) setIsAuditModalOpen(true);
+                else runSmartAudit();
+              }}
+              className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-sky-600/20 cursor-pointer"
+            >
+              <Zap className="w-4 h-4 text-sky-200" />
+              <span>Smart Audit (Quét phần thiếu)</span>
             </button>
 
             <button
@@ -1657,6 +1719,25 @@ export const PptxTranslator: React.FC = () => {
       <TranslationMemoryDrawer
         isOpen={isTmDrawerOpen}
         onClose={() => setIsTmDrawerOpen(false)}
+      />
+
+      {/* Smart Translation Audit Gap Modal */}
+      <SmartAuditModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        auditReport={auditReport}
+        onTranslateMissingOnly={(selectedUnitIds) => {
+          setIsAuditModalOpen(false);
+          executeAction("translate", {
+            translateMissingOnly: true,
+            selectedUnitIds,
+          });
+        }}
+        onTranslateAll={() => {
+          setIsAuditModalOpen(false);
+          executeAction("translate");
+        }}
+        isLoading={isProcessing || isAuditing}
       />
     </div>
   );

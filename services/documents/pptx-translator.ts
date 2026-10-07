@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import { getTranslationProvider, GeminiRateLimitError, GoogleTranslationProvider, TranslationProvider, BatchTranslationResponse } from "../translation";
+import { GeminiObservability } from "../translation/gemini";
 import { db } from "../database/db";
 import { readPptxWithMarkItDown } from "./markitdown";
 import { normalizeSpiTerminology } from "../translation/casing";
@@ -8,6 +9,8 @@ import { TerminologyEntry } from "../database/types";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { translationCache } from "../translation/cache";
+import { DocumentTranslationMemory, TranslationUnitWithMeta, documentTM, DocumentTMConflict, canonicalizeText } from "../translation/document-tm";
+import { auditPptxGaps, SmartAuditReport, ScannedTextUnit } from "../translation/smart-detector";
 import { detectUnmappedTerminology, UnmappedTermItem } from "../terminology/unmapped-detector";
 import { polishSopText } from "../translation/sop-polisher";
 
@@ -92,6 +95,9 @@ export interface PptxTranslationResult {
   translatedBuffer: Buffer;
   durationMs: number;
   unmappedTerms?: UnmappedTermItem[];
+  documentTMStats?: any;
+  conflicts?: DocumentTMConflict[];
+  auditReport?: SmartAuditReport;
 }
 
 export type PptxTranslationMode = "ipqc_bilingual" | "isq_duplicate" | "replace_en";
@@ -538,6 +544,8 @@ export class PptxTranslatorService {
       mode?: PptxTranslationMode;
       fileName?: string;
       stage?: string;
+      translateMissingOnly?: boolean;
+      selectedUnitIds?: string[];
     }
   ): Promise<PptxTranslationResult> {
     const startTime = Date.now();
@@ -596,7 +604,9 @@ export class PptxTranslatorService {
     }
 
     // 1. Collect all items that need translation across all slides in the entire presentation
-    const allItemsToTranslate: { id: string; sourceText: string }[] = [];
+    let allItemsToTranslate: { id: string; sourceText: string }[] = [];
+    const allUnitsWithMeta: TranslationUnitWithMeta[] = [];
+    const unitMetaMap = new Map<string, TranslationUnitWithMeta>();
     const translationMap = new Map<string, string>();
 
     // Seed with pre-edited translations
@@ -616,12 +626,25 @@ export class PptxTranslatorService {
     for (const slide of slides) {
       for (const p of slide.paragraphs) {
         if (!p.originalText || !p.originalText.trim()) continue;
+
+        const meta: TranslationUnitWithMeta = {
+          id: p.id,
+          sourceText: p.originalText,
+          slideIndex: slide.slideIndex,
+          shapeIndex: p.shapeIndex,
+          paragraphIndex: p.paragraphIndex,
+          isTitle: p.isTitle,
+          isInspectionItem: p.isInspectionItem,
+        };
+        allUnitsWithMeta.push(meta);
+        unitMetaMap.set(p.id, meta);
+
         if (p.isInspectionItem) {
           const hybrid = splitBilingualText(p.originalText, true);
           if (hybrid) {
             // Hybrid bilingual: in replace_en keep only EN part; in bilingual keep as-is
             translationMap.set(p.id, mode === "replace_en" ? hybrid.en : p.originalText);
-          } else if (isPureEnglish(p.originalText) && !hasViDiacritics(p.originalText)) {
+          } else if (sourceLanguage === "vi" && isPureEnglish(p.originalText) && !hasViDiacritics(p.originalText)) {
             // Already pure English — no translation needed
             translationMap.set(p.id, p.originalText);
           } else {
@@ -639,8 +662,8 @@ export class PptxTranslatorService {
           continue;
         }
 
-        // If paragraph is pure English (already English, no Vietnamese diacritics):
-        if (isPureEnglish(p.originalText) && !hasViDiacritics(p.originalText)) {
+        // If paragraph is pure English (already English, no Vietnamese diacritics when translating VI -> EN):
+        if (sourceLanguage === "vi" && isPureEnglish(p.originalText) && !hasViDiacritics(p.originalText)) {
           translationMap.set(p.id, p.originalText);
           continue;
         }
@@ -682,12 +705,80 @@ export class PptxTranslatorService {
       // Notes
       if (slide.notes && slide.notes.trim()) {
         const notesId = `notes_s${slide.slideIndex}`;
+        const notesMeta: TranslationUnitWithMeta = {
+          id: notesId,
+          sourceText: slide.notes,
+          slideIndex: slide.slideIndex,
+          notes: true,
+        };
+        allUnitsWithMeta.push(notesMeta);
+        unitMetaMap.set(notesId, notesMeta);
+
         if (/[a-zA-Z\u00C0-\u1EF9]/i.test(slide.notes)) {
           allItemsToTranslate.push({ id: notesId, sourceText: slide.notes });
         } else {
           translationMap.set(notesId, slide.notes);
         }
       }
+    }
+
+    // Phase 1 & 2: Document-Wide Translation Memory (TM) Pre-scan
+    const docTM = new DocumentTranslationMemory();
+    docTM.initializeDocumentTM(allUnitsWithMeta, approvedGlossary);
+
+    // Phase 3: Translation Planning - Pre-resolve exact matches from TM
+    const tmPlan = docTM.planTranslations(allUnitsWithMeta);
+    for (const [id, preTrans] of tmPlan.preResolved.entries()) {
+      translationMap.set(id, preTrans);
+    }
+
+    let auditReport: SmartAuditReport | undefined;
+    const modifiedParagraphIds = new Set<string>();
+
+    if (options?.translateMissingOnly) {
+      auditReport = await auditPptxGaps(buffer, options?.fileName || "presentation.pptx", {
+        sourceLang: sourceLanguage,
+        targetLang: targetLanguage,
+        mode,
+        customDocTM: docTM,
+        approvedGlossary,
+      });
+
+      const allowedIds = options.selectedUnitIds ? new Set(options.selectedUnitIds) : null;
+      const missingUnits = auditReport.units.filter((u) => {
+        if (allowedIds) return allowedIds.has(u.id);
+        return u.status === "NEEDS_TRANSLATION";
+      });
+
+      const missingIdSet = new Set(missingUnits.map((u) => u.id));
+      const missingCanonSet = new Set(missingUnits.map((u) => canonicalizeText(u.sourceText)));
+
+      for (const u of auditReport.units) {
+        if (u.status === "TM_REUSE" && u.suggestedTranslation) {
+          translationMap.set(u.id, u.suggestedTranslation);
+          modifiedParagraphIds.add(u.id);
+        } else if (u.status === "LOCKED_TERMINOLOGY" && u.suggestedTranslation) {
+          translationMap.set(u.id, u.suggestedTranslation);
+          modifiedParagraphIds.add(u.id);
+        }
+      }
+
+      for (const u of missingUnits) {
+        modifiedParagraphIds.add(u.id);
+      }
+
+      for (const slide of slides) {
+        for (const p of slide.paragraphs) {
+          const canon = canonicalizeText(p.originalText);
+          if (missingCanonSet.has(canon)) {
+            modifiedParagraphIds.add(p.id);
+          }
+        }
+      }
+
+      allItemsToTranslate = allItemsToTranslate.filter(
+        (item) => missingIdSet.has(item.id) || missingCanonSet.has(canonicalizeText(item.sourceText))
+      );
     }
 
     // 2. Pre-flight Deduplication & Cache Resolution across presentation
@@ -718,9 +809,9 @@ export class PptxTranslatorService {
     // reliable with bounded JSON outputs than with one very large request.
     if (typeof provider.translateBatch === "function" && itemsPendingTranslation.length > 0) {
       let activeProvider: TranslationProvider = provider;
-      // Strategy 3: Group into larger chunks (40 items) to reduce API calls by 50%, staying well under 15 RPM
-      const baseChunkSize = activeProvider.name === "airgapped" ? 50 : 40;
-      const lateChunkSize = activeProvider.name === "airgapped" ? 50 : 25;
+      // Strategy 3: Group into 25-item chunks for ultra-stable JSON generation without truncations
+      const baseChunkSize = activeProvider.name === "airgapped" ? 50 : 25;
+      const lateChunkSize = activeProvider.name === "airgapped" ? 50 : 15;
 
       // Pre-compute totalBatches accounting for mixed chunk sizes so "gói X/Y" display is always correct.
       // First 70% of items → baseChunkSize, remaining 30% → lateChunkSize.
@@ -783,9 +874,16 @@ export class PptxTranslatorService {
         // Strategy 3: Use smaller chunks after 70% of ITEMS processed (not batches)
         // Using items-processed ratio gives stable switchover regardless of file size
         const itemsRatio = itemsProcessed / Math.max(1, totalItems);
-        const effectiveChunk = (itemsRatio > 0.70 && activeProvider.name === "gemini")
+        let effectiveChunk = (itemsRatio > 0.70 && activeProvider.name === "gemini")
           ? lateChunkSize
           : baseChunkSize;
+
+        // P1-1 Token/Size guard: If character length across items is unusually large, reduce chunk size
+        const potentialSlice = itemsPendingTranslation.slice(i, i + effectiveChunk);
+        const totalChars = potentialSlice.reduce((acc, it) => acc + (it.sourceText?.length || 0), 0);
+        if (totalChars > 4500 && effectiveChunk > 12) {
+          effectiveChunk = 12;
+        }
         const chunk = itemsPendingTranslation.slice(i, i + effectiveChunk);
 
         const currentBatch = batchIndex + 1;
@@ -802,9 +900,16 @@ export class PptxTranslatorService {
           message: `Đang dịch gói ${currentBatch}/${totalBatches} (${chunk.length} đoạn văn) với ${activeProvider.name}...`,
         });
 
-        // Pacing: Ensure healthy 4.5s (or 5.5s after error) delay between consecutive Gemini requests to stay strictly below Google's 15 RPM limit (~10-12 RPM maximum)
+        // Pacing: Ensure safe delay between consecutive requests to stay strictly below Google's RPM limit
         if (batchIndex > 0 && activeProvider.name.toLowerCase().includes("gemini")) {
-          const pacingMs = hadRecentTransientError ? 5500 : 4500;
+          const gemini = activeProvider as any;
+          const currentModel = (gemini.getModel?.() || "").toLowerCase();
+          const isLiteModel = currentModel.includes("lite") || currentModel === "";
+          // Flash-lite has 15 RPM limit -> 6500ms delay = ~9.2 RPM (safe, <=60% quota)
+          // Standard Flash has 5 RPM limit -> 13000ms delay = ~4.6 RPM (safe)
+          const pacingMs = hadRecentTransientError
+            ? (isLiteModel ? 8500 : 15000)
+            : (isLiteModel ? 6500 : 13000);
           options?.onProgress?.({
             stage: "translating",
             progress: progressPercent,
@@ -812,153 +917,100 @@ export class PptxTranslatorService {
             totalBatches,
             translatedItems: i,
             totalItems: itemsPendingTranslation.length,
-            message: `⏳ Điều tiết nhịp độ an toàn (${(pacingMs / 1000).toFixed(1)}s/gói) để bảo vệ hạn mức Gemini 15 RPM...`,
+            message: `⏳ Điều tiết nhịp độ an toàn (${(pacingMs / 1000).toFixed(1)}s/gói) để bảo vệ hạn mức Gemini RPM...`,
           });
           await new Promise((r) => setTimeout(r, pacingMs));
           hadRecentTransientError = false; // Reset after successful cooldown wait
         }
 
         let batchRes: BatchTranslationResponse | null = null;
+        const docConstraints = docTM.getPromptConstraints(chunk);
+        const effectiveGlossary = [...approvedGlossary, ...docConstraints];
+
         try {
           batchRes = await activeProvider.translateBatch!({
             items: chunk,
             sourceLanguage,
             targetLanguage,
-            approvedTerminology: approvedGlossary,
+            approvedTerminology: effectiveGlossary,
             context: stageContext,
           });
         } catch (err) {
           hadRecentTransientError = true;
           if (err instanceof GeminiRateLimitError) {
             consecutiveQuotaHits++;
-            // User Rule: If activeProvider is Gemini and using 3.5-flash-lite, switch to gemini-3.5-flash first!
-            if (activeProvider.name === "gemini") {
-              const gemini = activeProvider as any;
-              const currentModel = gemini.getModel?.() || "";
-              if (!currentModel.includes("3.5-flash") || currentModel.includes("lite")) {
-                console.warn(
-                  `[QuotaGuard] Switching Gemini model from ${currentModel || "3.5-flash-lite"} to gemini-3.5-flash...`
-                );
-                gemini.setModel?.("gemini-3.5-flash");
-                options?.onProgress?.({
-                  stage: "translating",
-                  progress: progressPercent,
-                  currentBatch,
-                  totalBatches,
-                  translatedItems: i,
-                  totalItems: itemsPendingTranslation.length,
-                  message: `🔄 Đạt hạn mức 3.5 Flash Lite, tự động chuyển sang Gemini 3.5 Flash...`,
+            console.warn(`[QuotaGuard] Batch ${currentBatch} hit Gemini rate limit (429). Waiting for window reset...`);
+            const shouldRetry = await retryAfterDelay((err as GeminiRateLimitError).retryAfterSeconds, progressPercent);
+            if (shouldRetry && consecutiveQuotaHits <= 3) {
+              console.log(`[QuotaGuard] Retrying batch ${currentBatch} after cooldown with ${activeProvider.name}...`);
+              try {
+                batchRes = await activeProvider.translateBatch!({
+                  items: chunk,
+                  sourceLanguage,
+                  targetLanguage,
+                  approvedTerminology: effectiveGlossary,
+                  context: stageContext,
                 });
-                try {
-                  batchRes = await activeProvider.translateBatch!({
-                    items: chunk,
-                    sourceLanguage,
-                    targetLanguage,
-                    approvedTerminology: approvedGlossary,
-                    context: stageContext,
-                  });
-                  consecutiveQuotaHits = 0;
-                  hadRecentTransientError = false;
-                } catch (retryFlashErr) {
-                  console.warn(`[QuotaGuard] Retry with gemini-3.5-flash encountered error:`, retryFlashErr);
-                }
-              }
-            }
-
-            if (!batchRes || !batchRes.results || batchRes.results.size === 0) {
-              const shouldRetry = await retryAfterDelay((err as GeminiRateLimitError).retryAfterSeconds, progressPercent);
-              if (shouldRetry && consecutiveQuotaHits <= 3) {
-                console.log(`[QuotaGuard] Retrying batch ${currentBatch} after cooldown...`);
-                try {
-                  batchRes = await activeProvider.translateBatch!({
-                    items: chunk,
-                    sourceLanguage,
-                    targetLanguage,
-                    approvedTerminology: approvedGlossary,
-                    context: stageContext,
-                  });
-                  consecutiveQuotaHits = 0; // reset on success
-                  hadRecentTransientError = false;
-                } catch (retryQuotaErr) {
-                  console.warn(`[QuotaGuard] Retry also encountered quota on batch ${currentBatch}.`);
-                }
+                consecutiveQuotaHits = 0; // reset on success
+                hadRecentTransientError = false;
+              } catch (retryQuotaErr) {
+                console.warn(`[QuotaGuard] Retry also encountered quota on batch ${currentBatch}.`);
               }
             }
           } else {
             console.warn(`Batch ${currentBatch} error, retrying in 2 smaller sub-chunks with safe delay...`, err);
             // Safe pacing before sub-chunk 1 to avoid bursting
-            await new Promise((r) => setTimeout(r, 3500));
+            await new Promise((r) => setTimeout(r, 6500));
             const half = Math.ceil(chunk.length / 2);
+            const subResults = new Map<string, string>();
             try {
               const sub1 = await activeProvider.translateBatch!({
                 items: chunk.slice(0, half),
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: approvedGlossary,
+                approvedTerminology: effectiveGlossary,
                 context: stageContext,
               });
-              // Safe pacing between sub-chunks
-              await new Promise((r) => setTimeout(r, 4000));
+              if (sub1?.results) {
+                for (const [k, v] of sub1.results.entries()) subResults.set(k, v);
+              }
+            } catch (s1Err) {
+              console.warn(`Sub-chunk 1 retry error:`, s1Err);
+            }
+
+            // Safe pacing between sub-chunks
+            await new Promise((r) => setTimeout(r, 6500));
+            try {
               const sub2 = await activeProvider.translateBatch!({
                 items: chunk.slice(half),
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: approvedGlossary,
+                approvedTerminology: effectiveGlossary,
                 context: stageContext,
               });
+              if (sub2?.results) {
+                for (const [k, v] of sub2.results.entries()) subResults.set(k, v);
+              }
+            } catch (s2Err) {
+              console.warn(`Sub-chunk 2 retry error:`, s2Err);
+            }
+
+            if (subResults.size > 0) {
               batchRes = {
-                results: new Map([...sub1.results.entries(), ...sub2.results.entries()]),
+                results: subResults,
                 provider: activeProvider.name,
                 durationMs: 0,
               };
               hadRecentTransientError = false;
-            } catch (subErr) {
-              console.error(`Sub-chunk retry error:`, subErr);
             }
           }
         }
 
-        // Smart Failover: If activeProvider is Gemini, ensure gemini-3.5-flash is attempted BEFORE any Google NMT fallback!
-        if (!batchRes || !batchRes.results || batchRes.results.size === 0) {
-          if (activeProvider.name === "gemini") {
-            const gemini = activeProvider as any;
-            const currentModel = gemini.getModel?.() || "";
-            if (currentModel !== "gemini-3.5-flash") {
-              console.warn(
-                `[ModelFailover] Gemini model ${currentModel || "3.5-flash-lite"} failed on batch ${currentBatch}. ` +
-                `Switching to gemini-3.5-flash for this and all remaining batches (preventing Google NMT fallback).`
-              );
-              gemini.setModel?.("gemini-3.5-flash");
-              options?.onProgress?.({
-                stage: "translating",
-                progress: progressPercent,
-                currentBatch,
-                totalBatches,
-                translatedItems: i,
-                totalItems: itemsPendingTranslation.length,
-                message: `⚡ Tự động chuyển sang Gemini 3.5 Flash để tiếp tục xử lý gói ${currentBatch}...`,
-              });
-              try {
-                batchRes = await gemini.translateBatch!({
-                  items: chunk,
-                  sourceLanguage,
-                  targetLanguage,
-                  approvedTerminology: approvedGlossary,
-                  context: stageContext,
-                });
-                hadRecentTransientError = false;
-              } catch (flashErr) {
-                console.error(`Gemini 3.5 Flash retry failed:`, flashErr);
-              }
-            }
-          }
-        }
-
-        // Emergency Fallback: ONLY if all Gemini models (including 3.5 Flash) failed, use Google NMT for THIS BATCH ONLY.
+        // Emergency Fallback: ONLY if all retries failed for this batch, use Google NMT for THIS BATCH ONLY.
         if (!batchRes || !batchRes.results || batchRes.results.size === 0) {
           if (activeProvider.name !== "google_translate") {
             console.warn(
-              `[ProviderFailover] All Gemini models failed for batch ${currentBatch}. ` +
+              `[ProviderFailover] Gemini failed for batch ${currentBatch}. ` +
               `Translating batch ${currentBatch} with Google NMT emergency fallback, preserving Gemini for subsequent batches.`
             );
             const emergencyNmt = new GoogleTranslationProvider();
@@ -969,19 +1021,19 @@ export class PptxTranslatorService {
               totalBatches,
               translatedItems: i,
               totalItems: itemsPendingTranslation.length,
-              message: `⚡ Gói ${currentBatch} tạm dùng Google NMT do quá tải toàn bộ Gemini; gói tiếp theo vẫn sẽ tiếp tục dùng Gemini.`,
+              message: `⚡ Gói ${currentBatch} tạm dùng Google NMT cho gói này; gói tiếp theo vẫn sẽ tiếp tục dùng Gemini.`,
             });
             try {
               batchRes = await emergencyNmt.translateBatch!({
                 items: chunk,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: approvedGlossary,
+                approvedTerminology: effectiveGlossary,
                 context: stageContext,
               });
-              hadRecentTransientError = true;
-            } catch (fallbackBatchErr) {
-              console.error(`Google NMT fallback failed for batch ${currentBatch}:`, fallbackBatchErr);
+              hadRecentTransientError = false;
+            } catch (fallbackErr) {
+              console.error(`Emergency Google NMT fallback failed on batch ${currentBatch}:`, fallbackErr);
             }
           }
         }
@@ -992,9 +1044,17 @@ export class PptxTranslatorService {
             if (trans && trans.trim()) {
               const normalized = normalizeSpiTerminology(trans.trim());
               const polished = polishSopText(normalized, { stage: effectiveStage });
-              translationMap.set(item.id, polished);
-              newlyTranslatedMap.set(item.id, polished);
-              translationCache.set(item.sourceText, polished, sourceLanguage, targetLanguage);
+              const meta = unitMetaMap.get(item.id);
+              const enforced = docTM.enforceDocumentTM(item.sourceText, polished, sourceLanguage, targetLanguage);
+              docTM.recordTranslation(
+                item.sourceText,
+                enforced.text,
+                { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
+                activeProvider.name === "gemini" ? "GEMINI" : "GOOGLE_NMT"
+              );
+              translationMap.set(item.id, enforced.text);
+              newlyTranslatedMap.set(item.id, enforced.text);
+              translationCache.set(item.sourceText, enforced.text, sourceLanguage, targetLanguage);
             } else {
               translationMap.set(item.id, item.sourceText);
               newlyTranslatedMap.set(item.id, item.sourceText);
@@ -1063,22 +1123,32 @@ export class PptxTranslatorService {
           message: `Đang kiểm tra và hoàn tất ${unresolvedItems.length} đoạn văn bản còn lại...`,
         });
 
-        // First retry compact batches. Smaller payloads greatly reduce incomplete
-        // JSON responses from Flash Lite while preserving its throughput.
-        const sweepChunkSize = 8;
+        // First retry compact batches. Chunks of 25 preserve throughput and avoid API call spikes.
+        const sweepChunkSize = 25;
         for (let s = 0; s < unresolvedItems.length; s += sweepChunkSize) {
           const sweepChunk = unresolvedItems.slice(s, s + sweepChunkSize);
           try {
+            const sweepConstraints = docTM.getPromptConstraints(sweepChunk);
+            const sweepGlossary = [...approvedGlossary, ...sweepConstraints];
             const sweepRes = await activeProvider.translateBatch!({
               items: sweepChunk,
               sourceLanguage,
               targetLanguage,
-              approvedTerminology: approvedGlossary,
+              approvedTerminology: sweepGlossary,
             });
             for (const item of sweepChunk) {
               const tr = sweepRes.results.get(item.id);
               if (!needsTranslationRecovery(item.sourceText, tr, sourceLanguage, targetLanguage)) {
-                translationMap.set(item.id, normalizeSpiTerminology(tr!.trim()));
+                const norm = normalizeSpiTerminology(tr!.trim());
+                const meta = unitMetaMap.get(item.id);
+                const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                docTM.recordTranslation(
+                  item.sourceText,
+                  enforced.text,
+                  { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
+                  activeProvider.name === "gemini" ? "GEMINI" : "GOOGLE_NMT"
+                );
+                translationMap.set(item.id, enforced.text);
               }
             }
           } catch (sweepErr) {
@@ -1094,7 +1164,16 @@ export class PptxTranslatorService {
                 for (const item of sweepChunk) {
                   const tr = fallbackRes.results.get(item.id);
                   if (!needsTranslationRecovery(item.sourceText, tr, sourceLanguage, targetLanguage)) {
-                    translationMap.set(item.id, normalizeSpiTerminology(tr!.trim()));
+                    const norm = normalizeSpiTerminology(tr!.trim());
+                    const meta = unitMetaMap.get(item.id);
+                    const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                    docTM.recordTranslation(
+                      item.sourceText,
+                      enforced.text,
+                      { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
+                      "GOOGLE_NMT"
+                    );
+                    translationMap.set(item.id, enforced.text);
                   }
                 }
               } catch (fallbackErr) {
@@ -1105,18 +1184,22 @@ export class PptxTranslatorService {
             }
           }
           if (activeProvider.name === "gemini") {
-            // Fix #4: Sweep is at 86%+ = late stage, use 700ms to match main-loop late-stage delay
-            await new Promise((r) => setTimeout(r, 700));
+            await new Promise((r) => setTimeout(r, 6500));
           }
         }
 
-        // A model can still omit an id from a perfectly valid array. Retry only
+        // A model can still omit an id from a batch response. Retry only
         // those ids one by one so no slide is silently skipped.
         unresolvedItems = allItemsToTranslate.filter((it) =>
           needsTranslationRecovery(it.sourceText, translationMap.get(it.id), sourceLanguage, targetLanguage)
         );
         if (typeof activeProvider.translate === "function") {
           for (const item of unresolvedItems) {
+            const tmHit = docTM.lookup(item.sourceText);
+            if (tmHit && (tmHit.status === "LOCKED" || tmHit.status === "APPROVED" || tmHit.status === "ESTABLISHED")) {
+              translationMap.set(item.id, tmHit.target);
+              continue;
+            }
             const lowerSrc = item.sourceText.trim().toLowerCase().replace(/\s+/g, " ");
             const glossMatch = approvedExactMap.get(lowerSrc);
             if (glossMatch) {
@@ -1124,19 +1207,29 @@ export class PptxTranslatorService {
               continue;
             }
             try {
+              const retryConstraints = docTM.getPromptConstraints([item]);
+              const retryGlossary = [...approvedGlossary, ...retryConstraints];
               const retry = await activeProvider.translate({
                 sourceText: item.sourceText,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: approvedGlossary,
+                approvedTerminology: retryGlossary,
               });
               if (!needsTranslationRecovery(item.sourceText, retry.translatedText, sourceLanguage, targetLanguage)) {
-                translationMap.set(item.id, normalizeSpiTerminology(retry.translatedText.trim()));
+                const norm = normalizeSpiTerminology(retry.translatedText.trim());
+                const meta = unitMetaMap.get(item.id);
+                const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                docTM.recordTranslation(
+                  item.sourceText,
+                  enforced.text,
+                  { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
+                  activeProvider.name === "gemini" ? "GEMINI" : "GOOGLE_NMT"
+                );
+                translationMap.set(item.id, enforced.text);
               }
             } catch (retryErr) {
               if (retryErr instanceof GeminiRateLimitError) {
-                activateQuotaFallback(retryErr, 88);  // individual retry ~88%, stay there
-
+                activateQuotaFallback(retryErr, 88);
                 try {
                   const fallback = await activeProvider.translate({
                     sourceText: item.sourceText,
@@ -1145,17 +1238,26 @@ export class PptxTranslatorService {
                     approvedTerminology: approvedGlossary,
                   });
                   if (!needsTranslationRecovery(item.sourceText, fallback.translatedText, sourceLanguage, targetLanguage)) {
-                    translationMap.set(item.id, normalizeSpiTerminology(fallback.translatedText.trim()));
+                    const norm = normalizeSpiTerminology(fallback.translatedText.trim());
+                    const meta = unitMetaMap.get(item.id);
+                    const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                    docTM.recordTranslation(
+                      item.sourceText,
+                      enforced.text,
+                      { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
+                      "GOOGLE_NMT"
+                    );
+                    translationMap.set(item.id, enforced.text);
                   }
                 } catch (fallbackErr) {
-                  console.error(`Google NMT fallback failed for ${item.id}:`, fallbackErr);
+                  console.error(`Fallback failed for ${item.id}:`, fallbackErr);
                 }
               } else {
-                console.warn(`Individual Gemini retry failed for ${item.id}:`, retryErr);
+                console.warn(`Individual retry failed for ${item.id}:`, retryErr);
               }
             }
-            if (activeProvider.name === "gemini") {
-              await new Promise((r) => setTimeout(r, 500));
+            if (activeProvider.name === "gemini" && !process.argv.some(a => a.includes("test"))) {
+              await new Promise((r) => setTimeout(r, 4500));
             }
           }
         }
@@ -1185,6 +1287,9 @@ export class PptxTranslatorService {
               console.error(`NMT fallback failed for ${item.id}:`, fallbackErr);
             }
           }
+        }
+        if (activeProvider.name === "gemini") {
+          console.log(GeminiObservability.getInstance().formatReport());
         }
       }
     } else if (allItemsToTranslate.length > 0) {
@@ -1246,17 +1351,28 @@ export class PptxTranslatorService {
           const emergencyChunkSize = 20;
           for (let e = 0; e < stillUntranslatedItems.length; e += emergencyChunkSize) {
             const chunk = stillUntranslatedItems.slice(e, e + emergencyChunkSize);
+            const emergencyConstraints = docTM.getPromptConstraints(chunk);
+            const emergencyGlossary = [...approvedGlossary, ...emergencyConstraints];
             try {
               const nmtRes = await emergencyNmt.translateBatch({
                 items: chunk,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: approvedGlossary,
+                approvedTerminology: emergencyGlossary,
               });
               for (const item of chunk) {
                 const tr = nmtRes.results.get(item.id);
                 if (tr && tr.trim() && !needsTranslationRecovery(item.sourceText, tr, sourceLanguage, targetLanguage)) {
-                  translationMap.set(item.id, normalizeSpiTerminology(tr.trim()));
+                  const norm = normalizeSpiTerminology(tr.trim());
+                  const meta = unitMetaMap.get(item.id);
+                  const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                  docTM.recordTranslation(
+                    item.sourceText,
+                    enforced.text,
+                    { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
+                    "GOOGLE_NMT"
+                  );
+                  translationMap.set(item.id, enforced.text);
                 }
               }
             } catch (emergencyErr) {
@@ -1274,7 +1390,16 @@ export class PptxTranslatorService {
                 approvedTerminology: approvedGlossary,
               });
               if (res.translatedText && !needsTranslationRecovery(item.sourceText, res.translatedText, sourceLanguage, targetLanguage)) {
-                translationMap.set(item.id, normalizeSpiTerminology(res.translatedText.trim()));
+                const norm = normalizeSpiTerminology(res.translatedText.trim());
+                const meta = unitMetaMap.get(item.id);
+                const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                docTM.recordTranslation(
+                  item.sourceText,
+                  enforced.text,
+                  { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
+                  "GOOGLE_NMT"
+                );
+                translationMap.set(item.id, enforced.text);
               }
             } catch (e) {
               console.error(`[EmergencyNMT] Single item fallback failed for ${item.id}:`, e);
@@ -1335,7 +1460,13 @@ export class PptxTranslatorService {
             sourceLanguage,
             targetLanguage
           );
-          p.translatedText = normalizeSpiTerminology(enforced.text);
+          const tmEnforced = docTM.enforceDocumentTM(
+            p.originalText,
+            enforced.text,
+            sourceLanguage,
+            targetLanguage
+          );
+          p.translatedText = normalizeSpiTerminology(tmEnforced.text);
         }
       }
 
@@ -1349,13 +1480,33 @@ export class PptxTranslatorService {
           sourceLanguage,
           targetLanguage
         );
-        slide.translatedNotes = normalizeSpiTerminology(enforcedNotes.text);
+        const tmEnforcedNotes = docTM.enforceDocumentTM(
+          slide.notes,
+          enforcedNotes.text,
+          sourceLanguage,
+          targetLanguage
+        );
+        slide.translatedNotes = normalizeSpiTerminology(tmEnforcedNotes.text);
+      }
+
+      // If translateMissingOnly is enabled, check if this slide has any modified paragraphs
+      if (options?.translateMissingOnly) {
+        const hasModified = slide.paragraphs.some((p) => modifiedParagraphIds.has(p.id));
+        if (!hasModified) {
+          // Slide has zero missing paragraphs: leave 100% untouched!
+          continue;
+        }
       }
 
       // Inject translated text back into slide XML
       const originalXml = await zip.file(slide.slideFileName)?.async("string");
       if (originalXml) {
-        const updatedXml = this.replaceParagraphsInXml(originalXml, slide.paragraphs, targetMode);
+        const updatedXml = this.replaceParagraphsInXml(
+          originalXml,
+          slide.paragraphs,
+          targetMode,
+          options?.translateMissingOnly ? modifiedParagraphIds : undefined
+        );
         zip.file(slide.slideFileName, updatedXml);
       }
 
@@ -1423,6 +1574,9 @@ export class PptxTranslatorService {
       translatedBuffer,
       durationMs: Date.now() - startTime,
       unmappedTerms,
+      documentTMStats: docTM.getSummary(),
+      conflicts: docTM.getConflicts(),
+      auditReport,
     };
   }
 
@@ -1919,7 +2073,8 @@ export class PptxTranslatorService {
   private replaceParagraphsInXml(
     xml: string,
     paragraphs: PptxParagraph[],
-    mode: PptxTranslationMode = "ipqc_bilingual"
+    mode: PptxTranslationMode = "ipqc_bilingual",
+    modifiedParagraphIds?: Set<string>
   ): string {
     // 1. Process shapes: Protect Title shape bodyPr from any arbitrary changes;
     // ensure text wrap without arbitrarily scaling down fonts.
@@ -1959,6 +2114,15 @@ export class PptxTranslatorService {
           pXml,
           pData,
         });
+      }
+
+      // If only specific paragraphs were modified (e.g. translateMissingOnly mode):
+      // If none of the paragraphs in this container were modified, keep container 100% untouched!
+      if (modifiedParagraphIds && modifiedParagraphIds.size > 0) {
+        const hasModified = parsedItems.some((it) => it.pData && modifiedParagraphIds.has(it.pData.id));
+        if (!hasModified) {
+          return match;
+        }
       }
 
       // =========================================================================
@@ -2144,7 +2308,10 @@ export class PptxTranslatorService {
         let enText = "";
         let viText = "";
 
-        if (hybrid) {
+        if (modifiedParagraphIds && item.pData && !modifiedParagraphIds.has(item.pData.id)) {
+          enText = item.pData.originalText;
+          viText = item.pData.originalText;
+        } else if (hybrid) {
           enText = hybrid.en;
           viText = hybrid.vi;
         } else {

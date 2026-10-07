@@ -11,6 +11,7 @@ import { AntigravityCliTranslationProvider } from "@/services/translation/antigr
 import { pptxSessionStore, PptxSession } from "@/services/documents/pptx-session-store";
 import { recordTranslationSession } from "@/services/translation/translation-memory";
 import { harvestTerminologyFromSlides } from "@/services/translation/harvester";
+import { auditPptxGaps } from "@/services/translation/smart-detector";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -27,12 +28,20 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const action = (formData.get("action") as string) || "translate"; // "crawl" | "translate"
+    const action = (formData.get("action") as string) || "translate"; // "crawl" | "translate" | "audit"
     const sourceLanguage = (formData.get("sourceLanguage") as string) || "vi";
     const targetLanguage = (formData.get("targetLanguage") as string) || "en";
     const providerType = formData.get("provider") as string | null;
     const mode = ((formData.get("mode") as string) || "ipqc_bilingual") as any;
     const stage = (formData.get("stage") as string) || "auto";
+    const translateMissingOnly = formData.get("translateMissingOnly") === "true";
+    const selectedUnitIdsRaw = formData.get("selectedUnitIds") as string | null;
+    let selectedUnitIds: string[] | undefined;
+    if (selectedUnitIdsRaw) {
+      try {
+        selectedUnitIds = JSON.parse(selectedUnitIdsRaw);
+      } catch {}
+    }
 
     if (!file) {
       return NextResponse.json({ error: "No PowerPoint (.pptx) file provided" }, { status: 400 });
@@ -51,6 +60,22 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionId = `pptx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+
+    if (action === "audit") {
+      const auditReport = await auditPptxGaps(buffer, file.name, {
+        sourceLang: sourceLanguage,
+        targetLang: targetLanguage,
+        mode,
+      });
+
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        fileName: file.name,
+        action: "audit",
+        auditReport,
+      });
+    }
 
     if (action === "crawl") {
       // Crawl only
@@ -121,6 +146,8 @@ export async function POST(req: NextRequest) {
               mode,
               fileName: file.name,
               stage,
+              translateMissingOnly,
+              selectedUnitIds,
               onProgress: (progressUpdate) => {
                 sendEvent("progress", progressUpdate);
               },
@@ -195,6 +222,7 @@ export async function POST(req: NextRequest) {
               imageShieldActive: true,
               harvestedCount: harvestStats.added.length,
               downloadUrl: `/api/documents/translate-pptx/download?id=${sessionId}`,
+              auditReport: translationResult.auditReport,
             });
             controller.close();
           } catch (err: any) {
@@ -221,6 +249,8 @@ export async function POST(req: NextRequest) {
       mode,
       fileName: file.name,
       stage,
+      translateMissingOnly,
+      selectedUnitIds,
     });
 
     const pptxSession: PptxSession = {
@@ -293,6 +323,7 @@ export async function POST(req: NextRequest) {
       imageShieldActive: true,
       harvestedCount: harvestStats.added.length,
       downloadUrl: `/api/documents/translate-pptx/download?id=${sessionId}`,
+      auditReport: translationResult.auditReport,
     });
   } catch (error: any) {
     console.error("PPTX translation error:", error);
