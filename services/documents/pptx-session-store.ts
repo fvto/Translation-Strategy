@@ -12,6 +12,8 @@ export interface PptxSession {
   mode?: PptxTranslationMode;
   createdAt: number;
   unmappedTerms?: any[];
+  sourceLanguage?: string;
+  targetLanguage?: string;
 }
 
 const STORAGE_DIR = path.resolve(process.cwd(), "data", "secure_storage", "pptx_sessions");
@@ -30,6 +32,8 @@ interface SessionMetadata {
   mode?: PptxTranslationMode;
   createdAt: number;
   unmappedTerms?: any[];
+  sourceLanguage?: string;
+  targetLanguage?: string;
 }
 
 const globalForPptx = globalThis as unknown as {
@@ -121,6 +125,8 @@ export const pptxSessionStore = {
       stats: session.stats,
       mode: session.mode,
       createdAt: session.createdAt,
+      sourceLanguage: session.sourceLanguage,
+      targetLanguage: session.targetLanguage,
     };
 
     metaStore.set(id, meta);

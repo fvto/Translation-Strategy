@@ -216,6 +216,8 @@ export const PptxTranslator: React.FC = () => {
     if (!targetFile) return;
 
     setIsAuditing(true);
+    setAuditReport(null);
+    setIsAuditModalOpen(false);
     setProcessingStatus("Đang quét toàn diện cấu trúc tài liệu để phát hiện khoảng trống dịch thuật...");
     const formData = new FormData();
     formData.append("file", targetFile);
@@ -230,15 +232,48 @@ export const PptxTranslator: React.FC = () => {
         body: formData,
       });
       const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Không thể quét PowerPoint.");
       if (data.success && data.auditReport) {
         setAuditReport(data.auditReport);
         setIsAuditModalOpen(true);
       }
     } catch (e: any) {
       console.error("Smart audit error:", e);
+      setErrorMessage(e.message || "Không thể quét PowerPoint.");
     } finally {
       setIsAuditing(false);
     }
+  };
+
+  const applyAuditSuggestions = async (unitIds: string[], customTranslations?: Record<string, string>) => {
+    if (!file || !auditReport) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("action", "apply_audit");
+    formData.append("sourceLanguage", srcLang);
+    formData.append("targetLanguage", tgtLang);
+    formData.append("mode", mode);
+    formData.append("selectedUnitIds", JSON.stringify(unitIds));
+    const previewList = auditReport.units.filter((u) => unitIds.includes(u.id)).map((u) => ({
+      id: u.id,
+      sourceText: u.sourceText,
+      suggestedTranslation: customTranslations?.[u.id] !== undefined ? customTranslations[u.id] : u.suggestedTranslation,
+    }));
+    formData.append("auditPreview", JSON.stringify(previewList));
+    if (customTranslations && Object.keys(customTranslations).length > 0) {
+      formData.append("customTranslations", JSON.stringify(customTranslations));
+    }
+    const response = await fetch("/api/documents/translate-pptx", { method: "POST", body: formData });
+    if (!response.ok) { const data = await response.json(); throw new Error(data.error || "Không thể áp dụng gợi ý."); }
+    const blob = await response.blob();
+    const updatedFile = new File([blob], file.name, { type: file.type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name.replace(/\.pptx$/i, "-audited.pptx");
+    document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    setFile(updatedFile); setSlides([]); setStats(null); setSessionId(null); setUnmappedTerms([]);
+    await runSmartAudit(updatedFile);
   };
 
   const handleFileSelect = (selectedFile: File) => {
@@ -270,7 +305,11 @@ export const PptxTranslator: React.FC = () => {
 
   const executeAction = async (
     action: "crawl" | "translate",
-    options?: { translateMissingOnly?: boolean; selectedUnitIds?: string[] }
+    options?: {
+      translateMissingOnly?: boolean;
+      selectedUnitIds?: string[];
+      customTranslations?: Record<string, string>;
+    }
   ) => {
     if (!file) return;
 
@@ -307,7 +346,28 @@ export const PptxTranslator: React.FC = () => {
       if (options.selectedUnitIds) {
         formData.append("selectedUnitIds", JSON.stringify(options.selectedUnitIds));
       }
+      if (options.customTranslations && Object.keys(options.customTranslations).length > 0) {
+        formData.append("customTranslations", JSON.stringify(options.customTranslations));
+      }
     }
+
+    const finishMissingTranslation = async (payload: any) => {
+      if (!payload.sessionId) throw new Error("Không tìm thấy file đã sửa để tải về.");
+      // GET serves the already packaged incremental result. Rebuilding through
+      // the full-deck export path would change paragraphs outside the selection.
+      const response = await fetch(`/api/documents/translate-pptx/download?id=${encodeURIComponent(payload.sessionId)}`);
+      if (!response.ok) throw new Error("Đã dịch xong nhưng chưa tải được PPTX. Vui lòng thử tải lại.");
+      const blob = await response.blob();
+      const updatedFile = new File([blob], file.name, { type: file.type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name.replace(/\.pptx$/i, "-fixed.pptx");
+      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+      setFile(updatedFile); setSlides([]); setStats(null); setSessionId(null); setUnmappedTerms([]);
+      setProgressInfo({ stage: "done", percent: 100, message: "Đã sửa phần chưa dịch và tải PPTX. Đang kiểm tra lại..." });
+      await runSmartAudit(updatedFile);
+    };
 
     try {
       if (action === "translate") {
@@ -354,6 +414,10 @@ export const PptxTranslator: React.FC = () => {
                   });
                   setProcessingStatus(payload.message);
                 } else if (eventType === "complete") {
+                  if (options?.translateMissingOnly) {
+                    await finishMissingTranslation(payload);
+                    continue;
+                  }
                   setStats(payload.stats);
 
                   // Auto-merge any previously saved edits for this file
@@ -404,6 +468,10 @@ export const PptxTranslator: React.FC = () => {
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || "Xử lý file PowerPoint thất bại");
+        }
+        if (options?.translateMissingOnly) {
+          await finishMissingTranslation(data);
+          return;
         }
         setStats(data.stats);
 
@@ -478,6 +546,8 @@ export const PptxTranslator: React.FC = () => {
           slides,
           mode,
           fileName: file?.name,
+          sourceLanguage: srcLang,
+          targetLanguage: tgtLang,
         }),
       });
 
@@ -486,6 +556,8 @@ export const PptxTranslator: React.FC = () => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("slides", JSON.stringify(slides));
+        formData.append("sourceLanguage", srcLang);
+        formData.append("targetLanguage", tgtLang);
         formData.append("mode", mode);
         if (sessionId) formData.append("id", sessionId);
         res = await fetch("/api/documents/translate-pptx/download", {
@@ -528,6 +600,8 @@ export const PptxTranslator: React.FC = () => {
           slides: updatedSlides,
           mode,
           fileName: file?.name,
+          sourceLanguage: srcLang,
+          targetLanguage: tgtLang,
         }),
       });
 
@@ -977,10 +1051,8 @@ export const PptxTranslator: React.FC = () => {
             </button>
 
             <button
-              onClick={() => {
-                if (auditReport) setIsAuditModalOpen(true);
-                else runSmartAudit();
-              }}
+              onClick={() => runSmartAudit()}
+              disabled={isProcessing || isAuditing}
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-sky-600/20 cursor-pointer"
             >
               <Zap className="w-4 h-4 text-sky-200" />
@@ -1726,11 +1798,13 @@ export const PptxTranslator: React.FC = () => {
         isOpen={isAuditModalOpen}
         onClose={() => setIsAuditModalOpen(false)}
         auditReport={auditReport}
-        onTranslateMissingOnly={(selectedUnitIds) => {
+        onApplySuggestions={applyAuditSuggestions}
+        onTranslateMissingOnly={(selectedUnitIds, customTranslations) => {
           setIsAuditModalOpen(false);
           executeAction("translate", {
             translateMissingOnly: true,
             selectedUnitIds,
+            customTranslations,
           });
         }}
         onTranslateAll={() => {

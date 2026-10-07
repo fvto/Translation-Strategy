@@ -78,7 +78,8 @@ export class TranslationCacheService {
   deduplicateItems<T extends { id: string; sourceText: string }>(
     items: T[],
     sourceLang: string,
-    targetLang: string
+    targetLang: string,
+    bypassCacheTexts?: Set<string>
   ): {
     uniqueToTranslate: T[];
     resolveAll: (freshTranslations: Map<string, string>) => Map<string, string>;
@@ -100,7 +101,7 @@ export class TranslationCacheService {
       textToAllIds.get(normText)!.push(item.id);
 
       // Check if already in persistent memory cache
-      const cached = this.get(normText, sourceLang, targetLang);
+      const cached = bypassCacheTexts?.has(normText) ? undefined : this.get(normText, sourceLang, targetLang);
       if (cached) {
         resolvedTranslations.set(item.id, cached);
         cachedHits++;

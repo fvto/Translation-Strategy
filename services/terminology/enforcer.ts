@@ -22,6 +22,8 @@ export interface EnforcementResult {
  * translation, this map allows immediate, accurate verbatim substitution.
  */
 const KNOWN_SYNONYM_PATTERNS: { [canonicalTargetLower: string]: RegExp } = {
+  // Activated only when a matched source term has the approved target X-ray.
+  "x-ray": /\b(?:being\s+lumpy|lumpy\s+feeling|lumpy|lumps?|lumping|lumpiness)\b/gi,
   // Footwear Defects VI -> EN
   "air bubble": /\b(?:air\s+)?bubbles?\b|\bblisters?\b|\bgas\s+bubbles?\b|\bfoaming\b/gi,
   "bond gap": /\b(?:open\s+glue|glue\s+opening|glue\s+open|glue\s+gap|gap\s+glue|unbonded|delamination|debonding|unglued|glue\s+separation|peeled\s+off\s+glue|loose\s+glue|un-bonded)\b/gi,
@@ -209,7 +211,7 @@ export function enforceTerminologyCompliance(
             /[.!?]\s*$/.test(preceding) ||
             /:\s*$/.test(preceding);
 
-          const casedTarget = adaptTermCasing(effectiveTarget, isSentenceStart);
+          const casedTarget = cleanTargetLower === "x-ray" ? cleanTarget : adaptTermCasing(effectiveTarget, isSentenceStart);
           replacements.push({
             sourceTerm: entry.sourceTerm,
             expectedTarget: effectiveTarget,

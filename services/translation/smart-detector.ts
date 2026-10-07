@@ -10,6 +10,7 @@ import {
   documentTM,
 } from "./document-tm";
 import { normalizeSpiTerminology, cleanTargetTerm } from "./casing";
+import { scanPptxTranslationIntelligence } from "./pptx-smart-audit";
 
 export type TextUnitStatus =
   | "ALREADY_TRANSLATED"
@@ -19,9 +20,13 @@ export type TextUnitStatus =
   | "NON_TRANSLATABLE"
   | "MIXED_LANGUAGE"
   | "POSSIBLE_TRANSLATION"
+  | "SUSPICIOUS_TRANSLATION"
+  | "TRANSLATION_CONFLICT"
   | "REVIEW_REQUIRED";
 
 export interface TextUnitLocation {
+  partPath?: string;
+  containerId?: string;
   slideIndex?: number;
   shapeIndex?: number;
   paragraphIndex?: number;
@@ -33,6 +38,7 @@ export interface TextUnitLocation {
   isTable?: boolean;
   isTitle?: boolean;
   isInspectionItem?: boolean;
+  isIsq?: boolean;
 }
 
 export interface ScannedTextUnit {
@@ -47,7 +53,26 @@ export interface ScannedTextUnit {
   category?: "header" | "ctq" | "table_cell" | "acronym" | "code" | "body" | "notes";
   reason: string;
   selectedForTranslation: boolean;
+  requiresTranslation?: boolean;
   confidence: number;
+  safeToApply?: boolean;
+  canApply?: boolean;
+  matches?: import("./audit-intelligence").AuditMatch[];
+  suspiciousSegments?: string[];
+  glossaryCorrections?: { sourceTerm: string; expectedTarget: string }[];
+  glossaryMismatches?: { sourceTerm: string; expectedTarget: string }[];
+}
+
+export interface TranslationAuditGroup {
+  id: string;
+  type: "translation" | "consistency" | "language_quality";
+  title: string;
+  unitIds: string[];
+  suggestedTranslation?: string;
+  variants?: { text: string; count: number; approved: boolean; slides: number[] }[];
+  confidence: number;
+  reason: string;
+  safeToApply: boolean;
 }
 
 export interface SmartAuditReport {
@@ -58,6 +83,8 @@ export interface SmartAuditReport {
   totalSheets?: number;
   alreadyTranslatedCount: number;
   needsTranslationCount: number;
+  untranslatedCount?: number;
+  translatableMissingCount?: number;
   tmReusableCount: number;
   lockedTerminologyCount: number;
   nonTranslatableCount: number;
@@ -68,6 +95,11 @@ export interface SmartAuditReport {
   affectedSheets?: string[];
   estimatedGeminiRequests: number;
   units: ScannedTextUnit[];
+  groups?: TranslationAuditGroup[];
+  attentionCount?: number;
+  safeFixCount?: number;
+  suspiciousTranslationCount?: number;
+  translationConflictCount?: number;
 }
 
 /**
@@ -150,6 +182,7 @@ const TECHNICAL_ACRONYMS = new Set([
   "CFM",
   "DEV",
   "PROD",
+  "PLC", "USB", "WI-FI", "HTTP", "HTTPS", "TCP", "IP", "AC", "DC",
 ]);
 
 /**
@@ -187,6 +220,9 @@ export function isNonTranslatable(text: string): boolean {
   if (!text) return false;
   const trimmed = text.trim();
   if (!trimmed) return true;
+  if (/^(?:AC|DC)\s*\d+(?:[.,]\d+)?\s*V$/i.test(trimmed)) return true;
+  if (/^[A-Z]{2,6}\s+[A-Z]{1,6}\d+[A-Z0-9-]*$/.test(trimmed)) return true;
+  if (/^https?:\/\/\S+$|^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(trimmed)) return true;
 
   // 1. Solitary bullets or symbols
   if (/^[\*•\-\#\:\/\,\.\(\)\[\]\{\}\_]+$/.test(trimmed)) return true;
@@ -206,7 +242,7 @@ export function isNonTranslatable(text: string): boolean {
   if (/^ISO(?:\s*|\/IEC\s*)\d+(?:[-:]\d+)?$/i.test(trimmed)) return true;
 
   // 5. Standard Model / Product code patterns (e.g., "Model XYZ-100", "ABC-123", "SB-077-A-1", "(SBQ-083-6)")
-  if (/^(?:model\s+)?[A-Z0-9]{1,6}(?:[-_][A-Z0-9]+)+(?:\s*\([A-Z0-9\-]+\))?$/i.test(trimmed)) {
+  if (/\d/.test(trimmed) && /^(?:model\s+)?[A-Z0-9]{1,6}(?:[-_][A-Z0-9]+)+(?:\s*\([A-Z0-9\-]+\))?$/i.test(trimmed)) {
     return true;
   }
   if (/^\(?[A-Z]{2,4}[-_]\d{2,4}(?:[-_][A-Z0-9]+)*\)?$/i.test(trimmed)) {
@@ -502,259 +538,7 @@ export async function auditPptxGaps(
     approvedGlossary?: TerminologyEntry[];
   }
 ): Promise<SmartAuditReport> {
-  const sourceLang = options?.sourceLang || "en";
-  const targetLang = options?.targetLang || "vi";
-
-  const zip = await JSZip.loadAsync(buffer);
-
-  // Find all slide XML files sorted in natural order
-  const slideFiles = Object.keys(zip.files)
-    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
-    .sort((a, b) => {
-      const matchA = a.match(/slide(\d+)\.xml$/i) || a.match(/\d+/);
-      const matchB = b.match(/slide(\d+)\.xml$/i) || b.match(/\d+/);
-      const numA = matchA ? parseInt(matchA[1] || matchA[0], 10) : 0;
-      const numB = matchB ? parseInt(matchB[1] || matchB[0], 10) : 0;
-      return numA - numB;
-    });
-
-  const rawApprovedGlossary =
-    options?.approvedGlossary || db.getApprovedTerminology(sourceLang, targetLang);
-  const approvedGlossary = rawApprovedGlossary.filter((e) => e.sourceTerm && e.targetTerm);
-
-  // Initialize TM with glossary
-  const docTM = options?.customDocTM || new DocumentTranslationMemory();
-
-  interface ExtractedRawUnit {
-    id: string;
-    sourceText: string;
-    location: TextUnitLocation;
-    containerId: string;
-    isTitle?: boolean;
-    isInspectionItem?: boolean;
-    containerTexts: string[];
-  }
-
-  const rawUnits: ExtractedRawUnit[] = [];
-  const containerMap = new Map<string, string[]>();
-
-  for (let sIdx = 0; sIdx < slideFiles.length; sIdx++) {
-    const slidePath = slideFiles[sIdx];
-    const slideIndex = sIdx + 1;
-    const slideXml = await zip.file(slidePath)?.async("string");
-    if (!slideXml) continue;
-
-    // Scan text containers (<p:txBody>...</p:txBody> or <a:txBody>...</a:txBody>)
-    const txBodyRegex = /(<p:txBody>|<a:txBody>)([\s\S]*?)(<\/p:txBody>|<\/a:txBody>)/g;
-    let shapeIndex = 0;
-
-    let bodyMatch: RegExpExecArray | null;
-    while ((bodyMatch = txBodyRegex.exec(slideXml)) !== null) {
-      shapeIndex++;
-      const containerId = `s${slideIndex}_sp${shapeIndex}`;
-      const bodyContent = bodyMatch[2];
-
-      const pMatches = bodyContent.match(/<a:p(?:[\s>][\s\S]*?<\/a:p>|\/>)/g) || [];
-      const textsInContainer: string[] = [];
-
-      const pList: { pXml: string; text: string; pIndex: number }[] = [];
-      let pIndex = 0;
-      for (const pXml of pMatches) {
-        pIndex++;
-        const tMatches = pXml.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g) || [];
-        const fullText = tMatches
-          .map((tm) => tm.replace(/<[^>]+>/g, ""))
-          .join("")
-          .trim();
-        if (fullText) {
-          textsInContainer.push(fullText);
-          pList.push({ pXml, text: fullText, pIndex });
-        }
-      }
-
-      containerMap.set(containerId, textsInContainer);
-
-      const isTitle =
-        bodyContent.includes('type="title"') ||
-        bodyContent.includes('type="ctrTitle"') ||
-        shapeIndex === 1;
-
-      for (const item of pList) {
-        const isInsp =
-          item.text.toLowerCase().includes("inspection item") ||
-          item.text.toLowerCase().includes("hạng mục kiểm tra") ||
-          (shapeIndex === 2 && slideIndex <= 3 && item.text.length < 50);
-
-        rawUnits.push({
-          id: `p_s${slideIndex}_sp${shapeIndex}_p${item.pIndex}`,
-          sourceText: item.text,
-          location: {
-            slideIndex,
-            shapeIndex,
-            paragraphIndex: item.pIndex,
-            isTitle,
-            isInspectionItem: isInsp,
-          },
-          containerId,
-          isTitle,
-          isInspectionItem: isInsp,
-          containerTexts: textsInContainer,
-        });
-      }
-    }
-
-    // Also scan speaker notes if available
-    const notesPath = `ppt/notesSlides/notesSlide${slideIndex}.xml`;
-    const notesXml = await zip.file(notesPath)?.async("string");
-    if (notesXml) {
-      const tMatches = notesXml.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g) || [];
-      const notesText = tMatches
-        .map((tm) => tm.replace(/<[^>]+>/g, ""))
-        .join("\n")
-        .trim();
-      if (notesText) {
-        rawUnits.push({
-          id: `notes_s${slideIndex}`,
-          sourceText: notesText,
-          location: {
-            slideIndex,
-            isTitle: false,
-          },
-          containerId: `notes_s${slideIndex}`,
-          containerTexts: [notesText],
-        });
-      }
-    }
-  }
-
-  // Pre-seed Document TM with existing translated pairs found within the presentation
-  // (e.g. if a shape has English line on top and Vietnamese translation below)
-  const establishedPairs: { source: string; target: string }[] = [];
-  for (const [, texts] of containerMap.entries()) {
-    if (texts.length >= 2) {
-      const enTexts = texts.filter((t) => isPureEnglish(t) && !isNonTranslatable(t));
-      const viTexts = texts.filter((t) => hasViDiacritics(t));
-      if (enTexts.length === 1 && viTexts.length === 1) {
-        establishedPairs.push({
-          source: enTexts[0],
-          target: viTexts[0],
-        });
-      }
-    }
-  }
-
-  // Initialize TM with all raw units, approved glossary, and established bilingual pairs
-  docTM.initializeDocumentTM(
-    rawUnits.map((r) => ({
-      id: r.id,
-      sourceText: r.sourceText,
-      slideIndex: r.location.slideIndex,
-      shapeIndex: r.location.shapeIndex,
-      paragraphIndex: r.location.paragraphIndex,
-    })),
-    approvedGlossary,
-    establishedPairs.map((p) => ({
-      source: p.source,
-      target: p.target,
-      origin: "DOCUMENT",
-    }))
-  );
-
-  // Classify each raw unit
-  const scannedUnits: ScannedTextUnit[] = [];
-  const affectedSlidesSet = new Set<number>();
-
-  let alreadyTranslatedCount = 0;
-  let needsTranslationCount = 0;
-  let tmReusableCount = 0;
-  let lockedTerminologyCount = 0;
-  let nonTranslatableCount = 0;
-  let mixedLanguageCount = 0;
-  let possibleTranslationCount = 0;
-  let reviewRequiredCount = 0;
-
-  for (const r of rawUnits) {
-    const containerTexts = containerMap.get(r.containerId) || [];
-    const hasViInContainer = containerTexts.some((t) => hasViDiacritics(t));
-    const hasEnInContainer = containerTexts.some((t) => isPureEnglish(t));
-    const containerBilingual = hasViInContainer && hasEnInContainer && containerTexts.length >= 2;
-
-    const classification = classifyTextUnit(r.sourceText, r.location, {
-      sourceLang,
-      targetLang,
-      docTM,
-      approvedGlossary,
-      containerBilingual,
-      containerHasVietnamese: hasViInContainer,
-      containerHasEnglish: hasEnInContainer,
-      isInspectionItem: r.isInspectionItem,
-    });
-
-    const isSelected = classification.status === "NEEDS_TRANSLATION";
-
-    switch (classification.status) {
-      case "ALREADY_TRANSLATED":
-        alreadyTranslatedCount++;
-        break;
-      case "NEEDS_TRANSLATION":
-        needsTranslationCount++;
-        if (r.location.slideIndex) affectedSlidesSet.add(r.location.slideIndex);
-        break;
-      case "TM_REUSE":
-        tmReusableCount++;
-        break;
-      case "LOCKED_TERMINOLOGY":
-        lockedTerminologyCount++;
-        break;
-      case "NON_TRANSLATABLE":
-        nonTranslatableCount++;
-        break;
-      case "MIXED_LANGUAGE":
-        mixedLanguageCount++;
-        break;
-      case "POSSIBLE_TRANSLATION":
-        possibleTranslationCount++;
-        break;
-      case "REVIEW_REQUIRED":
-        reviewRequiredCount++;
-        break;
-    }
-
-    scannedUnits.push({
-      id: r.id,
-      sourceText: r.sourceText,
-      sourceHash: computeSourceHash(r.sourceText),
-      canonicalText: canonicalizeText(r.sourceText),
-      status: classification.status,
-      location: r.location,
-      suggestedTranslation: classification.suggestedTranslation,
-      reason: classification.reason,
-      selectedForTranslation: isSelected,
-      confidence: classification.confidence,
-    });
-  }
-
-  const affectedSlides = Array.from(affectedSlidesSet).sort((a, b) => a - b);
-  const estimatedGeminiRequests =
-    needsTranslationCount > 0 ? Math.max(1, Math.ceil(needsTranslationCount / 25)) : 0;
-
-  return {
-    fileName,
-    fileType: "pptx",
-    totalUnits: scannedUnits.length,
-    totalSlides: slideFiles.length,
-    alreadyTranslatedCount,
-    needsTranslationCount,
-    tmReusableCount,
-    lockedTerminologyCount,
-    nonTranslatableCount,
-    mixedLanguageCount,
-    possibleTranslationCount,
-    reviewRequiredCount,
-    affectedSlides,
-    estimatedGeminiRequests,
-    units: scannedUnits,
-  };
+  return scanPptxTranslationIntelligence(buffer, fileName, options);
 }
 
 /**

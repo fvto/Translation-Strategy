@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pptxSessionStore } from "@/services/documents/pptx-session-store";
 import { pptxTranslatorService, PptxSlideData, formatSopFileName, PptxTranslationMode } from "@/services/documents/pptx-translator";
-import { recordTranslationSession } from "@/services/translation/translation-memory";
+import { recordTranslationSession, getTranslationSessionById } from "@/services/translation/translation-memory";
 import { harvestTerminologyFromSlides } from "@/services/translation/harvester";
 
 export async function GET(req: NextRequest) {
@@ -40,11 +40,15 @@ export async function POST(req: NextRequest) {
     let slides: PptxSlideData[] = [];
     let fileBuffer: Buffer | null = null;
     let fileName = "presentation.pptx";
+    let sourceLanguage: string | undefined;
+    let targetLanguage: string | undefined;
 
     let mode: PptxTranslationMode | undefined = undefined;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
+      sourceLanguage = String(formData.get("sourceLanguage") || "") || undefined;
+      targetLanguage = String(formData.get("targetLanguage") || "") || undefined;
       sessionId = formData.get("id") as string | null;
       mode = (formData.get("mode") as PptxTranslationMode) || undefined;
       const slidesJson = formData.get("slides") as string | null;
@@ -58,6 +62,8 @@ export async function POST(req: NextRequest) {
       }
     } else {
       const body = await req.json();
+      sourceLanguage = body.sourceLanguage;
+      targetLanguage = body.targetLanguage;
       sessionId = body.id || null;
       mode = (body.mode as PptxTranslationMode) || undefined;
       slides = body.slides || [];
@@ -83,6 +89,18 @@ export async function POST(req: NextRequest) {
     }
 
     const finalMode = mode || session?.mode || "ipqc_bilingual";
+    const previousLog = sessionId ? getTranslationSessionById(sessionId) : null;
+    sourceLanguage = session?.sourceLanguage || previousLog?.sourceLanguage || sourceLanguage || "vi";
+    targetLanguage = session?.targetLanguage || previousLog?.targetLanguage || targetLanguage || "en";
+    const previousPairs = new Map(previousLog?.slides.flatMap((s) => s.pairs).map((p) => [p.id, p]) || []);
+    const baseline = new Map(session?.slides.flatMap((s) => s.paragraphs).map((p) => [p.id, p]) || []);
+    const userCorrectedIds = slides.flatMap((s) => s.paragraphs).filter((p) => {
+      const prior = previousPairs.get(p.id);
+      const before = baseline.get(p.id);
+      const sameSource = (before?.originalText || prior?.sourceText) === p.originalText;
+      const initial = before?.translatedText || prior?.translatedText;
+      return Boolean(sameSource && p.translatedText?.trim() && (prior?.userCorrected || (initial && initial !== p.translatedText)));
+    }).map((p) => p.id);
 
     // Rebuild translated PPTX with latest slide texts and selected mode
     const rebuiltBuffer = await pptxTranslatorService.rebuildWithTranslations(
@@ -107,11 +125,12 @@ export async function POST(req: NextRequest) {
         fileName,
         slides,
         finalMode,
-        "vi",
-        "en",
-        0
+        sourceLanguage,
+        targetLanguage,
+        0,
+        userCorrectedIds
       );
-      harvestTerminologyFromSlides(slides, fileName, "vi", "en");
+      harvestTerminologyFromSlides(slides, fileName, sourceLanguage, targetLanguage);
     } catch (tmErr) {
       console.warn("[DownloadPPTX] Failed to sync custom edits to TM:", tmErr);
     }

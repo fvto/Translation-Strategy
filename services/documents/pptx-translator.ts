@@ -7,10 +7,15 @@ import { normalizeSpiTerminology } from "../translation/casing";
 import { dynamicDeckDetector } from "./pptx-structure";
 import { TerminologyEntry } from "../database/types";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
+import { checkGlossaryTranslation } from "../terminology/audit-compliance";
+import { isSafeTerminologyEntry } from "../terminology/safety";
+export { isSafeTerminologyEntry } from "../terminology/safety";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { translationCache } from "../translation/cache";
 import { DocumentTranslationMemory, TranslationUnitWithMeta, documentTM, DocumentTMConflict, canonicalizeText } from "../translation/document-tm";
 import { auditPptxGaps, SmartAuditReport, ScannedTextUnit } from "../translation/smart-detector";
+import { paragraphText, PPTX_PARAGRAPH_PATTERN, replaceParagraphTranslation } from "./pptx-text";
+import { orderedSlidePaths, readIsqSlidePairs, ISQ_PAIRS_PART } from "./pptx-slide-order";
 import { detectUnmappedTerminology, UnmappedTermItem } from "../terminology/unmapped-detector";
 import { polishSopText } from "../translation/sop-polisher";
 
@@ -247,63 +252,6 @@ function needsTranslationRecovery(
   return sourceLanguage === "vi" && targetLanguage === "en" && hasViDiacritics(translatedText);
 }
 
-/**
- * Reject imported glossary rows that replace a complete instruction with a short
- * process heading. These rows are harmful even when marked "approved": exact
- * matching bypasses the translation provider and creates repeated headings such
- * as "*Upper priming/cementing" for every numbered step.
- */
-export function isSafeTerminologyEntry(entry: TerminologyEntry): boolean {
-  const source = entry.sourceTerm?.trim() || "";
-  const target = entry.targetTerm?.trim() || "";
-  if (!source || !target) return false;
-
-  // Target cannot be identical to source (no-op or untranslated row)
-  if (source.toLowerCase() === target.toLowerCase()) return false;
-
-  // When translating VI -> EN, target cannot be pure Vietnamese
-  const viChars = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i;
-  if (entry.sourceLanguage === "vi" && entry.targetLanguage === "en" && viChars.test(target) && !/[a-zA-Z]{3,}/.test(target.replace(viChars, ""))) {
-    return false;
-  }
-
-  const sourceWords = source.split(/\s+/).filter(Boolean);
-  const targetWords = target.split(/\s+/).filter(Boolean);
-  const sourceStep = source.match(/^\s*(\d+)[.)]/)?.[1];
-  const targetStep = target.match(/^\s*(\d+)[.)]/)?.[1];
-  const targetIsShortHeading = /^\s*[\*•#]\s*\S+(?:\s+\S+){0,3}\s*$/u.test(target);
-  const sourceIsShortHeading = /^\s*[\*•#]\s*\S+(?:\s+\S+){0,4}\s*[:：]?\s*$/u.test(source);
-
-  // Reject common typos like aplly
-  if (/\baplly\b/i.test(source) || /\baplly\b/i.test(target)) return false;
-
-  // Reject ordinal numbers or step fragments (e.g. "thứ 6", "nấc 2", "bước 3")
-  if (/^(?:thứ\s*\d+|nấc\s*\d*|bước\s*\d*|\d+|trang\s*\d+)$/i.test(source)) return false;
-
-  // A numbered instruction must retain its number. A heading cannot substitute it.
-  if (sourceStep && sourceStep !== targetStep) return false;
-
-  // Target process heading with '*' or '#' or '•' must have a matching heading prefix in source.
-  // Never allow arbitrary text or fragments to map to a process heading (e.g. 'thứ 6' -> '*Lacing').
-  if (targetIsShortHeading && !sourceIsShortHeading) {
-    return false;
-  }
-
-  // Preserve process headings, but never let one replace a substantive step,
-  // instruction, or long remark.
-  if (
-    targetIsShortHeading &&
-    (sourceWords.length > 4 || (!sourceIsShortHeading && source.length > 28))
-  ) {
-    return false;
-  }
-
-  // Catch imported mappings that discard most of a long instruction even if the
-  // target did not begin with an asterisk.
-  if (sourceWords.length >= 10 && target.length < source.length * 0.45) return false;
-
-  return true;
-}
 
 /**
  * Splits existing hybrid bilingual strings into separate clean English and Vietnamese components.
@@ -447,15 +395,7 @@ export class PptxTranslatorService {
     );
 
     // 2. Find all slide XML files sorted in order
-    const slideFiles = Object.keys(zip.files)
-      .filter((name) => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
-      .sort((a, b) => {
-        const matchA = a.match(/slide(\d+)\.xml$/i) || a.match(/\d+/);
-        const matchB = b.match(/slide(\d+)\.xml$/i) || b.match(/\d+/);
-        const numA = matchA ? parseInt(matchA[1] || matchA[0], 10) : 0;
-        const numB = matchB ? parseInt(matchB[1] || matchB[0], 10) : 0;
-        return numA - numB;
-      });
+    const slideFiles = await orderedSlidePaths(zip);
 
     const slides: PptxSlideData[] = [];
     let totalWords = 0;
@@ -481,7 +421,7 @@ export class PptxTranslatorService {
 
       // Check speaker notes if present
       let notes: string | undefined;
-      const notesPath = `ppt/notesSlides/notesSlide${slideIndex}.xml`;
+      const notesPath = `ppt/notesSlides/notesSlide${Number(slidePath.match(/slide(\d+)/)![1])}.xml`;
       const notesXml = await zip.file(notesPath)?.async("string");
       if (notesXml) {
         const noteParagraphs = this.extractParagraphsFromXml(notesXml, slideIndex);
@@ -546,6 +486,7 @@ export class PptxTranslatorService {
       stage?: string;
       translateMissingOnly?: boolean;
       selectedUnitIds?: string[];
+      customTranslations?: Record<string, string>;
     }
   ): Promise<PptxTranslationResult> {
     const startTime = Date.now();
@@ -732,8 +673,19 @@ export class PptxTranslatorService {
       translationMap.set(id, preTrans);
     }
 
-    let auditReport: SmartAuditReport | undefined;
     const modifiedParagraphIds = new Set<string>();
+
+    // Phase 3.5: Apply custom translations supplied from Smart Audit
+    if (options?.customTranslations) {
+      for (const [customId, customText] of Object.entries(options.customTranslations)) {
+        if (typeof customText === "string" && customText.trim()) {
+          translationMap.set(customId, customText.trim());
+          modifiedParagraphIds.add(customId);
+        }
+      }
+    }
+
+    let auditReport: SmartAuditReport | undefined;
 
     if (options?.translateMissingOnly) {
       auditReport = await auditPptxGaps(buffer, options?.fileName || "presentation.pptx", {
@@ -745,47 +697,39 @@ export class PptxTranslatorService {
       });
 
       const allowedIds = options.selectedUnitIds ? new Set(options.selectedUnitIds) : null;
-      const missingUnits = auditReport.units.filter((u) => {
-        if (allowedIds) return allowedIds.has(u.id);
-        return u.status === "NEEDS_TRANSLATION";
-      });
-
-      const missingIdSet = new Set(missingUnits.map((u) => u.id));
-      const missingCanonSet = new Set(missingUnits.map((u) => canonicalizeText(u.sourceText)));
-
-      for (const u of auditReport.units) {
-        if (u.status === "TM_REUSE" && u.suggestedTranslation) {
-          translationMap.set(u.id, u.suggestedTranslation);
-          modifiedParagraphIds.add(u.id);
-        } else if (u.status === "LOCKED_TERMINOLOGY" && u.suggestedTranslation) {
-          translationMap.set(u.id, u.suggestedTranslation);
-          modifiedParagraphIds.add(u.id);
-        }
-      }
-
-      for (const u of missingUnits) {
-        modifiedParagraphIds.add(u.id);
-      }
-
-      for (const slide of slides) {
-        for (const p of slide.paragraphs) {
-          const canon = canonicalizeText(p.originalText);
-          if (missingCanonSet.has(canon)) {
-            modifiedParagraphIds.add(p.id);
-          }
-        }
-      }
-
-      allItemsToTranslate = allItemsToTranslate.filter(
-        (item) => missingIdSet.has(item.id) || missingCanonSet.has(canonicalizeText(item.sourceText))
+      const selected = auditReport.units.filter((u) =>
+        allowedIds ? allowedIds.has(u.id) && u.selectedForTranslation : u.selectedForTranslation
       );
+      const missingIdSet = new Set(selected.map((u) => u.id));
+      if(sourceLanguage === "vi" && targetLanguage === "en" && mode !== "replace_en") {
+        for(const slide of slides.filter(s=>s.paragraphs.some(p=>missingIdSet.has(p.id)))) {
+          if(!this.isSlideIsq(slide,options.fileName))continue;
+          const omitted=auditReport.units.filter(u=>u.location.partPath===slide.slideFileName && u.requiresTranslation && !missingIdSet.has(u.id));
+          if(omitted.length)throw new Error(`ISQ cần dịch đủ cả slide. Hãy chọn thêm ${omitted.length} đoạn trên slide ${slide.slideIndex}.`);
+        }
+      }
+      // Exact IDs preserve the scope shown in the review. Never fan out by canonical text.
+      for (const u of selected) modifiedParagraphIds.add(u.id);
+      for (const u of selected.filter((u) => u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined)) translationMap.delete(u.id);
+      for(const u of selected) if(u.existingTranslation && targetLanguage === "en" && !hasViDiacritics(u.existingTranslation))translationMap.set(u.id,u.existingTranslation);
+      const queuedIds=new Set(allItemsToTranslate.map(item=>item.id));
+      for(const u of selected){
+        // Source-language evidence from the audit also covers Vietnamese without
+        // accents, which the older English pre-screen can mistakenly skip.
+        if(translationMap.get(u.id)?.trim()===u.sourceText.trim())translationMap.delete(u.id);
+        if(!translationMap.has(u.id) && !queuedIds.has(u.id)){
+          allItemsToTranslate.push({id:u.id,sourceText:unitMetaMap.get(u.id)?.sourceText || u.sourceText});queuedIds.add(u.id);
+        }
+      }
+      allItemsToTranslate = allItemsToTranslate.filter((item) => missingIdSet.has(item.id) && !translationMap.has(item.id));
     }
 
     // 2. Pre-flight Deduplication & Cache Resolution across presentation
     const { uniqueToTranslate, resolveAll, stats: dedupStats } = translationCache.deduplicateItems(
       allItemsToTranslate,
       sourceLanguage,
-      targetLanguage
+      targetLanguage,
+      options?.translateMissingOnly ? new Set(auditReport?.units.filter((u) => modifiedParagraphIds.has(u.id) && (u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined)).map((u) => u.sourceText.trim())) : undefined
     );
 
     // Populate pre-cached translations into translationMap
@@ -1417,6 +1361,46 @@ export class PptxTranslatorService {
       message: "Đang gắn bản dịch vào các slide OpenXML & giữ nguyên sơ đồ...",
     });
 
+    // Validate the selected VI repairs before packaging. A glossary failure must
+    // not disappear just because the new text looks English in the next audit.
+    const finalizedSelective = new Map<string, string>();
+    if (options?.translateMissingOnly && sourceLanguage === "vi" && targetLanguage === "en") {
+      const selectedUnits = new Map(auditReport?.units.map(u => [u.id, u]));
+      const retryItems: { id: string; sourceText: string }[] = [];
+      const required: string[] = [];
+      for (const p of slides.flatMap(slide => slide.paragraphs)) {
+        if (!modifiedParagraphIds.has(p.id) || p.isInspectionItem) continue;
+        const unit = selectedUnits.get(p.id);
+        // Existing English counterparts are protected by the user's preference.
+        if (unit?.existingTranslation && !hasViDiacritics(unit.existingTranslation)) continue;
+        const raw = translationMap.get(p.id) || p.originalText;
+        const rejectedMemory = unit?.status === "TRANSLATION_CONFLICT" || unit?.glossaryMismatches !== undefined;
+        const remembered = rejectedMemory ? raw : docTM.enforceDocumentTM(p.originalText, raw, sourceLanguage, targetLanguage).text;
+        const checked = checkGlossaryTranslation(p.originalText, remembered, approvedGlossary, sourceLanguage, targetLanguage);
+        if (checked.isValid && checked.text && !hasViDiacritics(checked.text)) finalizedSelective.set(p.id, checked.text);
+        else {
+          retryItems.push({ id: p.id, sourceText: p.originalText });
+          required.push(`${p.id}: ${checked.mismatches.map(m => `${m.sourceTerm} => ${m.expectedTarget}`).join('; ')}`);
+        }
+      }
+      for (let start = 0; start < retryItems.length; start += 25) {
+        const items = retryItems.slice(start, start + 25);
+        options.onProgress?.({ stage: "translating", progress: 89, message: `Đang sửa ${items.length} đoạn chưa tuân thủ glossary...` });
+        const context = "Translate each complete source instruction again. Use the approved glossary verbatim; preserve meaning, negation, numbers and prefixes. Do not append a list of terms. The previous output missed these required terms:\n" + required.slice(start, start + 25).join('\n');
+        const results = provider.translateBatch
+          ? (await provider.translateBatch({ items, sourceLanguage, targetLanguage, approvedTerminology: approvedGlossary, context })).results
+          : new Map(await Promise.all(items.map(async item => [item.id, (await provider.translate({ sourceText: item.sourceText, sourceLanguage, targetLanguage, approvedTerminology: approvedGlossary, context })).translatedText] as const)));
+        for (const item of items) {
+          // A fresh correction must never be overwritten by rejected document memory.
+          const checked = checkGlossaryTranslation(item.sourceText, results.get(item.id) || '', approvedGlossary, sourceLanguage, targetLanguage);
+          if (!checked.text || !checked.isValid || hasViDiacritics(checked.text)) {
+            throw new Error(`Chưa thể sửa đúng glossary tại ${item.id}: ${checked.mismatches.map(m => `${m.sourceTerm} → ${m.expectedTarget}`).join('; ')}. Chưa xuất file; hãy thử dịch lại.`);
+          }
+          finalizedSelective.set(item.id, checked.text);
+        }
+      }
+    }
+
     // Dynamic Deck Structure Detection (No hardcoded slide indices!)
     const slideXmlMap = new Map<string, string>();
     for (const s of slides) {
@@ -1428,8 +1412,28 @@ export class PptxTranslatorService {
     let isqSlidePaths = new Set<string>();
     // Duplicates ISQ slides according to Ching Luh SOP (1 page EN on top, 1 page VI original below)
     // Only applies to Option 1 (ipqc_bilingual / isq_duplicate), NEVER to Option 2 (replace_en)
-    if ((mode === "isq_duplicate" || mode === "ipqc_bilingual") && !zonePlan.hasParallelSections) {
-      isqSlidePaths = await this.duplicateDeck(zip, slides, options?.fileName, false, mode);
+    if ((mode === "isq_duplicate" || mode === "ipqc_bilingual") && !zonePlan.hasParallelSections && sourceLanguage === "vi" && targetLanguage === "en") {
+      const selectedPaths = options?.translateMissingOnly ? new Set(slides.filter(s=>s.paragraphs.some(p=>modifiedParagraphIds.has(p.id))).map(s=>s.slideFileName)) : undefined;
+      isqSlidePaths = await this.duplicateDeck(zip, slides, options?.fileName, false, mode, selectedPaths);
+      if(options?.translateMissingOnly){
+        for(const pair of await readIsqSlidePairs(zip)){
+          if(!selectedPaths?.has(pair.en))continue;
+          // Repair an input that already has EN/VI paragraphs in one box:
+          // the VI reference retains the VI paragraph, rather than both languages.
+          const englishCounterparts=new Set(auditReport?.units.filter(u=>u.location.partPath===pair.en && u.existingTranslation &&
+            hasViDiacritics(u.existingTranslation) && !hasViDiacritics(u.sourceText)).map(u=>u.location.paragraphIndex));
+          if(englishCounterparts.size){
+            const reference=await zip.file(pair.vi)!.async('string');let index=0;
+            zip.file(pair.vi,reference.replace(new RegExp(PPTX_PARAGRAPH_PATTERN),p=>englishCounterparts.has(index++)?'':p));
+          }
+        }
+      }
+      // An ISQ EN slide must be complete. Do not emit a partly repaired EN copy
+      // if the review selected only some of its still-Vietnamese paragraphs.
+      if(options?.translateMissingOnly) for(const path of isqSlidePaths){
+        const omitted=auditReport?.units.filter(u=>u.location.partPath===path && u.requiresTranslation && !modifiedParagraphIds.has(u.id)) || [];
+        if(omitted.length)throw new Error(`ISQ cần dịch đủ cả slide. Hãy chọn thêm ${omitted.length} đoạn trên slide ${omitted[0].location.slideIndex}.`);
+      }
     }
 
     // 3. Apply translations to slide objects and inject into OpenXML
@@ -1437,7 +1441,7 @@ export class PptxTranslatorService {
       const slide = slides[sIdx];
       const allocatedMode = zonePlan.targetSlideModes.get(slide.slideIndex);
 
-      if (allocatedMode === "keep_original") {
+      if (!options?.translateMissingOnly && allocatedMode === "keep_original") {
         // Vietnamese reference block or section divider in a pre-split deck: keep 100% original
         continue;
       }
@@ -1449,44 +1453,46 @@ export class PptxTranslatorService {
           : "ipqc_bilingual";
 
       for (const p of slide.paragraphs) {
+        if (options?.translateMissingOnly && !modifiedParagraphIds.has(p.id)) {
+          p.translatedText = p.originalText;
+          continue;
+        }
         const rawT = translationMap.get(p.id) || p.originalText;
         if (p.isInspectionItem) {
           p.translatedText = rawT;
+        } else if (finalizedSelective.has(p.id)) {
+          p.translatedText = normalizeSpiTerminology(finalizedSelective.get(p.id)!);
         } else {
-          const enforced = enforceTerminologyCompliance(
+          // Document memory may contain older wording. Glossary must be last.
+          const tmEnforced = docTM.enforceDocumentTM(
             p.originalText,
             rawT,
+            sourceLanguage,
+            targetLanguage
+          );
+          const enforced = enforceTerminologyCompliance(
+            p.originalText,
+            tmEnforced.text,
             approvedGlossary,
             sourceLanguage,
             targetLanguage
           );
-          const tmEnforced = docTM.enforceDocumentTM(
-            p.originalText,
-            enforced.text,
-            sourceLanguage,
-            targetLanguage
-          );
-          p.translatedText = normalizeSpiTerminology(tmEnforced.text);
+          p.translatedText = normalizeSpiTerminology(enforced.text);
         }
       }
 
       const notesId = `notes_s${slide.slideIndex}`;
       if (slide.notes) {
         const rawN = translationMap.get(notesId) || slide.notes;
+        const tmEnforcedNotes = docTM.enforceDocumentTM(slide.notes, rawN, sourceLanguage, targetLanguage);
         const enforcedNotes = enforceTerminologyCompliance(
           slide.notes,
-          rawN,
+          tmEnforcedNotes.text,
           approvedGlossary,
           sourceLanguage,
           targetLanguage
         );
-        const tmEnforcedNotes = docTM.enforceDocumentTM(
-          slide.notes,
-          enforcedNotes.text,
-          sourceLanguage,
-          targetLanguage
-        );
-        slide.translatedNotes = normalizeSpiTerminology(tmEnforcedNotes.text);
+        slide.translatedNotes = normalizeSpiTerminology(enforcedNotes.text);
       }
 
       // If translateMissingOnly is enabled, check if this slide has any modified paragraphs
@@ -1501,7 +1507,24 @@ export class PptxTranslatorService {
       // Inject translated text back into slide XML
       const originalXml = await zip.file(slide.slideFileName)?.async("string");
       if (originalXml) {
-        const updatedXml = this.replaceParagraphsInXml(
+        const updatedXml = options?.translateMissingOnly ? originalXml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (() => {
+          let paragraphIndex = 0;
+          const byIndex = new Map(slide.paragraphs.map((p) => [p.paragraphIndex, p]));
+          return (pXml: string) => {
+            const p = byIndex.get(paragraphIndex++);
+            if (!p || !modifiedParagraphIds.has(p.id)) return pXml;
+            let translated: string;
+            const auditedUnit=auditReport?.units.find(u=>u.id===p.id);
+            if(isThisIsq && auditedUnit?.existingTranslation && !hasViDiacritics(auditedUnit.existingTranslation)) {
+              // The English counterpart is already in this same container.
+              return '';
+            }
+            try { translated = replaceParagraphTranslation(pXml, p.translatedText || p.originalText); }
+            catch (error) { throw new Error(`Không thể giữ định dạng tại ${p.id}: ${error instanceof Error ? error.message : error}`); }
+            if (targetMode === "replace_en") return translated;
+            return targetLanguage === "en" ? translated + pXml : pXml + translated;
+          };
+        })()) : this.replaceParagraphsInXml(
           originalXml,
           slide.paragraphs,
           targetMode,
@@ -1513,7 +1536,7 @@ export class PptxTranslatorService {
       // Update notes XML if present
       const notesPath = `ppt/notesSlides/notesSlide${slide.slideIndex}.xml`;
       const originalNotesXml = await zip.file(notesPath)?.async("string");
-      if (originalNotesXml && slide.notes) {
+      if (!options?.translateMissingOnly && originalNotesXml && slide.notes) {
         const noteParagraphs = this.extractParagraphsFromXml(originalNotesXml, slide.slideIndex);
         if (slide.translatedNotes) {
           for (let npIdx = 0; npIdx < noteParagraphs.length; npIdx++) {
@@ -1532,6 +1555,10 @@ export class PptxTranslatorService {
     });
 
     // 4. Generate translated PPTX buffer
+    if(options?.translateMissingOnly && targetLanguage === "en") for(const path of isqSlidePaths){
+      const englishXml=await zip.file(path)?.async('string') || '';
+      if(hasViDiacritics(paragraphText(englishXml)))throw new Error(`Slide EN của ISQ vẫn còn tiếng Việt (${path}). Không xuất bản dịch thiếu; hãy thử dịch lại.`);
+    }
     // Note: All images in ppt/media/* remain 100% untouched and intact in the ZIP
     const rawBuffer = await zip.generateAsync({
       type: "nodebuffer",
@@ -1546,8 +1573,14 @@ export class PptxTranslatorService {
     });
 
     // Run proactive post-flight gate
-    const postFlight = await auditAndRepairPptxPostFlight(rawBuffer, mode as any);
+    // Full-deck repair may mutate unselected text. Incremental output is restricted to reviewed paragraphs.
+    const postFlight = options?.translateMissingOnly ? { auditedBuffer: rawBuffer, repairedCount: 0 } : await auditAndRepairPptxPostFlight(rawBuffer, mode as any);
     const translatedBuffer = postFlight.auditedBuffer;
+    if (options?.translateMissingOnly) {
+      auditReport = await auditPptxGaps(translatedBuffer, options.fileName || "presentation.pptx", {
+        sourceLang: sourceLanguage, targetLang: targetLanguage, mode, approvedGlossary,
+      });
+    }
 
     if (postFlight.repairedCount > 0) {
       console.log(`[PostFlightGate] Proactively auto-repaired ${postFlight.repairedCount} format/text issues before delivery.`);
@@ -1720,7 +1753,8 @@ export class PptxTranslatorService {
     slides: PptxSlideData[],
     fileName?: string,
     forceAll = false,
-    mode: PptxTranslationMode = "ipqc_bilingual"
+    mode: PptxTranslationMode = "ipqc_bilingual",
+    selectedSlidePaths?: Set<string>
   ): Promise<Set<string>> {
     const isqSlidePaths = new Set<string>();
 
@@ -1763,6 +1797,10 @@ export class PptxTranslatorService {
     const newRels: string[] = [];
     const newOverrides: string[] = [];
     const pairedEntries: string[] = [];
+    const existingPairs = await readIsqSlidePairs(zip);
+    const viReferencePaths = new Set(existingPairs.map(p=>p.vi));
+    const existingEnPaths = new Set(existingPairs.map(p=>p.en));
+    const newPairs = [...existingPairs];
 
     const slideDataMap = new Map<string, PptxSlideData>();
     for (const s of slides) {
@@ -1792,6 +1830,12 @@ export class PptxTranslatorService {
       const isIsq = forceAll || (sData ? this.isSlideIsq(sData, fileName, isPostHfpa) : false);
 
       pairedEntries.push(orig.fullTag);
+      if(viReferencePaths.has(origSlidePath))continue;
+      if(existingEnPaths.has(origSlidePath)){
+        if(!selectedSlidePaths || selectedSlidePaths.has(origSlidePath))isqSlidePaths.add(origSlidePath);
+        continue;
+      }
+      if(selectedSlidePaths && !selectedSlidePaths.has(origSlidePath))continue;
 
       // Check for substantive Vietnamese content:
       // "Tự động nhân đôi thành 1 Slide EN ở trên (xóa tiếng Việt) và 1 Slide VI nguyên bản ở ngay dưới liền kề"
@@ -1819,7 +1863,8 @@ export class PptxTranslatorService {
 
       if (shouldDuplicate) {
         isqSlidePaths.add(origSlidePath);
-        const newSlideNum = 1000 + i + 1;
+        let newSlideNum = 1000 + i + 1;
+        while(zip.file(`ppt/slides/slide${newSlideNum}.xml`))newSlideNum++;
         const newSlideTarget = `slides/slide${newSlideNum}.xml`;
         const newSlidePath = `ppt/${newSlideTarget}`;
 
@@ -1827,6 +1872,7 @@ export class PptxTranslatorService {
         const slideData = await zip.file(origSlidePath)?.async("nodebuffer");
         if (!slideData) continue;
         zip.file(newSlidePath, slideData);
+        if(selectedSlidePaths)newPairs.push({en:origSlidePath,vi:newSlidePath});
 
         // 2. Copy slide rels if exists
         const origRelPath = origSlidePath.replace("slides/", "slides/_rels/") + ".rels";
@@ -1855,6 +1901,14 @@ export class PptxTranslatorService {
     }
 
     if (newRels.length > 0) {
+      if(selectedSlidePaths){
+        zip.file(ISQ_PAIRS_PART,`<?xml version="1.0" encoding="UTF-8"?><pairs xmlns="urn:smart-audit:isq-pairs">${newPairs.map(p=>`<pair en="${p.en}" vi="${p.vi}"/>`).join('')}</pairs>`);
+        if(!existingPairs.length){
+          maxRId++;
+          newRels.push(`<Relationship Id="rId${maxRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" Target="../${ISQ_PAIRS_PART}"/>`);
+          newOverrides.push(`<Override PartName="/${ISQ_PAIRS_PART}" ContentType="application/xml"/>`);
+        }
+      }
       relsXml = relsXml.replace("</Relationships>", `${newRels.join("")}</Relationships>`);
       presXml = presXml.replace(
         /<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/,
@@ -1989,23 +2043,8 @@ export class PptxTranslatorService {
       const inInspectionCol = inspectionRanges.some((r) => pStart >= r.start && pStart < r.end);
 
       // Find all text tags and line breaks inside this paragraph (<a:t> and <a:br>)
-      const parts: string[] = [];
-      const tokenRegex = /(<a:t(?:\s[^>]*)?>[\s\S]*?<\/a:t>|<a:br(?:\s[^>]*)?\/>|<a:br(?:\s[^>]*)?>[\s\S]*?<\/a:br>)/g;
-      let tm: RegExpExecArray | null;
-      let hasText = false;
-      while ((tm = tokenRegex.exec(pXml)) !== null) {
-        if (tm[0].startsWith("<a:br")) {
-          parts.push("\n");
-        } else {
-          const raw = tm[0].replace(/<a:t(?:\s[^>]*)?>/, "").replace(/<\/a:t>$/, "");
-          const decoded = unescapeXml(raw);
-          if (decoded.trim()) hasText = true;
-          parts.push(decoded);
-        }
-      }
-
-      if (hasText) {
-        const fullText = parts.join("");
+      const fullText = paragraphText(pXml);
+      if (fullText.trim()) {
         const isInspectionItem = inInspectionCol;
         const hybrid = splitBilingualText(fullText, isInspectionItem);
         const initialTrans = isInspectionItem ? (hybrid ? hybrid.en : fullText) : hybrid ? hybrid.en : "";
