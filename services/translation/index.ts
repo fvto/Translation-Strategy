@@ -15,6 +15,8 @@ export * from "./google";
 export * from "./gemini";
 export * from "./antigravity";
 export * from "./ctranslate2";
+export * from "./document-tm";
+export * from "./smart-detector";
 
 export function getTranslationProvider(providerName?: string): TranslationProvider {
   const settings = db.getSettings();
