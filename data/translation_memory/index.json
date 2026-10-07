@@ -1,5 +1,49 @@
 [
   {
+    "sessionId": "pptx_1791353274332_ff34cb81",
+    "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-07T06:11:02.807Z",
+    "slideCount": 78,
+    "totalPairs": 1409,
+    "harvestedCount": 7
+  },
+  {
+    "sessionId": "pptx_1791348480590_ce7093fe",
+    "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-07T04:52:18.508Z",
+    "slideCount": 55,
+    "totalPairs": 1508,
+    "harvestedCount": 5
+  },
+  {
+    "sessionId": "pptx_1791337323267_5836ac54",
+    "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-07T01:49:28.052Z",
+    "slideCount": 78,
+    "totalPairs": 1709,
+    "harvestedCount": 11
+  },
+  {
+    "sessionId": "pptx_1791335126867_317f38fb",
+    "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-07T01:11:18.231Z",
+    "slideCount": 78,
+    "totalPairs": 1709,
+    "harvestedCount": 12
+  },
+  {
     "sessionId": "pptx_1791249189971_663685fb",
     "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
     "mode": "ipqc_bilingual",

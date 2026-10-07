@@ -69,6 +69,8 @@ const KNOWN_SYNONYM_PATTERNS: { [canonicalTargetLower: string]: RegExp } = {
   "sụp mí": /(?<![\p{L}\p{N}])(?:sụt\s+mí|tuột\s+mí|lệch\s+mí|rơi\s+mí|sụp\s+đường\s+may)(?![\p{L}\p{N}])/giu,
   "mài cao": /(?<![\p{L}\p{N}])(?:mài\s+quá\s+mức|mài\s+lồi|mài\s+sâu)(?![\p{L}\p{N}])/giu,
   "lộn chân": /(?<![\p{L}\p{N}])(?:lộn\s+ngược|sai\s+chân|đổi\s+chân|ngược\s+chân)(?![\p{L}\p{N}])/giu,
+  "nguyên liệu mũ giày": /(?<![\p{L}\p{N}])(?:vật\s+liệu\s+(?:phía\s+trên|phần\s+trên|mặt\s+trên|mũ(?:\s+giày)?)|nguyên\s+liệu\s+phần\s+trên)(?![\p{L}\p{N}])/giu,
+  "kiểm tra kim": /(?<![\p{L}\p{N}])(?:phát\s+hiện\s+kim(?:\s+loại)?|dò\s+kim|kiểm\s+tra\s+kim\s+loại)(?![\p{L}\p{N}])/giu,
 };
 
 function escapeRegex(str: string): string {

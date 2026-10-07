@@ -19,6 +19,10 @@ export const COMMON_PHRASES: DictionaryEntry[] = [
   { en: "hot/cold tip shaping", vi: "định hình mũi nóng lạnh", pos: "phrase" },
   { en: "needle stitch count", vi: "số mũi kim", pos: "phrase" },
   { en: "stitch count", vi: "số mũi", pos: "phrase" },
+  { en: "tighten laces too tight", vi: "xiết dây quá mạnh", pos: "phrase" },
+  { en: "tighten laces too tight", vi: "siết dây quá mạnh", pos: "phrase" },
+  { en: "tighten laces", vi: "xiết dây", pos: "phrase" },
+  { en: "tighten laces", vi: "siết dây", pos: "phrase" },
   { en: "stitch", vi: "mũi chỉ", pos: "noun" },
   { en: "stitches", vi: "các mũi chỉ", pos: "noun" },
   { en: "needle stitch", vi: "mũi kim", pos: "noun" },
@@ -1455,7 +1459,11 @@ export const VI_EN_DICTIONARY: Record<string, string> = {
   "ép nóng": "hot press",
   "nhiệt độ trên": "upper temperature",
   "nhiệt độ dưới": "lower temperature",
-  "lực ép": "pressure"
+  "lực ép": "pressure",
+  "xiết dây quá mạnh": "tighten laces too tight",
+  "xiết dây": "tighten laces",
+  "siết dây quá mạnh": "tighten laces too tight",
+  "siết dây": "tighten laces"
 };
 
 export const OFFLINE_DICTIONARY: Record<string, string> = {
