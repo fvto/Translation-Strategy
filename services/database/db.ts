@@ -11,6 +11,7 @@ import {
   AppSettings,
 } from "./types";
 import { sanitizeTerminologyEntry } from "../terminology/sanitizer";
+import { isSafeTerminologyEntry } from "../terminology/safety";
 
 const DATA_DIR = path.resolve(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "database.json");
@@ -1193,7 +1194,7 @@ class Database {
           return false;
         }
       }
-      return true;
+      return isSafeTerminologyEntry(t);
     });
 
     const expanded: (TerminologyEntry & { isDirect?: boolean })[] = [];
@@ -1212,9 +1213,12 @@ class Database {
     };
 
     for (const item of validCombined) {
-      const cleanTarget = cleanGlossaryTarget(item.targetTerm);
+      let cleanTarget = cleanGlossaryTarget(item.targetTerm);
+      cleanTarget = cleanTarget.replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim();
       const baseItem = { ...item, targetTerm: cleanTarget || item.targetTerm };
-      expanded.push(baseItem);
+      if (isSafeTerminologyEntry(baseItem)) {
+        expanded.push(baseItem);
+      }
 
       // Expand slash-separated term variations (e.g. "lỗ đinh/lỗ định vị" -> "lỗ đinh", "lỗ định vị")
       // Do NOT split units of measurement (e.g. "mũi/inch", "kg/cm2", "km/h") or fractions ("1/2")
@@ -1222,15 +1226,18 @@ class Database {
       if (item.sourceTerm.includes("/") && !isUnitOrMeasurement) {
         const parts = item.sourceTerm
           .split("/")
-          .map((p) => p.trim())
+          .map((p) => p.replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim())
           .filter((p) => p.length >= 2 && !/^(inch|cm2|mm|kg|size|mũi|gót|đế)$/i.test(p));
         const targetParts = item.targetTerm.includes("/")
-          ? item.targetTerm.split("/").map((p) => cleanGlossaryTarget(p)).filter(Boolean)
+          ? item.targetTerm.split("/").map((p) => cleanGlossaryTarget(p).replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim()).filter((p) => p.length >= 2)
           : [];
 
         if (targetParts.length === parts.length && parts.length > 0) {
           for (let i = 0; i < parts.length; i++) {
-            expanded.push({ ...baseItem, sourceTerm: parts[i], targetTerm: targetParts[i] });
+            const variant = { ...baseItem, sourceTerm: parts[i], targetTerm: targetParts[i] };
+            if (isSafeTerminologyEntry(variant)) {
+              expanded.push(variant);
+            }
           }
         } else if (parts.length >= 2 && item.sourceTerm.length <= 35) {
           // Shared target for short synonym phrases: e.g. "độ gập ghềnh/ổn định" -> "rocking"
@@ -1238,10 +1245,17 @@ class Database {
           const prefix = (firstWords.length >= 2 && firstWords.length <= 3) ? firstWords[0] : "";
 
           for (let i = 0; i < parts.length; i++) {
+            let candidateSrc = "";
             if (i > 0 && prefix && !parts[i].startsWith(prefix)) {
-              expanded.push({ ...baseItem, sourceTerm: `${prefix} ${parts[i]}`, targetTerm: baseItem.targetTerm });
+              candidateSrc = `${prefix} ${parts[i]}`;
             } else if (parts[i].split(/\s+/).length >= 2 || parts[0].split(/\s+/).length <= 2) {
-              expanded.push({ ...baseItem, sourceTerm: parts[i], targetTerm: baseItem.targetTerm });
+              candidateSrc = parts[i];
+            }
+            if (candidateSrc) {
+              const variant = { ...baseItem, sourceTerm: candidateSrc, targetTerm: baseItem.targetTerm };
+              if (isSafeTerminologyEntry(variant)) {
+                expanded.push(variant);
+              }
             }
           }
         }
@@ -1249,16 +1263,22 @@ class Database {
 
       // Expand parenthetical notes (e.g. "Trung đế (bao)" -> "Trung đế", "bao trung đế")
       if (/\([^\)]+\)/.test(item.sourceTerm)) {
-        const cleaned = item.sourceTerm.replace(/\([^\)]+\)/g, "").replace(/\s+/g, " ").trim();
+        let cleaned = item.sourceTerm.replace(/\([^\)]+\)/g, "").replace(/\s+/g, " ").trim();
+        cleaned = cleaned.replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim();
         if (cleaned.length >= 2) {
-          expanded.push({ ...baseItem, sourceTerm: cleaned });
+          const variant = { ...baseItem, sourceTerm: cleaned };
+          if (isSafeTerminologyEntry(variant)) {
+            expanded.push(variant);
+          }
         }
         const parenMatch = item.sourceTerm.match(/\(([^\)]+)\)/);
         if (parenMatch && cleaned) {
-          const inside = parenMatch[1].trim();
-          if (inside.length < 20 && !/^\d+$/.test(inside)) {
-            expanded.push({ ...baseItem, sourceTerm: `${inside} ${cleaned}`.trim() });
-            expanded.push({ ...baseItem, sourceTerm: `${cleaned} ${inside}`.trim() });
+          const inside = parenMatch[1].replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim();
+          if (inside.length >= 2 && inside.length < 20 && !/^\d+$/.test(inside)) {
+            const v1 = { ...baseItem, sourceTerm: `${inside} ${cleaned}`.trim() };
+            if (isSafeTerminologyEntry(v1)) expanded.push(v1);
+            const v2 = { ...baseItem, sourceTerm: `${cleaned} ${inside}`.trim() };
+            if (isSafeTerminologyEntry(v2)) expanded.push(v2);
           }
         }
       }

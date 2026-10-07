@@ -1,5 +1,5 @@
 export type UserRole = "admin" | "translator" | "reviewer" | "viewer";
-export type TermStatus = "approved" | "review" | "rejected" | "deprecated";
+export type TermStatus = "approved" | "review" | "rejected" | "deprecated" | "quarantined";
 export type DataClassification = "internal" | "confidential" | "highly_confidential";
 export type RetentionPolicy = "delete_immediately" | "persist_until_manual";
 

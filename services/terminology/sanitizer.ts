@@ -37,12 +37,37 @@ export function sanitizeTerminologyEntry(entry: Partial<TerminologyEntry>): Term
     return { valid: false, reason: "Source and target terms must not be empty" };
   }
 
-  // 1. Rejection: Identical source and target (no-op mapping causing untranslated leaks)
+  // 1. Rejection: Single character terms (e.g. 'C', 'H')
+  if (source.length < 2 || target.length < 2) {
+    return { valid: false, reason: `Single character term is not valid: '${source.length < 2 ? source : target}'.` };
+  }
+
+  // 2. Rejection: Identical source and target (no-op mapping causing untranslated leaks)
   if (source.toLowerCase() === target.toLowerCase()) {
     return {
       valid: false,
       reason: `Source and target are identical ('${source}'). A Vietnamese term cannot have itself as an English translation.`,
     };
+  }
+
+  // 3. Rejection: Standalone English function words / prepositions (e.g. 'at', 'in', 'on')
+  const ENGLISH_STOPWORDS = new Set([
+    "at", "in", "on", "of", "to", "for", "by", "with", "from", "as",
+    "the", "a", "an", "is", "are", "was", "were", "be", "been", "it", "its", "this", "that"
+  ]);
+  if (ENGLISH_STOPWORDS.has(source.toLowerCase()) || ENGLISH_STOPWORDS.has(target.toLowerCase())) {
+    return {
+      valid: false,
+      reason: `Standalone function word/preposition ('${ENGLISH_STOPWORDS.has(source.toLowerCase()) ? source : target}') cannot be a terminology entry.`,
+    };
+  }
+
+  // 4. Rejection: Malformed fragments with leading/trailing slashes or ellipsis
+  if (/^[/\\]|[/\\]$/.test(source) || /^[/\\]|[/\\]$/.test(target)) {
+    return { valid: false, reason: `Term cannot have leading or trailing slashes: '${source}' -> '${target}'.` };
+  }
+  if (/^\.{2,}/.test(source) || /^\.{2,}/.test(target)) {
+    return { valid: false, reason: `Term cannot start with ellipsis: '${source}' -> '${target}'.` };
   }
 
   // 2. Rejection: Target contains Vietnamese diacritics when translating VI -> EN
