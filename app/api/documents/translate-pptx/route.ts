@@ -10,6 +10,7 @@ import { AntigravityCliTranslationProvider } from "@/services/translation/antigr
 
 import { pptxSessionStore, PptxSession } from "@/services/documents/pptx-session-store";
 import { recordTranslationSession } from "@/services/translation/translation-memory";
+import { applyPptxAuditSuggestions } from "@/services/translation/pptx-smart-audit";
 import { harvestTerminologyFromSlides } from "@/services/translation/harvester";
 import { auditPptxGaps } from "@/services/translation/smart-detector";
 
@@ -40,6 +41,17 @@ export async function POST(req: NextRequest) {
     if (selectedUnitIdsRaw) {
       try {
         selectedUnitIds = JSON.parse(selectedUnitIdsRaw);
+        if (!Array.isArray(selectedUnitIds) || selectedUnitIds.some((id) => typeof id !== "string")) throw new Error("Invalid selection");
+      } catch {
+        return NextResponse.json({ error: "Danh sách vị trí đã chọn không hợp lệ. Hãy quét lại." }, { status: 400 });
+      }
+    }
+
+    const customTranslationsRaw = formData.get("customTranslations") as string | null;
+    let customTranslations: Record<string, string> | undefined;
+    if (customTranslationsRaw) {
+      try {
+        customTranslations = JSON.parse(customTranslationsRaw);
       } catch {}
     }
 
@@ -60,6 +72,26 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionId = `pptx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+
+    if (action === "apply_audit") {
+      if (!Array.isArray(selectedUnitIds) || !selectedUnitIds.length || selectedUnitIds.some((id) => typeof id !== "string")) {
+        return NextResponse.json({ error: "Chọn ít nhất một gợi ý để áp dụng." }, { status: 400 });
+      }
+      try {
+        const expectedSuggestions = JSON.parse(String(formData.get("auditPreview") || "null"));
+        if (!Array.isArray(expectedSuggestions) || expectedSuggestions.length !== new Set(selectedUnitIds).size || expectedSuggestions.some((u) => !u || typeof u.id !== "string" || typeof u.sourceText !== "string" || typeof u.suggestedTranslation !== "string")) {
+          return NextResponse.json({ error: "Thiếu nội dung xem trước. Hãy quét lại." }, { status: 400 });
+        }
+        const result = await applyPptxAuditSuggestions(buffer, file.name, selectedUnitIds, { sourceLang: sourceLanguage, targetLang: targetLanguage, mode, expectedSuggestions, customTranslations });
+        return new Response(result.buffer as any, { headers: {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "X-Audit-Applied-Count": String(result.appliedCount),
+          "Content-Disposition": `attachment; filename="${encodeURIComponent(file.name.replace(/\.pptx$/i, "-audited.pptx"))}"`,
+        } });
+      } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
+      }
+    }
 
     if (action === "audit") {
       const auditReport = await auditPptxGaps(buffer, file.name, {
@@ -148,6 +180,7 @@ export async function POST(req: NextRequest) {
               stage,
               translateMissingOnly,
               selectedUnitIds,
+              customTranslations,
               onProgress: (progressUpdate) => {
                 sendEvent("progress", progressUpdate);
               },
@@ -161,6 +194,8 @@ export async function POST(req: NextRequest) {
               slides: translationResult.slides,
               stats: translationResult.stats,
               mode,
+              sourceLanguage,
+              targetLanguage,
               createdAt: Date.now(),
               unmappedTerms: translationResult.unmappedTerms || [],
             };
@@ -251,6 +286,7 @@ export async function POST(req: NextRequest) {
       stage,
       translateMissingOnly,
       selectedUnitIds,
+      customTranslations,
     });
 
     const pptxSession: PptxSession = {
@@ -261,6 +297,8 @@ export async function POST(req: NextRequest) {
       slides: translationResult.slides,
       stats: translationResult.stats,
       mode,
+      sourceLanguage,
+      targetLanguage,
       createdAt: Date.now(),
       unmappedTerms: translationResult.unmappedTerms || [],
     };

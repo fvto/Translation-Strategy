@@ -1,572 +1,535 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import {
-  ShieldCheck,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
-  Sparkles,
-  Layers,
-  Lock,
-  RefreshCw,
-  X,
-  ArrowRight,
-  Eye,
-  Check,
-  Filter,
-  FileText,
-  Zap,
-} from "lucide-react";
-import { SmartAuditReport, ScannedTextUnit, TextUnitStatus } from "@/services/translation/smart-detector";
+import React, { useEffect, useMemo, useState } from "react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw } from "lucide-react";
+import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
 
 interface SmartAuditModalProps {
   isOpen: boolean;
   onClose: () => void;
   auditReport: SmartAuditReport | null;
-  onTranslateMissingOnly: (selectedUnitIds?: string[]) => void;
+  onTranslateMissingOnly: (selectedUnitIds?: string[], customTranslations?: Record<string, string>) => void;
   onTranslateAll?: () => void;
+  onApplySuggestions?: (unitIds: string[], customTranslations?: Record<string, string>) => Promise<void>;
   isLoading?: boolean;
 }
 
-export const SmartAuditModal: React.FC<SmartAuditModalProps> = ({
-  isOpen,
-  onClose,
-  auditReport,
-  onTranslateMissingOnly,
-  onTranslateAll,
-  isLoading = false,
-}) => {
-  const [activeTab, setActiveTab] = useState<"summary" | "review">("summary");
-  const [slideFilter, setSlideFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+const LABELS: Record<TextUnitStatus, string> = {
+  ALREADY_TRANSLATED: "Đã dịch", NEEDS_TRANSLATION: "Cần dịch", TM_REUSE: "Có thể tái sử dụng",
+  LOCKED_TERMINOLOGY: "Thuật ngữ đã duyệt", NON_TRANSLATABLE: "Mã / kỹ thuật", MIXED_LANGUAGE: "Ngôn ngữ hỗn hợp",
+  POSSIBLE_TRANSLATION: "Bản dịch tương tự, cần xem lại", REVIEW_REQUIRED: "Chưa đủ bằng chứng",
+  SUSPICIOUS_TRANSLATION: "Dấu / cách viết cần xem lại", TRANSLATION_CONFLICT: "Bản dịch không nhất quán",
+};
+const ORIGINS: Record<string, string> = { approved: "Thuật ngữ đã duyệt", correction: "Người dùng đã sửa", presentation: "PowerPoint hiện tại", history: "Tài liệu trước" };
 
-  // Manage selection of units for translation
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
-    if (!auditReport) return new Set();
-    return new Set(
-      auditReport.units
-        .filter((u) => u.status === "NEEDS_TRANSLATION")
-        .map((u) => u.id)
-    );
-  });
+export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissingOnly, onApplySuggestions, isLoading = false }: SmartAuditModalProps) {
+  const [tab, setTab] = useState<"summary" | "review">("summary");
+  const [filter, setFilter] = useState("attention");
+  const [slide, setSlide] = useState("all");
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState(new Set<string>());
+  const [ignored, setIgnored] = useState(new Set<string>());
+  const [preview, setPreview] = useState<string[] | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  // Re-initialize selections when auditReport changes
-  React.useEffect(() => {
-    if (auditReport) {
-      setSelectedIds(
-        new Set(
-          auditReport.units
-            .filter((u) => u.status === "NEEDS_TRANSLATION")
-            .map((u) => u.id)
-        )
-      );
-    }
+  // Custom translation editing states
+  const [customEdits, setCustomEdits] = useState<Record<string, string>>({});
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingUnitId, setEditingUnitId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+
+  useEffect(() => {
+    setSelected(new Set(auditReport?.units.filter((u) => u.selectedForTranslation).map((u) => u.id)));
+    setIgnored(new Set());
+    setCustomEdits({});
+    setEditingGroupId(null);
+    setEditingUnitId(null);
+    setPreview(null);
+    setError("");
+    setSlide("all");
+    setFilter("attention");
+    setTab("summary");
   }, [auditReport]);
 
-  // Filtered units for the Review view (called unconditionally before early return)
-  const filteredUnits = useMemo(() => {
-    if (!auditReport) return [];
-    return auditReport.units.filter((unit) => {
-      if (slideFilter !== "all") {
-        const slideNum = parseInt(slideFilter, 10);
-        if (unit.location.slideIndex !== slideNum) return false;
-      }
-      if (statusFilter !== "all" && unit.status !== statusFilter) {
-        return false;
-      }
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchSrc = unit.sourceText.toLowerCase().includes(q);
-        const matchTrans = (unit.suggestedTranslation || "").toLowerCase().includes(q);
-        if (!matchSrc && !matchTrans) return false;
-      }
-      return true;
-    });
-  }, [auditReport, slideFilter, statusFilter, searchQuery]);
+  const byId = useMemo(() => new Map(auditReport?.units.map((u) => [u.id, u])), [auditReport]);
 
-  // Group units by slide or sheet (called unconditionally before early return)
-  const groupedUnits = useMemo(() => {
-    const map = new Map<number | string, ScannedTextUnit[]>();
-    for (const unit of filteredUnits) {
-      const groupKey = unit.location.slideIndex ?? unit.location.sheetName ?? 1;
-      if (!map.has(groupKey)) map.set(groupKey, []);
-      map.get(groupKey)!.push(unit);
-    }
-    return Array.from(map.entries()).sort((a, b) => {
-      if (typeof a[0] === "number" && typeof b[0] === "number") return a[0] - b[0];
-      return String(a[0]).localeCompare(String(b[0]));
-    });
-  }, [filteredUnits]);
+  const groups = useMemo(() => {
+    if (!auditReport) return [];
+    const base: TranslationAuditGroup[] = auditReport.groups || auditReport.units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => ({
+      id: u.id, type: "translation", title: u.sourceText, unitIds: [u.id], reason: u.reason, confidence: u.confidence, safeToApply: false, suggestedTranslation: u.suggestedTranslation,
+    }));
+    return base.filter((g) => !ignored.has(g.id) && (filter !== "attention" || !g.safeToApply)).map((g) => ({ ...g, unitIds: g.unitIds.filter((id) => {
+      const u = byId.get(id);
+      const effectiveTranslation = customEdits[id] !== undefined ? customEdits[id] : u?.suggestedTranslation;
+      return u && (slide === "all" || String(u.location.slideIndex) === slide) &&
+        (filter === "attention" || filter === "all" || (filter === "reuse" && ["TM_REUSE", "LOCKED_TERMINOLOGY", "POSSIBLE_TRANSLATION"].includes(u.status)) || u.status === filter) &&
+        (!query.trim() || (u.sourceText + " " + (effectiveTranslation || "")).toLocaleLowerCase().includes(query.toLocaleLowerCase()));
+    }) })).filter((g) => g.unitIds.length);
+  }, [auditReport, byId, ignored, filter, slide, query, customEdits]);
 
   if (!isOpen || !auditReport) return null;
 
-  const toggleSelect = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
+  const loading = isLoading || busy;
+  const selectedMissing = auditReport.units.filter((u) => selected.has(u.id) && u.selectedForTranslation);
+  const safeIds = auditReport.units.filter((u) => u.safeToApply && u.canApply && !(auditReport.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
+  const attention = (auditReport.groups || []).filter((g) => !g.safeToApply && !ignored.has(g.id)).length || (auditReport.groups ? 0 : auditReport.needsTranslationCount);
+
+  const toggle = (id: string) => setSelected((previous) => {
+    const next = new Set(previous), unit = byId.get(id);
+    const ids = unit?.location.isIsq ? auditReport.units.filter(u => u.selectedForTranslation && u.location.partPath === unit.location.partPath).map(u => u.id) : [id];
+    const remove = next.has(id);
+    for (const target of ids) remove ? next.delete(target) : next.add(target);
+    return next;
+  });
+
+  const getEffectiveTranslation = (unit: ScannedTextUnit): string | undefined => {
+    if (customEdits[unit.id] !== undefined) return customEdits[unit.id];
+    return unit.suggestedTranslation;
   };
 
-  const selectAllMissing = () => {
-    const next = new Set(selectedIds);
-    auditReport.units
-      .filter((u) => u.status === "NEEDS_TRANSLATION")
-      .forEach((u) => next.add(u.id));
-    setSelectedIds(next);
+  const getGroupEffectiveTranslation = (group: TranslationAuditGroup): string | undefined => {
+    const firstUnit = byId.get(group.unitIds[0]);
+    if (firstUnit && customEdits[firstUnit.id] !== undefined) return customEdits[firstUnit.id];
+    return group.suggestedTranslation;
   };
 
-  const deselectAll = () => {
-    setSelectedIds(new Set());
+  const startEditGroup = (group: TranslationAuditGroup) => {
+    setEditingGroupId(group.id);
+    setEditingUnitId(null);
+    setEditText(getGroupEffectiveTranslation(group) || "");
   };
 
-  const getStatusBadge = (status: TextUnitStatus) => {
-    switch (status) {
-      case "ALREADY_TRANSLATED":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="w-3 h-3" /> Đã dịch (Skip)
-          </span>
-        );
-      case "NEEDS_TRANSLATION":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            <Sparkles className="w-3 h-3" /> Cần dịch (Mới)
-          </span>
-        );
-      case "TM_REUSE":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20">
-            <RefreshCw className="w-3 h-3" /> Tái sử dụng TM (0 API)
-          </span>
-        );
-      case "LOCKED_TERMINOLOGY":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-            <Lock className="w-3 h-3" /> Thuật ngữ khóa
-          </span>
-        );
-      case "NON_TRANSLATABLE":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/20">
-            <ShieldCheck className="w-3 h-3" /> Thuật ngữ kỹ thuật / Mã
-          </span>
-        );
-      case "MIXED_LANGUAGE":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-            <Layers className="w-3 h-3" /> Song ngữ hỗn hợp
-          </span>
-        );
-      case "REVIEW_REQUIRED":
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-            <AlertCircle className="w-3 h-3" /> Cần xem lại
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/15 text-slate-500 border border-slate-500/20">
-            {status}
-          </span>
-        );
+  const saveGroupEdit = (group: TranslationAuditGroup) => {
+    const trimmed = editText.trim();
+    setCustomEdits((prev) => {
+      const next = { ...prev };
+      for (const id of group.unitIds) {
+        if (trimmed) next[id] = trimmed;
+        else delete next[id];
+      }
+      return next;
+    });
+    setEditingGroupId(null);
+    setEditText("");
+  };
+
+  const resetGroupEdit = (group: TranslationAuditGroup) => {
+    setCustomEdits((prev) => {
+      const next = { ...prev };
+      for (const id of group.unitIds) delete next[id];
+      return next;
+    });
+  };
+
+  const startEditUnit = (unit: ScannedTextUnit) => {
+    setEditingUnitId(unit.id);
+    setEditingGroupId(null);
+    setEditText(getEffectiveTranslation(unit) || "");
+  };
+
+  const saveUnitEdit = (unit: ScannedTextUnit) => {
+    const trimmed = editText.trim();
+    setCustomEdits((prev) => {
+      const next = { ...prev };
+      if (trimmed) next[unit.id] = trimmed;
+      else delete next[unit.id];
+      return next;
+    });
+    setEditingUnitId(null);
+    setEditText("");
+  };
+
+  const resetUnitEdit = (unit: ScannedTextUnit) => {
+    setCustomEdits((prev) => {
+      const next = { ...prev };
+      delete next[unit.id];
+      return next;
+    });
+  };
+
+  const apply = async () => {
+    if (!preview || !onApplySuggestions) return;
+    setBusy(true); setError("");
+    try {
+      await onApplySuggestions(preview, customEdits);
+      setPreview(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không thể áp dụng gợi ý.");
+    } finally {
+      setBusy(false);
     }
   };
 
-  return (
-    <div
-      id="smart-audit-modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-    >
-      <div
-        id="smart-audit-modal-container"
-        className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                  SMART TRANSLATION AUDIT
-                </h2>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300">
-                  Gap Scanner
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Tệp: <span className="font-semibold text-slate-700 dark:text-slate-300">{auditReport.fileName}</span> •{" "}
-                {auditReport.totalSlides > 0 ? `${auditReport.totalSlides} slides scanned` : `${auditReport.totalSheets} sheets scanned`}
-              </p>
-            </div>
-          </div>
+  const ignore = (group: TranslationAuditGroup) => {
+    const isqPaths = new Set(group.unitIds.map(id => byId.get(id)).filter(u => u?.location.isIsq).map(u => u!.location.partPath));
+    setIgnored((previous) => new Set(previous).add(group.id));
+    setSelected((previous) => new Set([...previous].filter((id) => !group.unitIds.includes(id) && !isqPaths.has(byId.get(id)?.location.partPath))));
+  };
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Đóng (Hủy)"
-          >
+  const customEditsCount = Object.keys(customEdits).length;
+  const card = "rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 p-4";
+  const button = "px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 cursor-pointer";
+
+  return (
+    <div id="smart-audit-modal-backdrop" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div role="dialog" aria-modal="true" aria-labelledby="smart-audit-title" id="smart-audit-modal-container" className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+          <div>
+            <h2 id="smart-audit-title" className="text-lg font-bold flex items-center gap-2">
+              <Zap className="w-5 h-5 text-sky-500" /> Smart Audit
+              {customEditsCount > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700 font-medium">
+                  {customEditsCount} câu tùy chỉnh
+                </span>
+              )}
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">{auditReport.fileName} · {auditReport.totalSlides} slides · {auditReport.totalUnits} đoạn văn</p>
+          </div>
+          <button aria-label="Đóng Smart Audit" onClick={onClose} disabled={loading} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab switcher */}
-        <div className="flex items-center justify-between px-6 py-2.5 bg-slate-100/60 dark:bg-slate-950/20 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab("summary")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                activeTab === "summary"
-                  ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-              }`}
-            >
-              Tổng quan Kiểm toán ({auditReport.totalUnits} đơn vị)
-            </button>
-            <button
-              onClick={() => setActiveTab("review")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
-                activeTab === "review"
-                  ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-              }`}
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Chi tiết từng Slide ({auditReport.needsTranslationCount} cần dịch)
-            </button>
-          </div>
-
-          {activeTab === "review" && (
-            <div className="flex items-center gap-2 text-xs">
-              <button
-                onClick={selectAllMissing}
-                className="text-sky-600 dark:text-sky-400 hover:underline font-medium"
-              >
-                Chọn tất cả {auditReport.needsTranslationCount} mục cần dịch
-              </button>
-              <span className="text-slate-300 dark:text-slate-700">|</span>
-              <button
-                onClick={deselectAll}
-                className="text-slate-500 hover:underline"
-              >
-                Bỏ chọn hết
-              </button>
-            </div>
-          )}
+        <div className="flex gap-4 px-6 py-3 border-b border-slate-200 dark:border-slate-800 text-sm">
+          <button onClick={() => setTab("summary")} aria-pressed={tab === "summary"} className={tab === "summary" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Tổng quan</button>
+          <button onClick={() => setTab("review")} aria-pressed={tab === "review"} className={tab === "review" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Xem xét ({attention} nhóm)</button>
         </div>
 
-        {/* Body content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {activeTab === "summary" ? (
-            <div className="space-y-6">
-              {/* Stat grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {/* Already translated */}
-                <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                      Đã dịch sẵn (Skip)
-                    </span>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <div className="mt-2 text-2xl font-black text-emerald-700 dark:text-emerald-400">
-                    {auditReport.alreadyTranslatedCount}
-                  </div>
-                  <p className="mt-1 text-[11px] text-emerald-600/80 dark:text-emerald-400/80">
-                    Bảo toàn 100% không đổi
-                  </p>
-                </div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {error && <p role="alert" className="text-sm text-rose-600 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800">{error}</p>}
+          {tab === "summary" ? <>
+            <p className="text-2xl font-bold">{attention} nhóm cần chú ý</p>
+            <div className={card + " grid grid-cols-2 md:grid-cols-3 gap-5 text-sm"}>
+              <div><strong className="text-amber-600">{auditReport.untranslatedCount ?? auditReport.needsTranslationCount}</strong><p>Chưa dịch trong file</p></div>
+              <div><strong className="text-sky-600">{auditReport.tmReusableCount + auditReport.lockedTerminologyCount}</strong><p>Có bản dịch để dùng lại</p></div>
+              <div><strong className="text-rose-600">{auditReport.translationConflictCount || 0}</strong><p>Bản dịch khác nhau</p></div>
+              <div><strong>{auditReport.suspiciousTranslationCount || 0}</strong><p>Dấu / cách viết</p></div>
+              <div><strong>{auditReport.possibleTranslationCount + auditReport.reviewRequiredCount + auditReport.mixedLanguageCount}</strong><p>Cần kiểm tra ngữ cảnh</p></div>
+              <div><strong className="text-emerald-600">{safeIds.length}</strong><p>Gợi ý có thể áp dụng an toàn</p></div>
+            </div>
+            <div className={card + " flex gap-3 text-sm"}><ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" /><p>{auditReport.alreadyTranslatedCount} đoạn đã dịch và {auditReport.nonTranslatableCount} mã/giá trị được giữ lại. Bạn có thể tùy chỉnh sửa trực tiếp câu dịch của bất kỳ nhóm hoặc slide nào trước khi dịch.</p></div>
+            <p className="text-sm text-slate-500">Dịch và sửa trực tiếp phần chưa dịch, sau đó tự tải PPTX và quét lại. Các bản dịch đã tùy chỉnh thủ công sẽ được áp dụng trực tiếp mà không tốn quota AI.</p>
+            <p className="text-sm text-slate-500">ISQ: chọn theo cả slide để xuất một slide EN và một slide VI liền sau. IPQC giữ bố cục song ngữ trong slide.</p>
+            {(auditReport.untranslatedCount ?? 0) > (auditReport.translatableMissingCount ?? 0) && <p className="text-sm text-amber-600">{(auditReport.untranslatedCount ?? 0) - (auditReport.translatableMissingCount ?? 0)} đoạn có định dạng hoặc cấu trúc đặc biệt cần chỉnh thủ công; xem chi tiết trong các nhóm.</p>}
+            <div className="flex flex-wrap gap-3">
+              <button className={button} onClick={() => setTab("review")}>Xem &amp; Tùy chỉnh các nhóm</button>
+              <button className={button} onClick={() => { setFilter("reuse"); setTab("review"); }}>Xem bản dịch có thể dùng lại</button>
+              {onApplySuggestions && <button className={button + " text-emerald-600"} disabled={loading || !safeIds.length} onClick={() => setPreview(safeIds)}>Xem trước {safeIds.length} sửa an toàn</button>}
+            </div>
+          </> : <>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Filter className="w-4 h-4 text-slate-400" />
+              <select aria-label="Lọc trạng thái" className={button + " bg-transparent"} value={filter} onChange={(e) => setFilter(e.target.value)}>
+                <option value="attention">Các nhóm cần chú ý</option><option value="all">Tất cả nhóm phát hiện</option>
+                <option value="reuse">Các bản dịch có thể dùng lại</option>
+                {Object.entries(LABELS).filter(([s]) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(s)).map(([s, label]) => <option key={s} value={s}>{label}</option>)}
+              </select>
+              <select aria-label="Lọc slide" className={button + " bg-transparent"} value={slide} onChange={(e) => setSlide(e.target.value)}>
+                <option value="all">Tất cả slide</option>
+                {auditReport.affectedSlides.map((s) => <option key={s} value={s}>Slide {s}</option>)}
+              </select>
+              <input aria-label="Tìm nội dung" className={button + " flex-1 bg-transparent"} placeholder="Tìm nội dung hoặc gợi ý..." value={query} onChange={(e) => setQuery(e.target.value)} />
+              <button className={button} onClick={() => setSelected(new Set())}>Bỏ chọn tất cả</button>
+            </div>
 
-                {/* New / untranslated */}
-                <div className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
-                      Mới / Chưa dịch
-                    </span>
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <div className="mt-2 text-2xl font-black text-amber-700 dark:text-amber-400">
-                    {auditReport.needsTranslationCount}
-                  </div>
-                  <p className="mt-1 text-[11px] text-amber-600/80 dark:text-amber-400/80">
-                    Chỉ gửi số này tới Gemini
-                  </p>
-                </div>
+            {groups.map((group) => {
+              const members = group.unitIds.map((id) => byId.get(id)!);
+              const isEditingThisGroup = editingGroupId === group.id;
+              const groupTrans = getGroupEffectiveTranslation(group);
+              const groupCustomCount = members.filter((m) => customEdits[m.id] !== undefined).length;
+              const isCustomGroup = groupCustomCount > 0;
+              const writable = members.filter((u) => (u.canApply || customEdits[u.id] !== undefined) && (customEdits[u.id] || u.suggestedTranslation)).map((u) => u.id);
 
-                {/* TM reusable */}
-                <div className="p-4 rounded-xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-200/60 dark:border-sky-800/40">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-sky-700 dark:text-sky-300">
-                      Tái sử dụng TM
-                    </span>
-                    <RefreshCw className="w-4 h-4 text-sky-500" />
-                  </div>
-                  <div className="mt-2 text-2xl font-black text-sky-700 dark:text-sky-400">
-                    {auditReport.tmReusableCount}
-                  </div>
-                  <p className="mt-1 text-[11px] text-sky-600/80 dark:text-sky-400/80">
-                    Khớp từ các slide trước (0 API)
-                  </p>
-                </div>
-
-                {/* Non-translatable */}
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      Thuật ngữ / Mã / Số
-                    </span>
-                    <ShieldCheck className="w-4 h-4 text-slate-500" />
-                  </div>
-                  <div className="mt-2 text-2xl font-black text-slate-700 dark:text-slate-300">
-                    {auditReport.nonTranslatableCount}
-                  </div>
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    IPQC, ISQ, SPI, ngày, số...
-                  </p>
-                </div>
-              </div>
-
-              {/* Affected Slides Callout */}
-              <div className="p-5 rounded-xl bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-transparent border border-sky-500/20">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-sky-500" />
-                      Các Slide Chứa Nội Dung Mới Cần Dịch
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                      Hệ thống đã quét toàn diện toàn bộ {auditReport.totalSlides} slide và phát hiện nội dung chưa dịch chỉ nằm trên các slide sau:
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {auditReport.affectedSlides.length > 0 ? (
-                        auditReport.affectedSlides.map((sNum) => {
-                          const count = auditReport.units.filter(
-                            (u) => u.location.slideIndex === sNum && u.status === "NEEDS_TRANSLATION"
-                          ).length;
-                          return (
-                            <button
-                              key={sNum}
-                              onClick={() => {
-                                setSlideFilter(String(sNum));
-                                setActiveTab("review");
-                              }}
-                              className="px-3 py-1 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-700 text-sky-700 dark:text-sky-300 shadow-sm hover:scale-105 transition-all"
-                            >
-                              Slide {sNum} ({count} mục)
-                            </button>
-                          );
-                        })
-                      ) : (
-                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                          ✓ Không có slide nào thiếu dịch. Toàn bộ file đã được dịch hoàn chỉnh!
+              return (
+                <div key={group.id} className={card + (isCustomGroup ? " border-purple-400/50 dark:border-purple-600/50 bg-purple-50/20 dark:bg-purple-950/20" : "")}>
+                  <div className="flex justify-between items-center gap-3 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sky-600">
+                        {group.type === "consistency" ? "Nhất quán bản dịch" : group.type === "language_quality" ? "Chất lượng ngôn ngữ" : LABELS[members[0].status]} · {group.unitIds.length} vị trí
+                      </span>
+                      {isCustomGroup && (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-semibold border border-purple-300 dark:border-purple-700">
+                          <Pencil className="w-2.5 h-2.5" /> Đã tùy chỉnh ({groupCustomCount}/{members.length})
                         </span>
                       )}
                     </div>
+                    <span>{Math.round(group.confidence * 100)}% khớp bằng chứng</span>
                   </div>
 
-                  <div className="text-right pl-4">
-                    <span className="text-xs text-slate-500">Dự kiến request Gemini</span>
-                    <div className="text-2xl font-extrabold text-sky-600 dark:text-sky-400">
-                      {auditReport.estimatedGeminiRequests}{" "}
-                      <span className="text-xs font-normal text-slate-500">gói (25/gói)</span>
+                  <p className="font-medium mt-2 whitespace-pre-line text-sm">{group.title}</p>
+
+                  {/* Group-level translation editing */}
+                  {isEditingThisGroup ? (
+                    <div className="mt-2.5 p-3 rounded-lg bg-white dark:bg-slate-900 border border-sky-400 dark:border-sky-500 shadow-sm space-y-2">
+                      <label className="text-xs font-semibold text-sky-700 dark:text-sky-300 block">
+                        Chỉnh sửa câu dịch cho toàn bộ {members.length} vị trí trong nhóm:
+                      </label>
+                      <textarea
+                        aria-label="Nhập câu dịch tùy chỉnh cho nhóm"
+                        className="w-full text-sm p-2 rounded border border-slate-300 dark:border-slate-700 bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 min-h-[64px]"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        placeholder="Nhập câu dịch tiếng Anh..."
+                        autoFocus
+                      />
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          className={button + " bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"}
+                          onClick={() => { setEditingGroupId(null); setEditText(""); }}
+                        >
+                          Hủy
+                        </button>
+                        <button
+                          className={button + " bg-sky-600 text-white hover:bg-sky-500"}
+                          onClick={() => saveGroupEdit(group)}
+                        >
+                          <Check className="w-3.5 h-3.5 inline mr-1" />
+                          Lưu cho nhóm ({members.length} vị trí)
+                        </button>
+                      </div>
                     </div>
-                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                      Tiết kiệm ~{Math.round(((auditReport.totalUnits - auditReport.needsTranslationCount) / Math.max(1, auditReport.totalUnits)) * 100)}% quota
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Protection guarantee notice */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800 flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  <strong className="text-slate-800 dark:text-slate-200">Cam kết bảo toàn bản dịch:</strong> Khi chọn{" "}
-                  <strong className="text-sky-600 dark:text-sky-400">Translate Missing Only</strong>, toàn bộ{" "}
-                  {auditReport.alreadyTranslatedCount} đơn vị đã có bản dịch cùng định dạng in đậm, màu sắc, font chữ và các slide cũ{" "}
-                  <strong className="text-emerald-600 dark:text-emerald-400">sẽ được giữ nguyên 100%</strong>, không bao giờ bị ghi đè hay làm mất công sức trước đó.
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Review tab */
-            <div className="space-y-4">
-              {/* Filter controls */}
-              <div className="flex flex-wrap items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <Filter className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="font-medium text-slate-600 dark:text-slate-400">Lọc slide:</span>
-                  <select
-                    value={slideFilter}
-                    onChange={(e) => setSlideFilter(e.target.value)}
-                    className="px-2 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200"
-                  >
-                    <option value="all">Tất cả ({auditReport.totalSlides} slides)</option>
-                    {auditReport.affectedSlides.map((s) => (
-                      <option key={s} value={String(s)}>
-                        Chỉ Slide {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-slate-600 dark:text-slate-400">Trạng thái:</span>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-2 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200"
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="NEEDS_TRANSLATION">Cần dịch ({auditReport.needsTranslationCount})</option>
-                    <option value="ALREADY_TRANSLATED">Đã dịch ({auditReport.alreadyTranslatedCount})</option>
-                    <option value="TM_REUSE">TM Reuse ({auditReport.tmReusableCount})</option>
-                    <option value="NON_TRANSLATABLE">Kỹ thuật / Mã ({auditReport.nonTranslatableCount})</option>
-                  </select>
-                </div>
-
-                <div className="flex-1 min-w-[200px]">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Tìm kiếm nội dung đoạn văn..."
-                    className="w-full px-3 py-1 rounded bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400"
-                  />
-                </div>
-              </div>
-
-              {/* Units List */}
-              <div className="space-y-4">
-                {groupedUnits.map(([groupKey, units]) => (
-                  <div
-                    key={String(groupKey)}
-                    className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-900/50"
-                  >
-                    <div className="px-4 py-2.5 bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        Slide {groupKey} ({units.length} text units)
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        {units.filter((u) => u.status === "NEEDS_TRANSLATION").length} cần dịch
-                      </span>
-                    </div>
-
-                    <div className="divide-y divide-slate-200 dark:divide-slate-800/60">
-                      {units.map((unit) => {
-                        const isSelected = selectedIds.has(unit.id);
-                        return (
-                          <div
-                            key={unit.id}
-                            className={`p-3 text-xs flex items-start gap-3 transition-colors ${
-                              unit.status === "NEEDS_TRANSLATION"
-                                ? isSelected
-                                  ? "bg-amber-500/5 dark:bg-amber-500/10"
-                                  : "bg-transparent opacity-60"
-                                : "bg-transparent opacity-75"
-                            }`}
+                  ) : (
+                    <div className="mt-2 flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        {groupTrans ? (
+                          <p className={`text-sm flex gap-2 ${isCustomGroup ? "text-purple-700 dark:text-purple-300 font-medium" : "text-emerald-700 dark:text-emerald-400"}`}>
+                            <ArrowRight className="w-4 h-4 shrink-0 mt-0.5" />
+                            <span>{groupTrans}</span>
+                          </p>
+                        ) : (
+                          <p className="text-xs text-slate-400 italic">Chưa có bản dịch gợi ý</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          className="px-2.5 py-1 rounded text-xs text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 border border-sky-300 dark:border-sky-800 flex items-center gap-1 font-medium cursor-pointer"
+                          title="Tùy chỉnh sửa câu dịch cho nhóm này"
+                          onClick={() => startEditGroup(group)}
+                        >
+                          <Pencil className="w-3 h-3" />
+                          <span>{groupTrans ? "Sửa câu dịch" : "+ Thêm bản dịch"}</span>
+                        </button>
+                        {isCustomGroup && (
+                          <button
+                            className="px-2 py-1 rounded text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                            title="Khôi phục lại bản dịch đề xuất ban đầu"
+                            onClick={() => resetGroupEdit(group)}
                           >
-                            {unit.status === "NEEDS_TRANSLATION" ? (
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleSelect(unit.id)}
-                                className="mt-1 w-4 h-4 rounded text-sky-600 focus:ring-sky-500 border-slate-300 dark:border-slate-700"
-                              />
-                            ) : (
-                              <span className="w-4 h-4 flex items-center justify-center text-slate-400 mt-0.5">
-                                •
-                              </span>
-                            )}
+                            <RotateCcw className="w-3 h-3 inline mr-1" />
+                            Khôi phục
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                {getStatusBadge(unit.status)}
-                                <span className="text-[11px] text-slate-400 truncate">
-                                  {unit.reason}
-                                </span>
-                              </div>
+                  <p className="text-xs text-slate-500 mt-2">{group.reason}</p>
+                  {group.variants && (
+                    <table className="text-xs mt-3 w-full text-left">
+                      <thead><tr><th>Bản dịch</th><th>Lần dùng</th><th>Slide</th></tr></thead>
+                      <tbody>{group.variants.map((variant) => <tr key={variant.text}><td className="py-1">{variant.text}{variant.approved ? " (đã xác nhận)" : ""}</td><td>{variant.count}</td><td>{variant.slides.join(", ")}</td></tr>)}</tbody>
+                    </table>
+                  )}
 
-                              <div className="font-medium text-slate-900 dark:text-slate-100 break-words">
-                                "{unit.sourceText}"
-                              </div>
+                  <details className="mt-3 text-xs">
+                    <summary className="cursor-pointer text-sky-600 font-medium hover:underline">
+                      Xem vị trí và bằng chứng ({members.length})
+                    </summary>
+                    <div className="mt-2 space-y-3">
+                      {members.map((u) => {
+                        const isEditingThisUnit = editingUnitId === u.id;
+                        const uTrans = getEffectiveTranslation(u);
+                        const isCustomUnit = customEdits[u.id] !== undefined;
 
-                              {unit.suggestedTranslation && (
-                                <div className="mt-1 text-slate-600 dark:text-slate-400 flex items-center gap-1.5 italic">
-                                  <ArrowRight className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-                                  <span>"{unit.suggestedTranslation}"</span>
-                                </div>
+                        return (
+                          <div key={u.id} className="border-t border-slate-200 dark:border-slate-800 pt-2.5">
+                            <div className="flex gap-2 items-start">
+                              {u.selectedForTranslation && (
+                                <input
+                                  aria-label={"Chọn dịch " + u.sourceText}
+                                  type="checkbox"
+                                  checked={selected.has(u.id)}
+                                  disabled={loading}
+                                  onChange={() => toggle(u.id)}
+                                  className="mt-0.5"
+                                />
                               )}
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <strong className="text-slate-700 dark:text-slate-300">
+                                    Slide {u.location.slideIndex}, đoạn {(u.location.paragraphIndex ?? 0) + 1}
+                                  </strong>
+                                  <div className="flex items-center gap-1.5">
+                                    {!isEditingThisUnit && (
+                                      <button
+                                        className="px-2 py-0.5 rounded text-[11px] text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/50 border border-sky-300 dark:border-sky-800 flex items-center gap-1 cursor-pointer"
+                                        onClick={() => startEditUnit(u)}
+                                        title="Sửa riêng bản dịch cho vị trí này"
+                                      >
+                                        <Pencil className="w-2.5 h-2.5" />
+                                        <span>{uTrans ? "Sửa vị trí này" : "+ Nhập bản dịch"}</span>
+                                      </button>
+                                    )}
+                                    {isCustomUnit && !isEditingThisUnit && (
+                                      <button
+                                        className="px-1.5 py-0.5 rounded text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                        onClick={() => resetUnitEdit(u)}
+                                        title="Khôi phục lại gợi ý cho vị trí này"
+                                      >
+                                        <RotateCcw className="w-2.5 h-2.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <p className="whitespace-pre-line mt-0.5">{u.sourceText}</p>
+
+                                {/* Unit inline editor */}
+                                {isEditingThisUnit ? (
+                                  <div className="mt-2 p-2.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-sky-400 dark:border-sky-500 space-y-1.5">
+                                    <label className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 block">
+                                      Bản dịch riêng cho Slide {u.location.slideIndex}:
+                                    </label>
+                                    <input
+                                      type="text"
+                                      aria-label="Bản dịch riêng cho vị trí này"
+                                      className="w-full text-xs p-1.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                                      value={editText}
+                                      onChange={(e) => setEditText(e.target.value)}
+                                      placeholder="Nhập câu dịch..."
+                                      autoFocus
+                                    />
+                                    <div className="flex justify-end gap-1.5 pt-1">
+                                      <button
+                                        className="px-2 py-1 rounded text-[11px] border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                                        onClick={() => { setEditingUnitId(null); setEditText(""); }}
+                                      >
+                                        Hủy
+                                      </button>
+                                      <button
+                                        className="px-2.5 py-1 rounded text-[11px] bg-sky-600 text-white font-medium hover:bg-sky-500 cursor-pointer"
+                                        onClick={() => saveUnitEdit(u)}
+                                      >
+                                        Lưu vị trí này
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  uTrans && (
+                                    <p className={`mt-1 text-xs flex items-center gap-1.5 ${isCustomUnit ? "text-purple-600 dark:text-purple-400 font-semibold" : "text-emerald-700 dark:text-emerald-400"}`}>
+                                      <ArrowRight className="w-3 h-3 shrink-0" />
+                                      <span>{uTrans}</span>
+                                      {isCustomUnit && (
+                                        <span className="text-[10px] bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-1.5 py-0.2 rounded font-normal">
+                                          Tùy chỉnh riêng
+                                        </span>
+                                      )}
+                                    </p>
+                                  )
+                                )}
+
+                                {u.suspiciousSegments?.length ? <p className="mt-1 text-amber-600">Cụm cần xem lại: {u.suspiciousSegments.join("; ")}</p> : null}
+                                {u.matches?.map((match, index) => <p key={index} className="mt-1 text-slate-500">{ORIGINS[match.origin]}{match.fileName ? " · " + match.fileName : ""}{match.slideIndex ? " · Slide " + match.slideIndex : ""}: {match.source || match.target} → {match.target}</p>)}
+                                {uTrans && !u.canApply && !isCustomUnit && uTrans !== u.sourceText && (
+                                  <p className="mt-1 text-amber-600">{u.selectedForTranslation ? "Dùng nút Dịch & sửa để dịch theo định dạng chữ chủ đạo." : "Chỉnh thủ công để giữ định dạng hoặc cấu trúc đặc biệt."}</p>
+                                )}
+                                {u.requiresTranslation && !u.selectedForTranslation && <p className="mt-1 text-amber-600">{u.reason}</p>}
+                                {uTrans && (u.canApply || isCustomUnit) && onApplySuggestions && (
+                                  <button className={button + " mt-2"} disabled={loading} onClick={() => setPreview([u.id])}>
+                                    Áp dụng tại vị trí này
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                  </div>
-                ))}
+                  </details>
 
-                {groupedUnits.length === 0 && (
-                  <div className="p-8 text-center text-slate-500 text-xs">
-                    Không tìm thấy đoạn văn nào phù hợp với bộ lọc hiện tại.
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {onApplySuggestions && writable.length > 0 && (
+                      <button className={button} disabled={loading} onClick={() => setPreview(writable)}>
+                        <RefreshCw className="w-3 h-3 inline mr-1" />
+                        Xem trước &amp; áp dụng {writable.length} vị trí {isCustomGroup ? "(đã tùy chỉnh)" : ""}
+                      </button>
+                    )}
+                    <button className={button} disabled={loading} onClick={() => ignore(group)}>
+                      Bỏ qua nhóm lần này
+                    </button>
                   </div>
+                </div>
+              );
+            })}
+            {!groups.length && <p className="text-sm text-slate-500">Không có nhóm phù hợp.</p>}
+          </>}
+
+          {/* Preview applied regions */}
+          {preview && (
+            <div role="region" aria-label="Xem trước áp dụng" className="rounded-xl border border-sky-400 p-4 bg-sky-50 dark:bg-sky-950/40 space-y-3 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between">
+                <strong>Áp dụng gợi ý tại {preview.length} vị trí</strong>
+                {preview.some((id) => customEdits[id] !== undefined) && (
+                  <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded font-medium">
+                    Có {preview.filter((id) => customEdits[id] !== undefined).length} vị trí tùy chỉnh thủ công
+                  </span>
                 )}
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Chỉ những vị trí liệt kê dưới đây sẽ thay đổi trên tài liệu PowerPoint.</p>
+              <div className="max-h-52 overflow-auto space-y-2 text-xs">
+                {preview.map((id) => {
+                  const u = byId.get(id)!;
+                  const trans = customEdits[id] !== undefined ? customEdits[id] : u.suggestedTranslation;
+                  const isCustom = customEdits[id] !== undefined;
+                  return (
+                    <div key={id} className="flex items-start justify-between gap-2 p-1.5 rounded bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
+                      <div className="flex-1">
+                        <strong>Slide {u.location.slideIndex}, đoạn {(u.location.paragraphIndex ?? 0) + 1}</strong>: {u.sourceText} → <span className={isCustom ? "font-bold text-purple-600 dark:text-purple-400" : "text-emerald-700 dark:text-emerald-400"}>{trans}</span>
+                      </div>
+                      {isCustom && <span className="text-[10px] text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 px-1.5 py-0.5 rounded shrink-0 font-medium">Tùy chỉnh</span>}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button className={button + " bg-sky-600 text-white hover:bg-sky-500"} onClick={apply} disabled={loading}>
+                  Áp dụng {preview.length} vị trí
+                </button>
+                <button className={button} onClick={() => setPreview(null)} disabled={loading}>
+                  Hủy
+                </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-          <div className="text-xs text-slate-500">
-            {activeTab === "review" && (
-              <span>
-                Đã chọn <strong className="text-amber-600 dark:text-amber-400">{selectedIds.size}</strong> /{" "}
-                {auditReport.needsTranslationCount} mục cần dịch
+        {/* Modal footer actions */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 text-xs bg-slate-50/50 dark:bg-slate-950/30">
+          <div>
+            <span>Đã chọn <strong className="text-sky-600 dark:text-sky-400 font-semibold">{selectedMissing.length}</strong> đoạn cần dịch AI</span>
+            {customEditsCount > 0 && (
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-medium">
+                · {customEditsCount} đoạn đã sửa thủ công (0 token AI)
               </span>
             )}
+            <span className="ml-2 text-slate-400">· khoảng {Math.ceil(new Set(selectedMissing.map((u) => u.canonicalText)).size / 25)} yêu cầu AI</span>
           </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 transition-colors"
-            >
-              Hủy bỏ (Cancel)
+          <div className="flex gap-2">
+            <button className={button} onClick={onClose} disabled={loading}>
+              Đóng
             </button>
-
-            {activeTab === "summary" && (
-              <button
-                onClick={() => setActiveTab("review")}
-                disabled={isLoading}
-                className="px-4 py-2 text-xs font-semibold rounded-xl text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 border border-sky-300 dark:border-sky-800 transition-colors"
-              >
-                Review Untranslated
-              </button>
-            )}
-
-            {/* DEFAULT ACTION: Translate Missing Only */}
             <button
               id="btn-translate-missing-only"
-              onClick={() => onTranslateMissingOnly(Array.from(selectedIds))}
-              disabled={isLoading || (auditReport.needsTranslationCount > 0 && selectedIds.size === 0)}
-              className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl text-white bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/25 active:scale-95 transition-all disabled:opacity-50"
+              className={button + " bg-sky-600 text-white hover:bg-sky-500"}
+              disabled={loading || (!selectedMissing.length && customEditsCount === 0)}
+              onClick={() => onTranslateMissingOnly(selectedMissing.map((u) => u.id), customEdits)}
             >
-              <Zap className="w-4 h-4" />
-              {isLoading
-                ? "Đang xử lý..."
-                : auditReport.needsTranslationCount === 0
-                ? "File Đã Đầy Đủ (Không Cần Dịch)"
-                : `Translate Missing Only (${selectedIds.size} mục)`}
+              {loading ? "Đang xử lý..." : `Dịch & sửa phần chưa dịch (${selectedMissing.length + customEditsCount})`}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
