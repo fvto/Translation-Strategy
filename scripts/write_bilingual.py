@@ -149,7 +149,10 @@ async function translateViaGemini(items) {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
         const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Connection': 'close'
+          },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { temperature: 0.15, response_mime_type: 'application/json' }
@@ -452,7 +455,7 @@ async function main() {
 
       // Light interval
       if (i + chunkSize < itemsToTranslate.length) {
-        await new Promise(r => setTimeout(r, forceOffline ? 100 : 3500));
+        await new Promise(r => setTimeout(r, forceOffline ? 100 : 5500));
       }
     }
   }

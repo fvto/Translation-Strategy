@@ -7,7 +7,7 @@ import {
 } from "./types";
 import { matchTerminology } from "../terminology/matcher";
 import { COMMON_PHRASES, OFFLINE_DICTIONARY, VI_EN_DICTIONARY } from "./dictionary";
-import { formatUppercaseStructure, normalizeSourcePunctuation } from "./casing";
+import { formatUppercaseStructure, normalizeSourcePunctuation, adaptTermCasing } from "./casing";
 
 /**
  * Unlimited 100% Air-Gapped Dictionary & Terminology Translation Provider (EN ↔ VI)
@@ -401,7 +401,12 @@ export class AirGappedTranslationProvider implements TranslationProvider {
     // ─── Tier 4: Restore Placeholders in reverse order ───
     for (let i = placeholders.length - 1; i >= 0; i--) {
       const p = placeholders[i];
-      workingText = workingText.replace(new RegExp(this.escapeRegex(p.placeholder), "g"), p.target);
+      const phRegex = new RegExp(this.escapeRegex(p.placeholder), "g");
+      workingText = workingText.replace(phRegex, (_match, offset) => {
+        const prefixBefore = workingText.slice(0, offset);
+        const isStart = offset === 0 || /[.!?\n*]\s*$/.test(prefixBefore) || /^\d+[.)]\s*$/.test(prefixBefore);
+        return adaptTermCasing(p.target, isStart);
+      });
     }
 
     // ─── Tier 5: Smart Post-processing & Refinement ───

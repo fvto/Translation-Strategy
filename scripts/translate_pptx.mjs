@@ -122,7 +122,10 @@ ${JSON.stringify(items.map(it => ({ id: it.id, text: it.text })), null, 2)}`;
 
           const res = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "Connection": "close"
+            },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
@@ -407,7 +410,7 @@ Options:
     console.log(`[DONE]`);
 
     if (i + chunkSize < allItemsToTranslate.length) {
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 5500));
     }
   }
 
