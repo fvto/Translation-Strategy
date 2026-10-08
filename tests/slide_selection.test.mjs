@@ -197,3 +197,193 @@ test("Selective Slide Translation: only translates slides in slideRange, leaves 
   assert.ok(!slide1After.includes("Step successfully verified"), "Slide 1 was NOT translated");
   assert.ok(slide2After.includes("Step successfully verified"), "Slide 2 was successfully translated");
 });
+
+test("PPTX Translator: In-slide interleaved 1.EN 1.VI 2.EN 2.VI layout is preserved in ipqc_bilingual mode", async () => {
+  const { pptxTranslatorService } = await import("../services/documents/pptx-translator.ts");
+  const JSZip = (await import("jszip")).default;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+  </p:sldIdLst>
+</p:presentation>`);
+
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+
+  // Interleaved items in the exact style of user's presentation
+  const p1En = "1. Check if the upper stitching collar is smooth and even";
+  const p1Vi = "1.Kiểm tra mặt giày may vòng cổ có suông đều không";
+  const p2En = "2. Check if the worker operation of placing the upper into mold is standard";
+  const p2Vi = "2.Thao tác công nhân đặt mặt giày vào khuôn có chuẩn không";
+  const p3En = "3. Ensure collar shape after shaping is straight";
+  const p3Vi = "3. Đảm bảo hình dạng vòng cổ sau khi định hình thẳng";
+  const p4En = "4. Check if lasting is aligned";
+  const p4Vi = "4. Kiểm tra vô phom có ngay định vị không";
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody>
+      <a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p1En}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p1Vi}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p2En}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p2Vi}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p3En}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p3Vi}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p4En}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p4Vi}</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  let callCount = 0;
+  const mockProvider = {
+    name: "mock-engine",
+    async translateBatch(req) {
+      callCount += req.items.length;
+      const results = new Map();
+      for (const it of req.items) results.set(it.id, "Mock translated: " + it.sourceText);
+      return { results, provider: "mock-engine", durationMs: 5 };
+    },
+    async translate(req) {
+      callCount++;
+      return { translatedText: "Mock translated: " + req.sourceText, provider: "mock-engine", durationMs: 5 };
+    }
+  };
+
+  // Run translation in ipqc_bilingual mode
+  const result = await pptxTranslatorService.translate(buffer, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "ipqc_bilingual",
+  });
+
+  // Verify that paired interleaved items bypassed Gemini calls!
+  assert.equal(callCount, 0, "Paired interleaved items must not trigger LLM calls");
+
+  // Verify the output preserves the interleaved sequence: 1.EN then 1.VI, 2.EN then 2.VI, etc.
+  const zipAfter = await JSZip.loadAsync(result.translatedBuffer);
+  const slide1After = await zipAfter.file("ppt/slides/slide1.xml")?.async("string");
+
+  assert.ok(slide1After, "Slide 1 XML must exist");
+
+  const p1EnIdx = slide1After.indexOf(p1En);
+  const p1ViIdx = slide1After.indexOf(p1Vi);
+  const p2EnIdx = slide1After.indexOf(p2En);
+  const p2ViIdx = slide1After.indexOf(p2Vi);
+  const p3EnIdx = slide1After.indexOf(p3En);
+  const p3ViIdx = slide1After.indexOf(p3Vi);
+  const p4EnIdx = slide1After.indexOf(p4En);
+  const p4ViIdx = slide1After.indexOf(p4Vi);
+
+  assert.ok(p1EnIdx !== -1, "p1En found");
+  assert.ok(p1ViIdx !== -1, "p1Vi found");
+  assert.ok(p2EnIdx !== -1, "p2En found");
+  assert.ok(p2ViIdx !== -1, "p2Vi found");
+  assert.ok(p3EnIdx !== -1, "p3En found");
+  assert.ok(p3ViIdx !== -1, "p3Vi found");
+  assert.ok(p4EnIdx !== -1, "p4En found");
+  assert.ok(p4ViIdx !== -1, "p4Vi found");
+
+  // Interleaved order: 1.EN < 1.VI < 2.EN < 2.VI < 3.EN < 3.VI < 4.EN < 4.VI
+  assert.ok(p1EnIdx < p1ViIdx, "1.EN precedes 1.VI");
+  assert.ok(p1ViIdx < p2EnIdx, "1.VI precedes 2.EN");
+  assert.ok(p2EnIdx < p2ViIdx, "2.EN precedes 2.VI");
+  assert.ok(p2ViIdx < p3EnIdx, "2.VI precedes 3.EN");
+  assert.ok(p3EnIdx < p3ViIdx, "3.EN precedes 3.VI");
+  assert.ok(p3ViIdx < p4EnIdx, "3.VI precedes 4.EN");
+  assert.ok(p4EnIdx < p4ViIdx, "4.EN precedes 4.VI");
+});
+
+test("PPTX Translator: In-slide interleaved in replace_en mode outputs ONLY English without Vietnamese or duplicates", async () => {
+  const { pptxTranslatorService } = await import("../services/documents/pptx-translator.ts");
+  const JSZip = (await import("jszip")).default;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+  </p:sldIdLst>
+</p:presentation>`);
+
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+
+  const p1En = "1. Check if the upper stitching collar is smooth and even";
+  const p1Vi = "1.Kiểm tra mặt giày may vòng cổ có suông đều không";
+  const p2En = "2. Check if the worker operation of placing the upper into mold is standard";
+  const p2Vi = "2.Thao tác công nhân đặt mặt giày vào khuôn có chuẩn không";
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody>
+      <a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p1En}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p1Vi}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p2En}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${p2Vi}</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const mockProvider = {
+    name: "mock-engine",
+    async translateBatch() { return { results: new Map(), provider: "mock-engine", durationMs: 5 }; },
+    async translate() { return { translatedText: "", provider: "mock-engine", durationMs: 5 }; }
+  };
+
+  const result = await pptxTranslatorService.translate(buffer, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "replace_en",
+  });
+
+  const zipAfter = await JSZip.loadAsync(result.translatedBuffer);
+  const slide1After = await zipAfter.file("ppt/slides/slide1.xml")?.async("string");
+
+  assert.ok(slide1After.includes(p1En), "p1En must be in output");
+  assert.ok(slide1After.includes(p2En), "p2En must be in output");
+  assert.ok(!slide1After.includes(p1Vi), "p1Vi must be removed in replace_en mode");
+  assert.ok(!slide1After.includes(p2Vi), "p2Vi must be removed in replace_en mode");
+
+  // Verify no duplicate occurrences of English steps
+  const matches1 = slide1After.split(p1En).length - 1;
+  const matches2 = slide1After.split(p2En).length - 1;
+  assert.equal(matches1, 1, "p1En must appear exactly once");
+  assert.equal(matches2, 1, "p2En must appear exactly once");
+});
+
