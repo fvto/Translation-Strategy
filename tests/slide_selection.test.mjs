@@ -692,6 +692,72 @@ test("Smart Audit: Zero EN->EN identity suggestions for 'CRITICAL TO QUALITY' an
   assert.equal(ctp.suggestedTranslation, undefined, "CTP must NOT have identity suggestedTranslation");
 });
 
+test("Smart Audit: Never blindly pairs unrelated items across slides (e.g. COMMENTS: 0.3-0.6 A never pairs with QAM cập nhật)", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.ts");
+  const zip = new JSZip();
+
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+    <p:sldId id="257" r:id="rId2" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+  </p:sldIdLst>
+</p:presentation>`);
+
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/>
+</Relationships>`);
+
+  // Slide 1 (EN): comments note and steps
+  const slide1Xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1.Check the temp, time follow PFC</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>COMMENTS: 0.3-0.6 A</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  // Slide 2 (VI): steps and status stamp
+  const slide2Xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1.Kiểm tra thời gian nhiệt độ theo PFC</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>QAM cập nhật</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slide1Xml);
+  zip.file("ppt/slides/slide2.xml", slide2Xml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const auditReport = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual"
+  });
+
+  const commentsUnit = auditReport.units.find((u) => u.sourceText.includes("COMMENTS: 0.3-0.6 A"));
+  assert.ok(commentsUnit, "Comments unit must exist");
+  assert.notEqual(commentsUnit.suggestedTranslation, "QAM cập nhật", "Comments MUST NOT be paired with QAM cập nhật");
+  assert.notEqual(commentsUnit.existingTranslation, "QAM cập nhật", "Comments MUST NOT have QAM cập nhật as existingTranslation");
+});
+
+
 
 
 

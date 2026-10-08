@@ -326,15 +326,6 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         }
       }
     }
-
-    // B. Symmetric ordinal matching on the same slide if equal counts (e.g. 4 steps in shape 1, 4 steps in shape 2)
-    const remVi = slideUnits.filter((u) => !paired.has(u.id) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
-    const remEn = slideUnits.filter((u) => !paired.has(u.id) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish));
-    if (remVi.length > 0 && remVi.length === remEn.length && remVi.length <= 8) {
-      for (let i = 0; i < remVi.length; i++) {
-        addPair(remVi[i], remEn[i]);
-      }
-    }
   }
 
   // Cross-slide pairing between paired EN and VI slides (Ching Luh SOP Option 1 pairs)
@@ -348,11 +339,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   for (const pair of isqSlidePairs) {
     const enUnits = (slidePartUnits.get(pair.en) || []).filter((u) => !isNonTranslatable(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
     const viUnits = (slidePartUnits.get(pair.vi) || []).filter((u) => !isNonTranslatable(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
-    const enParaMap = new Map<number, RawUnit>();
-    for (const eu of enUnits) {
-      if (eu.location.paragraphIndex !== undefined) enParaMap.set(eu.location.paragraphIndex, eu);
-    }
-    // Match by step number across slides first
+    // Match by step number across slides
     for (const vu of viUnits) {
       if (paired.has(vu.id)) continue;
       const vStep = extractItemStepNumber(vu.text);
@@ -361,15 +348,6 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         if (matchingEu) {
           addPair(vu, matchingEu);
         }
-      }
-    }
-    for (let idx = 0; idx < viUnits.length; idx++) {
-      const vu = viUnits[idx];
-      if (paired.has(vu.id)) continue;
-      let eu = vu.location.paragraphIndex !== undefined ? enParaMap.get(vu.location.paragraphIndex) : undefined;
-      if (!eu && idx < enUnits.length) eu = enUnits[idx];
-      if (eu && eu.text.trim() && !paired.has(eu.id)) {
-        addPair(vu, eu);
       }
     }
   }
