@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import JSZip from "jszip";
 import { parseSlideRange, detectDynamicSlidePairs } from "../services/documents/pptx-slide-order";
 import { pptxTranslatorService } from "../services/documents/pptx-translator";
-import { auditPptxGaps } from "../services/translation/smart-detector";
+import { auditPptxGaps, hasViDiacritics } from "../services/translation/smart-detector";
 
 test("parseSlideRange: parses single numbers, ranges, and comma/space separated strings", () => {
   assert.deepEqual(parseSlideRange("1, 3, 5"), [1, 3, 5]);
@@ -1026,6 +1026,493 @@ test("Test 16: Smart Audit recognizes in-line bilingual items ('Color matching-P
   assert.equal(chiMay.status, "NEEDS_TRANSLATION", "Chỉ may must be NEEDS_TRANSLATION");
   assert.equal(chiMay.selectedForTranslation, true, "Chỉ may must be selected for translation");
 });
+
+test("Test 17: Model Scope Isolation - Steps under '*Đối với LQ-075W-1' remain NEEDS_TRANSLATION [x] and never pair with general steps", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.js");
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const genEn1 = "1. Stitching swoosh must follow marking line";
+  const genEn2 = "2. Check stitching line after sewing";
+  const genVi1 = "1. May logo phải theo đường định vị";
+  const genVi2 = "2. Kiểm tra đường may sau khi may";
+  const modelHdr = "*Đối với LQ-075W-1";
+  const modVi1 = "1. Kiểm tra logo được may theo định vị trên eo ngoài của hai chân trái phải và trên gót không";
+  const modVi2 = "2. Kiểm tra sau khi may cách biên đều 1.5mm/9-10 mũi/inch ,không lồi định vị trên mặt giày,logo không được cong,biến dạng";
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${genEn1}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${genEn2}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${genVi1}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${genVi2}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${modelHdr}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${modVi1}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${modVi2}</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const report = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+  });
+
+  const unitGenVi1 = report.units.find((u) => u.sourceText === genVi1);
+  const unitGenVi2 = report.units.find((u) => u.sourceText === genVi2);
+  const unitModelHdr = report.units.find((u) => u.sourceText === modelHdr);
+  const unitModVi1 = report.units.find((u) => u.sourceText === modVi1);
+  const unitModVi2 = report.units.find((u) => u.sourceText === modVi2);
+
+  assert.ok(unitGenVi1 && unitGenVi2 && unitModelHdr && unitModVi1 && unitModVi2, "All 5 units found");
+
+  // General steps are paired with general English steps -> ALREADY_TRANSLATED and unchecked
+  assert.equal(unitGenVi1.status, "ALREADY_TRANSLATED", "General VI 1 must be ALREADY_TRANSLATED");
+  assert.equal(unitGenVi1.selectedForTranslation, false, "General VI 1 must be unselected");
+  assert.equal(unitGenVi2.status, "ALREADY_TRANSLATED", "General VI 2 must be ALREADY_TRANSLATED");
+  assert.equal(unitGenVi2.selectedForTranslation, false, "General VI 2 must be unselected");
+
+  // Model header -> LOCKED_TERMINOLOGY, translates to '*For LQ-075W-1', selected [x]
+  assert.equal(unitModelHdr.status, "LOCKED_TERMINOLOGY", "Model header must be LOCKED_TERMINOLOGY");
+  assert.equal(unitModelHdr.suggestedTranslation, "*For LQ-075W-1", "Suggested translation is *For LQ-075W-1");
+  assert.equal(unitModelHdr.selectedForTranslation, true, "Model header must be selected for translation");
+
+  // Model-specific steps: MUST NOT pair with general English steps 1 & 2!
+  // MUST require translation and be selected [x]!
+  assert.ok(
+    ["NEEDS_TRANSLATION", "POSSIBLE_TRANSLATION"].includes(unitModVi1.status),
+    `Model step 1 must require translation, got ${unitModVi1.status}`
+  );
+  assert.equal(unitModVi1.selectedForTranslation, true, "Model step 1 must be selected [x]");
+
+  assert.ok(
+    ["NEEDS_TRANSLATION", "POSSIBLE_TRANSLATION", "REVIEW_REQUIRED"].includes(unitModVi2.status),
+    `Model step 2 must require translation, got ${unitModVi2.status}`
+  );
+  assert.equal(unitModVi2.selectedForTranslation, true, "Model step 2 must be selected [x]");
+});
+
+test("Test 18: Model Full Translation Execution - Translates *For LQ-075W-1 and both sub-steps without leaking Vietnamese", async () => {
+  const { pptxTranslatorService } = await import("../services/documents/pptx-translator.ts");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const modelHdr = "*Đối với LQ-075W-1";
+  const modVi1 = "1. Kiểm tra logo được may theo định vị trên eo ngoài của hai chân trái phải và trên gót không";
+  const modVi2 = "2. Kiểm tra sau khi may cách biên đều 1.5mm/9-10 mũi/inch ,không lồi định vị trên mặt giày,logo không được cong,biến dạng";
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${modelHdr}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${modVi1}</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${modVi2}</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const { translationCache } = await import("../services/translation/cache.js");
+  translationCache.clear();
+
+  const mockProvider = {
+    name: "mock-engine",
+    async translateBatch({ items }) {
+      const results = new Map();
+      for (const item of items) {
+        if (item.sourceText.includes("Kiểm tra logo")) {
+          results.set(item.id, "1. Check if the logo is stitched according to markings on outer waist of left/right feet and heel");
+        } else if (item.sourceText.includes("cách biên đều 1.5mm")) {
+          results.set(item.id, "2. Check after sewing margin evenly 1.5mm / 9-10 mũi/inch, no protruding positioning, logo not curved or deformed");
+        }
+      }
+      return { results, provider: "mock-engine", durationMs: 5 };
+    },
+    async translate(req) {
+      if (req.sourceText.includes("Kiểm tra logo")) {
+        return { translatedText: "1. Check if the logo is stitched according to markings on outer waist of left/right feet and heel", provider: "mock-engine", durationMs: 5 };
+      }
+      if (req.sourceText.includes("cách biên đều 1.5mm")) {
+        return { translatedText: "2. Check after sewing margin evenly 1.5mm / 9-10 mũi/inch, no protruding positioning, logo not curved or deformed", provider: "mock-engine", durationMs: 5 };
+      }
+      return { translatedText: "", provider: "mock-engine", durationMs: 5 };
+    }
+  };
+
+  const result = await pptxTranslatorService.translate(buffer, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "replace_en",
+  });
+
+  const zipOut = await JSZip.loadAsync(result.translatedBuffer);
+  const outXml = await zipOut.file("ppt/slides/slide1.xml")?.async("string");
+
+  assert.ok(outXml.includes("*For LQ-075W-1"), "Output must contain *For LQ-075W-1");
+  assert.ok(outXml.includes("1. Check if the logo is stitched"), "Output contains translated step 1");
+  assert.ok(outXml.includes("SPI 9-10 stitches/inch"), "Stitch density normalized to SPI 9-10 stitches/inch");
+  assert.equal(hasViDiacritics(outXml), false, "Zero Vietnamese leakage in replace_en mode");
+});
+
+test("Test 19: Multiple Model Subsections - 2 independent model blocks on 1 slide never cross-pair", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.js");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>*Đối với Model A</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1. Thao tác may Model A</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>2. Kiểm tra chất lượng Model A</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>*Đối với Model B</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1. Thao tác may Model B</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>2. Kiểm tra chất lượng Model B</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const report = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+  });
+
+  const stepA1 = report.units.find((u) => u.sourceText === "1. Thao tác may Model A");
+  const stepA2 = report.units.find((u) => u.sourceText === "2. Kiểm tra chất lượng Model A");
+  const stepB1 = report.units.find((u) => u.sourceText === "1. Thao tác may Model B");
+  const stepB2 = report.units.find((u) => u.sourceText === "2. Kiểm tra chất lượng Model B");
+
+  assert.ok(stepA1 && stepA2 && stepB1 && stepB2, "All 4 steps found");
+  assert.equal(stepA1.status, "NEEDS_TRANSLATION");
+  assert.equal(stepA1.selectedForTranslation, true);
+  assert.equal(stepA2.status, "NEEDS_TRANSLATION");
+  assert.equal(stepA2.selectedForTranslation, true);
+  assert.equal(stepB1.status, "NEEDS_TRANSLATION");
+  assert.equal(stepB1.selectedForTranslation, true);
+  assert.equal(stepB2.status, "NEEDS_TRANSLATION");
+  assert.equal(stepB2.selectedForTranslation, true);
+});
+
+test("Test 20: ISQ Duplication in apply_audit - apply_audit duplicates ISQ STRATEGY slide into 2 corresponding slides (EN top, VI bottom)", async () => {
+  const { applyPptxAuditSuggestions } = await import("../services/translation/pptx-smart-audit.js");
+  const { orderedSlidePaths, readIsqSlidePairs } = await import("../services/documents/pptx-slide-order.js");
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const viText = "CTQ 1-Lập thể mặt trước ép phải nổi";
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>ISQ STRATEGY-CTP-CTQ</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>${viText}</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const enTranslation = "CTQ 1-Vamp embossing must be prominent";
+  const result = await applyPptxAuditSuggestions(buffer, "ISQ-manual.pptx", ["s1_p1"], {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+    customTranslations: {
+      s1_p1: enTranslation,
+    },
+  });
+
+  const zipOut = await JSZip.loadAsync(result.buffer);
+  const order = await orderedSlidePaths(zipOut);
+  const pairs = await readIsqSlidePairs(zipOut);
+
+  // Exactly 2 slides created
+  assert.equal(order.length, 2, "ISQ slide must be duplicated into 2 slides");
+  assert.equal(pairs.length, 1, "Exactly 1 ISQ pair created");
+
+  const topXml = await zipOut.file(pairs[0].en)?.async("string");
+  const bottomXml = await zipOut.file(pairs[0].vi)?.async("string");
+
+  // Slide 1 (EN top): has English translation, NO Vietnamese text!
+  assert.ok(topXml.includes(enTranslation), "Slide EN has English translation");
+  assert.equal(hasViDiacritics(topXml), false, "Slide EN has ZERO Vietnamese leakage");
+
+  // Slide 2 (VI bottom): retains 100% original Vietnamese intact!
+  assert.ok(bottomXml.includes(viText), "Slide VI retains original Vietnamese");
+});
+
+test("Test 21: ISQ 2-Column CTP/CTQ & GOOD/NO GOOD - Preserves technical heading, color, and labels", async () => {
+  const { applyPptxAuditSuggestions } = await import("../services/translation/pptx-smart-audit.js");
+  const { readIsqSlidePairs } = await import("../services/documents/pptx-slide-order.js");
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1400" b="1"><a:solidFill><a:srgbClr val="0000FF"/></a:solidFill></a:rPr><a:t>ISQ NIKE CPFM AIR FLEA 1-STITCHING</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200" b="1"><a:solidFill><a:srgbClr val="0000FF"/></a:solidFill></a:rPr><a:t>*May logo:</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>GOOD</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>NO GOOD</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>May logo đều đẹp</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const result = await applyPptxAuditSuggestions(buffer, "ISQ-manual.pptx", ["s1_p1", "s1_p4"], {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+    customTranslations: {
+      s1_p1: "*Stitching logo:",
+      s1_p4: "Stitch logo evenly and beautifully",
+    },
+  });
+
+  const zipOut = await JSZip.loadAsync(result.buffer);
+  const pairs = await readIsqSlidePairs(zipOut);
+  const topXml = await zipOut.file(pairs[0].en)?.async("string");
+
+  assert.ok(topXml.includes("*Stitching logo:"), "Heading translated to English");
+  assert.ok(topXml.includes('b="1"'), "Heading bold preserved");
+  assert.ok(topXml.includes('val="0000FF"'), "Color preserved");
+  assert.ok(topXml.includes("GOOD") && topXml.includes("NO GOOD"), "GOOD / NO GOOD labels preserved");
+});
+
+test("Test 22: OpenXML Structural Integrity - Slide IDs and relationships remain completely valid after duplication", async () => {
+  const { applyPptxAuditSuggestions } = await import("../services/translation/pptx-smart-audit.js");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>ISQ STRATEGY-CTQ-CTP</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>CTQ 1-Kiểm tra</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const result = await applyPptxAuditSuggestions(buffer, "ISQ-manual.pptx", ["s1_p1"], {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+    customTranslations: { s1_p1: "CTQ 1-Inspect" },
+  });
+
+  const zipOut = await JSZip.loadAsync(result.buffer);
+  const presXml = await zipOut.file("ppt/presentation.xml")?.async("string");
+  const relsXml = await zipOut.file("ppt/_rels/presentation.xml.rels")?.async("string");
+  const typesXml = await zipOut.file("[Content_Types].xml")?.async("string");
+
+  // Check unique IDs
+  const sldIds = Array.from(presXml.matchAll(/id="(\d+)"/g), (m) => m[1]);
+  assert.equal(new Set(sldIds).size, sldIds.length, "All sldId attributes must be unique");
+
+  const rIds = Array.from(relsXml.matchAll(/Id="([^"]+)"/g), (m) => m[1]);
+  assert.equal(new Set(rIds).size, rIds.length, "All relationship IDs must be unique");
+
+  assert.ok(typesXml.includes("Override"), "Content types overrides present");
+});
+
+test("Test 23: Zero Vietnamese Leakage Gate - Post-Flight QA Gate auto-eliminates leaked Vietnamese on ISQ top slide", async () => {
+  const { auditAndRepairPptxPostFlight } = await import("../services/qa/pptx-postflight-gate.ts");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/><Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/><p:sldId id="257" r:id="rId2" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/></Relationships>`);
+  zip.file("ppt/customXml/pairs.xml", `<?xml version="1.0" encoding="UTF-8"?><pairs xmlns="urn:smart-audit:isq-pairs"><pair en="ppt/slides/slide1.xml" vi="ppt/slides/slide2.xml"/></pairs>`);
+
+  // Slide 1 is ISQ EN slide, with an accidental leaked Vietnamese paragraph
+  zip.file("ppt/slides/slide1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1. Check the stitching margin evenly 1.5mm</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Đoạn rò rỉ tiếng Việt chưa dịch</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`);
+  zip.file("ppt/slides/slide2.xml", `<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:bodyPr/><a:p><a:r><a:t>Nguyên bản tiếng Việt</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>`);
+
+  const report = await auditAndRepairPptxPostFlight(await zip.generateAsync({ type: "nodebuffer" }), "ipqc_bilingual");
+  const zipRepaired = await JSZip.loadAsync(report.auditedBuffer);
+  const slide1Xml = await zipRepaired.file("ppt/slides/slide1.xml")?.async("string");
+
+  assert.equal(hasViDiacritics(slide1Xml), false, "Leaked Vietnamese paragraph must be cleanly removed from ISQ EN slide");
+  assert.ok(slide1Xml.includes("1. Check the stitching margin"), "English content preserved");
+});
+
+test("Test 24: Technical Heading Visual Parity - Preserves bold b='1', font size, and color for '*May logo:'", async () => {
+  const { replaceParagraphText } = await import("../services/documents/pptx-text.js");
+  const origPXml = `<a:p><a:pPr algn="l"/><a:r><a:rPr b="1" sz="1400"><a:solidFill><a:srgbClr val="0066CC"/></a:solidFill><a:latin typeface="Arial"/></a:rPr><a:t>*May logo:</a:t></a:r></a:p>`;
+  const replaced = replaceParagraphText(origPXml, "*Stitching logo:");
+
+  assert.ok(replaced.includes("*Stitching logo:"), "Text replaced");
+  assert.ok(replaced.includes('b="1"'), "Bold preserved");
+  assert.ok(replaced.includes('val="0066CC"'), "Color preserved");
+  assert.ok(replaced.includes('sz="1400"'), "Font size preserved");
+  assert.ok(replaced.includes('typeface="Arial"'), "Font typeface preserved");
+});
+
+test("Test 25: SPI Strict Normalization - Normalizes variations to 'SPI <number> stitches/inch'", async () => {
+  const { normalizeSpiTerminology } = await import("../services/translation/casing.js");
+
+  assert.equal(normalizeSpiTerminology("1.5mm/9-10 mũi/inch"), "1.5mm/SPI 9-10 stitches/inch");
+  assert.equal(normalizeSpiTerminology("9-10 SPI"), "SPI 9-10 stitches/inch");
+  assert.equal(normalizeSpiTerminology("SPI 10-12"), "SPI 10-12 stitches/inch");
+  assert.equal(normalizeSpiTerminology("SPI 7-8 stitches/inch"), "SPI 7-8 stitches/inch");
+});
+
+test("Test 26: No-sew & Tip-quarter Enforcement - Standardizes to hyphenated 'No-sew' and 'Tip-quarter' (Production Rule #3)", async () => {
+  const { auditAndRepairPptxPostFlight } = await import("../services/qa/pptx-postflight-gate.ts");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  zip.file("ppt/slides/slide1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Check Nosew delamination on Tipquarter and Tip quarter upper</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`);
+
+  const report = await auditAndRepairPptxPostFlight(await zip.generateAsync({ type: "nodebuffer" }));
+  const zipOut = await JSZip.loadAsync(report.auditedBuffer);
+  const slideXml = await zipOut.file("ppt/slides/slide1.xml")?.async("string");
+
+  assert.ok(slideXml.includes("No-sew"), "Nosew must be auto-corrected to No-sew");
+  assert.ok(!slideXml.includes("Nosew"), "Nosew without hyphen must not exist");
+  assert.ok(slideXml.includes("Tip-quarter"), "Tipquarter and Tip quarter must be auto-corrected to Tip-quarter");
+  assert.ok(!slideXml.includes("Tipquarter"), "Tipquarter without hyphen must not exist");
+});
+
+test("Test 27: Inspection Noun Phrase Adjunct Ordering - Enforces [Component] shape (Toe shape, Collar shape, Heel shape)", async () => {
+  const { normalizeInvertedNounPhrases } = await import("../services/translation/casing.js");
+
+  assert.equal(normalizeInvertedNounPhrases("1. Shape tip and shape toe"), "1. Tip shape and Toe shape");
+  assert.equal(normalizeInvertedNounPhrases("Shape collar must be neat"), "Collar shape must be neat");
+  assert.equal(normalizeInvertedNounPhrases("Check Shape heel"), "Check Heel shape");
+  assert.equal(normalizeInvertedNounPhrases("Shape vamp"), "Vamp shape");
+});
+
+test("Test 28: Auto AI Cascade on Complex Slides - Detects complex slide and sets requiresIsqDuplicate", async () => {
+  const { auditPptxGaps } = await import("../services/translation/smart-detector.js");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>ISQ STRATEGY-CTP-CTQ</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>*Đối với LQ-075W-1</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1. Kiểm tra logo được may</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const report = await auditPptxGaps(buffer, "ISQ-manual.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    autoAiCascade: false, // tests heuristic tagging
+  });
+
+  assert.equal(report.requiresIsqDuplicate, true, "Complex ISQ slide automatically tagged requiresIsqDuplicate = true");
+  assert.equal(report.units.find((u) => u.sourceText.includes("Kiểm tra logo")).status, "NEEDS_TRANSLATION");
+});
+
+test("Test 29: Zero-token Pass for Simple Decks - Runs pure local heuristics in < 0.2s with 0 tokens spent", async () => {
+  const { auditPptxGaps } = await import("../services/translation/smart-detector.js");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Standard Operating Procedure</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>GOOD</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>NO GOOD</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const start = Date.now();
+  const report = await auditPptxGaps(buffer, "simple.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+  });
+  const duration = Date.now() - start;
+
+  assert.ok(duration < 1500, `Execution took ${duration}ms, must be < 1500ms`);
+  assert.equal(report.untranslatedCount, 0, "Zero untranslated items in pure English/label deck");
+  assert.equal(report.translatableMissingCount, 0, "Zero missing translatables");
+  assert.equal(report.requiresIsqDuplicate, false, "Simple deck does not require ISQ duplication");
+});
+
 
 
 

@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { hasViDiacritics } from "../terminology/sanitizer";
 import { normalizeSpiTerminology, normalizeInvertedNounPhrases } from "../translation/casing";
 import { polishSopText } from "../translation/sop-polisher";
+import { readIsqSlidePairs } from "../documents/pptx-slide-order";
 
 /** Escapes XML special characters for safe injection into <a:t> nodes. */
 function escapeXmlText(text: string): string {
@@ -45,6 +46,8 @@ export async function auditAndRepairPptxPostFlight(
   mode: "replace_en" | "ipqc_bilingual" = "replace_en"
 ): Promise<PostFlightAuditReport> {
   const zip = await JSZip.loadAsync(pptxBuffer);
+  const isqPairs = await readIsqSlidePairs(zip);
+  const isqEnPaths = new Set(isqPairs.map((p) => p.en));
   const issues: PostFlightIssue[] = [];
   let repairedCount = 0;
   let totalSlidesAudited = 0;
@@ -249,19 +252,19 @@ export async function auditAndRepairPptxPostFlight(
         }
       }
 
-      // Auto-Repair "no-sew" / "No-sew" to "Nosew" / "nosew" (strict footwear SOP terminology standard)
-      if (/\b(?:no-sew|No-sew|No-Sew|NO-SEW)\b/.test(updated)) {
+      // Auto-Repair unhyphenated "Nosew" / "nosew" to standard footwear SOP hyphenated "No-sew" / "no-sew" (Production Rule #3)
+      if (/\b(?:Nosew|nosew|NOSEW)\b/.test(updated)) {
         const fixed = updated
-          .replace(/\bNo-[sS]ew\b/g, "Nosew")
-          .replace(/\bno-sew\b/g, "nosew")
-          .replace(/\bNO-SEW\b/g, "NOSEW");
+          .replace(/\bNosew\b/g, "No-sew")
+          .replace(/\bnosew\b/g, "no-sew")
+          .replace(/\bNOSEW\b/g, "NO-SEW");
         if (fixed !== updated) {
           xmlModified = true;
           repairedCount++;
           issues.push({
             slide: filename,
             type: "typo_repair",
-            message: "Auto-repaired hyphenated 'no-sew' to standard footwear SOP unhyphenated 'Nosew' / 'nosew'",
+            message: "Auto-repaired unhyphenated 'Nosew'/'nosew' to standard footwear SOP hyphenated 'No-sew'/'no-sew'",
             targetText: fixed,
             autoRepaired: true,
           });
@@ -399,20 +402,34 @@ export async function auditAndRepairPptxPostFlight(
       return bodyXml;
     });
 
-    // 5. Audit Vietnamese Leaks in English Replace Mode
-    if (mode === "replace_en") {
+    // 5. Audit & Clean Vietnamese Leaks on English slides (replace_en mode and ISQ top EN slides)
+    if (mode === "replace_en" || isqEnPaths.has(filename)) {
       const pMatches = xml.match(/<a:p\b[\s\S]*?<\/a:p>/g) || [];
       for (const pXml of pMatches) {
         const tMatches = pXml.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g) || [];
         const fullText = tMatches.map((t) => t.replace(/<[^>]+>/g, "").trim()).join(" ");
-        if (fullText.length > 10 && hasViDiacritics(fullText)) {
-          issues.push({
-            slide: filename,
-            type: "vi_leak",
-            message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
-            targetText: fullText,
-            autoRepaired: false,
-          });
+        if (hasViDiacritics(fullText)) {
+          if (isqEnPaths.has(filename)) {
+            // SOP Section 4 & Production Rule #1: Zero Vietnamese Leakage on ISQ top EN slide
+            xml = xml.replace(pXml, "");
+            xmlModified = true;
+            repairedCount++;
+            issues.push({
+              slide: filename,
+              type: "vi_leak",
+              message: `Auto-eliminated leaked Vietnamese paragraph on ISQ English slide: "${fullText.slice(0, 60)}..."`,
+              targetText: "",
+              autoRepaired: true,
+            });
+          } else if (fullText.length > 10) {
+            issues.push({
+              slide: filename,
+              type: "vi_leak",
+              message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
+              targetText: fullText,
+              autoRepaired: false,
+            });
+          }
         }
       }
     }

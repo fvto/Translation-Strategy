@@ -143,7 +143,12 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
 }
 
 export async function readIsqSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
-  const xml = (await zip.file(ISQ_PAIRS_PART)?.async("string")) || "";
+  const xml =
+    (await zip.file(ISQ_PAIRS_PART)?.async("string")) ||
+    (await zip.file(`ppt/${ISQ_PAIRS_PART}`)?.async("string")) ||
+    (await zip.file("customXml/pairs.xml")?.async("string")) ||
+    (await zip.file("ppt/customXml/pairs.xml")?.async("string")) ||
+    "";
   const xmlPairs = Array.from(
     xml.matchAll(/<pair en="(ppt\/slides\/slide\d+\.xml)" vi="(ppt\/slides\/slide\d+\.xml)"\/>/g),
     (m) => ({ en: m[1], vi: m[2] })
@@ -194,5 +199,138 @@ export function parseSlideRange(rangeStr: string, maxSlides: number = 9999): num
     }
   }
   return Array.from(indices).sort((a, b) => a - b);
+}
+
+/**
+ * Duplicates specified ISQ slides in OpenXML package so that each slide becomes a pair:
+ * 1. Top slide (en): targets English translation (residual VI removed).
+ * 2. Bottom slide (vi): retains 100% original Vietnamese intact.
+ *
+ * Updates presentation.xml (<p:sldIdLst>), presentation.xml.rels, [Content_Types].xml,
+ * and records pairs in ISQ_PAIRS_PART.
+ */
+export async function duplicateIsqSlides(
+  zip: JSZip,
+  targetSlidePaths: Set<string>
+): Promise<IsqSlidePair[]> {
+  const existingPairs = await readIsqSlidePairs(zip);
+  const viReferencePaths = new Set(existingPairs.map((p) => p.vi));
+  const existingEnPaths = new Set(existingPairs.map((p) => p.en));
+  const newPairs = [...existingPairs];
+
+  let presXml = await zip.file("ppt/presentation.xml")?.async("string");
+  let relsXml = await zip.file("ppt/_rels/presentation.xml.rels")?.async("string");
+  let contentTypesXml = await zip.file("[Content_Types].xml")?.async("string");
+
+  if (!presXml || !relsXml || !contentTypesXml) return existingPairs;
+
+  const sldEntries = Array.from(
+    presXml.matchAll(/<p:sldId[^>]*id="(\d+)"[^>]*r:id="([^"]+)"[^>]*\/>/g)
+  ).map((m) => ({
+    fullTag: m[0],
+    id: parseInt(m[1], 10),
+    rId: m[2],
+  }));
+
+  if (sldEntries.length === 0) return existingPairs;
+
+  const allIds = sldEntries.map((s) => s.id);
+  let maxId = Math.max(255, ...allIds);
+
+  const rids = Array.from(relsXml.matchAll(/Id="rId(\d+)"/g)).map((m) => parseInt(m[1], 10));
+  let maxRId = Math.max(10, ...rids);
+
+  const relTargetMap = new Map<string, string>();
+  const relMatches = Array.from(
+    relsXml.matchAll(/<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/>/g)
+  );
+  for (const rm of relMatches) {
+    relTargetMap.set(rm[1], rm[2]);
+  }
+
+  const newRels: string[] = [];
+  const newOverrides: string[] = [];
+  const pairedEntries: string[] = [];
+  let didDuplicate = false;
+
+  for (let i = 0; i < sldEntries.length; i++) {
+    const orig = sldEntries[i];
+    const targetFile = relTargetMap.get(orig.rId) || `slides/slide${i + 1}.xml`;
+    const origSlidePath = targetFile.startsWith("ppt/") ? targetFile : `ppt/${targetFile}`;
+
+    pairedEntries.push(orig.fullTag);
+
+    // Skip if already a VI reference or already duplicated
+    if (viReferencePaths.has(origSlidePath)) continue;
+    if (existingEnPaths.has(origSlidePath)) continue;
+
+    // Check if this slide needs duplication
+    if (!targetSlidePaths.has(origSlidePath)) continue;
+
+    let newSlideNum = 1000 + i + 1;
+    while (zip.file(`ppt/slides/slide${newSlideNum}.xml`)) newSlideNum++;
+    const newSlideTarget = `slides/slide${newSlideNum}.xml`;
+    const newSlidePath = `ppt/${newSlideTarget}`;
+
+    // 1. Copy slide XML (keeps original Vietnamese intact)
+    const slideData = await zip.file(origSlidePath)?.async("nodebuffer");
+    if (!slideData) continue;
+    zip.file(newSlidePath, slideData);
+    newPairs.push({ en: origSlidePath, vi: newSlidePath });
+
+    // 2. Copy slide rels if exists
+    const origRelPath = origSlidePath.replace("slides/", "slides/_rels/") + ".rels";
+    const relData = await zip.file(origRelPath)?.async("nodebuffer");
+    if (relData) {
+      const newRelPath = newSlidePath.replace("slides/", "slides/_rels/") + ".rels";
+      zip.file(newRelPath, relData);
+    }
+
+    // 3. New rId and sldId
+    maxRId++;
+    maxId++;
+    const newRId = `rId${maxRId}`;
+    const newSldId = maxId;
+
+    newRels.push(
+      `<Relationship Id="${newRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="${newSlideTarget}"/>`
+    );
+    newOverrides.push(
+      `<Override PartName="/ppt/${newSlideTarget}" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`
+    );
+
+    // Insert duplicated slide immediately following original slide
+    pairedEntries.push(`<p:sldId id="${newSldId}" r:id="${newRId}"/>`);
+    didDuplicate = true;
+  }
+
+  if (didDuplicate) {
+    zip.file(
+      ISQ_PAIRS_PART,
+      `<?xml version="1.0" encoding="UTF-8"?><pairs xmlns="urn:smart-audit:isq-pairs">${newPairs
+        .map((p) => `<pair en="${p.en}" vi="${p.vi}"/>`)
+        .join("")}</pairs>`
+    );
+    if (!existingPairs.length) {
+      maxRId++;
+      newRels.push(
+        `<Relationship Id="rId${maxRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" Target="../${ISQ_PAIRS_PART}"/>`
+      );
+      newOverrides.push(`<Override PartName="/${ISQ_PAIRS_PART}" ContentType="application/xml"/>`);
+    }
+
+    relsXml = relsXml.replace("</Relationships>", `${newRels.join("")}</Relationships>`);
+    presXml = presXml.replace(
+      /<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/,
+      `<p:sldIdLst>${pairedEntries.join("")}</p:sldIdLst>`
+    );
+    contentTypesXml = contentTypesXml.replace("</Types>", `${newOverrides.join("")}</Types>`);
+
+    zip.file("ppt/_rels/presentation.xml.rels", relsXml);
+    zip.file("ppt/presentation.xml", presXml);
+    zip.file("[Content_Types].xml", contentTypesXml);
+  }
+
+  return newPairs;
 }
 

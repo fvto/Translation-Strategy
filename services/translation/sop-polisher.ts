@@ -123,11 +123,11 @@ export function polishSopText(text: string, options: PolishOptions = {}): string
     polished = polished.replace(/\bupper\s+with\s+sole\b/gi, "upper to bottom");
   }
 
-  // 6. Strict Terminology: "Nosew" / "nosew" (NEVER hyphenated "No-sew" or "no-sew")
+  // 6. Strict Terminology: "No-sew" / "no-sew" with hyphen (Production Rule #3, NEVER unhyphenated "Nosew" or "nosew")
   polished = polished
-    .replace(/\bNo-[sS]ew\b/g, "Nosew")
-    .replace(/\bno-sew\b/g, "nosew")
-    .replace(/\bNO-SEW\b/g, "NOSEW");
+    .replace(/\bNosew\b/g, "No-sew")
+    .replace(/\bnosew\b/g, "no-sew")
+    .replace(/\bNOSEW\b/g, "NO-SEW");
 
   return polished;
 }

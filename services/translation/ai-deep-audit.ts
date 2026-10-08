@@ -120,8 +120,8 @@ Your task is to review slide text items that are candidates for translation and 
 3. 'NON_TRANSLATABLE': The item is a numeric dimension, date, ISO code, or non-word symbol.
    -> Set verdict: 'NON_TRANSLATABLE', reason: '<Brief explanation in Vietnamese>'.
 
-4. 'NEEDS_TRANSLATION': The item is genuine Vietnamese text that has NO English counterpart on this slide.
-   -> Set verdict: 'NEEDS_TRANSLATION'.
+4. 'NEEDS_TRANSLATION': The item is genuine Vietnamese text that has NO English counterpart on this slide, or is a sub-model step following '*Đối với [Model]' that must be translated independently and never paired with general steps above.
+   -> Set verdict: 'NEEDS_TRANSLATION', translation: '<Suggested English translation or null>', reason: '<Brief explanation in Vietnamese>'.
 
 OUTPUT FORMAT:
 Respond ONLY with a valid JSON array of verdicts for candidate items:
@@ -199,6 +199,17 @@ Respond ONLY with a valid JSON array of verdicts for candidate items:
             unit.reason = v.reason || "AI Studio xác nhận: ký hiệu / mã kỹ thuật bất biến.";
             delete unit.suggestedTranslation;
             immuneCount++;
+            verifiedCount++;
+          } else if (v.verdict === "NEEDS_TRANSLATION") {
+            unit.status = "NEEDS_TRANSLATION";
+            unit.requiresTranslation = true;
+            unit.selectedForTranslation = true;
+            if (v.translation) {
+              unit.suggestedTranslation = v.translation;
+              unit.safeToApply = true;
+              unit.canApply = true;
+            }
+            unit.reason = v.reason || "AI Studio xác nhận: nội dung thuộc mục model riêng, cần dịch sang tiếng Anh.";
             verifiedCount++;
           }
         }

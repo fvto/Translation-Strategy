@@ -11,6 +11,7 @@ import {
 } from "./document-tm";
 import { normalizeSpiTerminology, cleanTargetTerm } from "./casing";
 import { scanPptxTranslationIntelligence } from "./pptx-smart-audit";
+import { runAiDeepAudit } from "./ai-deep-audit";
 
 export type TextUnitStatus =
   | "ALREADY_TRANSLATED"
@@ -114,6 +115,7 @@ export interface SmartAuditReport {
   translationConflictCount?: number;
   aiAudited?: boolean;
   aiAuditedItemCount?: number;
+  requiresIsqDuplicate?: boolean;
 }
 
 /**
@@ -717,9 +719,48 @@ export async function auditPptxGaps(
     mode?: string;
     customDocTM?: DocumentTranslationMemory;
     approvedGlossary?: TerminologyEntry[];
+    apiKey?: string;
+    autoAiCascade?: boolean;
   }
 ): Promise<SmartAuditReport> {
-  return scanPptxTranslationIntelligence(buffer, fileName, options);
+  const report = await scanPptxTranslationIntelligence(buffer, fileName, options);
+
+  // Smart Cascading Scan:
+  // If presentation has complex signals (model headings, ISQ slides, or duplicate steps),
+  // and Gemini API key is available, automatically invoke AI Studio cascade.
+  const hasModelSection = report.units.some((u) =>
+    /^\s*\*?\s*(?:đối\s*với|for|áp\s*dụng\s*cho|dành\s*cho|model\s*[:\s]|mẫu\s*[:\s])\s+/i.test(u.sourceText)
+  );
+  const hasIsq = Boolean(
+    report.requiresIsqDuplicate ||
+    report.units.some((u) => u.location.isIsq) ||
+    /\b(isq|ctq|ctp|strategy)\b/i.test(fileName)
+  );
+  const isComplex = hasModelSection || hasIsq;
+
+  if (isComplex && options?.autoAiCascade !== false) {
+    const geminiKey =
+      options?.apiKey ||
+      process.env.GEMINI_KEY ||
+      process.env.GEMINI_API_KEY ||
+      (typeof db !== "undefined" && db.getSettings ? db.getSettings()?.geminiApiKey : undefined);
+    if (geminiKey) {
+      const deep = await runAiDeepAudit(report, {
+        apiKey: geminiKey,
+        sourceLang: options?.sourceLang,
+        targetLang: options?.targetLang,
+      });
+      return {
+        ...deep.report,
+        requiresIsqDuplicate: hasIsq,
+      };
+    }
+  }
+
+  return {
+    ...report,
+    requiresIsqDuplicate: hasIsq,
+  };
 }
 
 /**
