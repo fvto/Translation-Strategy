@@ -64,6 +64,8 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
+    const sessionId = `pptx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+
     if (action === "ai_deep_audit") {
       let auditReport = null;
       const reportJson = formData.get("auditReport");
