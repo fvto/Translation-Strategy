@@ -2518,11 +2518,11 @@ export class PptxTranslatorService {
 
         const enPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
 
-        // Check if single paragraph contains multi-line interleaved text: 1.EN \n 1.VI \n 2.EN \n 2.VI
+        // Check if single paragraph contains multi-line interleaved text: 1.EN \n 1.VI \n 2.EN \n 2.VI or 1.VI \n 1.EN
         const rawLines = it.pData?.originalText ? it.pData.originalText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean) : [];
         if (rawLines.length >= 4 && rawLines.length % 2 === 0) {
           let isInterleavedLines = true;
-          const linePairs: { en: string; vi: string }[] = [];
+          const linePairs: { first: string; second: string; en: string; vi: string; firstIsEn: boolean }[] = [];
           for (let k = 0; k < rawLines.length; k += 2) {
             const l1 = rawLines[k], l2 = rawLines[k + 1];
             const hasVi1 = hasViDiacritics(l1), hasVi2 = hasViDiacritics(l2);
@@ -2532,9 +2532,9 @@ export class PptxTranslatorService {
             const sameStep = Boolean(step1 && step2 && step1 === step2);
 
             if ((hasEn1 && hasVi2) || (sameStep && hasEn1 && !hasVi2)) {
-              linePairs.push({ en: l1, vi: l2 });
+              linePairs.push({ first: l1, second: l2, en: l1, vi: l2, firstIsEn: true });
             } else if ((hasVi1 && hasEn2) || (sameStep && !hasVi1 && hasEn2)) {
-              linePairs.push({ en: l2, vi: l1 });
+              linePairs.push({ first: l1, second: l2, en: l2, vi: l1, firstIsEn: false });
             } else {
               isInterleavedLines = false;
               break;
@@ -2546,7 +2546,7 @@ export class PptxTranslatorService {
               const enPs = linePairs.flatMap((lp) => buildParagraphs(lp.en, enPPr, enAttrs, it.fontChildren));
               return `${tagOpen}${containerHeader}${enPs.join("")}${containerTrailer}${tagClose}`;
             } else {
-              // ipqc_bilingual: emit interleaved 1.EN, 1.VI, 2.EN, 2.VI...
+              // ipqc_bilingual: emit interleaved preserving exact author order (1.EN 1.VI or 1.VI 1.EN)
               let viAttrs = it.rawAttrs;
               if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
               else viAttrs += ' lang="vi-VN"';
@@ -2554,8 +2554,13 @@ export class PptxTranslatorService {
 
               const interleavedPs: string[] = [];
               for (const lp of linePairs) {
-                interleavedPs.push(...buildParagraphs(lp.en, enPPr, enAttrs, it.fontChildren));
-                interleavedPs.push(...buildParagraphs(lp.vi, viPPr, viAttrs, it.fontChildren));
+                if (lp.firstIsEn) {
+                  interleavedPs.push(...buildParagraphs(lp.first, enPPr, enAttrs, it.fontChildren));
+                  interleavedPs.push(...buildParagraphs(lp.second, viPPr, viAttrs, it.fontChildren));
+                } else {
+                  interleavedPs.push(...buildParagraphs(lp.first, viPPr, viAttrs, it.fontChildren));
+                  interleavedPs.push(...buildParagraphs(lp.second, enPPr, enAttrs, it.fontChildren));
+                }
               }
               return `${tagOpen}${containerHeader}${interleavedPs.join("")}${containerTrailer}${tagClose}`;
             }
@@ -2611,7 +2616,7 @@ export class PptxTranslatorService {
       }
 
       // Check if container contains an INTERLEAVED bilingual pattern
-      // e.g. 1. EN, 1. VI, 2. EN, 2. VI, 3. EN, 3. VI... (or alternating [EN, VI])
+      // e.g. 1. EN, 1. VI, 2. EN, 2. VI, 3. EN, 3. VI... (or alternating [EN, VI] / [VI, EN])
       const detectInterleavedPairs = () => {
         const pairs: { enIdx: number; viIdx: number; firstIdx: number; secondIdx: number }[] = [];
         const used = new Set<number>();
@@ -2694,7 +2699,7 @@ export class PptxTranslatorService {
         }
 
         // Bilingual mode (ipqc_bilingual):
-        // PRESERVE the in-slide interleaved structure: dòng 1.EN 1.VI dòng 2.EN 2.VI!
+        // PRESERVE the in-slide interleaved structure: dòng 1.EN 1.VI (hoặc 1.VI 1.EN)!
         const interleavedPList: string[] = [];
         const processedIndices = new Set<number>();
 
@@ -2702,26 +2707,24 @@ export class PptxTranslatorService {
           if (processedIndices.has(i)) continue;
           const pair = interleavedPairs.find((p) => p.enIdx === i || p.viIdx === i);
           if (pair) {
-            const enIt = coreActiveItems[pair.enIdx];
-            const viIt = coreActiveItems[pair.viIdx];
+            const firstIt = coreActiveItems[pair.firstIdx];
+            const secondIt = coreActiveItems[pair.secondIdx];
 
-            // 1. Emit EN paragraph
-            let enAttrs = enIt.rawAttrs;
-            if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
-            else enAttrs += ' lang="en-US"';
-            const enPPr = this.enhancePPr(enIt.pPr, { isTitle: enIt.pData?.isTitle });
-            const enPs = buildParagraphs(enIt.enText || enIt.pData?.originalText || "", enPPr, enAttrs, enIt.fontChildren);
+            const formatParagraph = (it: typeof firstIt, isEn: boolean) => {
+              let attrs = it.rawAttrs;
+              const langTag = isEn ? 'lang="en-US"' : 'lang="vi-VN"';
+              if (/lang="[^"]*"/.test(attrs)) attrs = attrs.replace(/lang="[^"]*"/, langTag);
+              else attrs += ` ${langTag}`;
+              const pPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
+              const text = isEn ? (it.enText || it.pData?.originalText || "") : (it.viText || it.pData?.originalText || "");
+              return buildParagraphs(text, pPr, attrs, it.fontChildren);
+            };
 
-            // 2. Emit VI paragraph directly below
-            let viAttrs = viIt.rawAttrs;
-            if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
-            else viAttrs += ' lang="vi-VN"';
-            const viPPr = this.enhancePPr(viIt.pPr, { isTitle: viIt.pData?.isTitle });
-            const viPs = buildParagraphs(viIt.viText || viIt.pData?.originalText || "", viPPr, viAttrs, viIt.fontChildren);
-
-            interleavedPList.push(...enPs, ...viPs);
-            processedIndices.add(pair.enIdx);
-            processedIndices.add(pair.viIdx);
+            const firstPs = formatParagraph(firstIt, pair.firstIdx === pair.enIdx);
+            const secondPs = formatParagraph(secondIt, pair.secondIdx === pair.enIdx);
+            interleavedPList.push(...firstPs, ...secondPs);
+            processedIndices.add(pair.firstIdx);
+            processedIndices.add(pair.secondIdx);
           } else {
             const it = coreActiveItems[i];
             const hasVi = hasViDiacritics(it.pData?.originalText || "");

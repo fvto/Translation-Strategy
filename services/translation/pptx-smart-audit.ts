@@ -206,16 +206,19 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         const l1 = parts[k], l2 = parts[k + 1];
         const s1 = sourceEvidence(l1, sourceLang), t1 = targetEvidence(l1, targetLang);
         const s2 = sourceEvidence(l2, sourceLang), t2 = targetEvidence(l2, targetLang);
+        const hasVi1 = hasViDiacritics(l1), hasVi2 = hasViDiacritics(l2);
+        const hasEn1 = !hasVi1 && /[a-zA-Z]{2,}/.test(l1);
+        const hasEn2 = !hasVi2 && /[a-zA-Z]{2,}/.test(l2);
         const step1 = extractItemStepNumber(l1), step2 = extractItemStepNumber(l2);
         const sameStep = Boolean(step1 && step2 && step1 === step2);
 
-        if ((s1 && t2) || (sameStep && s1 && !s2)) {
+        if ((s1 && t2) || (sameStep && s1 && !s2) || (hasVi1 && hasEn2)) {
           if (!isNonTranslatable(l1) && !isNonTranslatable(l2) && !/^\d+(?:[.,]\d+)?$/.test(l1) && !/^\d+(?:[.,]\d+)?$/.test(l2)) {
             pairs.push({ source: l1, target: l2, origin: "presentation", slideIndex: raw.location.slideIndex });
             inlineBilingual.add(raw.id);
             k++;
           }
-        } else if ((t1 && s2) || (sameStep && !s1 && s2)) {
+        } else if ((t1 && s2) || (sameStep && !s1 && s2) || (hasVi2 && hasEn1)) {
           if (!isNonTranslatable(l1) && !isNonTranslatable(l2) && !/^\d+(?:[.,]\d+)?$/.test(l1) && !/^\d+(?:[.,]\d+)?$/.test(l2)) {
             pairs.push({ source: l2, target: l1, origin: "presentation", slideIndex: raw.location.slideIndex });
             inlineBilingual.add(raw.id);
@@ -245,20 +248,23 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     }
   };
   for (const members of containers.values()) {
-    // 1. Interleaved adjacent [EN, VI] or [VI, EN] paragraphs within container (1.EN, 1.VI, 2.EN, 2.VI...)
+    // 1. Interleaved adjacent [EN, VI] or [VI, EN] paragraphs within container (1.EN 1.VI or 1.VI 1.EN)
     for (let k = 0; k < members.length - 1; k++) {
       const u1 = members[k], u2 = members[k + 1];
       if (paired.has(u1.id) || paired.has(u2.id)) continue;
 
       const s1 = sourceEvidence(u1.text, sourceLang), t1 = targetEvidence(u1.text, targetLang);
       const s2 = sourceEvidence(u2.text, sourceLang), t2 = targetEvidence(u2.text, targetLang);
+      const hasVi1 = hasViDiacritics(u1.text), hasVi2 = hasViDiacritics(u2.text);
+      const hasEn1 = !hasVi1 && /[a-zA-Z]{2,}/.test(u1.text);
+      const hasEn2 = !hasVi2 && /[a-zA-Z]{2,}/.test(u2.text);
       const step1 = extractItemStepNumber(u1.text), step2 = extractItemStepNumber(u2.text);
       const sameStep = Boolean(step1 && step2 && step1 === step2);
 
-      if ((s1 && t2) || (sameStep && s1 && !s2)) {
+      if ((s1 && t2) || (sameStep && s1 && !s2) || (hasVi1 && hasEn2)) {
         addPair(u1, u2);
         k++;
-      } else if ((t1 && s2) || (sameStep && !s1 && s2)) {
+      } else if ((t1 && s2) || (sameStep && !s1 && s2) || (hasVi2 && hasEn1)) {
         addPair(u2, u1);
         k++;
       }
