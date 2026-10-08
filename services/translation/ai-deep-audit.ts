@@ -114,7 +114,7 @@ Your task is to review slide text items that are candidates for translation and 
 1. 'PAIR': The item is Vietnamese, but it ALREADY has an English translation present on this slide (for instance, defect titles like 'Wrong material' and 'Sai liệu', or step titles 'Inconsistent pair matching label' and 'Tem số phối đôi không đồng bộ.').
    -> Set verdict: 'PAIR', pairedWithId: '<id of English item>', translation: '<English text>', reason: '<Brief explanation in Vietnamese>'.
 
-2. 'ALREADY_TRANSLATED': The item is already English, an inspection evaluation label (GOOD, NO GOOD, OK, NG, PASS, FAIL), a shoe model name, or technical standard that must NOT be translated.
+2. 'ALREADY_TRANSLATED': The item is already English, an in-line bilingual string containing both English and Vietnamese (e.g. 'Color matching-Phối màu liệu', 'Toe shape - Hình dạng mũi'), an inspection evaluation label (GOOD, NO GOOD, OK, NG, PASS, FAIL), a shoe model name, or technical standard that must NOT be translated.
    -> Set verdict: 'ALREADY_TRANSLATED', reason: '<Brief explanation in Vietnamese>'.
 
 3. 'NON_TRANSLATABLE': The item is a numeric dimension, date, ISO code, or non-word symbol.

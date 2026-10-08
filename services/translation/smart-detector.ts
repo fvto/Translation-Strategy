@@ -362,8 +362,12 @@ export function isNonTranslatable(text: string): boolean {
     return true;
   }
 
-  // Purchase order, production batch, and style code patterns (e.g. "P/O 2026-X1", "PO #123", "LOT-45A")
-  if (/^(?:P\/O|PO|BOM|LOT|STYLE|COLOR|SIZE|ITEM)(?:\s*[\#:]?\s*|\s+)[A-Z0-9\-_\/]+$/i.test(trimmed)) {
+  // Purchase order, production batch, and style code patterns (e.g. "P/O 2026-X1", "PO #123", "LOT-45A", "COLOR #101", "SIZE 9.5")
+  // Must contain at least one digit or '#' so normal English phrases like "Color matching", "Style guide", "Item list" are not classified as non-translatable codes.
+  if (/^(?:P\/O|PO|BOM|LOT|STYLE|COLOR|SIZE|ITEM)(?:\s*[\#:]\s*|\s+)[A-Z0-9\-_\/]*\d[A-Z0-9\-_\/]*$/i.test(trimmed)) {
+    return true;
+  }
+  if (/^(?:P\/O|PO|BOM|LOT|STYLE|COLOR|SIZE|ITEM)\s*\#[A-Z0-9\-_\/]+$/i.test(trimmed)) {
     return true;
   }
 
@@ -428,8 +432,18 @@ export function isEnglishImmunityProtected(text: string, sourceLang: string = "v
 }
 
 /**
+ * Checks whether a short token is merely an item/step number prefix rather than actual substantive text
+ * (e.g. "CTQ 1", "CTP 5", "Step 2", "1.", "#1")
+ */
+export function isItemPrefixOrCode(str: string): boolean {
+  if (!str) return false;
+  const clean = str.replace(/^[#\(\[\{\.\:\*\-\s]+|[\)\]\}\.\:\,\-\s]+$/g, "").trim();
+  return /^(?:CTQ|CTP|SOP|QC|QA|STEP|ITEM|PART|NO|STT)?\s*#?\d+[a-z]?$/i.test(clean);
+}
+
+/**
  * Detects whether a string is bilingual containing both English and Vietnamese components
- * (e.g. "Final Inspection\nKiểm tra cuối cùng", or "Toe shape - Hình dạng mũi", or "X-ray-Cộm")
+ * (e.g. "Final Inspection\nKiểm tra cuối cùng", or "Toe shape - Hình dạng mũi", or "Color matching-Phối màu liệu")
  */
 export function isBilingualText(text: string): boolean {
   if (!text) return false;
@@ -439,18 +453,18 @@ export function isBilingualText(text: string): boolean {
   if (trimmed.includes("\n")) {
     const lines = trimmed.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     if (lines.length >= 2) {
-      const hasEn = lines.some((l) => isPureEnglish(l));
+      const hasEn = lines.some((l) => isPureEnglish(l) && !isItemPrefixOrCode(l));
       const hasVi = lines.some((l) => hasViDiacritics(l));
       if (hasEn && hasVi) return true;
     }
   }
 
-  // Single-line hyphen / slash / bracket delimited bilingual check
-  if (/[-–—\/\(\)]/.test(trimmed)) {
-    // Delimit by hyphen, slash, or parentheses
-    const parts = trimmed.split(/[-–—\/]/).map((p) => p.trim()).filter(Boolean);
+  // Single-line hyphen / slash / bracket / colon / pipe delimited bilingual check
+  if (/[-–—\/\(\)\|:]/.test(trimmed)) {
+    // Delimit by hyphen, slash, colon, pipe, or parentheses
+    const parts = trimmed.split(/[-–—\/\(\)\|:]/).map((p) => p.trim()).filter(Boolean);
     if (parts.length >= 2) {
-      const hasEn = parts.some((p) => isPureEnglish(p) && !isNonTranslatable(p));
+      const hasEn = parts.some((p) => isPureEnglish(p) && !isNonTranslatable(p) && !isItemPrefixOrCode(p));
       const hasVi = parts.some((p) => hasViDiacritics(p));
       if (hasEn && hasVi) return true;
     }

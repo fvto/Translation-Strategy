@@ -11,7 +11,7 @@ import type { AuditMemoryPair } from "./audit-intelligence";
 import { PPTX_PARAGRAPH_PATTERN, paragraphText, canReplaceParagraphText, replaceParagraphText, canTranslateParagraphText } from "../documents/pptx-text";
 import { orderedSlidePaths, readIsqSlidePairs } from "../documents/pptx-slide-order";
 import { dynamicDeckDetector } from "../documents/pptx-structure";
-import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName, isEnglishImmunityProtected } from "./smart-detector";
+import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName, isEnglishImmunityProtected, isBilingualText, isItemPrefixOrCode } from "./smart-detector";
 import type { ScannedTextUnit, SmartAuditReport, TextUnitLocation, TranslationAuditGroup } from "./smart-detector";
 
 interface RawUnit { id: string; text: string; xml: string; location: TextUnitLocation; containerId: string; readOnly?: boolean }
@@ -194,10 +194,13 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   const paired = new Map<string, string>();
   const inlineBilingual = new Set<string>();
   for (const raw of extracted.units) {
-    const parts = raw.text.split(/\r?\n|\s+[-–—/|]\s+/).map((t) => t.replace(/^(?:EN|VI|VN)\s*:\s*/i, "").trim()).filter(Boolean);
+    if (isBilingualText(raw.text)) {
+      inlineBilingual.add(raw.id);
+    }
+    const parts = raw.text.split(/\r?\n|\s+[-–—/|:]\s+|[-–—/|:]/).map((t) => t.replace(/^(?:EN|VI|VN)\s*:\s*/i, "").trim()).filter(Boolean);
     if (parts.length === 2) {
-      const s = parts.find((t) => sourceEvidence(t, sourceLang));
-      const t = parts.find((t) => targetEvidence(t, targetLang));
+      const s = parts.find((t) => sourceEvidence(t, sourceLang) && !isItemPrefixOrCode(t));
+      const t = parts.find((t) => targetEvidence(t, targetLang) && !isItemPrefixOrCode(t));
       if (s && t && !isNonTranslatable(s) && !isNonTranslatable(t) && !/^\d+(?:[.,]\d+)?$/.test(s) && !/^\d+(?:[.,]\d+)?$/.test(t)) {
         pairs.push({ source: s, target: t, origin: "presentation", slideIndex: raw.location.slideIndex });
         inlineBilingual.add(raw.id);
@@ -454,7 +457,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         return unit;
       }
     }
-    if(sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text,"vi") && !paired.has(raw.id) && !inlineBilingual.has(raw.id) && unit.status === "ALREADY_TRANSLATED") {
+    if(sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text,"vi") && !paired.has(raw.id) && !inlineBilingual.has(raw.id) && !isBilingualText(raw.text) && unit.status === "ALREADY_TRANSLATED") {
       unit.status="NEEDS_TRANSLATION"; delete unit.suggestedTranslation;
     }
     if (unit.status === "NEEDS_TRANSLATION") unit.reason = "Nội dung có bằng chứng ngôn ngữ nguồn và chưa tìm thấy bản dịch.";
@@ -475,7 +478,15 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       unit.reason="Nội dung đã ở tiếng Việt; giữ nguyên, không gợi ý chỉnh sửa.";
       unit.requiresTranslation=false; delete unit.suggestedTranslation; return unit;
     }
-    if (inlineBilingual.has(raw.id) && !isqSource) { unit.status = "ALREADY_TRANSLATED"; unit.reason = "Đã có cặp song ngữ trong cùng đoạn văn."; return unit; }
+    if ((inlineBilingual.has(raw.id) || isBilingualText(raw.text)) && !isqSource) {
+      preservedIds.add(unit.id);
+      unit.status = "ALREADY_TRANSLATED";
+      unit.reason = "Nội dung đã có sẵn cả tiếng Anh và tiếng Việt trong cùng đoạn văn (song ngữ).";
+      unit.requiresTranslation = false;
+      unit.selectedForTranslation = false;
+      delete unit.suggestedTranslation;
+      return unit;
+    }
     // A leaked VI history target cannot prove that a VI paragraph is translated.
     const targetMatches = lookup(targetIndex, raw.text, "target").filter(match =>
       !(sourceLang === "vi" && targetLang === "en" && hasViDiacritics(match.target)));

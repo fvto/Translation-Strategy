@@ -968,6 +968,65 @@ test("Test 15: Smart Audit correctly pairs in-slide bilingual defects ('Wrong ma
   assert.equal(temSoVi.existingTranslation, "Inconsistent pair matching label", "Tem so paired with Inconsistent pair matching label");
 });
 
+test("Test 16: Smart Audit recognizes in-line bilingual items ('Color matching-Phối màu liệu', 'Toe shape - Hình dạng mũi') as ALREADY_TRANSLATED and unchecked", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.js");
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Color matching-Phối màu liệu</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Toe shape - Hình dạng mũi</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Outsole: Đế ngoài</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Chỉ may không đều</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const report = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+  });
+
+  const colorMatching = report.units.find((u) => u.sourceText === "Color matching-Phối màu liệu");
+  const toeShape = report.units.find((u) => u.sourceText === "Toe shape - Hình dạng mũi");
+  const outsole = report.units.find((u) => u.sourceText === "Outsole: Đế ngoài");
+  const chiMay = report.units.find((u) => u.sourceText === "Chỉ may không đều");
+
+  assert.ok(colorMatching, "Color matching item found");
+  assert.ok(toeShape, "Toe shape item found");
+  assert.ok(outsole, "Outsole item found");
+  assert.ok(chiMay, "Chi may item found");
+
+  // In-line bilingual items must be ALREADY_TRANSLATED and unchecked [ ]
+  assert.equal(colorMatching.status, "ALREADY_TRANSLATED", "Color matching-Phối màu liệu must be ALREADY_TRANSLATED");
+  assert.equal(colorMatching.selectedForTranslation, false, "Color matching must NOT be selected for translation");
+
+  assert.equal(toeShape.status, "ALREADY_TRANSLATED", "Toe shape - Hình dạng mũi must be ALREADY_TRANSLATED");
+  assert.equal(toeShape.selectedForTranslation, false, "Toe shape must NOT be selected for translation");
+
+  assert.equal(outsole.status, "ALREADY_TRANSLATED", "Outsole: Đế ngoài must be ALREADY_TRANSLATED");
+  assert.equal(outsole.selectedForTranslation, false, "Outsole must NOT be selected for translation");
+
+  // Genuine un-translated Vietnamese defect must remain NEEDS_TRANSLATION and checked [x]
+  assert.equal(chiMay.status, "NEEDS_TRANSLATION", "Chỉ may must be NEEDS_TRANSLATION");
+  assert.equal(chiMay.selectedForTranslation, true, "Chỉ may must be selected for translation");
+});
+
 
 
 
