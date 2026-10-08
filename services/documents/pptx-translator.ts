@@ -13,7 +13,7 @@ export { isSafeTerminologyEntry } from "../terminology/safety";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { translationCache } from "../translation/cache";
 import { DocumentTranslationMemory, TranslationUnitWithMeta, documentTM, DocumentTMConflict, canonicalizeText } from "../translation/document-tm";
-import { auditPptxGaps, SmartAuditReport, ScannedTextUnit, isNonTranslatable, isShoeModelName } from "../translation/smart-detector";
+import { auditPptxGaps, SmartAuditReport, ScannedTextUnit, isNonTranslatable, isShoeModelName, isInspectionStatusLabel, isEnglishImmunityProtected } from "../translation/smart-detector";
 import { paragraphText, PPTX_PARAGRAPH_PATTERN, replaceParagraphTranslation } from "./pptx-text";
 import { orderedSlidePaths, readIsqSlidePairs, ISQ_PAIRS_PART, parseSlideRange } from "./pptx-slide-order";
 import { detectUnmappedTerminology, UnmappedTermItem } from "../terminology/unmapped-detector";
@@ -637,17 +637,25 @@ export class PptxTranslatorService {
           const p1 = members[k], p2 = members[k + 1];
           if (pairedParagraphMap.has(p1.id) || pairedParagraphMap.has(p2.id)) continue;
           const t1 = p1.originalText.trim(), t2 = p2.originalText.trim();
+          if (isInspectionStatusLabel(t1) || isInspectionStatusLabel(t2)) continue;
+          if (isNonTranslatable(t1) || isNonTranslatable(t2)) continue;
           const hasVi1 = hasViDiacritics(t1), hasVi2 = hasViDiacritics(t2);
           const hasEn1 = !hasVi1 && /[a-zA-Z]{2,}/.test(t1);
           const hasEn2 = !hasVi2 && /[a-zA-Z]{2,}/.test(t2);
           const step1 = extractItemStepNumber(t1), step2 = extractItemStepNumber(t2);
           const sameStep = Boolean(step1 && step2 && step1 === step2);
+          const diffStep = Boolean(step1 && step2 && step1 !== step2);
+          if (diffStep) continue;
 
-          if ((hasEn1 && hasVi2) || (sameStep && hasEn1 && !hasVi2)) {
+          const lenRatio = Math.min(t1.length, t2.length) / Math.max(t1.length, t2.length);
+          const plausibleLength = lenRatio >= 0.35 || (sameStep && lenRatio >= 0.25);
+          if (!plausibleLength) continue;
+
+          if ((hasEn1 && hasVi2 && lenRatio >= 0.4) || (sameStep && hasEn1 && !hasVi2)) {
             pairedParagraphMap.set(p1.id, { partner: p2, isEn: true });
             pairedParagraphMap.set(p2.id, { partner: p1, isEn: false });
             k++;
-          } else if ((hasVi1 && hasEn2) || (sameStep && !hasVi1 && hasEn2)) {
+          } else if ((hasVi1 && hasEn2 && lenRatio >= 0.4) || (sameStep && !hasVi1 && hasEn2)) {
             pairedParagraphMap.set(p2.id, { partner: p1, isEn: true });
             pairedParagraphMap.set(p1.id, { partner: p2, isEn: false });
             k++;
@@ -670,6 +678,12 @@ export class PptxTranslatorService {
         allUnitsWithMeta.push(meta);
         unitMetaMap.set(p.id, meta);
 
+        // 0. English Immunity Shield: inspection status labels under photos are ALWAYS immune
+        if (isInspectionStatusLabel(p.originalText)) {
+          translationMap.set(p.id, p.originalText);
+          continue;
+        }
+
         // In-shape interleaved bilingual pair: 1.EN 1.VI 2.EN 2.VI
         const pairInfo = pairedParagraphMap.get(p.id);
         if (pairInfo) {
@@ -680,6 +694,12 @@ export class PptxTranslatorService {
             translationMap.set(p.id, pairInfo.isEn ? p.originalText : pairInfo.partner.originalText);
             continue;
           }
+        }
+
+        // English Immunity Shield: shoe models, technical standards, or already pure English
+        if (isEnglishImmunityProtected(p.originalText, sourceLanguage)) {
+          translationMap.set(p.id, p.originalText);
+          continue;
         }
 
         if (p.isInspectionItem) {

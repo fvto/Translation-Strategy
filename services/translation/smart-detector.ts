@@ -392,8 +392,37 @@ export function isNonTranslatable(text: string): boolean {
  */
 export function isInspectionStatusLabel(text: string): boolean {
   if (!text) return false;
-  const clean = text.replace(/^[#\(\[\{\.\:\*]+|[\)\]\}\.\:\,]+$/g, "").trim();
-  return /^(?:GOOD|NO\s*GOOD|OK|NG|PASS|FAIL|REJECT|ACCEPT|SAMPLE|DEFECT|CORRECT|INCORRECT|N\/A)$/i.test(clean);
+  const rawClean = text.replace(/^[#\(\[\{\.\:\*]+|[\)\]\}\.\:\,]+$/g, "").trim();
+  const strippedNumberClean = text
+    .replace(/^(?:\s*[\*•\-#\d+\.\:\)\(\[\]\{\}①-⑳]+\s*)+/, "")
+    .replace(/[\)\]\}\.\:\,]+$/g, "")
+    .trim();
+  const pattern = /^(?:GOOD|NO\s*GOOD|OK|NG|PASS|FAIL|REJECT|ACCEPT|SAMPLE|DEFECT|CORRECT|INCORRECT|N\/A)$/i;
+  return pattern.test(rawClean) || (strippedNumberClean.length > 0 && pattern.test(strippedNumberClean));
+}
+
+/**
+ * English Immunity Shield:
+ * Identifies tokens and phrases that are already English, technical standards,
+ * shoe models, or inspection labels in footwear manufacturing SOPs,
+ * which MUST NEVER be translated, modified, or re-translated by AI.
+ */
+export function isEnglishImmunityProtected(text: string, sourceLang: string = "vi"): boolean {
+  if (!text || !text.trim()) return false;
+  const trimmed = text.trim();
+
+  // 1. Universal inspection evaluation labels (GOOD, NO GOOD, OK, NG, PASS, FAIL...)
+  if (isInspectionStatusLabel(trimmed)) return true;
+
+  // 2. Technical acronyms, shoe models, standard symbols, ISO, SPI
+  if (isNonTranslatable(trimmed) || isShoeModelName(trimmed)) return true;
+
+  // 3. When translating VI -> EN, any text without Vietnamese diacritics that is pure English
+  if (sourceLang === "vi" && !hasViDiacritics(trimmed) && isPureEnglish(trimmed)) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -463,6 +492,22 @@ export function classifyTextUnit(
   const text = sourceText.trim();
   const sourceLang = options.sourceLang || "vi";
   const targetLang = options.targetLang || "en";
+
+  // 0. English Immunity Shield: Non-translatable, inspection labels, pure English, or shoe models
+  if (isEnglishImmunityProtected(text, sourceLang)) {
+    const isLabel = isInspectionStatusLabel(text);
+    return {
+      status: isLabel ? "NON_TRANSLATABLE" : "ALREADY_TRANSLATED",
+      reason: isLabel
+        ? "Ký hiệu nhãn kiểm tra hình ảnh đạt chuẩn (GOOD/NO GOOD/OK/NG); bảo toàn nguyên trạng."
+        : isPureEnglish(text)
+        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên không dịch lại."
+        : isShoeModelName(text)
+        ? "Tên thương hiệu, hình thể giày hoặc mã mẫu kỹ thuật; giữ nguyên."
+        : "Thuật ngữ kỹ thuật/mã chuẩn/số liệu; giữ nguyên.",
+      confidence: 1.0,
+    };
+  }
 
   // 1. Non-translatable Check (Numbers, Acronyms, Model Codes, ISO, Shoe Models)
   if (isNonTranslatable(text)) {

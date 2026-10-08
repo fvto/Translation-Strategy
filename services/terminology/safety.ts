@@ -1,4 +1,5 @@
 import type { TerminologyEntry } from "../database/types";
+import { isInspectionStatusLabel } from "../translation/smart-detector";
 
 /**
  * Reject imported glossary rows that replace a complete instruction with a short
@@ -13,6 +14,9 @@ export function isSafeTerminologyEntry(entry: TerminologyEntry): boolean {
 
   // Disallow quarantined or explicitly rejected entries
   if (entry.status === "quarantined" || entry.status === "rejected") return false;
+
+  // Reject inspection evaluation labels (GOOD, NO GOOD, OK, NG, PASS, FAIL...) from terminology
+  if (isInspectionStatusLabel(source) || isInspectionStatusLabel(target)) return false;
 
   // Single-character terms (e.g. 'C', 'H') are noise/abbreviations, not terminology
   if (source.length < 2 || target.length < 2) return false;

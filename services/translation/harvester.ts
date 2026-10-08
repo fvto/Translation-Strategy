@@ -1,6 +1,6 @@
 import { db } from "@/services/database/db";
 import { TerminologyEntry } from "@/services/database/types";
-import { isShoeModelName } from "./smart-detector";
+import { isShoeModelName, isInspectionStatusLabel, isNonTranslatable } from "./smart-detector";
 
 export interface HarvestResult {
   added: TerminologyEntry[];
@@ -98,9 +98,11 @@ export function harvestTerminologyFromSlides(
       return;
     }
 
-    // Rule 1: Zero identical source/target or shoe model names
+    // Rule 1: Zero identical source/target, shoe model names, inspection labels, or non-translatables
     if (src.toLowerCase() === tgt.toLowerCase()) return;
     if (isShoeModelName(src) || isShoeModelName(tgt)) return;
+    if (isInspectionStatusLabel(src) || isInspectionStatusLabel(tgt)) return;
+    if (isNonTranslatable(src) || isNonTranslatable(tgt)) return;
 
     // Rule 2: If translating VI -> EN, target must not leak Vietnamese diacritics
     if (sourceLanguage === "vi" && targetLanguage === "en") {

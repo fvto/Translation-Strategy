@@ -819,6 +819,99 @@ test("Smart Audit: Inspection labels (GOOD, NO GOOD, OK, NG) are NON_TRANSLATABL
   assert.notEqual(noGoodUnit.suggestedTranslation, thietKeUnit.sourceText, "NO GOOD MUST NOT suggest Do thiet ke");
 });
 
+test("Test 14: English Immunity Shield protects pure English, inspection labels, and shoe models from re-translation", async () => {
+  const { isEnglishImmunityProtected, isInspectionStatusLabel } = await import("../services/translation/smart-detector.js");
+  const { isSafeTerminologyEntry } = await import("../services/terminology/safety.js");
+
+  // 1. Detection Immunity Verification
+  assert.ok(isEnglishImmunityProtected("GOOD"), "GOOD is protected");
+  assert.ok(isEnglishImmunityProtected("NO GOOD"), "NO GOOD is protected");
+  assert.ok(isEnglishImmunityProtected("1. GOOD"), "1. GOOD is protected");
+  assert.ok(isEnglishImmunityProtected("(2) NO GOOD"), "(2) NO GOOD is protected");
+  assert.ok(isEnglishImmunityProtected("OK"), "OK is protected");
+  assert.ok(isEnglishImmunityProtected("NG"), "NG is protected");
+  assert.ok(isEnglishImmunityProtected("CRITICAL TO QUALITY"), "Pure English sentence is protected");
+  assert.ok(isEnglishImmunityProtected("SPI 9-10 stitches/inch"), "SPI specification is protected");
+  assert.ok(isEnglishImmunityProtected("Tip-quarter"), "Technical footwear compound is protected");
+  assert.ok(isEnglishImmunityProtected("No-sew"), "No-sew specification is protected");
+  assert.ok(isEnglishImmunityProtected("PEGASUS 41"), "Shoe model name is protected");
+
+  assert.ok(!isEnglishImmunityProtected("Kiểm tra dán đế"), "Pure Vietnamese is NOT protected");
+  assert.ok(!isEnglishImmunityProtected("1. Hình dạng mũi"), "Vietnamese step instruction is NOT protected");
+
+  // 2. Terminology Safety Gate Verification
+  assert.ok(!isSafeTerminologyEntry({ sourceTerm: "GOOD", targetTerm: "Đạt", status: "approved" }), "Rejects GOOD as terminology");
+  assert.ok(!isSafeTerminologyEntry({ sourceTerm: "Không đạt", targetTerm: "NO GOOD", status: "approved" }), "Rejects NO GOOD as terminology");
+  assert.ok(!isSafeTerminologyEntry({ sourceTerm: "OK", targetTerm: "OK", status: "approved" }), "Rejects OK identical term");
+
+  // 3. PPTX Translation Pipeline Verification (Immunity from LLM batch)
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>CRITICAL TO QUALITY</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>GOOD</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>NO GOOD</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>PEGASUS 41</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Kiểm tra dán đế chắc chắn</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const translatedBatches = [];
+  const mockProvider = {
+    name: "mock-engine",
+    async translateBatch(req) {
+      translatedBatches.push(...req.items.map((i) => i.sourceText));
+      const results = new Map();
+      for (const it of req.items) results.set(it.id, "Firmly inspect sole attaching process");
+      return { results, provider: "mock-engine", durationMs: 5 };
+    },
+    async translate(req) {
+      translatedBatches.push(req.sourceText);
+      return { translatedText: "Firmly inspect sole attaching process", provider: "mock-engine", durationMs: 5 };
+    }
+  };
+
+  const result = await pptxTranslatorService.translate(buffer, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "replace_en",
+  });
+
+  // ONLY Vietnamese sentence "Kiểm tra dán đế chắc chắn" should be translated
+  assert.equal(translatedBatches.length, 1, "Only 1 item should be sent to translation provider");
+  assert.ok(translatedBatches[0].includes("Kiểm tra dán đế"), "The translated item is the Vietnamese instruction");
+
+  // English immune items must NEVER be translated
+  assert.ok(!translatedBatches.includes("GOOD"), "GOOD was immune");
+  assert.ok(!translatedBatches.includes("NO GOOD"), "NO GOOD was immune");
+  assert.ok(!translatedBatches.includes("CRITICAL TO QUALITY"), "CRITICAL TO QUALITY was immune");
+  assert.ok(!translatedBatches.includes("PEGASUS 41"), "PEGASUS 41 was immune");
+
+  // Output slide XML must retain all original English terms intact
+  const zipAfter = await JSZip.loadAsync(result.translatedBuffer);
+  const slide1After = await zipAfter.file("ppt/slides/slide1.xml")?.async("string");
+  assert.ok(slide1After.includes("CRITICAL TO QUALITY"), "CRITICAL TO QUALITY preserved in output");
+  assert.ok(slide1After.includes("GOOD"), "GOOD preserved in output");
+  assert.ok(slide1After.includes("NO GOOD"), "NO GOOD preserved in output");
+  assert.ok(slide1After.includes("PEGASUS 41"), "PEGASUS 41 preserved in output");
+});
+
 
 
 

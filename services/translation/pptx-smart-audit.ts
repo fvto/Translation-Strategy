@@ -11,7 +11,7 @@ import type { AuditMemoryPair } from "./audit-intelligence";
 import { PPTX_PARAGRAPH_PATTERN, paragraphText, canReplaceParagraphText, replaceParagraphText, canTranslateParagraphText } from "../documents/pptx-text";
 import { orderedSlidePaths, readIsqSlidePairs } from "../documents/pptx-slide-order";
 import { dynamicDeckDetector } from "../documents/pptx-structure";
-import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName } from "./smart-detector";
+import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName, isEnglishImmunityProtected } from "./smart-detector";
 import type { ScannedTextUnit, SmartAuditReport, TextUnitLocation, TranslationAuditGroup } from "./smart-detector";
 
 interface RawUnit { id: string; text: string; xml: string; location: TextUnitLocation; containerId: string; readOnly?: boolean }
@@ -409,13 +409,21 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     const unit: ScannedTextUnit = { id: raw.id, sourceText: raw.text, sourceHash: computeSourceHash(raw.text), canonicalText: canonicalizeText(raw.text),
       location: raw.location, ...base, selectedForTranslation: false, safeToApply: false, canApply: false };
 
-    // Early guard: Inspection status labels under photos are ALWAYS non-translatable and preserved as-is
-    if (isInspectionStatusLabel(raw.text)) {
+    // Early guard: English Immunity Shield (inspection labels, pure English, shoe models, technical standards)
+    if (isEnglishImmunityProtected(raw.text, sourceLang)) {
       preservedIds.add(unit.id);
-      unit.status = "NON_TRANSLATABLE";
-      unit.reason = "Ký hiệu nhãn đánh giá đạt chuẩn (GOOD / NO GOOD / OK / NG); giữ nguyên.";
+      const isLabel = isInspectionStatusLabel(raw.text);
+      unit.status = isLabel ? "NON_TRANSLATABLE" : "ALREADY_TRANSLATED";
+      unit.reason = isLabel
+        ? "Ký hiệu nhãn đánh giá đạt chuẩn (GOOD / NO GOOD / OK / NG); giữ nguyên."
+        : isShoeModelName(raw.text)
+        ? "Tên model giày, thương hiệu hoặc mã mẫu kỹ thuật; giữ nguyên."
+        : isPureEnglish(raw.text)
+        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên, không cần dịch lại."
+        : "Thuật ngữ kỹ thuật / mã chuẩn / số liệu; giữ nguyên.";
       unit.requiresTranslation = false;
       unit.selectedForTranslation = false;
+      if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
       delete unit.suggestedTranslation;
       return unit;
     }
