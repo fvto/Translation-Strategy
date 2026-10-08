@@ -1922,6 +1922,140 @@ test("Test 33: Slide 30 Size Condition Notes & Anchored Containers - Pairs 'Đ�
   assert.equal(needsTrans.length, 0, "Slide 30 must have 0 units needing translation");
 });
 
+test("Test 34: Universal Option 1 Dynamic Slide Pairing - Topic/Title matching across diverse shoe models protects VI reference slides", async () => {
+  const { auditPptxGaps } = await import("../services/translation/smart-detector.js");
+
+  // Construct a presentation with 2 pairs of Option 1 slides:
+  // Slide 1 (EN) <-> Slide 2 (VI) with title 'MATCHING COLOR FOR SUEDE MATERIAL PROCESS'
+  // Slide 3 (EN) <-> Slide 4 (VI) with title 'IPQC Stitching Inspection Focuses'
+  // Slide 5 (VI only): Model exception slide with '*Đối với VOMERO-17' (genuine NEEDS_TRANSLATION)
+
+  const s1EnXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>IPQC Cutting Inspection Focuses</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody><a:p><a:r><a:t>MATCHING COLOR FOR SUEDE MATERIAL PROCESS</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody>
+      <a:p><a:r><a:t>1. Suede leather components are cut from the same material panel and pair-matching follow R method.</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Pair the materials correctly by matching label. Ensure the pair-matching label does not fall off.</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  const s2ViXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>IPQC Cutting Inspection Focuses</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody><a:p><a:r><a:t>MATCHING COLOR FOR SUEDE MATERIAL PROCESS</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody>
+      <a:p><a:r><a:t>1. Các bộ vị da lông được chặt trên cùng 1 tấm liệu và được phối R sau khi chặt.</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Liệu được phối đồng đôi đúng cặp số, tem phối không được rơi mất trong quá trình thao tác.</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  const s3EnXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Stitching Inspection Strategy</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody><a:p><a:r><a:t>IPQC Stitching Inspection Focuses</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody>
+      <a:p><a:r><a:t>1. Ensure one complete pair of sample shoes is available in the production line.</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Check stitching components for correct orientation to ensure the correct color is stitched.</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  const s4ViXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Stitching Inspection Strategy</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody><a:p><a:r><a:t>IPQC Stitching Inspection Focuses</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody>
+      <a:p><a:r><a:t>1. Kiểm tra đảm bảo có đủ 1 đôi giày mẫu tại khu vực chuyền may sản xuất.</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Kiểm tra các bộ vị may phải đồng chân để đảm bảo màu sắc được may đúng tiêu chuẩn.</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  const s5ModXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:p><a:r><a:t>Stitching Inspection Strategy</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody><a:p><a:r><a:t>*Đối với VOMERO-17</a:t></a:r></a:p></p:txBody></p:sp>
+    <p:sp><p:txBody>
+      <a:p><a:r><a:t>1. Kiểm tra logo được may theo định vị trên eo ngoài của model Vomero.</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Kiểm tra sau khi may cách biên đều 1.5mm SPI 9-10 stitches/inch.</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide3.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide4.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide5.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+    <p:sldId id="257" r:id="rId2"/>
+    <p:sldId id="258" r:id="rId3"/>
+    <p:sldId id="259" r:id="rId4"/>
+    <p:sldId id="260" r:id="rId5"/>
+  </p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+    <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/>
+    <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide3.xml"/>
+    <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide4.xml"/>
+    <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide5.xml"/>
+  </Relationships>`);
+  zip.file("ppt/slides/slide1.xml", s1EnXml);
+  zip.file("ppt/slides/slide2.xml", s2ViXml);
+  zip.file("ppt/slides/slide3.xml", s3EnXml);
+  zip.file("ppt/slides/slide4.xml", s4ViXml);
+  zip.file("ppt/slides/slide5.xml", s5ModXml);
+
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+  const report = await auditPptxGaps(buffer, "NIKE-VOMERO-17-SOP.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+    autoAiCascade: false,
+  });
+
+  // Verify Slide 2 (VI) is completely protected as reference slide of Slide 1 (EN)
+  const s2Units = report.units.filter((u) => u.location.slideIndex === 2);
+  assert.ok(s2Units.length >= 2, "Slide 2 units found");
+  for (const u of s2Units) {
+    assert.equal(u.status, "ALREADY_TRANSLATED", `Slide 2 unit '${u.sourceText}' must be ALREADY_TRANSLATED`);
+    assert.equal(u.requiresTranslation, false, `Slide 2 unit '${u.sourceText}' requiresTranslation must be false`);
+  }
+
+  // Verify Slide 4 (VI) is completely protected as reference slide of Slide 3 (EN)
+  const s4Units = report.units.filter((u) => u.location.slideIndex === 4);
+  assert.ok(s4Units.length >= 2, "Slide 4 units found");
+  for (const u of s4Units) {
+    assert.equal(u.status, "ALREADY_TRANSLATED", `Slide 4 unit '${u.sourceText}' must be ALREADY_TRANSLATED`);
+    assert.equal(u.requiresTranslation, false, `Slide 4 unit '${u.sourceText}' requiresTranslation must be false`);
+  }
+
+  // Verify Slide 5 (Model exception '*Đối với VOMERO-17') IS correctly flagged for translation
+  const s5Units = report.units.filter((u) => u.location.slideIndex === 5);
+  const s5NeedsTrans = s5Units.filter((u) => u.status === "NEEDS_TRANSLATION" || u.requiresTranslation || u.selectedForTranslation);
+  assert.ok(s5NeedsTrans.length >= 2, "Slide 5 model exception steps must require translation");
+
+  // Overall check: only Slide 5 steps require translation
+  const allNeedsTrans = report.units.filter((u) => u.requiresTranslation);
+  assert.ok(allNeedsTrans.every((u) => u.location.slideIndex === 5), "Only Slide 5 units can require translation across the deck");
+});
+
 
 
 

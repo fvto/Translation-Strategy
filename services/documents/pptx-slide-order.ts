@@ -47,6 +47,10 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     const viCount = texts.filter((t) => VI_DIACRITICS_REGEX.test(t)).length;
     const enCount = texts.filter((t) => !VI_DIACRITICS_REGEX.test(t) && /[a-zA-Z]{2,}/.test(t)).length;
     const totalTexts = texts.length;
+    const viLong = texts.filter((t) => VI_DIACRITICS_REGEX.test(t) && t.trim().length >= 25).length;
+    const enLong = texts.filter((t) => !VI_DIACRITICS_REGEX.test(t) && /[a-zA-Z]{2,}/.test(t) && t.trim().length >= 25).length;
+    const title1 = (texts[0] || "").trim().toLowerCase();
+    const title2 = (texts[1] || "").trim().toLowerCase();
     profiles.push({
       path,
       slideIndex: i + 1,
@@ -58,6 +62,10 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
       stepNumber: extractSlideStep(texts),
       hasEnMarker: hasExplicitEnMarker(texts),
       hasViMarker: hasExplicitViMarker(texts),
+      title1,
+      title2,
+      viLong,
+      enLong,
     });
   }
 
@@ -66,12 +74,14 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
 
   const isEnSlide = (s: SlideProfile) => {
     if (s.hasEnMarker && !s.hasViMarker) return true;
+    if (s.enLong >= 2 && s.enLong > s.viLong * 2) return true;
     return (s.viCount === 0 && (s.enRatio >= 0.20 || s.enCount >= 1)) ||
       (s.enCount > s.viCount && (s.viCount <= 1 || s.viRatio < 0.25));
   };
 
   const isViSlide = (s: SlideProfile) => {
     if (s.hasViMarker && !s.hasEnMarker) return true;
+    if (s.viLong >= 2 && s.viLong > s.enLong) return true;
     return (s.viCount >= 1 && (s.viRatio >= 0.20 || s.viCount >= s.enCount)) ||
       (s.viCount >= 2);
   };
@@ -86,18 +96,25 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     const diffStep = Boolean(curr.stepNumber && next.stepNumber && curr.stepNumber !== next.stepNumber);
     if (diffStep) continue;
 
+    const sameMainTitle = Boolean(curr.title1 && next.title1 && (curr.title1 === next.title1 || curr.title1.includes(next.title1) || next.title1.includes(curr.title1)));
+    const sameSubTitle = Boolean(curr.title2 && next.title2 && (curr.title2 === next.title2));
+    const titleTopicMatch = Boolean(
+      ((sameMainTitle && curr.title1.length >= 8) || (sameSubTitle && curr.title2.length >= 8)) &&
+      ((curr.enLong >= 2 && next.viLong >= 2) || (curr.viLong >= 2 && next.enLong >= 2))
+    );
+
     const currIsEn = isEnSlide(curr);
     const nextIsVi = isViSlide(next);
     const currIsVi = isViSlide(curr);
     const nextIsEn = isEnSlide(next);
     const explicitMarker = (curr.hasEnMarker && next.hasViMarker) || (curr.hasViMarker && next.hasEnMarker);
 
-    if ((currIsEn && nextIsVi && (stepMatch || explicitMarker)) || (stepMatch && curr.hasEnMarker && next.hasViMarker)) {
+    if ((currIsEn && nextIsVi && (stepMatch || explicitMarker || titleTopicMatch)) || (stepMatch && curr.hasEnMarker && next.hasViMarker)) {
       rawCandidatePairs.push({ en: curr.path, vi: next.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
       i++;
-    } else if ((currIsVi && nextIsEn && (stepMatch || explicitMarker)) || (stepMatch && curr.hasViMarker && next.hasEnMarker)) {
+    } else if ((currIsVi && nextIsEn && (stepMatch || explicitMarker || titleTopicMatch)) || (stepMatch && curr.hasViMarker && next.hasEnMarker)) {
       rawCandidatePairs.push({ en: next.path, vi: curr.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
@@ -153,8 +170,26 @@ export async function readIsqSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
     xml.matchAll(/<pair en="(ppt\/slides\/slide\d+\.xml)" vi="(ppt\/slides\/slide\d+\.xml)"\/>/g),
     (m) => ({ en: m[1], vi: m[2] })
   ).filter((p) => zip.file(p.en) && zip.file(p.vi));
-  if (xmlPairs.length > 0) return xmlPairs;
-  return detectDynamicSlidePairs(zip);
+
+  const dynamicPairs = await detectDynamicSlidePairs(zip);
+  if (xmlPairs.length === 0) return dynamicPairs;
+
+  const seenPaths = new Set<string>();
+  for (const p of xmlPairs) {
+    seenPaths.add(p.en);
+    seenPaths.add(p.vi);
+  }
+
+  const merged = [...xmlPairs];
+  for (const dp of dynamicPairs) {
+    if (!seenPaths.has(dp.en) && !seenPaths.has(dp.vi)) {
+      merged.push(dp);
+      seenPaths.add(dp.en);
+      seenPaths.add(dp.vi);
+    }
+  }
+
+  return merged;
 }
 export async function orderedSlidePaths(zip: JSZip): Promise<string[]> {
   const presentation = await zip.file("ppt/presentation.xml")?.async("string") || "";

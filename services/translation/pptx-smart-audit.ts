@@ -373,9 +373,22 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         } else {
           const rem1 = b1.filter((u) => !paired.has(u.id));
           const rem2 = b2.filter((u) => !paired.has(u.id));
-          const minRem = Math.min(rem1.length, rem2.length);
-          for (let i = 0; i < minRem; i++) {
-            addPair(rem1[i], rem2[i]);
+          // First match sub-headings if present (e.g. *For the eyestay: <-> *Đối với ô dê)
+          const h1 = rem1.find((u) => /^\s*\*?\s*(?:for|đối\s*với)\b/i.test(u.text));
+          const h2 = rem2.find((u) => /^\s*\*?\s*(?:for|đối\s*với)\b/i.test(u.text));
+          if (h1 && h2) {
+            addPair(h1, h2);
+          }
+          const subRem1 = rem1.filter((u) => !paired.has(u.id));
+          const subRem2 = rem2.filter((u) => !paired.has(u.id));
+          if (subRem1.length === 1 && subRem2.length >= 1) {
+            const bestMatch = subRem2.find((u) => u.text.trim().length >= 20) || subRem2[subRem2.length - 1];
+            if (bestMatch) addPair(subRem1[0], bestMatch);
+          } else {
+            const minRem = Math.min(subRem1.length, subRem2.length);
+            for (let i = 0; i < minRem; i++) {
+              addPair(subRem1[i], subRem2[i]);
+            }
           }
         }
       } else {
