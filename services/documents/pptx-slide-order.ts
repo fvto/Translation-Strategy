@@ -83,17 +83,21 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     if (pairedPaths.has(curr.path) || pairedPaths.has(next.path)) continue;
 
     const stepMatch = Boolean(curr.stepNumber && next.stepNumber && curr.stepNumber === next.stepNumber);
+    const diffStep = Boolean(curr.stepNumber && next.stepNumber && curr.stepNumber !== next.stepNumber);
+    if (diffStep) continue;
+
     const currIsEn = isEnSlide(curr);
     const nextIsVi = isViSlide(next);
     const currIsVi = isViSlide(curr);
     const nextIsEn = isEnSlide(next);
+    const explicitMarker = (curr.hasEnMarker && next.hasViMarker) || (curr.hasViMarker && next.hasEnMarker);
 
-    if ((currIsEn && nextIsVi) || (stepMatch && curr.hasEnMarker && next.hasViMarker)) {
+    if ((currIsEn && nextIsVi && (stepMatch || explicitMarker)) || (stepMatch && curr.hasEnMarker && next.hasViMarker)) {
       rawCandidatePairs.push({ en: curr.path, vi: next.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
       i++;
-    } else if ((currIsVi && nextIsEn) || (stepMatch && curr.hasViMarker && next.hasEnMarker)) {
+    } else if ((currIsVi && nextIsEn && (stepMatch || explicitMarker)) || (stepMatch && curr.hasViMarker && next.hasEnMarker)) {
       rawCandidatePairs.push({ en: next.path, vi: curr.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);

@@ -381,7 +381,19 @@ export function isNonTranslatable(text: string): boolean {
   // 8. SPI Stitch density canonical pattern (e.g., "SPI 9-10 stitches/inch")
   if (/^SPI\s+\d+(?:-\d+)?\s+stitches\/inch$/i.test(trimmed)) return true;
 
+  // 9. Inspection photo evaluation labels (GOOD, NO GOOD, OK, NG, PASS, FAIL)
+  if (isInspectionStatusLabel(trimmed)) return true;
+
   return false;
+}
+
+/**
+ * Detects universal inspection photo labels (GOOD, NO GOOD, OK, NG, PASS, FAIL)
+ */
+export function isInspectionStatusLabel(text: string): boolean {
+  if (!text) return false;
+  const clean = text.replace(/^[#\(\[\{\.\:\*]+|[\)\]\}\.\:\,]+$/g, "").trim();
+  return /^(?:GOOD|NO\s*GOOD|OK|NG|PASS|FAIL|REJECT|ACCEPT|SAMPLE|DEFECT|CORRECT|INCORRECT|N\/A)$/i.test(clean);
 }
 
 /**

@@ -757,6 +757,68 @@ test("Smart Audit: Never blindly pairs unrelated items across slides (e.g. COMME
   assert.notEqual(commentsUnit.existingTranslation, "QAM cập nhật", "Comments MUST NOT have QAM cập nhật as existingTranslation");
 });
 
+test("Smart Audit: Inspection labels (GOOD, NO GOOD, OK, NG) are NON_TRANSLATABLE with zero suggestions", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.ts");
+  const JSZip = (await import("jszip")).default;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+  </p:sldIdLst>
+</p:presentation>`);
+
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Do thiết kế phần eo có lập thể nên chấp nhận logo gợn sóng tự nhiên cập nhật QAM</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>NO GOOD</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>GOOD</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const auditReport = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual"
+  });
+
+  const noGoodUnit = auditReport.units.find((u) => u.sourceText === "NO GOOD");
+  const goodUnit = auditReport.units.find((u) => u.sourceText === "GOOD");
+  const thietKeUnit = auditReport.units.find((u) => u.sourceText.includes("Do thiết kế"));
+
+  assert.ok(noGoodUnit, "NO GOOD unit exists");
+  assert.ok(goodUnit, "GOOD unit exists");
+  assert.ok(thietKeUnit, "Do thiet ke unit exists");
+
+  assert.equal(noGoodUnit.status, "NON_TRANSLATABLE", "NO GOOD is NON_TRANSLATABLE");
+  assert.equal(noGoodUnit.suggestedTranslation, undefined, "NO GOOD has NO suggestedTranslation");
+  assert.equal(goodUnit.status, "NON_TRANSLATABLE", "GOOD is NON_TRANSLATABLE");
+  assert.equal(goodUnit.suggestedTranslation, undefined, "GOOD has NO suggestedTranslation");
+
+  assert.notEqual(thietKeUnit.suggestedTranslation, "NO GOOD", "Do thiet ke MUST NOT suggest NO GOOD");
+  assert.notEqual(noGoodUnit.suggestedTranslation, thietKeUnit.sourceText, "NO GOOD MUST NOT suggest Do thiet ke");
+});
+
 
 
 

@@ -11,7 +11,7 @@ import type { AuditMemoryPair } from "./audit-intelligence";
 import { PPTX_PARAGRAPH_PATTERN, paragraphText, canReplaceParagraphText, replaceParagraphText, canTranslateParagraphText } from "../documents/pptx-text";
 import { orderedSlidePaths, readIsqSlidePairs } from "../documents/pptx-slide-order";
 import { dynamicDeckDetector } from "../documents/pptx-structure";
-import { classifyTextUnit, computeSourceHash, hasViDiacritics, isNonTranslatable, isPureEnglish, isShoeModelName } from "./smart-detector";
+import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName } from "./smart-detector";
 import type { ScannedTextUnit, SmartAuditReport, TextUnitLocation, TranslationAuditGroup } from "./smart-detector";
 
 interface RawUnit { id: string; text: string; xml: string; location: TextUnitLocation; containerId: string; readOnly?: boolean }
@@ -204,21 +204,24 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       // Interleaved lines within the same paragraph: 1.EN, 1.VI, 2.EN, 2.VI...
       for (let k = 0; k < parts.length - 1; k++) {
         const l1 = parts[k], l2 = parts[k + 1];
+        if (isInspectionStatusLabel(l1) || isInspectionStatusLabel(l2)) continue;
         const s1 = sourceEvidence(l1, sourceLang), t1 = targetEvidence(l1, targetLang);
         const s2 = sourceEvidence(l2, sourceLang), t2 = targetEvidence(l2, targetLang);
-        const hasVi1 = hasViDiacritics(l1), hasVi2 = hasViDiacritics(l2);
-        const hasEn1 = !hasVi1 && /[a-zA-Z]{2,}/.test(l1);
-        const hasEn2 = !hasVi2 && /[a-zA-Z]{2,}/.test(l2);
         const step1 = extractItemStepNumber(l1), step2 = extractItemStepNumber(l2);
         const sameStep = Boolean(step1 && step2 && step1 === step2);
+        const diffStep = Boolean(step1 && step2 && step1 !== step2);
+        if (diffStep) continue;
 
-        if ((s1 && t2) || (sameStep && s1 && !s2) || (hasVi1 && hasEn2)) {
+        const lenRatio = Math.min(l1.trim().length, l2.trim().length) / Math.max(l1.trim().length, l2.trim().length);
+        const plausibleLength = lenRatio >= 0.35 || (sameStep && lenRatio >= 0.25);
+
+        if (plausibleLength && ((s1 && t2 && lenRatio >= 0.4) || (sameStep && s1 && !s2))) {
           if (!isNonTranslatable(l1) && !isNonTranslatable(l2) && !/^\d+(?:[.,]\d+)?$/.test(l1) && !/^\d+(?:[.,]\d+)?$/.test(l2)) {
             pairs.push({ source: l1, target: l2, origin: "presentation", slideIndex: raw.location.slideIndex });
             inlineBilingual.add(raw.id);
             k++;
           }
-        } else if ((t1 && s2) || (sameStep && !s1 && s2) || (hasVi2 && hasEn1)) {
+        } else if (plausibleLength && ((t1 && s2 && lenRatio >= 0.4) || (sameStep && !s1 && s2))) {
           if (!isNonTranslatable(l1) && !isNonTranslatable(l2) && !/^\d+(?:[.,]\d+)?$/.test(l1) && !/^\d+(?:[.,]\d+)?$/.test(l2)) {
             pairs.push({ source: l2, target: l1, origin: "presentation", slideIndex: raw.location.slideIndex });
             inlineBilingual.add(raw.id);
@@ -231,13 +234,18 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   const known = new AuditMemoryIndex(pairs);
   const addPair = (source: RawUnit, target: RawUnit) => {
     if (isNonTranslatable(source.text) || isNonTranslatable(target.text)) return;
+    if (isInspectionStatusLabel(source.text) || isInspectionStatusLabel(target.text)) return;
     const sTrim = source.text.trim();
     const tTrim = target.text.trim();
     if (sTrim.toLowerCase() === tTrim.toLowerCase()) return;
     if (/^\d+(?:[.,]\d+)?$/.test(sTrim) || /^\d+(?:[.,]\d+)?$/.test(tTrim)) return;
     if (sTrim.length <= 1 || tTrim.length <= 1) return;
-    if (sTrim.length > 15 && tTrim.length < 4) return;
-    if (tTrim.length > 15 && sTrim.length < 4) return;
+
+    // Strict length disparity guard: a long paragraph cannot pair with a short label
+    const minLen = Math.min(sTrim.length, tTrim.length);
+    const maxLen = Math.max(sTrim.length, tTrim.length);
+    if (maxLen >= 15 && minLen < 5) return;
+    if (maxLen >= 25 && minLen / maxLen < 0.25) return;
 
     pairs.push({ source: source.text, target: target.text, origin: "presentation", slideIndex: source.location.slideIndex, sourceUnitId: source.id, targetUnitId: target.id });
     paired.set(source.id, target.text); paired.set(target.id, source.text);
@@ -253,19 +261,22 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     for (let k = 0; k < members.length - 1; k++) {
       const u1 = members[k], u2 = members[k + 1];
       if (paired.has(u1.id) || paired.has(u2.id)) continue;
+      if (isInspectionStatusLabel(u1.text) || isInspectionStatusLabel(u2.text)) continue;
 
       const s1 = sourceEvidence(u1.text, sourceLang), t1 = targetEvidence(u1.text, targetLang);
       const s2 = sourceEvidence(u2.text, sourceLang), t2 = targetEvidence(u2.text, targetLang);
-      const hasVi1 = hasViDiacritics(u1.text), hasVi2 = hasViDiacritics(u2.text);
-      const hasEn1 = !hasVi1 && /[a-zA-Z]{2,}/.test(u1.text);
-      const hasEn2 = !hasVi2 && /[a-zA-Z]{2,}/.test(u2.text);
       const step1 = extractItemStepNumber(u1.text), step2 = extractItemStepNumber(u2.text);
       const sameStep = Boolean(step1 && step2 && step1 === step2);
+      const diffStep = Boolean(step1 && step2 && step1 !== step2);
+      if (diffStep) continue;
 
-      if ((s1 && t2) || (sameStep && s1 && !s2) || (hasVi1 && hasEn2)) {
+      const lenRatio = Math.min(u1.text.trim().length, u2.text.trim().length) / Math.max(u1.text.trim().length, u2.text.trim().length);
+      const plausibleLength = lenRatio >= 0.35 || (sameStep && lenRatio >= 0.25);
+
+      if (plausibleLength && ((s1 && t2 && lenRatio >= 0.4) || (sameStep && s1 && !s2))) {
         addPair(u1, u2);
         k++;
-      } else if ((t1 && s2) || (sameStep && !s1 && s2) || (hasVi2 && hasEn1)) {
+      } else if (plausibleLength && ((t1 && s2 && lenRatio >= 0.4) || (sameStep && !s1 && s2))) {
         addPair(u2, u1);
         k++;
       }
@@ -297,9 +308,16 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     }
 
     // 4. Unique complementary pair fallback
-    const unpairedSources = members.filter((u) => !paired.has(u.id) && sourceEvidence(u.text, sourceLang));
-    const unpairedTargets = members.filter((u) => !paired.has(u.id) && targetEvidence(u.text, targetLang));
-    if (unpairedSources.length === 1 && unpairedTargets.length === 1) addPair(unpairedSources[0], unpairedTargets[0]);
+    const unpairedSources = members.filter((u) => !paired.has(u.id) && sourceEvidence(u.text, sourceLang) && !isInspectionStatusLabel(u.text));
+    const unpairedTargets = members.filter((u) => !paired.has(u.id) && targetEvidence(u.text, targetLang) && !isInspectionStatusLabel(u.text));
+    if (unpairedSources.length === 1 && unpairedTargets.length === 1) {
+      const s = unpairedSources[0], t = unpairedTargets[0];
+      const sLen = s.text.trim().length, tLen = t.text.trim().length;
+      const ratio = Math.min(sLen, tLen) / Math.max(sLen, tLen);
+      if (ratio >= 0.35 && sLen >= 6 && tLen >= 6) {
+        addPair(s, t);
+      }
+    }
   }
 
   // 5. Cross-container / Same-slide pairing (Block bilingual layout on the same slide:
@@ -312,8 +330,8 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   }
 
   for (const [, slideUnits] of slideUnitsMap) {
-    const unpairedVi = slideUnits.filter((u) => !paired.has(u.id) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
-    const unpairedEn = slideUnits.filter((u) => !paired.has(u.id) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)));
+    const unpairedVi = slideUnits.filter((u) => !paired.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
+    const unpairedEn = slideUnits.filter((u) => !paired.has(u.id) && !isInspectionStatusLabel(u.text) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)));
 
     // A. Match by step number on the same slide (e.g. 1.EN with 1.VI, 2.EN with 2.VI...)
     for (const viUnit of unpairedVi) {
@@ -322,7 +340,11 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       if (vStep) {
         const matchingEn = unpairedEn.find((eu) => !paired.has(eu.id) && extractItemStepNumber(eu.text) === vStep);
         if (matchingEn) {
-          addPair(viUnit, matchingEn);
+          const vLen = viUnit.text.trim().length, eLen = matchingEn.text.trim().length;
+          const ratio = Math.min(vLen, eLen) / Math.max(vLen, eLen);
+          if (ratio >= 0.25 || (vLen < 15 && eLen < 20)) {
+            addPair(viUnit, matchingEn);
+          }
         }
       }
     }
@@ -337,8 +359,8 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     }
   }
   for (const pair of isqSlidePairs) {
-    const enUnits = (slidePartUnits.get(pair.en) || []).filter((u) => !isNonTranslatable(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
-    const viUnits = (slidePartUnits.get(pair.vi) || []).filter((u) => !isNonTranslatable(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
+    const enUnits = (slidePartUnits.get(pair.en) || []).filter((u) => !isNonTranslatable(u.text) && !isInspectionStatusLabel(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
+    const viUnits = (slidePartUnits.get(pair.vi) || []).filter((u) => !isNonTranslatable(u.text) && !isInspectionStatusLabel(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
     // Match by step number across slides
     for (const vu of viUnits) {
       if (paired.has(vu.id)) continue;
@@ -346,7 +368,11 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       if (vStep) {
         const matchingEu = enUnits.find((eu) => !paired.has(eu.id) && extractItemStepNumber(eu.text) === vStep);
         if (matchingEu) {
-          addPair(vu, matchingEu);
+          const vLen = vu.text.trim().length, eLen = matchingEu.text.trim().length;
+          const ratio = Math.min(vLen, eLen) / Math.max(vLen, eLen);
+          if (ratio >= 0.3 || (vLen < 15 && eLen < 20)) {
+            addPair(vu, matchingEu);
+          }
         }
       }
     }
@@ -382,6 +408,18 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       existingTranslation: paired.has(raw.id) ? paired.get(raw.id) : undefined });
     const unit: ScannedTextUnit = { id: raw.id, sourceText: raw.text, sourceHash: computeSourceHash(raw.text), canonicalText: canonicalizeText(raw.text),
       location: raw.location, ...base, selectedForTranslation: false, safeToApply: false, canApply: false };
+
+    // Early guard: Inspection status labels under photos are ALWAYS non-translatable and preserved as-is
+    if (isInspectionStatusLabel(raw.text)) {
+      preservedIds.add(unit.id);
+      unit.status = "NON_TRANSLATABLE";
+      unit.reason = "Ký hiệu nhãn đánh giá đạt chuẩn (GOOD / NO GOOD / OK / NG); giữ nguyên.";
+      unit.requiresTranslation = false;
+      unit.selectedForTranslation = false;
+      delete unit.suggestedTranslation;
+      return unit;
+    }
+
     if (referencePaths.has(raw.location.partPath!)) {
       preservedIds.add(unit.id);
       unit.status = "ALREADY_TRANSLATED";
@@ -389,6 +427,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       unit.selectedForTranslation = false;
       unit.requiresTranslation = false;
       if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
+      delete unit.suggestedTranslation;
       return unit;
     }
     const isqSource = isqPaths.has(raw.location.partPath!) && sourceEvidence(raw.text,sourceLang);
@@ -401,11 +440,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         unit.reason = "Đã có bản dịch song ngữ tương ứng trong cùng slide/hộp văn bản.";
         unit.requiresTranslation = false;
         unit.selectedForTranslation = false;
-        if (unit.existingTranslation && unit.existingTranslation.trim().toLowerCase() !== raw.text.trim().toLowerCase()) {
-          unit.suggestedTranslation = unit.existingTranslation;
-        } else {
-          delete unit.suggestedTranslation;
-        }
+        delete unit.suggestedTranslation;
         return unit;
       }
     }
