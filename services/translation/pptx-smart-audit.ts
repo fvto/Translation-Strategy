@@ -462,6 +462,39 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
           addPair(s, t);
         }
       }
+
+      // 4.5 Orphan / Continuation paragraph adoption within container
+      // When an unnumbered paragraph in a container follows a paired paragraph of the same language,
+      // and there are no unpaired items of the other language in this container,
+      // it is a line break / continuation (e.g. '1.May mũi độ bo' followed by 'không đều' in Slide 7).
+      for (let k = 1; k < scopeMembers.length; k++) {
+        const u = scopeMembers[k];
+        if (paired.has(u.id)) continue;
+        if (isInspectionStatusLabel(u.text) || isModelSectionHeading(u.text) || isNonTranslatable(u.text)) continue;
+        if (extractItemStepNumber(u.text)) continue;
+
+        // Check preceding member in the container
+        const prev = scopeMembers[k - 1];
+        if (!paired.has(prev.id)) continue;
+
+        const uIsVi = hasViDiacritics(u.text) || sourceEvidence(u.text, sourceLang);
+        const prevIsVi = hasViDiacritics(prev.text) || sourceEvidence(prev.text, sourceLang);
+        if (uIsVi !== prevIsVi) continue;
+
+        // Check if the other language in this scope has any unpaired items
+        const oppositeUnpaired = scopeMembers.some((cand) => {
+          if (paired.has(cand.id)) return false;
+          const candIsVi = hasViDiacritics(cand.text) || sourceEvidence(cand.text, sourceLang);
+          return candIsVi !== uIsVi;
+        });
+
+        if (!oppositeUnpaired) {
+          const partnerText = paired.get(prev.id)!;
+          const partnerId = pairedPartnerId.get(prev.id);
+          paired.set(u.id, partnerText);
+          if (partnerId) pairedPartnerId.set(u.id, partnerId);
+        }
+      }
     }
   }
 

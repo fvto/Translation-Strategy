@@ -37,6 +37,10 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     stepNumber: string | null;
     hasEnMarker: boolean;
     hasViMarker: boolean;
+    title1: string;
+    title2: string;
+    enLong: number;
+    viLong: number;
   }
 
   const profiles: SlideProfile[] = [];

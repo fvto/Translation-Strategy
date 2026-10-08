@@ -2056,6 +2056,85 @@ test("Test 34: Universal Option 1 Dynamic Slide Pairing - Topic/Title matching a
   assert.ok(allNeedsTrans.every((u) => u.location.slideIndex === 5), "Only Slide 5 units can require translation across the deck");
 });
 
+test("Test 35: Slide 7 Orphan Continuation Paragraph Adoption - Eliminates false gaps for split line paragraphs in table cells", async () => {
+  const { auditPptxGaps } = await import("../services/translation/smart-detector.js");
+
+  const slide7Xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp>
+        <p:txBody>
+          <a:p><a:r><a:t>Assembly Inspection Strategy</a:t></a:r></a:p>
+        </p:txBody>
+      </p:sp>
+      <p:graphicFrame>
+        <a:graphic>
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">
+            <a:tbl>
+              <a:tr>
+                <a:tc>
+                  <a:txBody>
+                    <a:p><a:r><a:t>1.Stitching tip curve inconsistent</a:t></a:r></a:p>
+                    <a:p><a:r><a:t>2.Pull tip inconsistent when insert last</a:t></a:r></a:p>
+                    <a:p><a:r><a:t>1.May mũi độ bo</a:t></a:r></a:p>
+                    <a:p><a:r><a:t>không đều</a:t></a:r></a:p>
+                    <a:p><a:r><a:t>2. Vô phom bợ mũi không đều</a:t></a:r></a:p>
+                  </a:txBody>
+                </a:tc>
+              </a:tr>
+            </a:tbl>
+          </a:graphicData>
+        </a:graphic>
+      </p:graphicFrame>
+    </p:spTree>
+  </p:cSld>
+</p:sld>`;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+  </p:sldIdLst>
+</p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+  zip.file("ppt/slides/slide1.xml", slide7Xml);
+
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+  const report = await auditPptxGaps(buffer, "Slide7-Continuation-Test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+  });
+
+  // Verify that 'không đều' is adopted by '1.May mũi độ bo' and marked ALREADY_TRANSLATED
+  const orphanUnit = report.units.find((u) => u.sourceText === "không đều");
+  assert.ok(orphanUnit, "'không đều' unit must be extracted");
+  assert.equal(orphanUnit.status, "ALREADY_TRANSLATED", "'không đều' must be ALREADY_TRANSLATED, not NEEDS_TRANSLATION");
+  assert.equal(orphanUnit.requiresTranslation, false, "'không đều' requiresTranslation must be false");
+  assert.equal(orphanUnit.selectedForTranslation, false, "'không đều' selectedForTranslation must be false");
+  assert.ok(orphanUnit.existingTranslation?.includes("Stitching tip curve inconsistent"), "Must link to step 1 English translation");
+
+  // Verify all 5 table items are ALREADY_TRANSLATED
+  const tableUnits = report.units.filter((u) => u.location.isTable);
+  for (const tu of tableUnits) {
+    assert.equal(tu.status, "ALREADY_TRANSLATED", `Table unit '${tu.sourceText}' must be ALREADY_TRANSLATED`);
+  }
+  assert.equal(report.needsTranslationCount, 0, "Slide 7 table cell must produce 0 needsTranslation");
+});
+
+
 
 
 
