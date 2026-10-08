@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw } from "lucide-react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
 
 interface SmartAuditModalProps {
@@ -23,7 +23,7 @@ const LABELS: Record<TextUnitStatus, string> = {
 const ORIGINS: Record<string, string> = { approved: "Thuật ngữ đã duyệt", correction: "Người dùng đã sửa", presentation: "PowerPoint hiện tại", history: "Tài liệu trước" };
 
 export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissingOnly, onApplySuggestions, isLoading = false }: SmartAuditModalProps) {
-  const [tab, setTab] = useState<"summary" | "review">("summary");
+  const [tab, setTab] = useState<"summary" | "review" | "pairs">("summary");
   const [filter, setFilter] = useState("attention");
   const [slide, setSlide] = useState("all");
   const [query, setQuery] = useState("");
@@ -32,6 +32,8 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   const [preview, setPreview] = useState<string[] | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [harvesting, setHarvesting] = useState(false);
+  const [harvestMsg, setHarvestMsg] = useState("");
 
   // Custom translation editing states
   const [customEdits, setCustomEdits] = useState<Record<string, string>>({});
@@ -47,6 +49,8 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
     setEditingUnitId(null);
     setPreview(null);
     setError("");
+    setHarvestMsg("");
+    setHarvesting(false);
     setSlide("all");
     setFilter("attention");
     setTab("summary");
@@ -167,6 +171,29 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
     setSelected((previous) => new Set([...previous].filter((id) => !group.unitIds.includes(id) && !isqPaths.has(byId.get(id)?.location.partPath))));
   };
 
+  const handleHarvestPairs = async () => {
+    if (!auditReport) return;
+    setHarvesting(true);
+    setHarvestMsg("");
+    try {
+      const res = await fetch("/api/terminology/harvest-pairs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ auditReport, fileName: auditReport.fileName }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHarvestMsg(`Đã thu hoạch thành công ${data.addedCount} cụm thuật ngữ vào từ điển (Bỏ qua ${data.skippedCount} từ đã có)!`);
+      } else {
+        setHarvestMsg("Lỗi: " + (data.error || "Không thể thu hoạch"));
+      }
+    } catch (err: any) {
+      setHarvestMsg("Lỗi kết nối: " + (err.message || "Không thể thu hoạch"));
+    } finally {
+      setHarvesting(false);
+    }
+  };
+
   const customEditsCount = Object.keys(customEdits).length;
   const card = "rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 p-4";
   const button = "px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 cursor-pointer";
@@ -194,11 +221,79 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
         <div className="flex gap-4 px-6 py-3 border-b border-slate-200 dark:border-slate-800 text-sm">
           <button onClick={() => setTab("summary")} aria-pressed={tab === "summary"} className={tab === "summary" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Tổng quan</button>
           <button onClick={() => setTab("review")} aria-pressed={tab === "review"} className={tab === "review" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Xem xét ({attention} nhóm)</button>
+          <button onClick={() => setTab("pairs")} aria-pressed={tab === "pairs"} className={tab === "pairs" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700 flex items-center gap-1.5"}>
+            <Layers className="w-3.5 h-3.5" /> Cặp slide ({auditReport.slidePairs?.length || 0})
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {error && <p role="alert" className="text-sm text-rose-600 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800">{error}</p>}
-          {tab === "summary" ? <>
+          {tab === "pairs" ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-base flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-sky-600" /> Sơ đồ ghép cặp slide song ngữ
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Tự động nhận diện động {auditReport.slidePairs?.length || 0} cặp slide (1 trang EN bản dịch + 1 trang VI tham chiếu).
+                  </p>
+                </div>
+                <button
+                  className={button + " bg-emerald-600 text-white hover:bg-emerald-500 flex items-center gap-1.5"}
+                  onClick={handleHarvestPairs}
+                  disabled={harvesting || !(auditReport.slidePairs && auditReport.slidePairs.length > 0)}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  {harvesting ? "Đang thu hoạch..." : "Thu hoạch thuật ngữ vào TM & Glossary"}
+                </button>
+              </div>
+
+              {harvestMsg && (
+                <div className={`p-3 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+                  harvestMsg.startsWith("Lỗi")
+                    ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800"
+                    : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800"
+                }`}>
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span>{harvestMsg}</span>
+                </div>
+              )}
+
+              {(!auditReport.slidePairs || auditReport.slidePairs.length === 0) ? (
+                <div className={card + " text-center py-8 text-slate-500"}>
+                  <p>Không phát hiện chuỗi slide song ngữ xen kẽ trong tệp này.</p>
+                  <p className="text-xs mt-1">Tệp này có thể là tệp dạng bảng IPQC đơn slide hoặc tệp chưa được ghép đôi.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                  {auditReport.slidePairs.map((pair, idx) => (
+                    <div key={idx} className={card + " border-slate-300 dark:border-slate-700 relative hover:border-sky-400 dark:hover:border-sky-500 transition-colors"}>
+                      <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2 pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                        <span className="text-sky-600 dark:text-sky-400">Cặp slide #{idx + 1}</span>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {pair.itemCount || 0} đoạn văn · Tự động
+                        </span>
+                      </div>
+                      <div className="space-y-2 text-xs">
+                        <div className="p-2.5 rounded-lg bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/60">
+                          <span className="font-bold text-sky-700 dark:text-sky-300 block mb-0.5">Slide {pair.enSlide} (Bản dịch EN)</span>
+                          <p className="text-slate-700 dark:text-slate-300 line-clamp-2 italic">{pair.enTitle || "(Không có tiêu đề)"}</p>
+                        </div>
+                        <div className="flex justify-center text-slate-400">
+                          <ArrowRight className="w-3.5 h-3.5 rotate-90" />
+                        </div>
+                        <div className="p-2.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60">
+                          <span className="font-bold text-amber-700 dark:text-amber-300 block mb-0.5">Slide {pair.viSlide} (Gốc VI tham chiếu xưởng)</span>
+                          <p className="text-slate-700 dark:text-slate-300 line-clamp-2 italic">{pair.viTitle || "(Không có tiêu đề)"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : tab === "summary" ? <>
             <p className="text-2xl font-bold">{attention} nhóm cần chú ý</p>
             <div className={card + " grid grid-cols-2 md:grid-cols-3 gap-5 text-sm"}>
               <div><strong className="text-amber-600">{auditReport.untranslatedCount ?? auditReport.needsTranslationCount}</strong><p>Chưa dịch trong file</p></div>
@@ -208,6 +303,20 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
               <div><strong>{auditReport.possibleTranslationCount + auditReport.reviewRequiredCount + auditReport.mixedLanguageCount}</strong><p>Cần kiểm tra ngữ cảnh</p></div>
               <div><strong className="text-emerald-600">{safeIds.length}</strong><p>Gợi ý có thể áp dụng an toàn</p></div>
             </div>
+
+            {auditReport.slidePairs && auditReport.slidePairs.length > 0 && (
+              <div className={card + " flex items-center justify-between gap-3 text-sm border-sky-300 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/20"}>
+                <div className="flex items-center gap-3">
+                  <Layers className="w-5 h-5 text-sky-600 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-sky-900 dark:text-sky-200">Đã nhận diện động {auditReport.slidePairs.length} cặp slide song ngữ (ISQ Option 1)</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Các slide tiếng Việt tham chiếu đã được tự động liên kết với slide tiếng Anh tương ứng và bảo vệ không dịch lại.</p>
+                  </div>
+                </div>
+                <button className={button + " bg-sky-600 text-white hover:bg-sky-500"} onClick={() => setTab("pairs")}>Xem sơ đồ ({auditReport.slidePairs.length} cặp)</button>
+              </div>
+            )}
+
             <div className={card + " flex gap-3 text-sm"}><ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" /><p>{auditReport.alreadyTranslatedCount} đoạn đã dịch và {auditReport.nonTranslatableCount} mã/giá trị được giữ lại. Bạn có thể tùy chỉnh sửa trực tiếp câu dịch của bất kỳ nhóm hoặc slide nào trước khi dịch.</p></div>
             <p className="text-sm text-slate-500">Dịch và sửa trực tiếp phần chưa dịch, sau đó tự tải PPTX và quét lại. Các bản dịch đã tùy chỉnh thủ công sẽ được áp dụng trực tiếp mà không tốn quota AI.</p>
             <p className="text-sm text-slate-500">ISQ: chọn theo cả slide để xuất một slide EN và một slide VI liền sau. IPQC giữ bố cục song ngữ trong slide.</p>
@@ -215,6 +324,11 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
             <div className="flex flex-wrap gap-3">
               <button className={button} onClick={() => setTab("review")}>Xem &amp; Tùy chỉnh các nhóm</button>
               <button className={button} onClick={() => { setFilter("reuse"); setTab("review"); }}>Xem bản dịch có thể dùng lại</button>
+              {auditReport.slidePairs && auditReport.slidePairs.length > 0 && (
+                <button className={button + " text-sky-600 flex items-center gap-1.5"} onClick={() => setTab("pairs")}>
+                  <Layers className="w-3.5 h-3.5" /> Sơ đồ cặp slide ({auditReport.slidePairs.length})
+                </button>
+              )}
               {onApplySuggestions && <button className={button + " text-emerald-600"} disabled={loading || !safeIds.length} onClick={() => setPreview(safeIds)}>Xem trước {safeIds.length} sửa an toàn</button>}
             </div>
           </> : <>

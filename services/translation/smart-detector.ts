@@ -75,6 +75,17 @@ export interface TranslationAuditGroup {
   safeToApply: boolean;
 }
 
+export interface SlidePairSummary {
+  enSlide: number;
+  viSlide: number;
+  enPath: string;
+  viPath: string;
+  enTitle?: string;
+  viTitle?: string;
+  status: "auto" | "manual";
+  itemCount?: number;
+}
+
 export interface SmartAuditReport {
   fileName: string;
   fileType: "pptx" | "xlsx";
@@ -96,6 +107,7 @@ export interface SmartAuditReport {
   estimatedGeminiRequests: number;
   units: ScannedTextUnit[];
   groups?: TranslationAuditGroup[];
+  slidePairs?: SlidePairSummary[];
   attentionCount?: number;
   safeFixCount?: number;
   suspiciousTranslationCount?: number;

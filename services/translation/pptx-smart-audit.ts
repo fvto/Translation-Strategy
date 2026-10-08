@@ -393,7 +393,26 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   const count = (status: ScannedTextUnit["status"]) => units.filter((u) => u.status === status).length;
   const pending = units.filter((u) => u.status === "NEEDS_TRANSLATION");
   const translatableMissing = units.filter((u) => u.selectedForTranslation);
-  const uniquePending = new Set(translatableMissing.filter((u) => !u.safeToApply && !["TM_REUSE","LOCKED_TERMINOLOGY"].includes(u.status)).map((u) => u.canonicalText));
+  const slidePairs: import("./smart-detector").SlidePairSummary[] = [];
+  for (const pair of isqSlidePairs) {
+    const enUnits = slidePartUnits.get(pair.en) || [];
+    const viUnits = slidePartUnits.get(pair.vi) || [];
+    const enSlide = enUnits[0]?.location.slideIndex || Number(pair.en.match(/slide(\d+)/)?.[1] || 0);
+    const viSlide = viUnits[0]?.location.slideIndex || Number(pair.vi.match(/slide(\d+)/)?.[1] || 0);
+    const enTitle = enUnits.find((u) => u.text.trim())?.text || "";
+    const viTitle = viUnits.find((u) => u.text.trim())?.text || "";
+    slidePairs.push({
+      enSlide,
+      viSlide,
+      enPath: pair.en,
+      viPath: pair.vi,
+      enTitle,
+      viTitle,
+      status: "auto",
+      itemCount: viUnits.length,
+    });
+  }
+  const uniquePending = new Set(translatableMissing.filter((u) => !u.safeToApply && !["TM_REUSE", "LOCKED_TERMINOLOGY"].includes(u.status)).map((u) => u.canonicalText));
   return { fileName, fileType: "pptx", totalUnits: units.length, totalSlides: extracted.slides,
     alreadyTranslatedCount: count("ALREADY_TRANSLATED"), needsTranslationCount: pending.length, tmReusableCount: count("TM_REUSE"), lockedTerminologyCount: count("LOCKED_TERMINOLOGY"),
     untranslatedCount: units.filter((u) => u.requiresTranslation).length, translatableMissingCount: translatableMissing.length,
@@ -401,7 +420,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     suspiciousTranslationCount: count("SUSPICIOUS_TRANSLATION"), translationConflictCount: count("TRANSLATION_CONFLICT"),
     attentionCount: groups.filter((g) => !g.safeToApply).length, safeFixCount: units.filter((u) => u.safeToApply).length,
     affectedSlides: [...new Set(units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => u.location.slideIndex!))].sort((a, b) => a - b),
-    estimatedGeminiRequests: Math.ceil(uniquePending.size / 25), units, groups };
+    estimatedGeminiRequests: Math.ceil(uniquePending.size / 25), units, groups, slidePairs };
 }
 
 /** Re-scan on the server and apply only the selected suggestions. No client-supplied replacement text. */
