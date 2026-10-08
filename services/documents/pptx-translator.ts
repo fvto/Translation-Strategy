@@ -1519,7 +1519,7 @@ export class PptxTranslatorService {
               // The English counterpart is already in this same container.
               return '';
             }
-            try { translated = replaceParagraphTranslation(pXml, p.translatedText || p.originalText); }
+            try { translated = replaceParagraphTranslation(pXml, p.translatedText || p.originalText, p.originalText); }
             catch (error) { throw new Error(`Không thể giữ định dạng tại ${p.id}: ${error instanceof Error ? error.message : error}`); }
             if (targetMode === "replace_en") return translated;
             return targetLanguage === "en" ? translated + pXml : pXml + translated;

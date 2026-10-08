@@ -57,7 +57,7 @@ export function canTranslateParagraphText(xml: string): boolean {
   return !/<a:fld\b/.test(xml) && /<a:r(?:\s[^>]*)?>[\s\S]*?<a:t(?:\s[^>]*)?>/.test(xml);
 }
 
-export function replaceParagraphTranslation(xml: string, target: string): string {
+export function replaceParagraphTranslation(xml: string, target: string, sourceText?: string): string {
   if (canReplaceParagraphText(xml, target)) return replaceParagraphText(xml, target);
   if (!canTranslateParagraphText(xml) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(target)) {
     throw new Error("This paragraph contains unsupported fields or explicit breaks.");
@@ -74,6 +74,13 @@ export function replaceParagraphTranslation(xml: string, target: string): string
   const hasBold = (r: string) => /<a:rPr\b[^>]*\bb=["'](?:1|true)["']/.test(r);
   const partialBold = substantive.some(r => hasBold(r[0])) && !substantive.every(r => hasBold(r[0]));
   const lines = target.split(/\r?\n/).map(line => line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+
+  // Text Box Overflow Guard: If translated text expanded by > 35% in length and is substantial,
+  // adaptively scale font size down by 1-1.5pt (100-150 hundredths) to prevent text wrapping out of bounds
+  const origLen = (sourceText || paragraphText(xml)).trim().length;
+  const targetLen = target.trim().length;
+  const shouldScaleDown = targetLen > 40 && origLen > 0 && targetLen > origLen * 1.35;
+
   let index = 0;
   return xml.replace(/<a:br\b[^>]*(?:\/>|>[\s\S]*?<\/a:br>)/g, "").replace(/<a:r(?:\s[^>]*)?>[\s\S]*?<\/a:r>/g, r => {
     const selected = index++ === chosen;
@@ -85,6 +92,16 @@ export function replaceParagraphTranslation(xml: string, target: string): string
     if (selected && partialBold) {
       if (/<a:rPr\b/.test(updated)) updated = updated.replace(/<a:rPr\b([^>]*?)(\/?>)/, (_,attrs,end) => `<a:rPr${attrs.replace(/\s+b=["'][^"']*["']/g, "")} b="0"${end}`);
       else updated = updated.replace(/(<a:r(?:\s[^>]*)?>)/, '$1<a:rPr b="0"/>');
+    }
+    if (selected && shouldScaleDown) {
+      updated = updated.replace(/\bsz=["'](\d+)["']/, (_, szStr) => {
+        const currentSz = parseInt(szStr, 10);
+        if (currentSz >= 1200) {
+          const scaled = Math.max(900, currentSz - 120);
+          return `sz="${scaled}"`;
+        }
+        return `sz="${currentSz}"`;
+      });
     }
     if (selected && lines.length > 1) return lines.map(line => {
       let first = true;
