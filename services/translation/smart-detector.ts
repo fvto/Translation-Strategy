@@ -214,8 +214,26 @@ export const FOOTWEAR_BRANDS = new Set([
   "REEBOK",
   "ASICS",
   "NEW BALANCE",
+  "BALANCE",
   "CHING LUH",
   "CHINGLUH",
+  "HOKA",
+  "SALOMON",
+  "ON",
+  "RUNNING",
+  "BROOKS",
+  "SAUCONY",
+  "MIZUNO",
+  "UNDER ARMOUR",
+  "ARMOUR",
+  "TIMBERLAND",
+  "SKECHERS",
+  "LI-NING",
+  "ANTA",
+  "FILA",
+  "CROCS",
+  "BIRKENSTOCK",
+  "MERRELL",
 ]);
 
 /**
@@ -230,6 +248,9 @@ export const FOOTWEAR_MODEL_TOKENS = new Set([
   "NYJAH", "GIANNIS", "FREAK", "LEBRON", "KOBE", "PROTRO", "KD", "JA", "BOOK", "SABRINA",
   "LUKA", "TATUM", "ZION", "GT", "CUT", "JUMP", "VAPORFLY", "ALPHAFLY", "STREAKFLY",
   "TIEMPO", "MERCURIAL", "PHANTOM", "CHUCK", "TAYLOR", "ALL-STAR", "ONE-STAR", "SK8-HI", "OLD-SKOOL",
+  // Multi-brand lines & models
+  "CPFM", "FLEA", "KAYANO", "NIMBUS", "GEL", "BONDI", "CLIFTON", "SPEEDGOAT", "XT-6", "GHOST",
+  "ADRENALINE", "SAMBA", "GAZELLE", "CAMPUS", "STAN", "SMITH", "ULTRABOOST", "SUPERSTAR", "SUEDE",
   // Cuts, tiers, season & document tags
   "LOW", "MID", "HIGH", "OG", "SE", "QS", "SP", "NRG", "PRM", "PREMIUM", "PLUS",
   "FA24", "FA25", "FA26", "SP24", "SP25", "SP26", "SU24", "SU25", "SU26", "HO24", "HO25", "HO26",
@@ -248,16 +269,15 @@ const BRAND_AND_MODELS = new Set([
 /**
  * Detects whether a string is a shoe model name, brand title, or footwear product specification code.
  * Shoe names must never be translated into Vietnamese or sent to the LLM.
+ * Dynamically handles any factory development code, style-color code, or generic model without hardcoding.
  * E.g.
  * - "NIKE SB ZOOM NYJAH 4"
  * - "NIKE SB ZOOM NYJAH 4(SB-077-A)"
- * - "NIKE SB ZOOM NYJAH 4 (SB-077-C)"
- * - "NIKE SB ZOOM NYJAH 4(SB-077-P-1)"
- * - "AIR FORCE 1 '07"
- * - "ZOOM VOMERO 5"
- * - "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual"
- * - "Model: NIKE SB ZOOM NYJAH 4"
- * - "Tên hình thể: NIKE SB ZOOM NYJAH 4"
+ * - "FD0736-001" (Nike 9-char style code)
+ * - "CW2288-111"
+ * - "LQ-075W-1", "SB-077-A-1", "W-088", "(SB-077-C)"
+ * - "Model A", "Model X-99", "Mẫu 1"
+ * - "ASICS GEL-KAYANO 31", "NEW BALANCE 1906R", "HOKA CLIFTON 9"
  */
 export function isShoeModelName(text: string): boolean {
   if (!text) return false;
@@ -272,15 +292,26 @@ export function isShoeModelName(text: string): boolean {
     return false;
   }
 
-  // Standalone spec/sample code like "(SB-077-A)" or "SB-077-P-1" or "SBQ-083-6"
-  if (/^\(?[A-Z]{2,4}[-_]\d{2,4}(?:[-_][A-Z0-9]+)*\)?$/i.test(trimmed)) {
+  // 1. Generic Model labels: "Model A", "Model 01", "Model X-99", "Mẫu 1", "Sample #1"
+  if (/^(?:model|mẫu|sample|hình\s*thể|style|code|art(?:icle)?)\s*[:#\-]?\s*([A-Z0-9\-\.\/]+)$/i.test(trimmed)) {
     return true;
   }
 
-  // Check if string contains at least one recognized footwear brand or prominent model keyword
+  // 2. Standard Footwear Style/Color Codes (e.g. Nike 9-character code "FD0736-001", "CW2288-111", "315122-111", "DD1391-100")
+  if (/^\(?[A-Z0-9]{5,8}[-_/]\d{3}\)?$/i.test(trimmed)) {
+    return true;
+  }
+
+  // 3. Dynamic Factory Development / Sample / Spec codes (e.g. "LQ-075W-1", "SB-077-A-1", "W-088", "HF-001", "FB-100-2", "(SB-077-C)", "SBQ-083-6", "DEV-2025-1")
+  // Requires at least one digit and one separator (- / . _) to avoid catching English hyphenated words like no-sew
+  if (/\d/.test(trimmed) && /^\(?#?[A-Z0-9]{1,8}(?:[-_/\.][A-Z0-9]{1,8})+\)?$/i.test(trimmed)) {
+    return true;
+  }
+
+  // 4. Check if string contains at least one recognized footwear brand or prominent model keyword
   const upper = trimmed.toUpperCase();
   const hasBrandOrModelKeyword =
-    /\b(?:NIKE|JORDAN|CONVERSE|VANS|ADIDAS|AIR\s*FORCE|AIR\s*MAX|ZOOM|PEGASUS|VOMERO|METCON|BLAZER|DUNK|NYJAH|LEBRON|KOBE|GIANNIS|VAPORMAX|FREE\s*METCON|INVINCIBLE|INFINITYRN)\b/i.test(upper);
+    /\b(?:NIKE|JORDAN|CONVERSE|VANS|ADIDAS|PUMA|REEBOK|ASICS|NEW\s*BALANCE|CHING\s*LUH|HOKA|SALOMON|ON|BROOKS|SAUCONY|MIZUNO|UNDER\s*ARMOUR|TIMBERLAND|SKECHERS|LI-NING|ANTA|AIR\s*FORCE|AIR\s*MAX|ZOOM|PEGASUS|VOMERO|METCON|BLAZER|DUNK|NYJAH|LEBRON|KOBE|GIANNIS|VAPORMAX|FREE\s*METCON|INVINCIBLE|INFINITYRN|KAYANO|NIMBUS|GEL|BONDI|CLIFTON|SPEEDGOAT|XT-6|GHOST|ADRENALINE|SAMBA|GAZELLE|STAN\s*SMITH|ULTRABOOST|CPFM|FLEA)\b/i.test(upper);
 
   if (!hasBrandOrModelKeyword) {
     return false;
@@ -307,10 +338,29 @@ export function isShoeModelName(text: string): boolean {
     if (/^[IVXLCDM]+$/i.test(cleanToken)) return true;
     // Year/model year: '07, 77, 2025
     if (/^(?:'\d{2}|\d{2,4})$/.test(cleanToken)) return true;
-    // Product codes with numbers & letters: SB-077-A, SB-077-P-1, SBQ-083, CW2288-111
-    if (/\d/.test(cleanToken) && /^[A-Z0-9\-]+$/.test(cleanToken)) return true;
+    // Product codes with numbers & letters: SB-077-A, SB-077-P-1, SBQ-083, CW2288-111, FD0736-001, W-088
+    if (/\d/.test(cleanToken) && /^[A-Z0-9\-\.\/]+$/.test(cleanToken)) return true;
     // Short alphanumeric tokens (e.g. SB, OG, SE, A, P, C)
     if (cleanToken.length <= 4 && /^[A-Z0-9]+$/.test(cleanToken)) return true;
+    // Hyphenated composite tokens (e.g. GEL-KAYANO, AIR-MAX, OLD-SKOOL)
+    const subParts = cleanToken.split(/[-_/]/);
+    if (
+      subParts.length > 1 &&
+      subParts.every((p) => {
+        const up = p.toUpperCase();
+        return (
+          FOOTWEAR_BRANDS.has(up) ||
+          FOOTWEAR_MODEL_TOKENS.has(up) ||
+          TECHNICAL_ACRONYMS.has(up) ||
+          /^\d+$/.test(up) ||
+          /^[IVXLCDM]+$/i.test(up) ||
+          up.length <= 4 ||
+          (/\d/.test(up) && /^[A-Z0-9]+$/.test(up))
+        );
+      })
+    ) {
+      return true;
+    }
     return false;
   });
 
@@ -331,6 +381,9 @@ export function isNonTranslatable(text: string): boolean {
   if (!text) return false;
   const trimmed = text.trim();
   if (!trimmed) return true;
+
+  // Text with Vietnamese diacritics contains translatable words (e.g. *Mẫu:, *Hình thể:, *Đối với)
+  if (hasViDiacritics(trimmed)) return false;
 
   // 0. Shoe models & footwear brand series (Ching Luh SOP Rule: never translate model names)
   if (isShoeModelName(trimmed)) return true;
@@ -450,6 +503,11 @@ export function isItemPrefixOrCode(str: string): boolean {
 export function isBilingualText(text: string): boolean {
   if (!text) return false;
   const trimmed = text.trim();
+
+  // Model condition / header lines are never inline bilingual text
+  if (/^\s*\*?\s*(?:đối\s*với|áp\s*dụng\s*cho|dành\s*cho|model\s*[:\s\-]|mẫu\s*[:\s\-])/i.test(trimmed)) {
+    return false;
+  }
 
   // Multi-line bilingual check: at least one line pure English and at least one line with Vietnamese diacritics
   if (trimmed.includes("\n")) {

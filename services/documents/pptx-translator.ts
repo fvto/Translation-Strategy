@@ -731,13 +731,24 @@ export class PptxTranslatorService {
           continue;
         }
 
-        // Conditional note prefix pattern: *Đối với <Model> / Đối với <Model>
-        // User rule: Only translate "đối với" -> "For", keep shoe model untouched and never bind model into glossary!
-        const doiVoiMatch = p.originalText.match(/^(\s*\*?\s*)đối\s*với\s+(.+)$/i);
+        // Conditional note prefix pattern: *Đối với <Model> / *Áp dụng cho <Model> / *Dành cho <Model>
+        // User rule: Only translate prefix -> "For", keep shoe model untouched and never bind model into glossary!
+        const doiVoiMatch = p.originalText.match(/^(\s*\*?\s*)(?:đối\s*với|áp\s*dụng\s*cho|dành\s*cho)\s+(.+)$/i);
         if (doiVoiMatch) {
           const prefix = doiVoiMatch[1].includes("*") ? "*For " : "For ";
           const remainder = doiVoiMatch[2].trim();
-          if (isShoeModelName(remainder) || /^[A-Z0-9\-\/\.\s]+$/i.test(remainder)) {
+          if (!hasViDiacritics(remainder) && (isShoeModelName(remainder) || /^[A-Z0-9\-\/\.\s\(\)\'\"\#\:\,]+$/i.test(remainder))) {
+            translationMap.set(p.id, prefix + remainder);
+            continue;
+          }
+        }
+
+        // Model header pattern: *Model: <Model> / *Mẫu: <Model>
+        const modelHeaderMatch = p.originalText.match(/^(\s*\*?\s*)(?:model|mẫu)\s*[:：\-]\s*(.+)$/i);
+        if (modelHeaderMatch) {
+          const prefix = modelHeaderMatch[1].includes("*") ? "*Model: " : "Model: ";
+          const remainder = modelHeaderMatch[2].trim();
+          if (!hasViDiacritics(remainder) && (isShoeModelName(remainder) || /^[A-Z0-9\-\/\.\s\(\)\'\"\#\:\,]+$/i.test(remainder))) {
             translationMap.set(p.id, prefix + remainder);
             continue;
           }

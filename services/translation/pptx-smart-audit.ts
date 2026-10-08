@@ -192,7 +192,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
 
   const isModelSectionHeading = (text: string): boolean => {
     if (!text) return false;
-    return /^\s*\*?\s*(?:đối\s*với|for|áp\s*dụng\s*cho|dành\s*cho|model\s*[:\s]|mẫu\s*[:\s])/i.test(text);
+    return /^\s*\*?\s*(?:đối\s*với|for|áp\s*dụng\s*cho|apply\s*to|dành\s*cho|model\s*[:\s\-]|mẫu\s*[:\s\-])/i.test(text);
   };
 
   const containers = new Map<string, RawUnit[]>();
@@ -200,6 +200,9 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   const paired = new Map<string, string>();
   const inlineBilingual = new Set<string>();
   for (const raw of extracted.units) {
+    if (isModelSectionHeading(raw.text)) {
+      continue;
+    }
     if (isBilingualText(raw.text)) {
       inlineBilingual.add(raw.id);
     }
@@ -547,10 +550,13 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         unit.status = "MIXED_LANGUAGE"; unit.reason = "Có cụm tiếng Anh trong nội dung tiếng Việt; cần xem ngữ cảnh."; unit.confidence = 0.83;
       } else { unit.status = "ALREADY_TRANSLATED"; }
     } else if (!paired.has(raw.id)) {
-      // Check conditional prefix pattern: *Đối với <Model> / Đối với <Model>
-      // Rule: Translate "Đối với" -> "For", shoe model name stays as-is, never binds model into glossary!
-      const doiVoiAuditMatch = raw.text.match(/^(\s*\*?\s*)đối\s*với\s+(.+)$/i);
-      const isModelNote = doiVoiAuditMatch && (isShoeModelName(doiVoiAuditMatch[2].trim()) || /^[A-Z0-9\-\/\.\s]+$/i.test(doiVoiAuditMatch[2].trim()));
+      // Check conditional prefix pattern: *Đối với <Model> / *Áp dụng cho <Model> / *Dành cho <Model>
+      // Rule: Translate prefix -> "For", shoe model name stays as-is, never binds model into glossary!
+      const doiVoiAuditMatch = raw.text.match(/^(\s*\*?\s*)(?:đối\s*với|áp\s*dụng\s*cho|dành\s*cho)\s+(.+)$/i);
+      const isModelNote = doiVoiAuditMatch && !hasViDiacritics(doiVoiAuditMatch[2].trim()) && (isShoeModelName(doiVoiAuditMatch[2].trim()) || /^[A-Z0-9\-\/\.\s\(\)\'\"\#\:\,]+$/i.test(doiVoiAuditMatch[2].trim()));
+
+      const modelAuditMatch = !isModelNote && raw.text.match(/^(\s*\*?\s*)(?:model|mẫu)\s*[:：\-]\s*(.+)$/i);
+      const isModelLabel = modelAuditMatch && !hasViDiacritics(modelAuditMatch[2].trim()) && (isShoeModelName(modelAuditMatch[2].trim()) || /^[A-Z0-9\-\/\.\s\(\)\'\"\#\:\,]+$/i.test(modelAuditMatch[2].trim()));
 
       if (isModelNote) {
         const prefix = doiVoiAuditMatch![1].includes("*") ? "*For " : "For ";
@@ -560,8 +566,17 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         unit.safeToApply = true;
         unit.canApply = true;
         unit.confidence = 1.0;
-        unit.reason = "Dịch 'Đối với' thành 'For' theo quy chuẩn (tên model giày giữ nguyên).";
+        unit.reason = "Dịch tiền tố điều kiện thành 'For' theo quy chuẩn động (tên model giày giữ nguyên).";
         unit.glossaryCorrections = [{ sourceTerm: "Đối với", expectedTarget: "For" }];
+      } else if (isModelLabel) {
+        const prefix = modelAuditMatch![1].includes("*") ? "*Model: " : "Model: ";
+        const remainder = modelAuditMatch![2].trim();
+        unit.suggestedTranslation = prefix + remainder;
+        unit.status = "LOCKED_TERMINOLOGY";
+        unit.safeToApply = true;
+        unit.canApply = true;
+        unit.confidence = 1.0;
+        unit.reason = "Quy chuẩn tiêu đề Model (tên model giữ nguyên).";
       } else {
         const rawMatches = lookup(sourceIndex, raw.text, "source");
         const enforceGlossary = sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text, sourceLang);

@@ -1,6 +1,6 @@
 import { db } from "@/services/database/db";
 import { TerminologyEntry } from "@/services/database/types";
-import { isShoeModelName, isInspectionStatusLabel, isNonTranslatable } from "./smart-detector";
+import { isShoeModelName, isInspectionStatusLabel, isNonTranslatable, hasViDiacritics } from "./smart-detector";
 
 export interface HarvestResult {
   added: TerminologyEntry[];
@@ -72,13 +72,13 @@ export function harvestTerminologyFromSlides(
     if (doiVoiSrcMatch && doiVoiTgtMatch) {
       const srcModel = doiVoiSrcMatch[2].trim();
       const tgtModel = doiVoiTgtMatch[2].trim();
-      if (isShoeModelName(srcModel) || isShoeModelName(tgtModel) || /^[A-Z0-9\-\/\.\s]+$/i.test(srcModel)) {
+      if (!hasViDiacritics(srcModel) || isShoeModelName(srcModel) || isShoeModelName(tgtModel) || /^[A-Z0-9\-\/\.\s\(\)\'\"\#\:\,]+$/i.test(srcModel)) {
         src = "Đối với";
         tgt = "For";
       }
     } else if (doiVoiSrcMatch) {
       const srcModel = doiVoiSrcMatch[2].trim();
-      if (isShoeModelName(srcModel) || /^[A-Z0-9\-\/\.\s]+$/i.test(srcModel)) {
+      if (!hasViDiacritics(srcModel) || isShoeModelName(srcModel) || /^[A-Z0-9\-\/\.\s\(\)\'\"\#\:\,]+$/i.test(srcModel)) {
         return;
       }
     }

@@ -1513,6 +1513,118 @@ test("Test 29: Zero-token Pass for Simple Decks - Runs pure local heuristics in 
   assert.equal(report.requiresIsqDuplicate, false, "Simple deck does not require ISQ duplication");
 });
 
+test("Test 30: Universal Dynamic Model Handling - Zero hardcoding across thousands of footwear models and styles", async () => {
+  const { isShoeModelName } = await import("../services/translation/smart-detector.ts");
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.ts");
+  const { pptxTranslatorService } = await import("../services/documents/pptx-translator.ts");
+
+  // 1. Dynamic Model Recognition Check: Must recognize arbitrary factory and brand models without pre-registration
+  const testModels = [
+    "FD0736-001",           // Nike 9-char style-color code
+    "CW2288-111",           // Nike style code
+    "315122-111",           // Numeric Nike style code
+    "W-088",                // Short factory code
+    "SB-077-A-1",           // Complex factory development code
+    "(SB-077-C)",           // Parenthesized spec code
+    "DEV-2025-1",           // Development code
+    "PEGASUS 41",           // Branded silhouette
+    "ASICS GEL-KAYANO 31",  // Asics runner
+    "NEW BALANCE 1906R",    // New Balance lifestyle
+    "HOKA CLIFTON 9",       // Hoka maximalist runner
+    "SALOMON XT-6",         // Salomon trail runner
+    "Model X-99",           // Generic model label
+    "Sample #1",            // Generic sample label
+  ];
+
+  for (const m of testModels) {
+    assert.ok(isShoeModelName(m), `Model '${m}' must be dynamically recognized as shoe model name`);
+  }
+
+  // 2. Dynamic Smart Audit & Translation Check: Arbitrary model prefixes translated dynamically
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>
+</Relationships>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst><p:sldId id="256" r:id="rId1"/></p:sldIdLst>
+</p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+
+  const dynamicItems = [
+    { vi: "*Đối với FD0736-001", expected: "*For FD0736-001" },
+    { vi: "*Đối với (SB-077-C)", expected: "*For (SB-077-C)" },
+    { vi: "*Đối với W-088", expected: "*For W-088" },
+    { vi: "*Đối với ASICS GEL-KAYANO 31", expected: "*For ASICS GEL-KAYANO 31" },
+    { vi: "*Áp dụng cho NEW BALANCE 1906R", expected: "*For NEW BALANCE 1906R" },
+    { vi: "*Dành cho Model X-99", expected: "*For Model X-99" },
+    { vi: "*Mẫu: FZ4044-001", expected: "*Model: FZ4044-001" },
+  ];
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      ${dynamicItems.map(it => `<a:p><a:r><a:rPr sz="1200"/><a:t>${it.vi}</a:t></a:r></a:p>`).join("")}
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const auditReport = await scanPptxTranslationIntelligence(buffer, "dynamic_models.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "replace_en"
+  });
+
+  for (const item of dynamicItems) {
+    const unit = auditReport.units.find(u => u.sourceText === item.vi);
+    assert.ok(unit, `Unit found for '${item.vi}'`);
+    assert.equal(unit.suggestedTranslation, item.expected, `Suggested translation matches '${item.expected}'`);
+    assert.equal(unit.status, "LOCKED_TERMINOLOGY", `Unit '${item.vi}' must be locked terminology`);
+  }
+
+  // 3. Translation Execution: Translates dynamically with zero LLM calls and zero VI leaks
+  let llmCalls = 0;
+  const mockProvider = {
+    name: "mock-engine",
+    async translateBatch() { llmCalls++; return { results: new Map(), provider: "mock-engine", durationMs: 5 }; },
+    async translate() { llmCalls++; return { translatedText: "", provider: "mock-engine", durationMs: 5 }; }
+  };
+
+  const transResult = await pptxTranslatorService.translate(buffer, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "replace_en",
+  });
+
+  assert.equal(llmCalls, 0, "All dynamic model prefixes must resolve without calling LLM");
+  const zipAfter = await JSZip.loadAsync(transResult.translatedBuffer);
+  const outXml = await zipAfter.file("ppt/slides/slide1.xml")?.async("string");
+
+  for (const item of dynamicItems) {
+    assert.ok(outXml.includes(item.expected), `Output XML must contain '${item.expected}'`);
+  }
+  assert.ok(!outXml.includes("*Đối với"), "Vietnamese prefix *Đối với must be absent");
+  assert.ok(!outXml.includes("*Áp dụng cho"), "Vietnamese prefix *Áp dụng cho must be absent");
+  assert.ok(!outXml.includes("*Dành cho"), "Vietnamese prefix *Dành cho must be absent");
+});
+
+
 
 
 

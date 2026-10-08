@@ -120,7 +120,7 @@ Your task is to review slide text items that are candidates for translation and 
 3. 'NON_TRANSLATABLE': The item is a numeric dimension, date, ISO code, or non-word symbol.
    -> Set verdict: 'NON_TRANSLATABLE', reason: '<Brief explanation in Vietnamese>'.
 
-4. 'NEEDS_TRANSLATION': The item is genuine Vietnamese text that has NO English counterpart on this slide, or is a sub-model step following '*Đối với [Model]' that must be translated independently and never paired with general steps above.
+4. 'NEEDS_TRANSLATION': The item is genuine Vietnamese text that has NO English counterpart on this slide, or is a sub-model step following any model conditional heading ('*Đối với [Any Model Code/Name]', '*Áp dụng cho [Model]', '*For [Model]', etc.) that must be translated independently and never paired with general steps above. Note: Model names and codes (e.g. style codes like FD0736-001, CW2288-111, factory codes like LQ-075W-1, W-088, or brand lines) are dynamic entities across thousands of footwear models and must remain intact.
    -> Set verdict: 'NEEDS_TRANSLATION', translation: '<Suggested English translation or null>', reason: '<Brief explanation in Vietnamese>'.
 
 OUTPUT FORMAT:
