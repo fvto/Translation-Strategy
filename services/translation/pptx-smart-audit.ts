@@ -215,6 +215,32 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         inlineBilingual.add(raw.id);
       }
     } else if (parts.length > 2) {
+      // Check block bilingual lines within same paragraph: (1.EN..4.EN ... 1.VI..4.VI OR 1.VI..4.VI ... 1.EN..4.EN)
+      const firstIsVi = hasViDiacritics(parts[0]);
+      const transIdx = firstIsVi
+        ? parts.findIndex((p) => !hasViDiacritics(p) && (targetEvidence(p, targetLang) || isPureEnglish(p)))
+        : parts.findIndex((p) => hasViDiacritics(p) || sourceEvidence(p, sourceLang));
+
+      let handledBlock = false;
+      if (transIdx > 0 && transIdx < parts.length) {
+        const b1 = parts.slice(0, transIdx);
+        const b2 = parts.slice(transIdx);
+        if (b1.length === b2.length || (b1.length >= 2 && b2.length >= 2)) {
+          for (const it1 of b1) {
+            const s1 = extractItemStepNumber(it1);
+            const partner = s1 ? b2.find((it2) => extractItemStepNumber(it2) === s1) : b1.length === b2.length ? b2[b1.indexOf(it1)] : undefined;
+            if (partner && !isNonTranslatable(it1) && !isNonTranslatable(partner)) {
+              const src = firstIsVi ? it1 : partner;
+              const tgt = firstIsVi ? partner : it1;
+              pairs.push({ source: src, target: tgt, origin: "presentation", slideIndex: raw.location.slideIndex });
+              inlineBilingual.add(raw.id);
+              handledBlock = true;
+            }
+          }
+        }
+      }
+      if (handledBlock) continue;
+
       // Interleaved lines within the same paragraph: 1.EN, 1.VI, 2.EN, 2.VI...
       for (let k = 0; k < parts.length - 1; k++) {
         const l1 = parts[k], l2 = parts[k + 1];
@@ -332,7 +358,8 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         if (target) addPair(source, target);
       }
 
-      // 3. Step-number matching within container sub-scope (e.g. all EN items 1,2,3,4 followed by all VI items 1,2,3,4)
+      // 3. Step-number & Block matching within container sub-scope
+      // (e.g. all EN items 1,2,3,4 followed by all VI items 1,2,3,4 OR all VI items 1,2,3,4 followed by all EN items 1,2,3,4)
       const remSources = scopeMembers.filter((u) => !paired.has(u.id) && sourceEvidence(u.text, sourceLang));
       const remTargets = scopeMembers.filter((u) => !paired.has(u.id) && targetEvidence(u.text, targetLang));
       for (const src of remSources) {
@@ -342,6 +369,12 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
           const matchingTgt = remTargets.find((tgt) => !paired.has(tgt.id) && extractItemStepNumber(tgt.text) === srcStep);
           if (matchingTgt) {
             addPair(src, matchingTgt);
+          }
+        } else if (remSources.length === remTargets.length && remSources.length >= 2) {
+          const idx = remSources.indexOf(src);
+          const cand = remTargets[idx];
+          if (cand && !paired.has(cand.id)) {
+            addPair(src, cand);
           }
         }
       }

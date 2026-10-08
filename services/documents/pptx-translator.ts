@@ -319,6 +319,38 @@ export function splitBilingualText(rawText: string, isInspectionItem: boolean = 
         return { en: enLines.join("\n"), vi: viLines.join("\n") };
       }
     }
+
+    if (lines.length >= 4) {
+      // 1.2 Block lines within single paragraph:
+      // (1.EN \n 2.EN \n 3.EN... 1.VI \n 2.VI \n 3.VI... OR 1.VI \n 2.VI \n 3.VI... 1.EN \n 2.EN \n 3.EN...)
+      const firstIsVi = hasViDiacritics(lines[0]);
+      const transIdx = firstIsVi
+        ? lines.findIndex((l) => !hasViDiacritics(l) && /[a-zA-Z]{2,}/.test(l))
+        : lines.findIndex((l) => hasViDiacritics(l));
+
+      if (transIdx > 0 && transIdx < lines.length) {
+        const b1 = lines.slice(0, transIdx);
+        const b2 = lines.slice(transIdx);
+        const b1Valid = firstIsVi
+          ? b1.every((l) => hasViDiacritics(l)) && b2.every((l) => !hasViDiacritics(l) && /[a-zA-Z]{2,}/.test(l))
+          : b1.every((l) => !hasViDiacritics(l) && /[a-zA-Z]{2,}/.test(l)) && b2.every((l) => hasViDiacritics(l));
+
+        if (b1Valid && (b1.length === b2.length || (b1.length >= 2 && b2.length >= 2))) {
+          let stepMismatch = false;
+          if (b1.length === b2.length) {
+            for (let k = 0; k < b1.length; k++) {
+              const s1 = extractItemStepNumber(b1[k]), s2 = extractItemStepNumber(b2[k]);
+              if (s1 && s2 && s1 !== s2) { stepMismatch = true; break; }
+            }
+          }
+          if (!stepMismatch) {
+            return firstIsVi
+              ? { en: b2.join("\n"), vi: b1.join("\n") }
+              : { en: b1.join("\n"), vi: b2.join("\n") };
+          }
+        }
+      }
+    }
   }
 
   // User Rule: Delimiter / hyphen hybrid split ONLY applies to Inspection Item columns!
@@ -659,6 +691,41 @@ export class PptxTranslatorService {
             pairedParagraphMap.set(p2.id, { partner: p1, isEn: true });
             pairedParagraphMap.set(p1.id, { partner: p2, isEn: false });
             k++;
+          }
+        }
+
+        // 2. Block pairs within same shape: [1.EN, 2.EN, 3.EN, 4.EN, 1.VI, 2.VI, 3.VI, 4.VI] OR [1.VI, 2.VI, 3.VI, 4.VI, 1.EN, 2.EN, 3.EN, 4.EN]
+        const unpaired = members.filter((p) => !pairedParagraphMap.has(p.id) && !isInspectionStatusLabel(p.originalText) && !isNonTranslatable(p.originalText));
+        if (unpaired.length >= 4) {
+          const firstIsVi = hasViDiacritics(unpaired[0].originalText);
+          const transIdx = firstIsVi
+            ? unpaired.findIndex((p) => !hasViDiacritics(p.originalText) && /[a-zA-Z]{2,}/.test(p.originalText))
+            : unpaired.findIndex((p) => hasViDiacritics(p.originalText));
+
+          if (transIdx > 0 && transIdx < unpaired.length) {
+            const b1 = unpaired.slice(0, transIdx);
+            const b2 = unpaired.slice(transIdx);
+            const b1IsVi = firstIsVi;
+            const b2IsVi = !firstIsVi;
+
+            for (const p1 of b1) {
+              const s1 = extractItemStepNumber(p1.originalText);
+              let partner: PptxParagraph | undefined;
+              if (s1) {
+                partner = b2.find((p2) => !pairedParagraphMap.has(p2.id) && extractItemStepNumber(p2.originalText) === s1);
+              }
+              if (!partner && b1.length === b2.length) {
+                const idx = b1.indexOf(p1);
+                const cand = b2[idx];
+                if (cand && !pairedParagraphMap.has(cand.id)) {
+                  partner = cand;
+                }
+              }
+              if (partner) {
+                pairedParagraphMap.set(p1.id, { partner, isEn: !b1IsVi });
+                pairedParagraphMap.set(partner.id, { partner: p1, isEn: !b2IsVi });
+              }
+            }
           }
         }
       }
@@ -2610,6 +2677,34 @@ export class PptxTranslatorService {
           }
         }
 
+        if (rawLines.length >= 4) {
+          // Block pattern in single paragraph: 1.EN 2.EN 3.EN ... 1.VI 2.VI 3.VI OR 1.VI 2.VI ... 1.EN 2.EN
+          const firstIsVi = hasViDiacritics(rawLines[0]);
+          const transIdx = firstIsVi
+            ? rawLines.findIndex((l) => !hasViDiacritics(l) && /[a-zA-Z]{2,}/.test(l))
+            : rawLines.findIndex((l) => hasViDiacritics(l));
+
+          if (transIdx > 0 && transIdx < rawLines.length) {
+            const b1 = rawLines.slice(0, transIdx);
+            const b2 = rawLines.slice(transIdx);
+            const enBlock = firstIsVi ? b2 : b1;
+
+            if (mode === "replace_en") {
+              const enPs = enBlock.flatMap((l) => buildParagraphs(l, enPPr, enAttrs, it.fontChildren));
+              return `${tagOpen}${containerHeader}${enPs.join("")}${containerTrailer}${tagClose}`;
+            } else {
+              let viAttrs = it.rawAttrs;
+              if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
+              else viAttrs += ' lang="vi-VN"';
+              const viPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
+
+              const block1Ps = b1.flatMap((l) => buildParagraphs(l, firstIsVi ? viPPr : enPPr, firstIsVi ? viAttrs : enAttrs, it.fontChildren));
+              const block2Ps = b2.flatMap((l) => buildParagraphs(l, firstIsVi ? enPPr : viPPr, firstIsVi ? enAttrs : viAttrs, it.fontChildren));
+              return `${tagOpen}${containerHeader}${block1Ps.join("")}${block2Ps.join("")}${containerTrailer}${tagClose}`;
+            }
+          }
+        }
+
         const enParagraphs = buildParagraphs(it.enText, enPPr, enAttrs, it.fontChildren);
 
         if (mode === "replace_en" || !shouldIncludeVi(it.enText, it.viText)) {
@@ -2800,17 +2895,25 @@ export class PptxTranslatorService {
 
       // Check if container ALREADY contains a genuine parallel bilingual block
       // (e.g. Slide 16, 28, 29, 30, 31, 32, 33, 34, 35, and QA defect cells)
-      // where an English block is followed by a Vietnamese block.
-      const firstViIdx = coreActiveItems.findIndex((it) => hasViDiacritics(it.pData?.originalText || ""));
-      const topItems = firstViIdx > 0 ? coreActiveItems.slice(0, firstViIdx) : [];
-      const bottomItems = firstViIdx > 0 ? coreActiveItems.slice(firstViIdx) : [];
+      // Format 1: 1.EN 2.EN 3.EN 4.EN ... 1.VI 2.VI 3.VI 4.VI
+      // Format 2: 1.VI 2.VI 3.VI 4.VI ... 1.EN 2.EN 3.EN 4.EN
+      const firstIsVi = coreActiveItems.length > 0 && hasViDiacritics(coreActiveItems[0].pData?.originalText || "");
+      const transIdx = firstIsVi
+        ? coreActiveItems.findIndex((it) => !hasViDiacritics(it.pData?.originalText || "") && /[a-zA-Z]{2,}/.test(it.pData?.originalText || ""))
+        : coreActiveItems.findIndex((it) => hasViDiacritics(it.pData?.originalText || ""));
 
-      const topCombined = topItems.map((it) => it.pData?.originalText || "").join(" ").trim();
+      const topItems = transIdx > 0 ? coreActiveItems.slice(0, transIdx) : [];
+      const bottomItems = transIdx > 0 ? coreActiveItems.slice(transIdx) : [];
+
+      const pureEnItems = firstIsVi ? bottomItems : topItems;
+      const pureViItems = firstIsVi ? topItems : bottomItems;
+
+      const enCombined = pureEnItems.map((it) => it.pData?.originalText || "").join(" ").trim();
       const hasSubstantiveEnglish =
-        /[a-zA-Z]{2,}/.test(topCombined) && !/^[\(\[]?[A-Z0-9\-\s]+[\)\]]?$/.test(topCombined);
+        /[a-zA-Z]{2,}/.test(enCombined) && !/^[\(\[]?[A-Z0-9\-\s]+[\)\]]?$/.test(enCombined);
 
-      const bottomCombined = bottomItems.map((it) => it.pData?.originalText || "").join(" ").trim();
-      const hasSubstantiveVietnamese = hasViDiacritics(bottomCombined);
+      const viCombined = pureViItems.map((it) => it.pData?.originalText || "").join(" ").trim();
+      const hasSubstantiveVietnamese = hasViDiacritics(viCombined);
 
       // Check if EN items and VI items have genuine structural correspondence:
       // 1. If VI items start with model/conditional notes (*Đối với, *Áp dụng, *Lưu ý, *Ghi chú, *Note),
@@ -2820,12 +2923,12 @@ export class PptxTranslatorService {
       // 4. For unequal lengths (e.g. Slide 68 where VI has extra step 4), ensure the common prefix items
       //    share matching structural types (heading matches heading, step matches step).
       const hasParallelStructure = (): boolean => {
-        if (!hasSubstantiveEnglish || !hasSubstantiveVietnamese || topItems.length === 0 || bottomItems.length === 0) {
+        if (!hasSubstantiveEnglish || !hasSubstantiveVietnamese || pureEnItems.length === 0 || pureViItems.length === 0) {
           return false;
         }
 
-        const enFirst = topItems[0].pData?.originalText.trim() || "";
-        const viFirst = bottomItems[0].pData?.originalText.trim() || "";
+        const enFirst = pureEnItems[0].pData?.originalText.trim() || "";
+        const viFirst = pureViItems[0].pData?.originalText.trim() || "";
 
         // If VI items begin with model/conditional notes (*Đối với, Đối với, *Áp dụng, *Lưu ý, *Chú ý, *Ghi chú),
         // they are separate notes, NEVER parallel translations of preceding steps!
@@ -2848,12 +2951,12 @@ export class PptxTranslatorService {
         }
 
         // If equal length, verify they don't have conflicting structural types
-        if (topItems.length === bottomItems.length) {
+        if (pureEnItems.length === pureViItems.length) {
           if (enStepMatch) {
             let matchedSteps = 0;
-            for (let i = 0; i < topItems.length; i++) {
-              const eM = topItems[i].pData?.originalText.trim().match(/^(\d+)[\.\)]/);
-              const vM = bottomItems[i].pData?.originalText.trim().match(/^(\d+)[\.\)]/);
+            for (let i = 0; i < pureEnItems.length; i++) {
+              const eM = pureEnItems[i].pData?.originalText.trim().match(/^(\d+)[\.\)]/);
+              const vM = pureViItems[i].pData?.originalText.trim().match(/^(\d+)[\.\)]/);
               if (eM && vM && eM[1] === vM[1]) matchedSteps++;
             }
             if (matchedSteps === 0) return false;
@@ -2863,10 +2966,10 @@ export class PptxTranslatorService {
 
         // If unequal length (e.g. VI has an extra step like Slide 68):
         // All items in the shared prefix range must share the same structural kind (step vs heading vs text)
-        if (bottomItems.length > topItems.length && topItems.length >= 2) {
-          for (let i = 0; i < topItems.length; i++) {
-            const eTxt = topItems[i].pData?.originalText.trim() || "";
-            const vTxt = bottomItems[i].pData?.originalText.trim() || "";
+        if (pureViItems.length > pureEnItems.length && pureEnItems.length >= 2) {
+          for (let i = 0; i < pureEnItems.length; i++) {
+            const eTxt = pureEnItems[i].pData?.originalText.trim() || "";
+            const vTxt = pureViItems[i].pData?.originalText.trim() || "";
             const eStep = /^(\d+)[\.\)]/.test(eTxt);
             const vStep = /^(\d+)[\.\)]/.test(vTxt);
             const eHeading = /^[\*•#]/.test(eTxt);
@@ -2882,17 +2985,14 @@ export class PptxTranslatorService {
       };
 
       // A genuine parallel bilingual container has:
-      // 1. Equal number of substantive EN and VI items (topItems.length === bottomItems.length)
-      // 2. OR a distinct block of English items (>=2) followed by a block of Vietnamese items (>=2)
+      // 1. Equal number of substantive EN and VI items (pureEnItems.length === pureViItems.length)
+      // 2. OR a distinct block of English items (>=2) followed by a block of Vietnamese items (>=2) (or vice versa)
       // It is NEVER a 1-heading-plus-several-steps instruction list (where pureEn is 1 and pureVi is >=2)!
       const isParallelBilingualBlock =
-        firstViIdx > 0 &&
+        transIdx > 0 &&
         hasSubstantiveEnglish &&
         hasSubstantiveVietnamese &&
         hasParallelStructure();
-
-      const pureEnItems = topItems;
-      const pureViItems = bottomItems;
 
       if (isParallelBilingualBlock) {
         const enPList = pureEnItems.flatMap((it) => {
@@ -2904,7 +3004,7 @@ export class PptxTranslatorService {
         });
 
         // VI items (or mixed items that needed translation): emit translated enText so nothing is lost
-        const viLikeItems = coreActiveItems.filter((it) => !pureEnItems.includes(it));
+        const viLikeItems = pureViItems;
         // If the Vietnamese block had extra items not present in the English block (e.g. Slide 68 step 4):
         // Translate the extra Vietnamese items into English and append them so they are not lost!
         if (pureViItems.length > pureEnItems.length) {
@@ -2935,7 +3035,9 @@ export class PptxTranslatorService {
           return buildParagraphs(it.pData!.originalText, viPPr, viAttrs, it.fontChildren);
         });
 
-        return `${tagOpen}${containerHeader}${enPList.join("")}${viPList.join("")}${neutralPList.join("")}${containerTrailer}${tagClose}`;
+        const firstBlockPs = firstIsVi ? viPList : enPList;
+        const secondBlockPs = firstIsVi ? enPList : viPList;
+        return `${tagOpen}${containerHeader}${firstBlockPs.join("")}${secondBlockPs.join("")}${neutralPList.join("")}${containerTrailer}${tagClose}`;
       }
 
       // If in replace_en mode (ISQ slides): preserve all items translated to English

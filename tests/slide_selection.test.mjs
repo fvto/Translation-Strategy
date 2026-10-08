@@ -1624,6 +1624,163 @@ test("Test 30: Universal Dynamic Model Handling - Zero hardcoding across thousan
   assert.ok(!outXml.includes("*Dành cho"), "Vietnamese prefix *Dành cho must be absent");
 });
 
+test("Test 31: Block Bilingual Support - 1.EN..4.EN ... 1.VI..4.VI and vice versa (1.VI..4.VI ... 1.EN..4.EN)", async () => {
+  const { splitBilingualText, pptxTranslatorService } = await import("../services/documents/pptx-translator.ts");
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.ts");
+
+  // 1. Check splitBilingualText for both directions in single multi-line strings
+  const enViBlockStr = [
+    "1. Clean the surface",
+    "2. Apply primer coat",
+    "3. Heat activate at 55C",
+    "4. Press sole firmly",
+    "1. Làm sạch bề mặt",
+    "2. Quét lớp chất xử lý",
+    "3. Kích hoạt nhiệt ở 55C",
+    "4. Ép đế giày chắc chắn"
+  ].join("\n");
+
+  const viEnBlockStr = [
+    "1. Làm sạch bề mặt",
+    "2. Quét lớp chất xử lý",
+    "3. Kích hoạt nhiệt ở 55C",
+    "4. Ép đế giày chắc chắn",
+    "1. Clean the surface",
+    "2. Apply primer coat",
+    "3. Heat activate at 55C",
+    "4. Press sole firmly"
+  ].join("\n");
+
+  const splitEnVi = splitBilingualText(enViBlockStr);
+  assert.ok(splitEnVi, "splitBilingualText parses EN-first block format");
+  assert.ok(splitEnVi.en.includes("1. Clean the surface") && splitEnVi.en.includes("4. Press sole firmly"));
+  assert.ok(splitEnVi.vi.includes("1. Làm sạch bề mặt") && splitEnVi.vi.includes("4. Ép đế giày chắc chắn"));
+
+  const splitViEn = splitBilingualText(viEnBlockStr);
+  assert.ok(splitViEn, "splitBilingualText parses VI-first block format");
+  assert.ok(splitViEn.en.includes("1. Clean the surface") && splitViEn.en.includes("4. Press sole firmly"));
+  assert.ok(splitViEn.vi.includes("1. Làm sạch bề mặt") && splitViEn.vi.includes("4. Ép đế giày chắc chắn"));
+
+  // 2. Check Smart Audit: In-container multi-paragraph block pairing for both directions
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+  <Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>
+</Relationships>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+    <p:sldId id="257" r:id="rId2"/>
+  </p:sldIdLst>
+</p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/>
+</Relationships>`);
+
+  // Slide 1: Shape 1 contains 1.EN..4.EN followed by 1.VI..4.VI
+  const slide1Xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:t>1. Clean the surface</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Apply primer coat</a:t></a:r></a:p>
+      <a:p><a:r><a:t>3. Heat activate at 55C</a:t></a:r></a:p>
+      <a:p><a:r><a:t>4. Press sole firmly</a:t></a:r></a:p>
+      <a:p><a:r><a:t>1. Làm sạch bề mặt</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Quét lớp chất xử lý</a:t></a:r></a:p>
+      <a:p><a:r><a:t>3. Kích hoạt nhiệt ở 55C</a:t></a:r></a:p>
+      <a:p><a:r><a:t>4. Ép đế giày chắc chắn</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  // Slide 2: Shape 1 contains 1.VI..4.VI followed by 1.EN..4.EN
+  const slide2Xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:t>1. Làm sạch bề mặt</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Quét lớp chất xử lý</a:t></a:r></a:p>
+      <a:p><a:r><a:t>3. Kích hoạt nhiệt ở 55C</a:t></a:r></a:p>
+      <a:p><a:r><a:t>4. Ép đế giày chắc chắn</a:t></a:r></a:p>
+      <a:p><a:r><a:t>1. Clean the surface</a:t></a:r></a:p>
+      <a:p><a:r><a:t>2. Apply primer coat</a:t></a:r></a:p>
+      <a:p><a:r><a:t>3. Heat activate at 55C</a:t></a:r></a:p>
+      <a:p><a:r><a:t>4. Press sole firmly</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slide1Xml);
+  zip.file("ppt/slides/slide2.xml", slide2Xml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const auditReport = await scanPptxTranslationIntelligence(buffer, "block_bilingual.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "replace_en"
+  });
+
+  // Verify all 8 items on Slide 1 & Slide 2 are recognized as ALREADY_TRANSLATED and unchecked
+  const viUnitsSlide1 = auditReport.units.filter(u => u.location.slideIndex === 1 && /Làm sạch|Quét lớp|Kích hoạt|Ép đế/.test(u.sourceText));
+  assert.equal(viUnitsSlide1.length, 4, "4 VI units on Slide 1");
+  for (const u of viUnitsSlide1) {
+    assert.equal(u.status, "ALREADY_TRANSLATED", `Slide 1 VI unit '${u.sourceText}' must be ALREADY_TRANSLATED`);
+    assert.equal(u.selectedForTranslation, false, `Slide 1 VI unit '${u.sourceText}' must be unchecked`);
+  }
+
+  const viUnitsSlide2 = auditReport.units.filter(u => u.location.slideIndex === 2 && /Làm sạch|Quét lớp|Kích hoạt|Ép đế/.test(u.sourceText));
+  assert.equal(viUnitsSlide2.length, 4, "4 VI units on Slide 2");
+  for (const u of viUnitsSlide2) {
+    assert.equal(u.status, "ALREADY_TRANSLATED", `Slide 2 VI unit '${u.sourceText}' must be ALREADY_TRANSLATED`);
+    assert.equal(u.selectedForTranslation, false, `Slide 2 VI unit '${u.sourceText}' must be unchecked`);
+  }
+
+  // 3. Check PPTX Translation in replace_en mode: Outputs ONLY single English block, zero duplicates
+  let llmCalls = 0;
+  const mockProvider = {
+    name: "mock-engine",
+    async translateBatch() { llmCalls++; return { results: new Map(), provider: "mock-engine", durationMs: 5 }; },
+    async translate() { llmCalls++; return { translatedText: "", provider: "mock-engine", durationMs: 5 }; }
+  };
+
+  const transResult = await pptxTranslatorService.translate(buffer, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "replace_en",
+  });
+
+  assert.equal(llmCalls, 0, "No LLM calls needed for already bilingual blocks");
+  const zipAfter = await JSZip.loadAsync(transResult.translatedBuffer);
+  const slide1After = await zipAfter.file("ppt/slides/slide1.xml")?.async("string");
+  const slide2After = await zipAfter.file("ppt/slides/slide2.xml")?.async("string");
+
+  // Slide 1 checks: Exactly 1 instance of each English step, 0 Vietnamese
+  assert.ok(slide1After.includes("Clean the surface") && slide1After.includes("Press sole firmly"));
+  assert.ok(!slide1After.includes("Làm sạch"), "Slide 1 must not contain Vietnamese");
+  const s1Matches = slide1After.match(/Clean the surface/g) || [];
+  assert.equal(s1Matches.length, 1, "Slide 1 has exactly 1 English step 1 (no duplicates)");
+
+  // Slide 2 checks: Exactly 1 instance of each English step, 0 Vietnamese
+  assert.ok(slide2After.includes("Clean the surface") && slide2After.includes("Press sole firmly"));
+  assert.ok(!slide2After.includes("Làm sạch"), "Slide 2 must not contain Vietnamese");
+  const s2Matches = slide2After.match(/Clean the surface/g) || [];
+  assert.equal(s2Matches.length, 1, "Slide 2 has exactly 1 English step 1 (no duplicates)");
+});
+
+
 
 
 
