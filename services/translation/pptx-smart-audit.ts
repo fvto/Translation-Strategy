@@ -107,6 +107,10 @@ function buildGroups(units: ScannedTextUnit[], pairs: AuditMemoryPair[], preserv
     if (!present.length) continue;
     const variants = new Map<string, { text: string; count: number; approved: boolean; slides: number[] }>();
     for (const pair of entries) {
+      if (!pair.target || !pair.target.trim()) continue;
+      const trimmedTarget = pair.target.trim();
+      // Bare numbers, non-translatables, and single-char targets must NEVER be treated as valid translation variants
+      if (/^\d+(?:[.,]\d+)?$/.test(trimmedTarget) || isNonTranslatable(trimmedTarget) || trimmedTarget.length <= 1) continue;
       const targetKey = auditTextForms(pair.target).normalized;
       if (!variants.has(targetKey)) variants.set(targetKey, { text: pair.target, count: 0, approved: pair.origin === "approved" || pair.origin === "correction", slides: [] });
       const variant = variants.get(targetKey)!;
@@ -172,39 +176,122 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   pairs.push(...(options.historyPairs || getAuditHistoryPairs(sourceLang, targetLang)));
   for (const entry of options.customDocTM?.getAllEntries() || []) pairs.push({ source: entry.sourceOriginal, target: entry.target,
     origin: entry.status === "LOCKED" || entry.status === "APPROVED" ? "approved" : "presentation", slideIndex: entry.sourceLocation.slide });
+  const extractItemStepNumber = (text: string): string | null => {
+    if (!text) return null;
+    const m = text.match(/^\s*(?:(?:step|bước|ctq|sop|item|mục|trạm)\s*[:#]?\s*(\d+(?:\.\d+)?)|#?\s*(\d+(?:\.\d+)?)\s*(?:[.:\-\/)]|\s*(?:en|vi|vn)\b))/i);
+    if (m) return m[1] || m[2];
+    return null;
+  };
+
+  const cleanStepPrefix = (text: string): string => {
+    return text.replace(/^\s*(?:(?:step|bước|ctq|sop|item|mục|trạm)\s*[:#]?\s*\d+(?:\.\d+)?[:.]?|#?\s*\d+(?:\.\d+)?\s*(?:[.:\-\/)]|\s*(?:en|vi|vn)[:.]?))\s*/i, "").trim();
+  };
+
   const containers = new Map<string, RawUnit[]>();
   for (const unit of extracted.units) { if (!containers.has(unit.containerId)) containers.set(unit.containerId, []); containers.get(unit.containerId)!.push(unit); }
   const paired = new Map<string, string>();
   const inlineBilingual = new Set<string>();
   for (const raw of extracted.units) {
     const parts = raw.text.split(/\r?\n|\s+[-–—/|]\s+/).map((t) => t.replace(/^(?:EN|VI|VN)\s*:\s*/i, "").trim()).filter(Boolean);
-    const sources = parts.filter((t) => sourceEvidence(t, sourceLang));
-    const targets = parts.filter((t) => targetEvidence(t, targetLang));
-    if (sources.length === 1 && targets.length === 1) {
-      pairs.push({ source: sources[0], target: targets[0], origin: "presentation", slideIndex: raw.location.slideIndex });
-      inlineBilingual.add(raw.id);
+    if (parts.length === 2) {
+      const s = parts.find((t) => sourceEvidence(t, sourceLang));
+      const t = parts.find((t) => targetEvidence(t, targetLang));
+      if (s && t && !isNonTranslatable(s) && !isNonTranslatable(t) && !/^\d+(?:[.,]\d+)?$/.test(s) && !/^\d+(?:[.,]\d+)?$/.test(t)) {
+        pairs.push({ source: s, target: t, origin: "presentation", slideIndex: raw.location.slideIndex });
+        inlineBilingual.add(raw.id);
+      }
+    } else if (parts.length > 2) {
+      // Interleaved lines within the same paragraph: 1.EN, 1.VI, 2.EN, 2.VI...
+      for (let k = 0; k < parts.length - 1; k++) {
+        const l1 = parts[k], l2 = parts[k + 1];
+        const s1 = sourceEvidence(l1, sourceLang), t1 = targetEvidence(l1, targetLang);
+        const s2 = sourceEvidence(l2, sourceLang), t2 = targetEvidence(l2, targetLang);
+        const step1 = extractItemStepNumber(l1), step2 = extractItemStepNumber(l2);
+        const sameStep = Boolean(step1 && step2 && step1 === step2);
+
+        if ((s1 && t2) || (sameStep && s1 && !s2)) {
+          if (!isNonTranslatable(l1) && !isNonTranslatable(l2) && !/^\d+(?:[.,]\d+)?$/.test(l1) && !/^\d+(?:[.,]\d+)?$/.test(l2)) {
+            pairs.push({ source: l1, target: l2, origin: "presentation", slideIndex: raw.location.slideIndex });
+            inlineBilingual.add(raw.id);
+            k++;
+          }
+        } else if ((t1 && s2) || (sameStep && !s1 && s2)) {
+          if (!isNonTranslatable(l1) && !isNonTranslatable(l2) && !/^\d+(?:[.,]\d+)?$/.test(l1) && !/^\d+(?:[.,]\d+)?$/.test(l2)) {
+            pairs.push({ source: l2, target: l1, origin: "presentation", slideIndex: raw.location.slideIndex });
+            inlineBilingual.add(raw.id);
+            k++;
+          }
+        }
+      }
     }
   }
   const known = new AuditMemoryIndex(pairs);
   const addPair = (source: RawUnit, target: RawUnit) => {
     if (isNonTranslatable(source.text) || isNonTranslatable(target.text)) return;
-    if (/^\d+(?:[.,]\d+)?$/.test(source.text.trim()) || /^\d+(?:[.,]\d+)?$/.test(target.text.trim())) return;
+    const sTrim = source.text.trim();
+    const tTrim = target.text.trim();
+    if (/^\d+(?:[.,]\d+)?$/.test(sTrim) || /^\d+(?:[.,]\d+)?$/.test(tTrim)) return;
+    if (sTrim.length <= 1 || tTrim.length <= 1) return;
+    if (sTrim.length > 15 && tTrim.length < 4) return;
+    if (tTrim.length > 15 && sTrim.length < 4) return;
+
     pairs.push({ source: source.text, target: target.text, origin: "presentation", slideIndex: source.location.slideIndex, sourceUnitId: source.id, targetUnitId: target.id });
     paired.set(source.id, target.text); paired.set(target.id, source.text);
+
+    const cleanSrc = cleanStepPrefix(source.text);
+    const cleanTgt = cleanStepPrefix(target.text);
+    if (cleanSrc && cleanTgt && cleanSrc.length > 2 && cleanTgt.length > 2 && (cleanSrc !== source.text || cleanTgt !== target.text)) {
+      pairs.push({ source: cleanSrc, target: cleanTgt, origin: "presentation", slideIndex: source.location.slideIndex });
+    }
   };
   for (const members of containers.values()) {
-    const sources = members.filter((u) => sourceEvidence(u.text, sourceLang));
-    const targets = members.filter((u) => targetEvidence(u.text, targetLang));
-    // Existing relationships can identify pairs even in crowded/messy containers.
+    // 1. Interleaved adjacent [EN, VI] or [VI, EN] paragraphs within container (1.EN, 1.VI, 2.EN, 2.VI...)
+    for (let k = 0; k < members.length - 1; k++) {
+      const u1 = members[k], u2 = members[k + 1];
+      if (paired.has(u1.id) || paired.has(u2.id)) continue;
+
+      const s1 = sourceEvidence(u1.text, sourceLang), t1 = targetEvidence(u1.text, targetLang);
+      const s2 = sourceEvidence(u2.text, sourceLang), t2 = targetEvidence(u2.text, targetLang);
+      const step1 = extractItemStepNumber(u1.text), step2 = extractItemStepNumber(u2.text);
+      const sameStep = Boolean(step1 && step2 && step1 === step2);
+
+      if ((s1 && t2) || (sameStep && s1 && !s2)) {
+        addPair(u1, u2);
+        k++;
+      } else if ((t1 && s2) || (sameStep && !s1 && s2)) {
+        addPair(u2, u1);
+        k++;
+      }
+    }
+
+    // 2. Existing relationships from memory index
+    const sources = members.filter((u) => !paired.has(u.id) && sourceEvidence(u.text, sourceLang));
+    const targets = members.filter((u) => !paired.has(u.id) && targetEvidence(u.text, targetLang));
     for (const source of sources) {
+      if (paired.has(source.id)) continue;
       const relationship = chooseAuditMatch(known.lookup(source.text));
       if (!relationship.match || relationship.conflict) continue;
-      const target = targets.find((t) => auditTextForms(t.text).compact === auditTextForms(relationship.match!.target).compact);
+      const target = targets.find((t) => !paired.has(t.id) && auditTextForms(t.text).compact === auditTextForms(relationship.match!.target).compact);
       if (target) addPair(source, target);
     }
-    const unpairedSources = sources.filter((u) => !paired.has(u.id));
-    const unpairedTargets = targets.filter((u) => !paired.has(u.id));
-    // A unique complementary pair is structural evidence. Multiple unrelated lines are never silently paired.
+
+    // 3. Step-number matching within container (e.g. all EN items 1,2,3,4 followed by all VI items 1,2,3,4)
+    const remSources = members.filter((u) => !paired.has(u.id) && sourceEvidence(u.text, sourceLang));
+    const remTargets = members.filter((u) => !paired.has(u.id) && targetEvidence(u.text, targetLang));
+    for (const src of remSources) {
+      if (paired.has(src.id)) continue;
+      const srcStep = extractItemStepNumber(src.text);
+      if (srcStep) {
+        const matchingTgt = remTargets.find((tgt) => !paired.has(tgt.id) && extractItemStepNumber(tgt.text) === srcStep);
+        if (matchingTgt) {
+          addPair(src, matchingTgt);
+        }
+      }
+    }
+
+    // 4. Unique complementary pair fallback
+    const unpairedSources = members.filter((u) => !paired.has(u.id) && sourceEvidence(u.text, sourceLang));
+    const unpairedTargets = members.filter((u) => !paired.has(u.id) && targetEvidence(u.text, targetLang));
     if (unpairedSources.length === 1 && unpairedTargets.length === 1) addPair(unpairedSources[0], unpairedTargets[0]);
   }
 
@@ -217,17 +304,29 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     }
   }
   for (const pair of isqSlidePairs) {
-    const enUnits = slidePartUnits.get(pair.en) || [];
-    const viUnits = slidePartUnits.get(pair.vi) || [];
+    const enUnits = (slidePartUnits.get(pair.en) || []).filter((u) => !isNonTranslatable(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
+    const viUnits = (slidePartUnits.get(pair.vi) || []).filter((u) => !isNonTranslatable(u.text) && !/^\d+(?:[.,]\d+)?$/.test(u.text.trim()) && u.text.trim().length > 1);
     const enParaMap = new Map<number, RawUnit>();
     for (const eu of enUnits) {
       if (eu.location.paragraphIndex !== undefined) enParaMap.set(eu.location.paragraphIndex, eu);
     }
+    // Match by step number across slides first
+    for (const vu of viUnits) {
+      if (paired.has(vu.id)) continue;
+      const vStep = extractItemStepNumber(vu.text);
+      if (vStep) {
+        const matchingEu = enUnits.find((eu) => !paired.has(eu.id) && extractItemStepNumber(eu.text) === vStep);
+        if (matchingEu) {
+          addPair(vu, matchingEu);
+        }
+      }
+    }
     for (let idx = 0; idx < viUnits.length; idx++) {
       const vu = viUnits[idx];
+      if (paired.has(vu.id)) continue;
       let eu = vu.location.paragraphIndex !== undefined ? enParaMap.get(vu.location.paragraphIndex) : undefined;
       if (!eu && idx < enUnits.length) eu = enUnits[idx];
-      if (eu && eu.text.trim()) {
+      if (eu && eu.text.trim() && !paired.has(eu.id)) {
         addPair(vu, eu);
       }
     }

@@ -3,6 +3,25 @@ export const ISQ_PAIRS_PART = "customXml/smart-audit-isq-pairs.xml";
 export interface IsqSlidePair { en: string; vi: string }
 const VI_DIACRITICS_REGEX = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i;
 
+function extractSlideStep(texts: string[]): string | null {
+  for (const t of texts.slice(0, 6)) {
+    // Matches "1.", "1.1", "1 -", "1.EN", "1.VI", "1-EN", "Step 1", "Bước 1", "CTQ 1", "SOP 1", "Trạm 1", "Item 1"
+    const m = t.match(/^\s*(?:(?:step|bước|ctq|sop|item|mục|trạm)\s*[:#]?\s*(\d+(?:\.\d+)?)|#?\s*(\d+(?:\.\d+)?)\s*(?:[.:\-\/)]|\s*(?:en|vi|vn)\b))/i);
+    if (m) return m[1] || m[2];
+    const m2 = t.match(/\b(\d+(?:\.\d+)?)\s*[._-]?\s*(?:EN|VI|VN)\b/i);
+    if (m2) return m2[1];
+  }
+  return null;
+}
+
+function hasExplicitEnMarker(texts: string[]): boolean {
+  return texts.slice(0, 6).some((t) => /\b(?:\d+[._-]?)?EN\b/i.test(t) || /\[EN\]|\(EN\)/i.test(t));
+}
+
+function hasExplicitViMarker(texts: string[]): boolean {
+  return texts.slice(0, 6).some((t) => /\b(?:\d+[._-]?)?(?:VI|VN)\b/i.test(t) || /\[VI\]|\(VI\)/i.test(t));
+}
+
 export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
   const ordered = await orderedSlidePaths(zip);
   if (ordered.length < 2) return [];
@@ -15,6 +34,9 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     totalTexts: number;
     viRatio: number;
     enRatio: number;
+    stepNumber: string | null;
+    hasEnMarker: boolean;
+    hasViMarker: boolean;
   }
 
   const profiles: SlideProfile[] = [];
@@ -33,29 +55,55 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
       totalTexts,
       viRatio: totalTexts > 0 ? viCount / totalTexts : 0,
       enRatio: totalTexts > 0 ? enCount / totalTexts : 0,
+      stepNumber: extractSlideStep(texts),
+      hasEnMarker: hasExplicitEnMarker(texts),
+      hasViMarker: hasExplicitViMarker(texts),
     });
   }
 
   const rawCandidatePairs: { en: string; vi: string }[] = [];
   const pairedPaths = new Set<string>();
 
-  // 1. Interleaved adjacent pairs [EN, VI] or [VI, EN]
+  const isEnSlide = (s: SlideProfile) => {
+    if (s.hasEnMarker && !s.hasViMarker) return true;
+    return (s.viCount === 0 && (s.enRatio >= 0.20 || s.enCount >= 1)) ||
+      (s.enCount > s.viCount && (s.viCount <= 1 || s.viRatio < 0.25));
+  };
+
+  const isViSlide = (s: SlideProfile) => {
+    if (s.hasViMarker && !s.hasEnMarker) return true;
+    return (s.viCount >= 1 && (s.viRatio >= 0.20 || s.viCount >= s.enCount)) ||
+      (s.viCount >= 2);
+  };
+
+  // 1. Interleaved adjacent pairs [1.EN, 1.VI], [2.EN, 2.VI] or [1.VI, 1.EN], [2.VI, 2.EN]
   for (let i = 0; i < profiles.length - 1; i++) {
     const curr = profiles[i];
     const next = profiles[i + 1];
     if (pairedPaths.has(curr.path) || pairedPaths.has(next.path)) continue;
 
-    const currIsEn = curr.viCount === 0 && (curr.enRatio >= 0.25 || curr.enCount >= 2);
-    const nextIsVi = next.viCount >= 2;
-    const currIsVi = curr.viCount >= 2;
-    const nextIsEn = next.viCount === 0 && (next.enRatio >= 0.25 || next.enCount >= 2);
+    const stepMatch = Boolean(curr.stepNumber && next.stepNumber && curr.stepNumber === next.stepNumber);
+    const currIsEn = isEnSlide(curr);
+    const nextIsVi = isViSlide(next);
+    const currIsVi = isViSlide(curr);
+    const nextIsEn = isEnSlide(next);
 
-    if (currIsEn && nextIsVi) {
+    if ((currIsEn && nextIsVi) || (stepMatch && curr.hasEnMarker && next.hasViMarker)) {
       rawCandidatePairs.push({ en: curr.path, vi: next.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
       i++;
-    } else if (currIsVi && nextIsEn) {
+    } else if ((currIsVi && nextIsEn) || (stepMatch && curr.hasViMarker && next.hasEnMarker)) {
+      rawCandidatePairs.push({ en: next.path, vi: curr.path });
+      pairedPaths.add(curr.path);
+      pairedPaths.add(next.path);
+      i++;
+    } else if (stepMatch && (curr.viCount < next.viCount)) {
+      rawCandidatePairs.push({ en: curr.path, vi: next.path });
+      pairedPaths.add(curr.path);
+      pairedPaths.add(next.path);
+      i++;
+    } else if (stepMatch && (curr.viCount > next.viCount)) {
       rawCandidatePairs.push({ en: next.path, vi: curr.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
@@ -63,15 +111,22 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     }
   }
 
-  // An alternating paired presentation (Option 1) must have at least 3 alternating pairs
-  if (rawCandidatePairs.length >= 3) {
+  // Accept interleaved pairs if:
+  // - at least 2 pairs found, OR
+  // - 1 pair found in a small deck (<= 4 slides), OR
+  // - pairs cover >= 40% of the entire presentation
+  if (
+    rawCandidatePairs.length >= 2 ||
+    (rawCandidatePairs.length === 1 && profiles.length <= 4) ||
+    (rawCandidatePairs.length * 2 >= profiles.length * 0.4)
+  ) {
     return rawCandidatePairs;
   }
 
   // 2. Parallel block pairs (e.g. block of VI slides, followed by block of EN slides)
-  const viSlides = profiles.filter((s) => !pairedPaths.has(s.path) && (s.viCount >= 2 || s.viRatio >= 0.2));
-  const enSlides = profiles.filter((s) => !pairedPaths.has(s.path) && s.viCount === 0 && (s.enRatio >= 0.25 || s.enCount >= 2));
-  if (viSlides.length >= 3 && enSlides.length >= 3 && Math.abs(viSlides.length - enSlides.length) <= 5) {
+  const viSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isViSlide(s));
+  const enSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isEnSlide(s));
+  if (viSlides.length >= 2 && enSlides.length >= 2 && Math.abs(viSlides.length - enSlides.length) <= 5) {
     const pairs: IsqSlidePair[] = [];
     const minLen = Math.min(viSlides.length, enSlides.length);
     for (let k = 0; k < minLen; k++) {
@@ -80,7 +135,7 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     return pairs;
   }
 
-  return [];
+  return rawCandidatePairs.length > 0 ? rawCandidatePairs : [];
 }
 
 export async function readIsqSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
