@@ -147,7 +147,8 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   const sourceLang = options.sourceLang || "en", targetLang = options.targetLang || "vi";
   const zip = await JSZip.loadAsync(buffer);
   const extracted = await extractUnits(zip);
-  const referencePaths = new Set((await readIsqSlidePairs(zip)).map(p=>p.vi));
+  const isqSlidePairs = await readIsqSlidePairs(zip);
+  const referencePaths = new Set(isqSlidePairs.map(p=>p.vi));
   const isqPaths = new Set<string>();
   if (sourceLang === "vi" && targetLang === "en" && options.mode !== "replace_en") {
     const slideUnits = new Map<string,RawUnit[]>();
@@ -204,6 +205,31 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     // A unique complementary pair is structural evidence. Multiple unrelated lines are never silently paired.
     if (unpairedSources.length === 1 && unpairedTargets.length === 1) addPair(unpairedSources[0], unpairedTargets[0]);
   }
+
+  // Cross-slide pairing between paired EN and VI slides (Ching Luh SOP Option 1 pairs)
+  const slidePartUnits = new Map<string, RawUnit[]>();
+  for (const unit of extracted.units) {
+    if (unit.location.partPath) {
+      if (!slidePartUnits.has(unit.location.partPath)) slidePartUnits.set(unit.location.partPath, []);
+      slidePartUnits.get(unit.location.partPath)!.push(unit);
+    }
+  }
+  for (const pair of isqSlidePairs) {
+    const enUnits = slidePartUnits.get(pair.en) || [];
+    const viUnits = slidePartUnits.get(pair.vi) || [];
+    const enParaMap = new Map<number, RawUnit>();
+    for (const eu of enUnits) {
+      if (eu.location.paragraphIndex !== undefined) enParaMap.set(eu.location.paragraphIndex, eu);
+    }
+    for (let idx = 0; idx < viUnits.length; idx++) {
+      const vu = viUnits[idx];
+      let eu = vu.location.paragraphIndex !== undefined ? enParaMap.get(vu.location.paragraphIndex) : undefined;
+      if (!eu && idx < enUnits.length) eu = enUnits[idx];
+      if (eu && eu.text.trim()) {
+        addPair(vu, eu);
+      }
+    }
+  }
   // Vietnamese already present in the deck also supplies spelling evidence without inventing a source/target relationship.
   if (targetLang === "vi") for (const raw of extracted.units) {
     if (inlineBilingual.has(raw.id) || languageEvidence(raw.text).en.length >= 2 || (!hasViDiacritics(raw.text) && !languageEvidence(raw.text).vi.length)) continue;
@@ -235,7 +261,15 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       existingTranslation: paired.has(raw.id) ? paired.get(raw.id) : undefined });
     const unit: ScannedTextUnit = { id: raw.id, sourceText: raw.text, sourceHash: computeSourceHash(raw.text), canonicalText: canonicalizeText(raw.text),
       location: raw.location, ...base, selectedForTranslation: false, safeToApply: false, canApply: false };
-    if (referencePaths.has(raw.location.partPath!)) {preservedIds.add(unit.id);unit.status="ALREADY_TRANSLATED";unit.reason="Slide tiếng Việt tham chiếu của cặp ISQ; giữ nguyên.";return unit;}
+    if (referencePaths.has(raw.location.partPath!)) {
+      preservedIds.add(unit.id);
+      unit.status = "ALREADY_TRANSLATED";
+      unit.reason = "Slide tiếng Việt tham chiếu của cặp ISQ; giữ nguyên, không cần dịch lại.";
+      unit.selectedForTranslation = false;
+      unit.requiresTranslation = false;
+      if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
+      return unit;
+    }
     const isqSource = isqPaths.has(raw.location.partPath!) && sourceEvidence(raw.text,sourceLang);
     unit.location.isIsq=isqPaths.has(raw.location.partPath!);
     if (paired.has(raw.id)) unit.existingTranslation=paired.get(raw.id);

@@ -97,13 +97,88 @@
   ],
   "terminology": [
     {
+      "id": "term_f1302f5aa83b",
+      "sourceTerm": "Vamp RB bị tràn keo",
+      "targetTerm": "RB vamp has cement overflow",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Lỗi chất lượng (Defect)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "review",
+      "priority": 1,
+      "confidence": 0.95,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-07T09:50:10.436Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "editHistory": [
+        {
+          "id": "hist_96901adf",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_67e17adaa65e",
+      "sourceTerm": "Chặt mặt trước",
+      "targetTerm": "Die-cut vamp",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "review",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-07T09:50:10.436Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "editHistory": [
+        {
+          "id": "hist_98ef8cc3",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_58ae1ea22ed0",
+      "sourceTerm": "at",
+      "targetTerm": "vị trí",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": "QA Stage Footwear Standard",
+      "category": "QA",
+      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
+      "status": "quarantined",
+      "priority": 2,
+      "confidence": 0.95,
+      "createdBy": "anonymous@secure.local",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-09-28T01:23:35.772Z",
+      "updatedAt": "2026-10-07T09:02:23.528Z"
+    },
+    {
       "id": "term_89b91a0203c9",
       "sourceTerm": "Ép lạnh",
       "targetTerm": "Cold press",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual-EN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual-EN.pptx",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual-EN.pptx",
       "status": "approved",
@@ -113,8 +188,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-02T09:45:21.059Z",
-      "updatedAt": "2026-10-07T07:48:08.979Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
+        {
+          "id": "hist_7d5c3a8a",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_4c4c57ee",
           "timestamp": "2026-10-07T07:48:08.979Z",
@@ -210,8 +293,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-07T06:11:02.773Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
+        {
+          "id": "hist_3984bd8c",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_7a6b9687",
           "timestamp": "2026-10-07T06:11:02.773Z",
@@ -406,8 +497,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-07T06:11:02.773Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
+        {
+          "id": "hist_0ac54cc9",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_645186ca",
           "timestamp": "2026-10-07T06:11:02.773Z",
@@ -815,8 +914,8 @@
       "targetTerm": "Finished shoe with bond gap",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "status": "review",
@@ -826,8 +925,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-07T01:49:28.030Z",
-      "updatedAt": "2026-10-07T01:49:28.030Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
+        {
+          "id": "hist_34a951e6",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_1a38f552",
           "timestamp": "2026-10-07T01:49:28.030Z",
@@ -1214,8 +1321,8 @@
       "targetTerm": "Pouring cement",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
       "status": "approved",
@@ -1225,8 +1332,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-05T09:08:58.752Z",
-      "updatedAt": "2026-10-07T01:11:18.209Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
+        {
+          "id": "hist_c8fffd5d",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_72072f87",
           "timestamp": "2026-10-07T01:11:18.209Z",
@@ -1288,8 +1403,8 @@
       "targetTerm": "Gathering stitching",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": null,
       "status": "approved",
@@ -1299,8 +1414,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-09-25T09:00:54.085Z",
-      "updatedAt": "2026-10-07T01:11:18.209Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
+        {
+          "id": "hist_94e8a8e5",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_8e27b4e4",
           "timestamp": "2026-10-07T01:11:18.209Z",
@@ -2811,9 +2934,9 @@
       "targetTerm": "Press nosew vamp",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
-      "definition": "Auto-harvested technical pair from translated SOP FA25 NIKE SB ZOOM NYJAH 4 QA IPQC manual-EN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC manual-EN.pptx",
-      "category": "No-Sew",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC manual-EN.pptx",
       "status": "approved",
       "priority": 1,
@@ -2822,8 +2945,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-01T02:16:16.548Z",
-      "updatedAt": "2026-10-05T09:00:53.296Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
+        {
+          "id": "hist_40ab1adb",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_d9ebf5ff",
           "timestamp": "2026-10-05T09:00:53.296Z",
@@ -3931,8 +4062,8 @@
       "targetTerm": "Stitching strobel",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
-      "definition": "Thuật ngữ chuyên ngành đề xuất từ bài trình chiếu PowerPoint",
-      "context": "Slide 63 - Tiêu đề Slide (Slide Title)",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": null,
       "status": "approved",
@@ -3942,7 +4073,17 @@
       "approvedBy": "user@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-05T03:46:45.773Z",
-      "updatedAt": "2026-10-05T03:46:45.773Z"
+      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "editHistory": [
+        {
+          "id": "hist_3b7bc6b7",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        }
+      ]
     },
     {
       "id": "term_c599bfd8fa1a",
@@ -4589,25 +4730,6 @@
       "version": "v1.0",
       "createdAt": "2026-10-02T09:43:29.429Z",
       "updatedAt": "2026-10-02T09:43:29.429Z"
-    },
-    {
-      "id": "term_58ae1ea22ed0",
-      "sourceTerm": "at",
-      "targetTerm": "vị trí",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": "QA Stage Footwear Standard",
-      "category": "QA",
-      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
-      "status": "quarantined",
-      "priority": 2,
-      "confidence": 0.95,
-      "createdBy": "anonymous@secure.local",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-09-28T01:23:35.772Z",
-      "updatedAt": "2026-10-07T09:02:23.528Z"
     },
     {
       "id": "term_d5573cc90780",
@@ -19678,6 +19800,26 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1791366610402_718943a8",
+      "timestamp": "2026-10-07T09:50:10.403Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 166578,
+      "errorCode": null,
+      "details": {
+        "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+        "totalSlides": 78,
+        "totalParagraphs": 1409,
+        "totalImagesProtected": 310,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
     {
       "id": "log_1791362482377_c7dd517d",
       "timestamp": "2026-10-07T08:41:22.378Z",

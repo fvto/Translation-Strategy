@@ -33,6 +33,7 @@ export interface DynamicZonePlan {
   totalSlides: number;
   zones: DynamicZone[];
   hasParallelSections: boolean;
+  hasInterleavedPairs: boolean;
   targetSlideModes: Map<number, "ipqc_bilingual" | "replace_en" | "keep_original">;
 }
 
@@ -185,6 +186,21 @@ export class DynamicDeckDetector {
       Math.abs(viIsqSlides.length - enIsqSlides.length) <= 10 &&
       Math.min(...enIsqSlides.map((s) => s.slideIndex)) > Math.max(...viIsqSlides.map((s) => s.slideIndex));
 
+    let interleavedPairCount = 0;
+    for (let i = 0; i < profiles.length - 1; i++) {
+      const curr = profiles[i];
+      const next = profiles[i + 1];
+      const currIsEn = curr.viRatio <= 0.05 && curr.enRatio >= 0.25;
+      const nextIsVi = next.viRatio >= 0.15;
+      const currIsVi = curr.viRatio >= 0.15;
+      const nextIsEn = next.viRatio <= 0.05 && next.enRatio >= 0.25;
+      if ((currIsEn && nextIsVi) || (currIsVi && nextIsEn)) {
+        interleavedPairCount++;
+        i++;
+      }
+    }
+    const hasInterleavedPairs = interleavedPairCount >= 2;
+
     // 2. Classify each slide into dynamic zones
     const zones: DynamicZone[] = [];
     let currentZone: DynamicZone | null = null;
@@ -239,20 +255,15 @@ export class DynamicDeckDetector {
         continue;
       }
 
-      if (hasParallelSections) {
+      if (hasParallelSections || hasInterleavedPairs) {
         if (p.isDivider) {
           targetSlideModes.set(p.slideIndex, "keep_original");
-        } else if (p.isIsq) {
-          if (p.viRatio >= 0.35) {
-            // Pre-existing Vietnamese ISQ reference block kept as-is
-            targetSlideModes.set(p.slideIndex, "keep_original");
-          } else {
-            // Target English ISQ block translated in-place
-            targetSlideModes.set(p.slideIndex, "replace_en");
-          }
+        } else if (p.viRatio >= 0.2) {
+          // Pre-existing Vietnamese reference slide kept as-is
+          targetSlideModes.set(p.slideIndex, "keep_original");
         } else {
-          // IPQC tables & standard inspection focuses: bilingual
-          targetSlideModes.set(p.slideIndex, "ipqc_bilingual");
+          // Target English slide kept as-is if already English, or replace_en if needing repair
+          targetSlideModes.set(p.slideIndex, p.viRatio <= 0.05 ? "keep_original" : "replace_en");
         }
       } else {
         // Monolithic deck
@@ -273,6 +284,7 @@ export class DynamicDeckDetector {
       totalSlides,
       zones,
       hasParallelSections,
+      hasInterleavedPairs,
       targetSlideModes,
     };
   }

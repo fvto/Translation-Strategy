@@ -1,10 +1,96 @@
 import type JSZip from "jszip";
 export const ISQ_PAIRS_PART = "customXml/smart-audit-isq-pairs.xml";
 export interface IsqSlidePair { en: string; vi: string }
+const VI_DIACRITICS_REGEX = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i;
+
+export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
+  const ordered = await orderedSlidePaths(zip);
+  if (ordered.length < 2) return [];
+
+  interface SlideProfile {
+    path: string;
+    slideIndex: number;
+    viCount: number;
+    enCount: number;
+    totalTexts: number;
+    viRatio: number;
+    enRatio: number;
+  }
+
+  const profiles: SlideProfile[] = [];
+  for (let i = 0; i < ordered.length; i++) {
+    const path = ordered[i];
+    const xml = (await zip.file(path)?.async("string")) || "";
+    const texts = Array.from(xml.matchAll(/<a:t\b[^>]*>(.*?)<\/a:t>/gs), (m) => m[1].trim()).filter(Boolean);
+    const viCount = texts.filter((t) => VI_DIACRITICS_REGEX.test(t)).length;
+    const enCount = texts.filter((t) => !VI_DIACRITICS_REGEX.test(t) && /[a-zA-Z]{2,}/.test(t)).length;
+    const totalTexts = texts.length;
+    profiles.push({
+      path,
+      slideIndex: i + 1,
+      viCount,
+      enCount,
+      totalTexts,
+      viRatio: totalTexts > 0 ? viCount / totalTexts : 0,
+      enRatio: totalTexts > 0 ? enCount / totalTexts : 0,
+    });
+  }
+
+  const rawCandidatePairs: { en: string; vi: string }[] = [];
+  const pairedPaths = new Set<string>();
+
+  // 1. Interleaved adjacent pairs [EN, VI] or [VI, EN]
+  for (let i = 0; i < profiles.length - 1; i++) {
+    const curr = profiles[i];
+    const next = profiles[i + 1];
+    if (pairedPaths.has(curr.path) || pairedPaths.has(next.path)) continue;
+
+    const currIsEn = curr.viCount === 0 && (curr.enRatio >= 0.25 || curr.enCount >= 2);
+    const nextIsVi = next.viCount >= 2;
+    const currIsVi = curr.viCount >= 2;
+    const nextIsEn = next.viCount === 0 && (next.enRatio >= 0.25 || next.enCount >= 2);
+
+    if (currIsEn && nextIsVi) {
+      rawCandidatePairs.push({ en: curr.path, vi: next.path });
+      pairedPaths.add(curr.path);
+      pairedPaths.add(next.path);
+      i++;
+    } else if (currIsVi && nextIsEn) {
+      rawCandidatePairs.push({ en: next.path, vi: curr.path });
+      pairedPaths.add(curr.path);
+      pairedPaths.add(next.path);
+      i++;
+    }
+  }
+
+  // An alternating paired presentation (Option 1) must have at least 3 alternating pairs
+  if (rawCandidatePairs.length >= 3) {
+    return rawCandidatePairs;
+  }
+
+  // 2. Parallel block pairs (e.g. block of VI slides, followed by block of EN slides)
+  const viSlides = profiles.filter((s) => !pairedPaths.has(s.path) && (s.viCount >= 2 || s.viRatio >= 0.2));
+  const enSlides = profiles.filter((s) => !pairedPaths.has(s.path) && s.viCount === 0 && (s.enRatio >= 0.25 || s.enCount >= 2));
+  if (viSlides.length >= 3 && enSlides.length >= 3 && Math.abs(viSlides.length - enSlides.length) <= 5) {
+    const pairs: IsqSlidePair[] = [];
+    const minLen = Math.min(viSlides.length, enSlides.length);
+    for (let k = 0; k < minLen; k++) {
+      pairs.push({ en: enSlides[k].path, vi: viSlides[k].path });
+    }
+    return pairs;
+  }
+
+  return [];
+}
+
 export async function readIsqSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
-  const xml = await zip.file(ISQ_PAIRS_PART)?.async("string") || "";
-  return Array.from(xml.matchAll(/<pair en="(ppt\/slides\/slide\d+\.xml)" vi="(ppt\/slides\/slide\d+\.xml)"\/>/g), m => ({en:m[1],vi:m[2]}))
-    .filter(p => zip.file(p.en) && zip.file(p.vi));
+  const xml = (await zip.file(ISQ_PAIRS_PART)?.async("string")) || "";
+  const xmlPairs = Array.from(
+    xml.matchAll(/<pair en="(ppt\/slides\/slide\d+\.xml)" vi="(ppt\/slides\/slide\d+\.xml)"\/>/g),
+    (m) => ({ en: m[1], vi: m[2] })
+  ).filter((p) => zip.file(p.en) && zip.file(p.vi));
+  if (xmlPairs.length > 0) return xmlPairs;
+  return detectDynamicSlidePairs(zip);
 }
 export async function orderedSlidePaths(zip: JSZip): Promise<string[]> {
   const presentation = await zip.file("ppt/presentation.xml")?.async("string") || "";

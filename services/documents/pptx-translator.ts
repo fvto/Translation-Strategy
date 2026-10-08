@@ -1412,7 +1412,7 @@ export class PptxTranslatorService {
     let isqSlidePaths = new Set<string>();
     // Duplicates ISQ slides according to Ching Luh SOP (1 page EN on top, 1 page VI original below)
     // Only applies to Option 1 (ipqc_bilingual / isq_duplicate), NEVER to Option 2 (replace_en)
-    if ((mode === "isq_duplicate" || mode === "ipqc_bilingual") && !zonePlan.hasParallelSections && sourceLanguage === "vi" && targetLanguage === "en") {
+    if ((mode === "isq_duplicate" || mode === "ipqc_bilingual") && !zonePlan.hasParallelSections && !zonePlan.hasInterleavedPairs && sourceLanguage === "vi" && targetLanguage === "en") {
       const selectedPaths = options?.translateMissingOnly ? new Set(slides.filter(s=>s.paragraphs.some(p=>modifiedParagraphIds.has(p.id))).map(s=>s.slideFileName)) : undefined;
       isqSlidePaths = await this.duplicateDeck(zip, slides, options?.fileName, false, mode, selectedPaths);
       if(options?.translateMissingOnly){
