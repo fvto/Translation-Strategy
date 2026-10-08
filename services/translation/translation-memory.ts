@@ -190,7 +190,7 @@ export function getAuditHistoryPairs(sourceLanguage: string, targetLanguage: str
     if (!session || !Array.isArray(session.slides) || session.sourceLanguage !== sourceLanguage || session.targetLanguage !== targetLanguage) continue;
     for (const slide of session.slides || []) for (const pair of Array.isArray(slide?.pairs) ? slide.pairs : []) {
       if (results.length >= AUDIT_CONFIDENCE.historyPairs) return results;
-      if (!pair.sourceText || !pair.translatedText || pair.sourceText.trim() === pair.translatedText.trim()) continue;
+      if (!pair.sourceText || !pair.translatedText || pair.sourceText.trim().toLowerCase() === pair.translatedText.trim().toLowerCase()) continue;
       const origin = pair.userCorrected ? "correction" : "history";
       const key = JSON.stringify([pair.sourceText, pair.translatedText, origin]);
       if (seen.has(key)) continue;
