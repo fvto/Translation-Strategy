@@ -114,6 +114,8 @@ export const PptxTranslator: React.FC = () => {
   const [provider, setProvider] = useState<string>("gemini");
   const [mode, setMode] = useState<PptxTranslationMode>("ipqc_bilingual");
   const [langDir, setLangDir] = useState<"vi-en" | "en-vi">("vi-en");
+  const [slideScope, setSlideScope] = useState<"all" | "custom">("all");
+  const [slideRangeInput, setSlideRangeInput] = useState<string>("");
 
   const srcLang = langDir === "vi-en" ? "vi" : "en";
   const tgtLang = langDir === "vi-en" ? "en" : "vi";
@@ -341,6 +343,9 @@ export const PptxTranslator: React.FC = () => {
     formData.append("provider", provider);
     formData.append("mode", mode);
     formData.append("stage", "all");
+    if (slideScope === "custom" && slideRangeInput.trim()) {
+      formData.append("slideRange", slideRangeInput.trim());
+    }
     if (options?.translateMissingOnly) {
       formData.append("translateMissingOnly", "true");
       if (options.selectedUnitIds) {
@@ -1036,6 +1041,64 @@ export const PptxTranslator: React.FC = () => {
                 )}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Slide Selection Scope (Chọn slide cần dịch) */}
+        {file && !isProcessing && (
+          <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4.5 space-y-3 shadow-xl">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
+              <span className="text-xs font-bold text-sky-300 flex items-center space-x-2">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
+                <span>Phạm vi slide cần dịch (Slide Scope):</span>
+              </span>
+              <span className="text-[11px] text-slate-400">
+                {slideScope === "all" ? "Toàn bộ bài thuyết trình" : `Chỉ dịch slide: ${slideRangeInput || "(Chưa nhập)"}`}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSlideScope("all")}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  slideScope === "all"
+                    ? "bg-sky-500/10 border-sky-500/80 text-white shadow-md shadow-sky-500/10 ring-1 ring-sky-500/50"
+                    : "bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                }`}
+              >
+                <div className="text-xs font-bold text-sky-300">Dịch tất cả các slide (Mặc định)</div>
+                <div className="text-[11px] text-slate-400 mt-1">Quét và dịch toàn bộ nội dung từ trang đầu đến trang cuối.</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSlideScope("custom")}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                  slideScope === "custom"
+                    ? "bg-sky-500/10 border-sky-500/80 text-white shadow-md shadow-sky-500/10 ring-1 ring-sky-500/50"
+                    : "bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                }`}
+              >
+                <div className="text-xs font-bold text-sky-300">Chỉ dịch các slide được chọn</div>
+                <div className="text-[11px] text-slate-400 mt-1">Chỉ dịch các slide cụ thể, các slide khác giữ nguyên 100% không đổi.</div>
+              </button>
+            </div>
+
+            {slideScope === "custom" && (
+              <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Nhập khoảng slide, ví dụ: 1-5, 8, 12-14..."
+                  value={slideRangeInput}
+                  onChange={(e) => setSlideRangeInput(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 flex-1"
+                />
+                <span className="text-[11px] text-slate-400">
+                  (Định dạng: số đơn lẻ hoặc dải slide cách nhau bằng dấu phẩy)
+                </span>
+              </div>
+            )}
           </div>
         )}
 

@@ -55,6 +55,15 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
+    const slideRange = (formData.get("slideRange") as string | null) || undefined;
+    const selectedSlideIndicesRaw = formData.get("selectedSlideIndices") as string | null;
+    let selectedSlideIndices: number[] | undefined;
+    if (selectedSlideIndicesRaw) {
+      try {
+        selectedSlideIndices = JSON.parse(selectedSlideIndicesRaw);
+      } catch {}
+    }
+
     if (!file) {
       return NextResponse.json({ error: "No PowerPoint (.pptx) file provided" }, { status: 400 });
     }
@@ -180,6 +189,8 @@ export async function POST(req: NextRequest) {
               stage,
               translateMissingOnly,
               selectedUnitIds,
+              slideRange,
+              selectedSlideIndices,
               customTranslations,
               onProgress: (progressUpdate) => {
                 sendEvent("progress", progressUpdate);
@@ -286,6 +297,8 @@ export async function POST(req: NextRequest) {
       stage,
       translateMissingOnly,
       selectedUnitIds,
+      slideRange,
+      selectedSlideIndices,
       customTranslations,
     });
 

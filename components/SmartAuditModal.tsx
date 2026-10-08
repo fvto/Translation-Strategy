@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers } from "lucide-react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
 
 interface SmartAuditModalProps {
@@ -23,7 +23,7 @@ const LABELS: Record<TextUnitStatus, string> = {
 const ORIGINS: Record<string, string> = { approved: "Thuật ngữ đã duyệt", correction: "Người dùng đã sửa", presentation: "PowerPoint hiện tại", history: "Tài liệu trước" };
 
 export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissingOnly, onApplySuggestions, isLoading = false }: SmartAuditModalProps) {
-  const [tab, setTab] = useState<"summary" | "review" | "pairs">("summary");
+  const [tab, setTab] = useState<"summary" | "slides" | "review" | "pairs">("summary");
   const [filter, setFilter] = useState("attention");
   const [slide, setSlide] = useState("all");
   const [query, setQuery] = useState("");
@@ -34,6 +34,10 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   const [busy, setBusy] = useState(false);
   const [harvesting, setHarvesting] = useState(false);
   const [harvestMsg, setHarvestMsg] = useState("");
+
+  // Slide selector states
+  const [slideRangeInput, setSlideRangeInput] = useState("");
+  const [expandedSlideIndex, setExpandedSlideIndex] = useState<number | null>(null);
 
   // Custom translation editing states
   const [customEdits, setCustomEdits] = useState<Record<string, string>>({});
@@ -57,6 +61,85 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   }, [auditReport]);
 
   const byId = useMemo(() => new Map(auditReport?.units.map((u) => [u.id, u])), [auditReport]);
+
+  // Group all units by slide index
+  const slideMap = useMemo(() => {
+    if (!auditReport) return new Map<number, ScannedTextUnit[]>();
+    const map = new Map<number, ScannedTextUnit[]>();
+    for (const u of auditReport.units) {
+      const s = u.location.slideIndex ?? 0;
+      if (!map.has(s)) map.set(s, []);
+      map.get(s)!.push(u);
+    }
+    return map;
+  }, [auditReport]);
+
+  const slideList = useMemo(() => {
+    if (!auditReport) return [];
+    return Array.from(slideMap.keys()).sort((a, b) => a - b);
+  }, [slideMap, auditReport]);
+
+  const toggleSlide = (slideNum: number) => {
+    const units = slideMap.get(slideNum) || [];
+    const translatable = units.filter((u) => u.selectedForTranslation);
+    if (!translatable.length) return;
+    const allSelected = translatable.every((u) => selected.has(u.id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const u of translatable) {
+        if (allSelected) next.delete(u.id);
+        else next.add(u.id);
+      }
+      return next;
+    });
+  };
+
+  const applySlideRange = (rangeStr: string) => {
+    if (!rangeStr.trim() || !auditReport) return;
+    const indices = new Set<number>();
+    const normalized = rangeStr.replace(/\s*-\s*/g, "-");
+    const parts = normalized.split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean);
+    for (const part of parts) {
+      if (part.includes("-")) {
+        const [startStr, endStr] = part.split("-").map((s) => s.trim());
+        const start = parseInt(startStr, 10);
+        const end = parseInt(endStr, 10);
+        if (!isNaN(start) && !isNaN(end)) {
+          const min = Math.max(1, Math.min(start, end));
+          const max = Math.min(auditReport.totalSlides, Math.max(start, end));
+          for (let i = min; i <= max; i++) indices.add(i);
+        }
+      } else {
+        const num = parseInt(part, 10);
+        if (!isNaN(num) && num >= 1 && num <= auditReport.totalSlides) indices.add(num);
+      }
+    }
+    if (indices.size === 0) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const u of auditReport.units) {
+        if (!u.selectedForTranslation) continue;
+        const s = u.location.slideIndex ?? 0;
+        if (indices.has(s)) next.add(u.id);
+        else next.delete(u.id);
+      }
+      return next;
+    });
+  };
+
+  const selectAllSlides = () => {
+    if (!auditReport) return;
+    setSelected(new Set(auditReport.units.filter((u) => u.selectedForTranslation).map((u) => u.id)));
+  };
+
+  const deselectAllSlides = () => {
+    setSelected(new Set());
+  };
+
+  const selectOnlyPending = () => {
+    if (!auditReport) return;
+    setSelected(new Set(auditReport.units.filter((u) => u.selectedForTranslation && u.status === "NEEDS_TRANSLATION").map((u) => u.id)));
+  };
 
   const groups = useMemo(() => {
     if (!auditReport) return [];
@@ -220,15 +303,270 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
 
         <div className="flex gap-4 px-6 py-3 border-b border-slate-200 dark:border-slate-800 text-sm">
           <button onClick={() => setTab("summary")} aria-pressed={tab === "summary"} className={tab === "summary" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Tổng quan</button>
+          <button onClick={() => setTab("slides")} aria-pressed={tab === "slides"} className={tab === "slides" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1 flex items-center gap-1.5" : "text-slate-500 hover:text-slate-700 flex items-center gap-1.5"}>
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Chọn Slide &amp; Chỗ cần dịch ({selectedMissing.length})
+          </button>
           <button onClick={() => setTab("review")} aria-pressed={tab === "review"} className={tab === "review" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Xem xét ({attention} nhóm)</button>
-          <button onClick={() => setTab("pairs")} aria-pressed={tab === "pairs"} className={tab === "pairs" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700 flex items-center gap-1.5"}>
+          <button onClick={() => setTab("pairs")} aria-pressed={tab === "pairs"} className={tab === "pairs" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1 flex items-center gap-1.5" : "text-slate-500 hover:text-slate-700 flex items-center gap-1.5"}>
             <Layers className="w-3.5 h-3.5" /> Cặp slide ({auditReport.slidePairs?.length || 0})
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {error && <p role="alert" className="text-sm text-rose-600 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800">{error}</p>}
-          {tab === "pairs" ? (
+          {tab === "slides" ? (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-sky-50/60 dark:bg-sky-950/30 p-3.5 rounded-xl border border-sky-200 dark:border-sky-800/60">
+                <div>
+                  <h3 className="font-bold text-sm text-sky-900 dark:text-sky-200 flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-sky-600" /> Chọn slide và đoạn văn cần dịch bổ sung
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Chọn cả slide, nhập khoảng slide (vd: 1-5, 8, 12-14), hoặc mở rộng từng slide để chọn cụ thể từng chỗ/đoạn văn.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" className={button} onClick={selectAllSlides}>Chọn tất cả ({auditReport.units.filter((u) => u.selectedForTranslation).length})</button>
+                  <button type="button" className={button} onClick={deselectAllSlides}>Bỏ chọn tất cả</button>
+                  <button type="button" className={button + " text-sky-600 font-semibold"} onClick={selectOnlyPending}>Chỉ chọn slide thiếu ({auditReport.needsTranslationCount})</button>
+                </div>
+              </div>
+
+              {/* Range input */}
+              <div className="flex items-center gap-2 text-xs">
+                <input
+                  type="text"
+                  placeholder="Nhập khoảng slide cần dịch, vd: 1-5, 8, 12-14..."
+                  value={slideRangeInput}
+                  onChange={(e) => setSlideRangeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") applySlideRange(slideRangeInput);
+                  }}
+                  className={button + " flex-1 bg-transparent"}
+                />
+                <button
+                  type="button"
+                  className={button + " bg-sky-600 text-white hover:bg-sky-500 shrink-0 font-semibold"}
+                  onClick={() => applySlideRange(slideRangeInput)}
+                  disabled={!slideRangeInput.trim()}
+                >
+                  Áp dụng khoảng slide
+                </button>
+              </div>
+
+              {/* Slide list */}
+              <div className="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
+                {slideList.map((slideNum) => {
+                  const units = slideMap.get(slideNum) || [];
+                  const translatable = units.filter((u) => u.selectedForTranslation);
+                  const selectedInSlide = translatable.filter((u) => selected.has(u.id));
+                  const isAllSelected = translatable.length > 0 && selectedInSlide.length === translatable.length;
+                  const isPartiallySelected = selectedInSlide.length > 0 && selectedInSlide.length < translatable.length;
+                  const isExpanded = expandedSlideIndex === slideNum;
+                  const needsTransCount = translatable.filter((u) => u.status === "NEEDS_TRANSLATION").length;
+
+                  // Find title or first substantive snippet
+                  const titleUnit = units.find((u) => u.sourceText && u.sourceText.trim().length > 3);
+                  const titlePreview = titleUnit ? titleUnit.sourceText : `Slide ${slideNum}`;
+
+                  return (
+                    <div
+                      key={slideNum}
+                      className={card + " transition-colors " + (
+                        isAllSelected
+                          ? "border-sky-400 dark:border-sky-700 bg-sky-50/40 dark:bg-sky-950/25"
+                          : isPartiallySelected
+                          ? "border-amber-400 dark:border-amber-700 bg-amber-50/20 dark:bg-amber-950/15"
+                          : "border-slate-200 dark:border-slate-800"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => toggleSlide(slideNum)}
+                            disabled={translatable.length === 0}
+                            className="text-slate-600 dark:text-slate-300 hover:text-sky-600 shrink-0 disabled:opacity-30 cursor-pointer"
+                            aria-label={`Chọn toàn bộ Slide ${slideNum}`}
+                          >
+                            {isAllSelected ? (
+                              <CheckSquare className="w-4 h-4 text-sky-600" />
+                            ) : isPartiallySelected ? (
+                              <div className="w-4 h-4 rounded border-2 border-amber-600 bg-amber-500/20 flex items-center justify-center font-bold text-[10px] text-amber-600 leading-none">
+                                -
+                              </div>
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-800 dark:text-slate-100">Slide {slideNum}</span>
+                              {needsTransCount > 0 ? (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-medium">
+                                  {needsTransCount} câu chưa dịch
+                                </span>
+                              ) : translatable.length > 0 ? (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-medium">
+                                  Đã dịch
+                                </span>
+                              ) : (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium">
+                                  Không cần dịch
+                                </span>
+                              )}
+                              <span className="text-slate-400 text-[11px]">
+                                ({selectedInSlide.length}/{translatable.length} đoạn được chọn)
+                              </span>
+                            </div>
+                            <p className="text-slate-500 text-[11px] truncate mt-0.5 max-w-lg">
+                              {titlePreview}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedSlideIndex(isExpanded ? null : slideNum)}
+                            className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center gap-1 text-[11px] cursor-pointer"
+                          >
+                            <span>{isExpanded ? "Thu gọn" : "Chi tiết từng câu"}</span>
+                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Granular paragraph-by-paragraph toggle */}
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                          <p className="text-[11px] font-semibold text-slate-500">
+                            Các vị trí văn bản trong Slide {slideNum} (tick để chọn từng chỗ/phần cần dịch):
+                          </p>
+                          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                            {units.map((u) => {
+                              const isChecked = selected.has(u.id);
+                              const isCustom = customEdits[u.id] !== undefined;
+                              const effectiveTrans = getEffectiveTranslation(u);
+                              const isEditing = editingUnitId === u.id;
+
+                              return (
+                                <div
+                                  key={u.id}
+                                  className={`p-2 rounded border text-xs flex flex-col gap-1.5 transition-colors ${
+                                    isChecked
+                                      ? "bg-white dark:bg-slate-900 border-sky-300 dark:border-sky-800"
+                                      : "bg-slate-50/50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 opacity-70"
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        disabled={!u.selectedForTranslation}
+                                        onChange={() => toggle(u.id)}
+                                        className="mt-0.5 rounded border-slate-300 dark:border-slate-700 text-sky-600 shrink-0 cursor-pointer"
+                                      />
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                            Đoạn {(u.location.paragraphIndex ?? 0) + 1}
+                                          </span>
+                                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                            {LABELS[u.status]}
+                                          </span>
+                                          {isCustom && (
+                                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-semibold">
+                                              Đã sửa thủ công
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-slate-800 dark:text-slate-200 mt-0.5 break-words">
+                                          {u.sourceText}
+                                        </p>
+                                        {effectiveTrans && !isEditing && (
+                                          <p className="text-emerald-700 dark:text-emerald-400 text-[11px] mt-0.5 break-words flex items-center gap-1">
+                                            <ArrowRight className="w-2.5 h-2.5 shrink-0" />
+                                            {effectiveTrans}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      {isEditing ? (
+                                        <div className="flex items-center gap-1">
+                                          <button
+                                            type="button"
+                                            className={button + " text-emerald-600 p-1"}
+                                            onClick={() => saveUnitEdit(u)}
+                                            title="Lưu sửa đổi"
+                                          >
+                                            <Check className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={button + " text-slate-400 p-1"}
+                                            onClick={() => setEditingUnitId(null)}
+                                            title="Hủy"
+                                          >
+                                            <X className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1">
+                                          <button
+                                            type="button"
+                                            className={button + " text-slate-500 p-1"}
+                                            onClick={() => startEditUnit(u)}
+                                            title="Tự sửa bản dịch của câu này"
+                                          >
+                                            <Pencil className="w-3.5 h-3.5" />
+                                          </button>
+                                          {isCustom && (
+                                            <button
+                                              type="button"
+                                              className={button + " text-rose-500 p-1"}
+                                              onClick={() => resetUnitEdit(u)}
+                                              title="Hủy sửa đổi, khôi phục gốc"
+                                            >
+                                              <RotateCcw className="w-3.5 h-3.5" />
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {isEditing && (
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <input
+                                        type="text"
+                                        className={button + " flex-1 bg-white dark:bg-slate-900 text-xs"}
+                                        placeholder="Nhập bản dịch tùy chỉnh..."
+                                        value={editText}
+                                        onChange={(e) => setEditText(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") saveUnitEdit(u);
+                                        }}
+                                        autoFocus
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : tab === "pairs" ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -322,14 +660,17 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
             <p className="text-sm text-slate-500">ISQ: chọn theo cả slide để xuất một slide EN và một slide VI liền sau. IPQC giữ bố cục song ngữ trong slide.</p>
             {(auditReport.untranslatedCount ?? 0) > (auditReport.translatableMissingCount ?? 0) && <p className="text-sm text-amber-600">{(auditReport.untranslatedCount ?? 0) - (auditReport.translatableMissingCount ?? 0)} đoạn có định dạng hoặc cấu trúc đặc biệt cần chỉnh thủ công; xem chi tiết trong các nhóm.</p>}
             <div className="flex flex-wrap gap-3">
-              <button className={button} onClick={() => setTab("review")}>Xem &amp; Tùy chỉnh các nhóm</button>
-              <button className={button} onClick={() => { setFilter("reuse"); setTab("review"); }}>Xem bản dịch có thể dùng lại</button>
+              <button type="button" className={button + " bg-sky-600 text-white hover:bg-sky-500 flex items-center gap-1.5 font-semibold"} onClick={() => setTab("slides")}>
+                <SlidersHorizontal className="w-3.5 h-3.5" /> Chọn slide &amp; chỗ cần dịch ({selectedMissing.length} đã chọn)
+              </button>
+              <button type="button" className={button} onClick={() => setTab("review")}>Xem &amp; Tùy chỉnh các nhóm</button>
+              <button type="button" className={button} onClick={() => { setFilter("reuse"); setTab("review"); }}>Xem bản dịch có thể dùng lại</button>
               {auditReport.slidePairs && auditReport.slidePairs.length > 0 && (
-                <button className={button + " text-sky-600 flex items-center gap-1.5"} onClick={() => setTab("pairs")}>
+                <button type="button" className={button + " text-sky-600 flex items-center gap-1.5"} onClick={() => setTab("pairs")}>
                   <Layers className="w-3.5 h-3.5" /> Sơ đồ cặp slide ({auditReport.slidePairs.length})
                 </button>
               )}
-              {onApplySuggestions && <button className={button + " text-emerald-600"} disabled={loading || !safeIds.length} onClick={() => setPreview(safeIds)}>Xem trước {safeIds.length} sửa an toàn</button>}
+              {onApplySuggestions && <button type="button" className={button + " text-emerald-600"} disabled={loading || !safeIds.length} onClick={() => setPreview(safeIds)}>Xem trước {safeIds.length} sửa an toàn</button>}
             </div>
           </> : <>
             <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -343,8 +684,30 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
                 <option value="all">Tất cả slide</option>
                 {auditReport.affectedSlides.map((s) => <option key={s} value={s}>Slide {s}</option>)}
               </select>
+              {slide !== "all" && (
+                <>
+                  <button type="button" className={button + " text-sky-600 font-semibold"} onClick={() => {
+                    const slideNum = parseInt(slide, 10);
+                    const units = slideMap.get(slideNum) || [];
+                    setSelected((prev) => {
+                      const next = new Set(prev);
+                      for (const u of units) if (u.selectedForTranslation) next.add(u.id);
+                      return next;
+                    });
+                  }}>Chọn cả Slide {slide}</button>
+                  <button type="button" className={button + " text-slate-500"} onClick={() => {
+                    const slideNum = parseInt(slide, 10);
+                    const units = slideMap.get(slideNum) || [];
+                    setSelected((prev) => {
+                      const next = new Set(prev);
+                      for (const u of units) next.delete(u.id);
+                      return next;
+                    });
+                  }}>Bỏ chọn Slide {slide}</button>
+                </>
+              )}
               <input aria-label="Tìm nội dung" className={button + " flex-1 bg-transparent"} placeholder="Tìm nội dung hoặc gợi ý..." value={query} onChange={(e) => setQuery(e.target.value)} />
-              <button className={button} onClick={() => setSelected(new Set())}>Bỏ chọn tất cả</button>
+              <button type="button" className={button} onClick={() => setSelected(new Set())}>Bỏ chọn tất cả</button>
             </div>
 
             {groups.map((group) => {

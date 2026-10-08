@@ -15,7 +15,7 @@ import { translationCache } from "../translation/cache";
 import { DocumentTranslationMemory, TranslationUnitWithMeta, documentTM, DocumentTMConflict, canonicalizeText } from "../translation/document-tm";
 import { auditPptxGaps, SmartAuditReport, ScannedTextUnit, isNonTranslatable, isShoeModelName } from "../translation/smart-detector";
 import { paragraphText, PPTX_PARAGRAPH_PATTERN, replaceParagraphTranslation } from "./pptx-text";
-import { orderedSlidePaths, readIsqSlidePairs, ISQ_PAIRS_PART } from "./pptx-slide-order";
+import { orderedSlidePaths, readIsqSlidePairs, ISQ_PAIRS_PART, parseSlideRange } from "./pptx-slide-order";
 import { detectUnmappedTerminology, UnmappedTermItem } from "../terminology/unmapped-detector";
 import { polishSopText } from "../translation/sop-polisher";
 
@@ -487,6 +487,8 @@ export class PptxTranslatorService {
       stage?: string;
       translateMissingOnly?: boolean;
       selectedUnitIds?: string[];
+      selectedSlideIndices?: number[];
+      slideRange?: string;
       customTranslations?: Record<string, string>;
     }
   ): Promise<PptxTranslationResult> {
@@ -565,7 +567,24 @@ export class PptxTranslatorService {
       }
     }
 
+    const effectiveSlideIndices = options?.selectedSlideIndices && options.selectedSlideIndices.length > 0
+      ? new Set(options.selectedSlideIndices)
+      : options?.slideRange
+      ? new Set(parseSlideRange(options.slideRange, slides.length))
+      : null;
+
     for (const slide of slides) {
+      if (effectiveSlideIndices && !effectiveSlideIndices.has(slide.slideIndex)) {
+        // Non-selected slides: keep 100% original text, zero LLM translation
+        for (const p of slide.paragraphs) {
+          translationMap.set(p.id, p.originalText);
+        }
+        if (slide.notes) {
+          translationMap.set(`notes_s${slide.slideIndex}`, slide.notes);
+        }
+        continue;
+      }
+
       for (const p of slide.paragraphs) {
         if (!p.originalText || !p.originalText.trim()) continue;
 

@@ -105,3 +105,35 @@ export async function orderedSlidePaths(zip: JSZip): Promise<string[]> {
   const ordered=Array.from(presentation.matchAll(/<p:sldId\b[^>]*>/g),m => targets.get(m[0].match(/\br:id="([^"]+)"/)?.[1] || "")).filter((p):p is string=>!!p);
   return ordered.length ? ordered : Object.keys(zip.files).filter(p=>/^ppt\/slides\/slide\d+\.xml$/.test(p)).sort((a,b)=>Number(a.match(/slide(\d+)/)![1])-Number(b.match(/slide(\d+)/)![1]));
 }
+
+/**
+ * Parses user-provided slide ranges like "1-5, 8, 10-12" into an array of 1-based slide numbers.
+ */
+export function parseSlideRange(rangeStr: string, maxSlides: number = 9999): number[] {
+  if (!rangeStr || !rangeStr.trim()) return [];
+  const indices = new Set<number>();
+  // Normalize whitespace around hyphens e.g. "10 - 12" -> "10-12"
+  const normalized = rangeStr.replace(/\s*-\s*/g, "-");
+  const parts = normalized.split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean);
+  for (const part of parts) {
+    if (part.includes("-")) {
+      const [startStr, endStr] = part.split("-").map((s) => s.trim());
+      const start = parseInt(startStr, 10);
+      const end = parseInt(endStr, 10);
+      if (!isNaN(start) && !isNaN(end)) {
+        const min = Math.max(1, Math.min(start, end));
+        const max = Math.min(maxSlides, Math.max(start, end));
+        for (let i = min; i <= max; i++) {
+          indices.add(i);
+        }
+      }
+    } else {
+      const num = parseInt(part, 10);
+      if (!isNaN(num) && num >= 1 && num <= maxSlides) {
+        indices.add(num);
+      }
+    }
+  }
+  return Array.from(indices).sort((a, b) => a - b);
+}
+
