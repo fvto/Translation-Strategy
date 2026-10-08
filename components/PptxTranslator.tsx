@@ -1861,6 +1861,7 @@ export const PptxTranslator: React.FC = () => {
         isOpen={isAuditModalOpen}
         onClose={() => setIsAuditModalOpen(false)}
         auditReport={auditReport}
+        file={file}
         onApplySuggestions={applyAuditSuggestions}
         onTranslateMissingOnly={(selectedUnitIds, customTranslations) => {
           setIsAuditModalOpen(false);

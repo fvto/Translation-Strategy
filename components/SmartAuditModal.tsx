@@ -8,6 +8,7 @@ interface SmartAuditModalProps {
   isOpen: boolean;
   onClose: () => void;
   auditReport: SmartAuditReport | null;
+  file?: File | null;
   onTranslateMissingOnly: (selectedUnitIds?: string[], customTranslations?: Record<string, string>) => void;
   onTranslateAll?: () => void;
   onApplySuggestions?: (unitIds: string[], customTranslations?: Record<string, string>) => Promise<void>;
@@ -22,7 +23,7 @@ const LABELS: Record<TextUnitStatus, string> = {
 };
 const ORIGINS: Record<string, string> = { approved: "Thuật ngữ đã duyệt", correction: "Người dùng đã sửa", presentation: "PowerPoint hiện tại", history: "Tài liệu trước" };
 
-export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissingOnly, onApplySuggestions, isLoading = false }: SmartAuditModalProps) {
+export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslateMissingOnly, onApplySuggestions, isLoading = false }: SmartAuditModalProps) {
   const [tab, setTab] = useState<"summary" | "slides" | "review" | "pairs">("summary");
   const [filter, setFilter] = useState("attention");
   const [slide, setSlide] = useState("all");
@@ -279,6 +280,9 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
       formData.append("auditReport", JSON.stringify(report));
       formData.append("sourceLanguage", "vi");
       formData.append("targetLanguage", "en");
+      if (file) {
+        formData.append("file", file);
+      }
 
       const res = await fetch("/api/documents/translate-pptx", {
         method: "POST",

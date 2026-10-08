@@ -64,6 +64,56 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
+    if (action === "ai_deep_audit") {
+      let auditReport = null;
+      const reportJson = formData.get("auditReport");
+      if (reportJson) {
+        try {
+          auditReport = JSON.parse(String(reportJson));
+        } catch {}
+      }
+
+      // If auditReport wasn't provided directly, extract from file if provided
+      if (!auditReport) {
+        if (!file) {
+          return NextResponse.json({ error: "Thiếu dữ liệu auditReport hoặc file PowerPoint (.pptx)." }, { status: 400 });
+        }
+        if (!file.name.toLowerCase().endsWith(".pptx")) {
+          return NextResponse.json({ error: "Only .pptx PowerPoint presentations are supported" }, { status: 400 });
+        }
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        if (buffer.length < 4 || buffer[0] !== 0x50 || buffer[1] !== 0x4b || buffer[2] !== 0x03 || buffer[3] !== 0x04) {
+          return NextResponse.json({ error: "Invalid PPTX file: invalid binary zip header" }, { status: 400 });
+        }
+        auditReport = await auditPptxGaps(buffer, file.name, {
+          sourceLang: sourceLanguage,
+          targetLang: targetLanguage,
+          mode,
+        });
+      }
+
+      if (!auditReport) {
+        return NextResponse.json({ error: "Thiếu dữ liệu auditReport hoặc file PowerPoint." }, { status: 400 });
+      }
+
+      const deepResult = await runAiDeepAudit(auditReport, {
+        sourceLang: sourceLanguage,
+        targetLang: targetLanguage,
+      });
+
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        action: "ai_deep_audit",
+        auditReport: deepResult.report,
+        pairedCount: deepResult.pairedCount,
+        immuneCount: deepResult.immuneCount,
+        verifiedCount: deepResult.verifiedCount,
+        error: deepResult.error,
+      });
+    }
+
     if (!file) {
       return NextResponse.json({ error: "No PowerPoint (.pptx) file provided" }, { status: 400 });
     }
@@ -79,8 +129,6 @@ export async function POST(req: NextRequest) {
     if (buffer.length < 4 || buffer[0] !== 0x50 || buffer[1] !== 0x4b || buffer[2] !== 0x03 || buffer[3] !== 0x04) {
       return NextResponse.json({ error: "Invalid PPTX file: invalid binary zip header" }, { status: 400 });
     }
-
-    const sessionId = `pptx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
 
     if (action === "apply_audit") {
       if (!Array.isArray(selectedUnitIds) || !selectedUnitIds.length || selectedUnitIds.some((id) => typeof id !== "string")) {
@@ -115,45 +163,6 @@ export async function POST(req: NextRequest) {
         fileName: file.name,
         action: "audit",
         auditReport,
-      });
-    }
-
-    if (action === "ai_deep_audit") {
-      let auditReport = null;
-      const reportJson = formData.get("auditReport");
-      if (reportJson) {
-        try {
-          auditReport = JSON.parse(String(reportJson));
-        } catch {}
-      }
-
-      // If auditReport wasn't provided, run base audit first
-      if (!auditReport && buffer && file) {
-        auditReport = await auditPptxGaps(buffer, file.name, {
-          sourceLang: sourceLanguage,
-          targetLang: targetLanguage,
-          mode,
-        });
-      }
-
-      if (!auditReport) {
-        return NextResponse.json({ error: "Thiếu dữ liệu auditReport hoặc file PowerPoint." }, { status: 400 });
-      }
-
-      const deepResult = await runAiDeepAudit(auditReport, {
-        sourceLang: sourceLanguage,
-        targetLang: targetLanguage,
-      });
-
-      return NextResponse.json({
-        success: true,
-        sessionId,
-        action: "ai_deep_audit",
-        auditReport: deepResult.report,
-        pairedCount: deepResult.pairedCount,
-        immuneCount: deepResult.immuneCount,
-        verifiedCount: deepResult.verifiedCount,
-        error: deepResult.error,
       });
     }
 
