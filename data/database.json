@@ -97,6 +97,34 @@
   ],
   "terminology": [
     {
+      "id": "term_8797f2b9afa7",
+      "sourceTerm": "lập thể",
+      "targetTerm": "definition",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": null,
+      "context": null,
+      "category": "Corporate",
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "user@secure.local",
+      "approvedBy": "user@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T08:50:13.348Z",
+      "updatedAt": "2026-10-08T08:50:13.348Z",
+      "editHistory": [
+        {
+          "id": "hist_2cdb0a4a",
+          "timestamp": "2026-10-08T08:50:13.348Z",
+          "editedBy": "user@secure.local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
       "id": "term_a7d1d30f83c1",
       "sourceTerm": "Hình dạng mũi đều",
       "targetTerm": "F vamp",
@@ -20741,6 +20769,20 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1791449413410_4f40e5c4",
+      "timestamp": "2026-10-08T08:50:13.410Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_CREATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 4,
+      "errorCode": null,
+      "details": {
+        "termId": "term_8797f2b9afa7"
+      }
+    },
     {
       "id": "log_1791434173053_94fbec96",
       "timestamp": "2026-10-08T04:36:13.053Z",

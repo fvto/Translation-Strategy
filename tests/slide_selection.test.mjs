@@ -1858,6 +1858,70 @@ test("Test 32: In-Slide Focus Heading & Trailing Notes - All paired as ALREADY_T
   assert.equal(traceContent.summary.needsTranslation, 0);
 });
 
+test("Test 33: Slide 30 Size Condition Notes & Anchored Containers - Pairs 'Đối với size #13...' with 'For sizes #13...'", async () => {
+  const { auditPptxGaps } = await import("../services/translation/smart-detector.js");
+
+  const slide30Xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp><p:txBody><a:p><a:r><a:t>Assembly Inspection Strategy</a:t></a:r></a:p></p:txBody></p:sp>
+      <p:sp><p:txBody><a:p><a:r><a:t>IPQC Inspection Focuses :</a:t></a:r></a:p></p:txBody></p:sp>
+      <p:sp><p:txBody>
+        <a:p><a:r><a:t>1. Kiểm tra phom, đế, khuôn lớn hơn mặt giày 1/2 size</a:t></a:r></a:p>
+        <a:p><a:r><a:t>Đối với size #13.#14.#15 đế lớn hơn mặt giày 1.0 size</a:t></a:r></a:p>
+        <a:p><a:r><a:t>Các thông số được sử dủng theo tiêu chuẩn cập nhật PFC</a:t></a:r></a:p>
+      </p:txBody></p:sp>
+      <p:sp><p:txBody>
+        <a:p><a:r><a:t>Due to differences in sizing between the upper, bottom, gauge marking pad, pay close attention during inspection:</a:t></a:r></a:p>
+        <a:p><a:r><a:t>Do thiết kế mặt giày đế, last, khuôn vẽ có sự khác biệt về size số nên khi kiểm tra cần chú ý</a:t></a:r></a:p>
+      </p:txBody></p:sp>
+      <p:sp><p:txBody><a:p><a:r><a:t>Upper</a:t></a:r></a:p></p:txBody></p:sp>
+      <p:sp><p:txBody>
+        <a:p><a:r><a:t>1. Check the last, bottom, gauge marking to ensure they are  ½ size larger than upper</a:t></a:r></a:p>
+        <a:p><a:r><a:t>For sizes #13, #14, and #15, the outsole is 1.0 size larger than the upper.</a:t></a:r></a:p>
+        <a:p><a:r><a:t>All specifications must follow the latest updated PFC standard.</a:t></a:r></a:p>
+      </p:txBody></p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>`;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide30.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide30.xml"/></Relationships>`);
+  zip.file("ppt/slides/slide30.xml", slide30Xml);
+
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+  const report = await auditPptxGaps(buffer, "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+    autoAiCascade: false,
+  });
+
+  const uSizeVi = report.units.find((u) => u.sourceText.includes("Đối với size #13.#14.#15"));
+  assert.ok(uSizeVi, "Size note must be found");
+  assert.equal(uSizeVi.status, "ALREADY_TRANSLATED");
+  assert.equal(uSizeVi.requiresTranslation, false);
+  assert.ok(uSizeVi.existingTranslation?.includes("For sizes #13, #14, and #15"));
+
+  const uPfcVi = report.units.find((u) => u.sourceText.includes("Các thông số được sử dủng"));
+  assert.ok(uPfcVi, "PFC standard note must be found");
+  assert.equal(uPfcVi.status, "ALREADY_TRANSLATED");
+  assert.equal(uPfcVi.requiresTranslation, false);
+  assert.ok(uPfcVi.existingTranslation?.includes("All specifications must follow"));
+
+  const needsTrans = report.units.filter((u) => u.status === "NEEDS_TRANSLATION" || u.requiresTranslation);
+  assert.equal(needsTrans.length, 0, "Slide 30 must have 0 units needing translation");
+});
+
 
 
 

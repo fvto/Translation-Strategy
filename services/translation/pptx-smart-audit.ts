@@ -192,12 +192,25 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
 
   const isModelSectionHeading = (text: string): boolean => {
     if (!text) return false;
-    return /^\s*\*?\s*(?:đối\s*với|for|áp\s*dụng\s*cho|apply\s*to|dành\s*cho|model\s*[:\s\-]|mẫu\s*[:\s\-])/i.test(text);
+    const clean = text.trim();
+    if (/^\s*\*?\s*(?:model|mẫu)\s*[:\s\-]/i.test(clean)) return true;
+    const m = clean.match(/^\s*\*?\s*(?:đối\s*với|for|áp\s*dụng\s*cho|apply\s*to|dành\s*cho)\s*(?:mẫu|model)?\s*[:\s\-]?\s*(.+)$/i);
+    if (m) {
+      const candidate = m[1].trim();
+      if (/^sizes?\b/i.test(candidate)) return false;
+      if (candidate.length > 50) return false;
+      if (hasViDiacritics(candidate)) return false;
+      if (isShoeModelName(candidate)) return true;
+      if (/[A-Z0-9]+-[A-Z0-9]+/i.test(candidate)) return true;
+      if (/^[A-Z0-9\s\-\/\#]+$/i.test(candidate)) return true;
+    }
+    return false;
   };
 
   const containers = new Map<string, RawUnit[]>();
   for (const unit of extracted.units) { if (!containers.has(unit.containerId)) containers.set(unit.containerId, []); containers.get(unit.containerId)!.push(unit); }
   const paired = new Map<string, string>();
+  const pairedPartnerId = new Map<string, string>();
   const inlineBilingual = new Set<string>();
   for (const raw of extracted.units) {
     if (isModelSectionHeading(raw.text)) {
@@ -289,6 +302,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
 
     pairs.push({ source: source.text, target: target.text, origin: "presentation", slideIndex: source.location.slideIndex, sourceUnitId: source.id, targetUnitId: target.id });
     paired.set(source.id, target.text); paired.set(target.id, source.text);
+    pairedPartnerId.set(source.id, target.id); pairedPartnerId.set(target.id, source.id);
 
     const cleanSrc = cleanStepPrefix(source.text);
     const cleanTgt = cleanStepPrefix(target.text);
@@ -470,6 +484,50 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
           const ratio = Math.min(vLen, eLen) / Math.max(vLen, eLen);
           if (ratio >= 0.25 || (vLen < 15 && eLen < 20)) {
             addPair(viUnit, matchingEn);
+          }
+        }
+      }
+    }
+
+    // A2. Anchored container pairing:
+    // When two containers on the same slide already share at least one paired pair (e.g., Step 1 VI <-> Step 1 EN),
+    // align their remaining unpaired items in sequential order if they have matching count or structure.
+    const slideContainers = new Map<string, RawUnit[]>();
+    for (const u of slideUnits) {
+      if (!slideContainers.has(u.containerId)) slideContainers.set(u.containerId, []);
+      slideContainers.get(u.containerId)!.push(u);
+    }
+
+    const containerIds = Array.from(slideContainers.keys());
+    for (let i = 0; i < containerIds.length; i++) {
+      for (let j = i + 1; j < containerIds.length; j++) {
+        const c1 = containerIds[i];
+        const c2 = containerIds[j];
+        const units1 = slideContainers.get(c1)!;
+        const units2 = slideContainers.get(c2)!;
+
+        // Check if c1 and c2 are anchored by an existing pair
+        const isAnchored = units1.some((u1) => {
+          const partnerId = pairedPartnerId.get(u1.id);
+          return partnerId && units2.some((u2) => u2.id === partnerId);
+        });
+
+        if (isAnchored) {
+          const rem1 = units1.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text));
+          const rem2 = units2.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text));
+
+          if (rem1.length > 0 && rem1.length === rem2.length) {
+            for (let k = 0; k < rem1.length; k++) {
+              const u1 = rem1[k];
+              const u2 = rem2[k];
+              const u1IsVi = hasViDiacritics(u1.text) || languageEvidence(u1.text).vi.length > 0;
+              const u2IsVi = hasViDiacritics(u2.text) || languageEvidence(u2.text).vi.length > 0;
+              if (u1IsVi !== u2IsVi) {
+                const src = u1IsVi ? u1 : u2;
+                const tgt = u1IsVi ? u2 : u1;
+                addPair(src, tgt);
+              }
+            }
           }
         }
       }

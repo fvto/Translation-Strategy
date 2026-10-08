@@ -111,7 +111,7 @@ export async function runAiDeepAudit(
     const systemPrompt = `You are a Senior Bilingual QA Auditor for footwear manufacturing SOP presentations (Ching Luh standard).
 Your task is to review slide text items that are candidates for translation and determine their true status based on full slide context:
 
-1. 'PAIR': The item is Vietnamese, but it ALREADY has an English translation present on this slide (for instance, defect titles like 'Wrong material' and 'Sai liệu', or step titles 'Inconsistent pair matching label' and 'Tem số phối đôi không đồng bộ.').
+1. 'PAIR': The item is Vietnamese, but it ALREADY has an English translation present on this slide (for instance, defect titles like 'Wrong material' and 'Sai liệu', step titles, size condition notes like 'Đối với size #13.#14.#15...' and 'For sizes #13, #14, and #15...', or standard notes like 'Các thông số được sử dụng theo tiêu chuẩn cập nhật PFC' and 'All specifications must follow the latest updated PFC standard.').
    -> Set verdict: 'PAIR', pairedWithId: '<id of English item>', translation: '<English text>', reason: '<Brief explanation in Vietnamese>'.
 
 2. 'ALREADY_TRANSLATED': The item is already English, an in-line bilingual string containing both English and Vietnamese (e.g. 'Color matching-Phối màu liệu', 'Toe shape - Hình dạng mũi'), an inspection evaluation label (GOOD, NO GOOD, OK, NG, PASS, FAIL), a shoe model name, or technical standard that must NOT be translated.
@@ -120,7 +120,7 @@ Your task is to review slide text items that are candidates for translation and 
 3. 'NON_TRANSLATABLE': The item is a numeric dimension, date, ISO code, or non-word symbol.
    -> Set verdict: 'NON_TRANSLATABLE', reason: '<Brief explanation in Vietnamese>'.
 
-4. 'NEEDS_TRANSLATION': The item is genuine Vietnamese text that has NO English counterpart on this slide, or is a sub-model step following any model conditional heading ('*Đối với [Any Model Code/Name]', '*Áp dụng cho [Model]', '*For [Model]', etc.) that must be translated independently and never paired with general steps above. Note: Model names and codes (e.g. style codes like FD0736-001, CW2288-111, factory codes like LQ-075W-1, W-088, or brand lines) are dynamic entities across thousands of footwear models and must remain intact.
+4. 'NEEDS_TRANSLATION': The item is genuine Vietnamese text that has NO English counterpart on this slide, or is a sub-model step following a specific shoe model heading ('*Đối với [Model Code]', e.g. '*Đối với LQ-075W-1') where no model-specific English translation exists on this slide. Do NOT mark size conditions (e.g. 'Đối với size #13...') or standard notes as NEEDS_TRANSLATION if their corresponding English sentence is present on the slide. Note: Model names and codes (e.g. style codes like FD0736-001, CW2288-111, factory codes like LQ-075W-1, W-088, or brand lines) are dynamic entities across thousands of footwear models and must remain intact.
    -> Set verdict: 'NEEDS_TRANSLATION', translation: '<Suggested English translation or null>', reason: '<Brief explanation in Vietnamese>'.
 
 OUTPUT FORMAT:
