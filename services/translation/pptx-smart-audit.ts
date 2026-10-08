@@ -596,7 +596,8 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     unit.location.isIsq=isqPaths.has(raw.location.partPath!);
     if (paired.has(raw.id)) {
       unit.existingTranslation = paired.get(raw.id);
-      if (!isqSource) {
+      const isPureIsqCtq = isqSource && /^\s*CT[QP]\s*\d+/i.test(raw.text);
+      if (!isPureIsqCtq) {
         preservedIds.add(unit.id);
         unit.status = "ALREADY_TRANSLATED";
         unit.reason = "Đã có bản dịch song ngữ tương ứng trong cùng slide/hộp văn bản.";

@@ -201,6 +201,14 @@ Respond ONLY with a valid JSON array of verdicts for candidate items:
             immuneCount++;
             verifiedCount++;
           } else if (v.verdict === "NEEDS_TRANSLATION") {
+            // Guard: If item was already paired with an in-slide translation, do NOT downgrade to NEEDS_TRANSLATION
+            if (unit.existingTranslation) {
+              unit.status = "ALREADY_TRANSLATED";
+              unit.requiresTranslation = false;
+              unit.selectedForTranslation = false;
+              delete unit.suggestedTranslation;
+              continue;
+            }
             unit.status = "NEEDS_TRANSLATION";
             unit.requiresTranslation = true;
             unit.selectedForTranslation = true;
