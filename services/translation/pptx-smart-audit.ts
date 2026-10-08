@@ -187,6 +187,8 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   }
   const known = new AuditMemoryIndex(pairs);
   const addPair = (source: RawUnit, target: RawUnit) => {
+    if (isNonTranslatable(source.text) || isNonTranslatable(target.text)) return;
+    if (/^\d+(?:[.,]\d+)?$/.test(source.text.trim()) || /^\d+(?:[.,]\d+)?$/.test(target.text.trim())) return;
     pairs.push({ source: source.text, target: target.text, origin: "presentation", slideIndex: source.location.slideIndex, sourceUnitId: source.id, targetUnitId: target.id });
     paired.set(source.id, target.text); paired.set(target.id, source.text);
   };
