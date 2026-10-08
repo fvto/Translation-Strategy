@@ -198,32 +198,127 @@ const TECHNICAL_ACRONYMS = new Set([
 ]);
 
 /**
- * Known brand names, shoe models, or standard series that are non-translatable
+ * Known footwear brands that produce SOP technical manuals
  */
-const BRAND_AND_MODELS = new Set([
+export const FOOTWEAR_BRANDS = new Set([
   "NIKE",
   "JORDAN",
-  "AIR",
-  "MAX",
-  "ZOOM",
-  "DUNK",
-  "FORCE",
-  "PEGASUS",
-  "VAPORMAX",
-  "METCON",
-  "REACT",
-  "BLAZER",
-  "INVINCIBLE",
+  "CONVERSE",
+  "VANS",
+  "ADIDAS",
+  "PUMA",
+  "REEBOK",
+  "ASICS",
+  "NEW BALANCE",
   "CHING LUH",
   "CHINGLUH",
 ]);
+
+/**
+ * Recognized shoe model series, technologies, silhouette names, and SOP model attributes
+ */
+export const FOOTWEAR_MODEL_TOKENS = new Set([
+  // Lines & Tech
+  "SB", "ZOOM", "AIR", "MAX", "PRO", "RETRO", "FORCE", "DUNK", "PEGASUS", "VAPORMAX",
+  "METCON", "REACT", "BLAZER", "INVINCIBLE", "VOMERO", "CORTEZ", "WAFFLE", "DOWNSHIFTER",
+  "REVOLUTION", "STRUCTURE", "WINFLO", "INFINITYRN", "INFINITY", "FLYKNIT", "FREE", "FLEX",
+  // Signature Lines & Silhouettes
+  "NYJAH", "GIANNIS", "FREAK", "LEBRON", "KOBE", "PROTRO", "KD", "JA", "BOOK", "SABRINA",
+  "LUKA", "TATUM", "ZION", "GT", "CUT", "JUMP", "VAPORFLY", "ALPHAFLY", "STREAKFLY",
+  "TIEMPO", "MERCURIAL", "PHANTOM", "CHUCK", "TAYLOR", "ALL-STAR", "ONE-STAR", "SK8-HI", "OLD-SKOOL",
+  // Cuts, tiers, season & document tags
+  "LOW", "MID", "HIGH", "OG", "SE", "QS", "SP", "NRG", "PRM", "PREMIUM", "PLUS",
+  "FA24", "FA25", "FA26", "SP24", "SP25", "SP26", "SU24", "SU25", "SU26", "HO24", "HO25", "HO26",
+  "SAMPLE", "STAGE", "CFM", "DEV", "PROD", "QA", "ISQ", "IPQC", "SOP", "MANUAL",
+  "MODEL", "STYLE", "COLOR", "COLORWAY", "CODE", "REV", "ROUND", "SPEC"
+]);
+
+/**
+ * Known brand names, shoe models, or standard series that are non-translatable
+ */
+const BRAND_AND_MODELS = new Set([
+  ...FOOTWEAR_BRANDS,
+  ...FOOTWEAR_MODEL_TOKENS,
+]);
+
+/**
+ * Detects whether a string is a shoe model name, brand title, or footwear product specification code.
+ * Shoe names must never be translated into Vietnamese or sent to the LLM.
+ * E.g.
+ * - "NIKE SB ZOOM NYJAH 4"
+ * - "NIKE SB ZOOM NYJAH 4(SB-077-A)"
+ * - "NIKE SB ZOOM NYJAH 4 (SB-077-C)"
+ * - "NIKE SB ZOOM NYJAH 4(SB-077-P-1)"
+ * - "AIR FORCE 1 '07"
+ * - "ZOOM VOMERO 5"
+ * - "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual"
+ * - "Model: NIKE SB ZOOM NYJAH 4"
+ * - "Tên hình thể: NIKE SB ZOOM NYJAH 4"
+ */
+export function isShoeModelName(text: string): boolean {
+  if (!text) return false;
+  let trimmed = text.trim();
+  if (!trimmed) return false;
+
+  // Strip common label prefixes like "Model:", "Tên hình thể:", "Hình thể:", "Tên giày:", "Tên mẫu:"
+  const viLabelMatch = trimmed.match(/^(?:tên\s*(?:hình\s*thể|giày|mẫu)|hình\s*thể|mẫu\s*giày|model(?:\s*name)?)\s*[:：\-]\s*/i);
+  if (viLabelMatch) {
+    trimmed = trimmed.slice(viLabelMatch[0].length).trim();
+  } else if (hasViDiacritics(trimmed)) {
+    return false;
+  }
+
+  // Standalone spec/sample code like "(SB-077-A)" or "SB-077-P-1" or "SBQ-083-6"
+  if (/^\(?[A-Z]{2,4}[-_]\d{2,4}(?:[-_][A-Z0-9]+)*\)?$/i.test(trimmed)) {
+    return true;
+  }
+
+  // Check if string contains at least one recognized footwear brand or prominent model keyword
+  const upper = trimmed.toUpperCase();
+  const hasBrandOrModelKeyword =
+    /\b(?:NIKE|JORDAN|CONVERSE|VANS|ADIDAS|AIR\s*FORCE|AIR\s*MAX|ZOOM|PEGASUS|VOMERO|METCON|BLAZER|DUNK|NYJAH|LEBRON|KOBE|GIANNIS|VAPORMAX|FREE\s*METCON|INVINCIBLE|INFINITYRN)\b/i.test(upper);
+
+  if (!hasBrandOrModelKeyword) {
+    return false;
+  }
+
+  // Tokenize by spaces and enclosing punctuation, preserving hyphens
+  const rawTokens = trimmed
+    .replace(/[\(\)\[\]\{\}\<\>\"\'\,]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (rawTokens.length === 0) return false;
+
+  // Every token must belong to brands, model lines, numbers, or alphanumeric spec codes
+  const allTokensValid = rawTokens.every((token) => {
+    const cleanToken = token.replace(/^[#\.\:\-]+|[\.\:\-]+$/g, "").toUpperCase();
+    if (!cleanToken) return true;
+    if (FOOTWEAR_BRANDS.has(cleanToken) || FOOTWEAR_MODEL_TOKENS.has(cleanToken) || TECHNICAL_ACRONYMS.has(cleanToken)) {
+      return true;
+    }
+    // Numbers: 1, 2, 4, 90, 95, 270, etc.
+    if (/^\d+$/.test(cleanToken)) return true;
+    // Roman numerals: I, II, III, IV, V, VI, etc.
+    if (/^[IVXLCDM]+$/i.test(cleanToken)) return true;
+    // Year/model year: '07, 77, 2025
+    if (/^(?:'\d{2}|\d{2,4})$/.test(cleanToken)) return true;
+    // Product codes with numbers & letters: SB-077-A, SB-077-P-1, SBQ-083, CW2288-111
+    if (/\d/.test(cleanToken) && /^[A-Z0-9\-]+$/.test(cleanToken)) return true;
+    // Short alphanumeric tokens (e.g. SB, OG, SE, A, P, C)
+    if (cleanToken.length <= 4 && /^[A-Z0-9]+$/.test(cleanToken)) return true;
+    return false;
+  });
+
+  return allTokensValid;
+}
 
 /**
  * Robust non-translatable detection.
  * Identifies:
  * - ISO standards (e.g., ISO 9001, ISO 14001)
  * - Footwear technical acronyms (e.g., IPQC, ISQ, SPI, CTQ, QC, QA, CAPA)
- * - Brand names (e.g., Nike, Air Jordan)
+ * - Brand names & shoe models (e.g., Nike, Air Jordan, Nike SB Zoom Nyjah 4)
  * - Model numbers & product codes (e.g., Model XYZ-100, ABC-123, SB-077-A-1, (SBQ-083-6))
  * - Pure numbers, percentages, dates, measurements (e.g., 2026, 98.5%, 12/05/2024, 1.5mm, 10-12)
  * - Solitary punctuation, bullets, symbols (*, #, -, •)
@@ -232,6 +327,10 @@ export function isNonTranslatable(text: string): boolean {
   if (!text) return false;
   const trimmed = text.trim();
   if (!trimmed) return true;
+
+  // 0. Shoe models & footwear brand series (Ching Luh SOP Rule: never translate model names)
+  if (isShoeModelName(trimmed)) return true;
+
   if (/^(?:AC|DC)\s*\d+(?:[.,]\d+)?\s*V$/i.test(trimmed)) return true;
   if (/^[A-Z]{2,6}\s+[A-Z]{1,6}\d+[A-Z0-9-]*$/.test(trimmed)) return true;
   if (/^https?:\/\/\S+$|^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(trimmed)) return true;
@@ -353,11 +452,14 @@ export function classifyTextUnit(
   const sourceLang = options.sourceLang || "vi";
   const targetLang = options.targetLang || "en";
 
-  // 1. Non-translatable Check (Numbers, Acronyms, Model Codes, ISO)
+  // 1. Non-translatable Check (Numbers, Acronyms, Model Codes, ISO, Shoe Models)
   if (isNonTranslatable(text)) {
+    const isShoe = isShoeModelName(text);
     return {
       status: "NON_TRANSLATABLE",
-      reason: "Technical acronym, standard, model code, ID, date, or numeric value",
+      reason: isShoe
+        ? "Tên thương hiệu, hình thể giày hoặc mã mẫu kỹ thuật (giữ nguyên, không dịch lại)"
+        : "Technical acronym, standard, model code, ID, date, or numeric value",
       suggestedTranslation: text,
       confidence: 1.0,
     };

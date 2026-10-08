@@ -13,7 +13,7 @@ export { isSafeTerminologyEntry } from "../terminology/safety";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { translationCache } from "../translation/cache";
 import { DocumentTranslationMemory, TranslationUnitWithMeta, documentTM, DocumentTMConflict, canonicalizeText } from "../translation/document-tm";
-import { auditPptxGaps, SmartAuditReport, ScannedTextUnit } from "../translation/smart-detector";
+import { auditPptxGaps, SmartAuditReport, ScannedTextUnit, isNonTranslatable, isShoeModelName } from "../translation/smart-detector";
 import { paragraphText, PPTX_PARAGRAPH_PATTERN, replaceParagraphTranslation } from "./pptx-text";
 import { orderedSlidePaths, readIsqSlidePairs, ISQ_PAIRS_PART } from "./pptx-slide-order";
 import { detectUnmappedTerminology, UnmappedTermItem } from "../terminology/unmapped-detector";
@@ -200,6 +200,7 @@ export function isNeutralMetadataItem(str: string): boolean {
   const trimmed = str.trim();
   if (!trimmed) return false;
   if (hasViDiacritics(trimmed)) return false;
+  if (isShoeModelName(trimmed) || isNonTranslatable(trimmed)) return true;
 
   // Pure dates: e.g. 22/9/2026, 2026-09-22, 22/09/26, 22.09.2026, 22/9
   if (/^\d{1,2}[\/\-\.]\d{1,2}(?:[\/\-\.]\d{2,4})?$/.test(trimmed)) return true;
@@ -636,7 +637,11 @@ export class PptxTranslatorService {
         }
 
         if (translationMap.has(p.id)) continue;
-        if (!/[a-zA-Z\u00C0-\u1EF9]/i.test(p.originalText)) {
+        if (
+          !/[a-zA-Z\u00C0-\u1EF9]/i.test(p.originalText) ||
+          isNonTranslatable(p.originalText) ||
+          isShoeModelName(p.originalText)
+        ) {
           translationMap.set(p.id, p.originalText);
           continue;
         }

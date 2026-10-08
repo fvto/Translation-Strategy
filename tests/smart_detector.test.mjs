@@ -231,15 +231,24 @@ test("Smart Detector - 7. Acronyms such as IPQC/ISQ/SPI", () => {
 });
 
 // -----------------------------------------------------------------------------
-// Test 8: Product codes
+// Test 8: Product codes & Shoe model names
 // -----------------------------------------------------------------------------
-test("Smart Detector - 8. Product codes", () => {
+test("Smart Detector - 8. Product codes & Shoe model names", () => {
   const codes = [
     "ABC-123",
     "Model XYZ-100",
     "SB-077-A-1",
     "(SBQ-083-6)",
     "P/O 2026-X1",
+    "NIKE SB ZOOM NYJAH 4",
+    "NIKE SB ZOOM NYJAH 4(SB-077-A)",
+    "NIKE SB ZOOM NYJAH 4 (SB-077-C)",
+    "NIKE SB ZOOM NYJAH 4(SB-077-P-1)",
+    "AIR FORCE 1 '07",
+    "ZOOM VOMERO 5",
+    "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual",
+    "Model: NIKE SB ZOOM NYJAH 4",
+    "Tên hình thể: NIKE SB ZOOM NYJAH 4",
   ];
   for (const code of codes) {
     assert.equal(isNonTranslatable(code), true, `${code} must be non-translatable`);

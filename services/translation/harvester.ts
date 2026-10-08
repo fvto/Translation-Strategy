@@ -1,5 +1,6 @@
 import { db } from "@/services/database/db";
 import { TerminologyEntry } from "@/services/database/types";
+import { isShoeModelName } from "./smart-detector";
 
 export interface HarvestResult {
   added: TerminologyEntry[];
@@ -80,8 +81,9 @@ export function harvestTerminologyFromSlides(
       return;
     }
 
-    // Rule 1: Zero identical source/target
+    // Rule 1: Zero identical source/target or shoe model names
     if (src.toLowerCase() === tgt.toLowerCase()) return;
+    if (isShoeModelName(src) || isShoeModelName(tgt)) return;
 
     // Rule 2: If translating VI -> EN, target must not leak Vietnamese diacritics
     if (sourceLanguage === "vi" && targetLanguage === "en") {
@@ -201,6 +203,7 @@ export function harvestTerminologyFromAuditReport(
     const src = cleanTerm(srcRaw);
     const tgt = cleanTerm(tgtRaw);
     if (!src || !tgt || src === tgt) return;
+    if (isShoeModelName(src) || isShoeModelName(tgt)) return;
     if (sourceLanguage === "vi" && !VI_DIACRITICS_REGEX.test(src)) return;
 
     const lowerSrc = src.toLowerCase();
