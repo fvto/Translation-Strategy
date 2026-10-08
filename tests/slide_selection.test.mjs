@@ -495,4 +495,83 @@ test("PPTX Translator & Smart Audit: Supports 1.VI 1.EN 2.VI 2.EN order seamless
   assert.ok(!slideEnXml.includes(p2Vi), "p2Vi eliminated in replace_en");
 });
 
+test("PPTX Translator & Smart Audit: 'Đối với' translates to 'For' without attaching shoe model names", async () => {
+  const { pptxTranslatorService } = await import("../services/documents/pptx-translator.ts");
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.ts");
+  const JSZip = (await import("jszip")).default;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1"/>
+  </p:sldIdLst>
+</p:presentation>`);
+
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+
+  const rawVi = "*Đối với LQ-075W-1";
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody>
+      <a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1400"/><a:t>${rawVi}</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  // 1. Audit Check: Glossary correction must be "Đối với" -> "For", NOT "Đối với LQ-075W-1"
+  const auditReport = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "replace_en"
+  });
+
+  const unit = auditReport.units.find((u) => u.sourceText === rawVi);
+  assert.ok(unit, "Unit found");
+  assert.equal(unit.suggestedTranslation, "*For LQ-075W-1");
+  assert.ok(unit.glossaryCorrections, "Glossary corrections present");
+  assert.equal(unit.glossaryCorrections.length, 1);
+  assert.equal(unit.glossaryCorrections[0].sourceTerm, "Đối với", "Term must be 'Đối với' without shoe model");
+  assert.equal(unit.glossaryCorrections[0].expectedTarget, "For", "Expected target must be 'For'");
+
+  // 2. Translation Check: Translates to "*For LQ-075W-1" without calling LLM
+  let llmCalls = 0;
+  const mockProvider = {
+    name: "mock-engine",
+    async translateBatch() { llmCalls++; return { results: new Map(), provider: "mock-engine", durationMs: 5 }; },
+    async translate() { llmCalls++; return { translatedText: "", provider: "mock-engine", durationMs: 5 }; }
+  };
+
+  const result = await pptxTranslatorService.translate(buffer, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "replace_en",
+  });
+
+  assert.equal(llmCalls, 0, "Pattern must resolve directly without LLM call");
+  const zipAfter = await JSZip.loadAsync(result.translatedBuffer);
+  const slideAfter = await zipAfter.file("ppt/slides/slide1.xml")?.async("string");
+
+  assert.ok(slideAfter.includes("*For LQ-075W-1"), "Output must contain *For LQ-075W-1");
+  assert.ok(!slideAfter.includes("*Đối với"), "Vietnamese prefix must be removed");
+});
+
+
 

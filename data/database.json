@@ -97,6 +97,898 @@
   ],
   "terminology": [
     {
+      "id": "term_b4892b38aed8",
+      "sourceTerm": "Ép H/F mặt trước /eo",
+      "targetTerm": "H/F press vamp/quarter",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:55:43.224Z",
+      "updatedAt": "2026-10-08T02:35:29.090Z",
+      "editHistory": [
+        {
+          "id": "hist_483ee1cb",
+          "timestamp": "2026-10-08T02:35:29.090Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_e39adc5e",
+          "timestamp": "2026-10-08T01:55:43.224Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_1f5e3d294200",
+      "sourceTerm": "Hình dạng lưỡi giày",
+      "targetTerm": "Tongue shape",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:55:43.224Z",
+      "updatedAt": "2026-10-08T02:37:13.948Z",
+      "editHistory": [
+        {
+          "id": "hist_edd3b192",
+          "timestamp": "2026-10-08T02:37:13.948Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_d6358ebe",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d9a4926c",
+          "timestamp": "2026-10-08T01:55:43.224Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_cdbee6bf084b",
+      "sourceTerm": "Hình dạng mũi giày",
+      "targetTerm": "Toe cap shape",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:49:12.943Z",
+      "updatedAt": "2026-10-08T02:37:13.992Z",
+      "editHistory": [
+        {
+          "id": "hist_754f66c8",
+          "timestamp": "2026-10-08T02:37:13.992Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_b21e5e5c",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_0535a61d",
+          "timestamp": "2026-10-08T01:55:43.224Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_817703ed",
+          "timestamp": "2026-10-08T01:49:12.943Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_dfbec3fd77e9",
+      "sourceTerm": "Hình dạng mũi đều",
+      "targetTerm": "H/F vamp/quarter",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T02:24:37.347Z",
+      "updatedAt": "2026-10-08T02:37:14.015Z",
+      "editHistory": [
+        {
+          "id": "hist_c81625d2",
+          "timestamp": "2026-10-08T02:37:14.015Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_4356ae18",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_93bba862d769",
+      "sourceTerm": "Đối với khâu chặt",
+      "targetTerm": "For the cutting",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T02:24:37.347Z",
+      "updatedAt": "2026-10-08T02:37:14.051Z",
+      "editHistory": [
+        {
+          "id": "hist_cee318c7",
+          "timestamp": "2026-10-08T02:37:14.051Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_fed72003",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_e20ce5762453",
+      "sourceTerm": "Đối với LQ-075W-1",
+      "targetTerm": "For LQ-075W-1",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:55:43.224Z",
+      "updatedAt": "2026-10-08T02:37:14.083Z",
+      "editHistory": [
+        {
+          "id": "hist_fc304229",
+          "timestamp": "2026-10-08T02:37:14.083Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_b97ff68a",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_147a36b0",
+          "timestamp": "2026-10-08T01:55:43.224Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_376bd125e870",
+      "sourceTerm": "Mũi/gót cao thấp",
+      "targetTerm": "Tip/heel height inconsistent",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:49:12.943Z",
+      "updatedAt": "2026-10-08T02:37:14.117Z",
+      "editHistory": [
+        {
+          "id": "hist_01e6852e",
+          "timestamp": "2026-10-08T02:37:14.117Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_3447bfa9",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_3c2f26a2",
+          "timestamp": "2026-10-08T01:49:12.943Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_d3216a9594ba",
+      "sourceTerm": "Đối với ô dê",
+      "targetTerm": "For eyestay",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:55:43.224Z",
+      "updatedAt": "2026-10-08T02:37:14.208Z",
+      "editHistory": [
+        {
+          "id": "hist_448faee2",
+          "timestamp": "2026-10-08T02:37:14.208Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_62afbdfe",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_fd2cc734",
+          "timestamp": "2026-10-08T01:55:43.224Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_5d489b544812",
+      "sourceTerm": "gót méo",
+      "targetTerm": "Heel off center",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:49:12.943Z",
+      "updatedAt": "2026-10-08T02:37:14.247Z",
+      "editHistory": [
+        {
+          "id": "hist_9ac1c055",
+          "timestamp": "2026-10-08T02:37:14.247Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_e3d8f3fa",
+          "timestamp": "2026-10-08T02:24:37.347Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_6b6408ca",
+          "timestamp": "2026-10-08T01:49:12.943Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_98aa251b5697",
+      "sourceTerm": "Đối với khâu chặt",
+      "targetTerm": "For cutting",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:55:43.224Z",
+      "updatedAt": "2026-10-08T02:37:14.274Z",
+      "editHistory": [
+        {
+          "id": "hist_1f393ec3",
+          "timestamp": "2026-10-08T02:37:14.274Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_643ca0c2",
+          "timestamp": "2026-10-08T01:55:43.224Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_f3cd39adc70c",
+      "sourceTerm": "Đối với khâu may",
+      "targetTerm": "For stitching (stitching heel)",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "context": "SOP: HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:55:43.224Z",
+      "updatedAt": "2026-10-08T02:37:14.305Z",
+      "editHistory": [
+        {
+          "id": "hist_425fe266",
+          "timestamp": "2026-10-08T02:37:14.305Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_9f370c25",
+          "timestamp": "2026-10-08T01:55:43.224Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_fc9844eee14b",
+      "sourceTerm": "Gót không bị bao không",
+      "targetTerm": "Heels are not bubble",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:39:57.813Z",
+      "updatedAt": "2026-10-08T02:37:14.340Z",
+      "editHistory": [
+        {
+          "id": "hist_ce19a2b4",
+          "timestamp": "2026-10-08T02:37:14.340Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_efd32251",
+          "timestamp": "2026-10-08T01:39:57.813Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_bb0de4f54311",
+      "sourceTerm": "Vamp RB ép dính chắc",
+      "targetTerm": "Swoosh's tail is curved",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:39:57.813Z",
+      "updatedAt": "2026-10-08T02:37:14.366Z",
+      "editHistory": [
+        {
+          "id": "hist_306e0814",
+          "timestamp": "2026-10-08T02:37:14.366Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_08f41157",
+          "timestamp": "2026-10-08T01:39:57.813Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_22211bd39f0d",
+      "sourceTerm": "Gót bị bao không",
+      "targetTerm": "The heel is bubble",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:39:57.813Z",
+      "updatedAt": "2026-10-08T02:37:14.394Z",
+      "editHistory": [
+        {
+          "id": "hist_617d5215",
+          "timestamp": "2026-10-08T02:37:14.394Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_4f7ce10d",
+          "timestamp": "2026-10-08T01:39:57.813Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_b9d5edba0e59",
+      "sourceTerm": "Chặt mặt trước",
+      "targetTerm": "Vamp cutting",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-08T02:37:14.482Z",
+      "editHistory": [
+        {
+          "id": "hist_6388b2b8",
+          "timestamp": "2026-10-08T02:37:14.482Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_74ab899f",
+          "timestamp": "2026-10-08T01:39:57.813Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_13ef9cf2",
+          "timestamp": "2026-10-07T06:11:02.773Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_90ee2546",
+          "timestamp": "2026-10-07T01:49:28.030Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_09d5f0bc",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d5052ba1",
+          "timestamp": "2026-10-06T01:14:11.334Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_775a56b1896f",
+      "sourceTerm": "Mũi bị gãy",
+      "targetTerm": "Broken toe",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ từ Smart Audit: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Tiêu chuẩn CTQ",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.96,
+      "createdBy": "SmartAudit-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T01:39:57.813Z",
+      "updatedAt": "2026-10-08T02:37:14.516Z",
+      "editHistory": [
+        {
+          "id": "hist_33b30f23",
+          "timestamp": "2026-10-08T02:37:14.516Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_6248e1be",
+          "timestamp": "2026-10-08T01:39:57.813Z",
+          "editedBy": "SmartAudit-Harvester",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_186b65fb221c",
+      "sourceTerm": "Vamp bị bao không,tràn keo",
+      "targetTerm": "Vamp has bubbles, cement overflow",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Lỗi chất lượng (Defect)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.95,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-08T02:37:14.551Z",
+      "editHistory": [
+        {
+          "id": "hist_a291334d",
+          "timestamp": "2026-10-08T02:37:14.551Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_3984bd8c",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_7a6b9687",
+          "timestamp": "2026-10-07T06:11:02.773Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_ed307e67",
+          "timestamp": "2026-10-07T01:49:28.030Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_c416363e",
+          "timestamp": "2026-10-07T01:11:18.209Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_4f1b07ae",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_41c319d9",
+          "timestamp": "2026-10-06T01:14:11.334Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_cacdabae36cb",
+      "sourceTerm": "Thành phẩm giày hở keo",
+      "targetTerm": "Finished shoe with bond gap",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Lỗi chất lượng (Defect)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.95,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-07T01:49:28.030Z",
+      "updatedAt": "2026-10-08T02:37:14.583Z",
+      "editHistory": [
+        {
+          "id": "hist_41734710",
+          "timestamp": "2026-10-08T02:37:14.583Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_34a951e6",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_1a38f552",
+          "timestamp": "2026-10-07T01:49:28.030Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
       "id": "term_f1302f5aa83b",
       "sourceTerm": "Vamp RB bị tràn keo",
       "targetTerm": "RB vamp has cement overflow",
@@ -106,21 +998,107 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T09:50:10.436Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "updatedAt": "2026-10-08T02:37:14.616Z",
       "editHistory": [
+        {
+          "id": "hist_58152112",
+          "timestamp": "2026-10-08T02:37:14.616Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_96901adf",
           "timestamp": "2026-10-07T09:50:10.436Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_c5b0134e1450",
+      "sourceTerm": "Ép nosew mặt trước",
+      "targetTerm": "Press nosew vamp",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC manual-EN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-01T02:16:16.548Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "editHistory": [
+        {
+          "id": "hist_40ab1adb",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d9ebf5ff",
+          "timestamp": "2026-10-05T09:00:53.296Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        }
+      ]
+    },
+    {
+      "id": "term_ceb17fd771db",
+      "sourceTerm": "May bao trung đế",
+      "targetTerm": "Stitching strobel",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "user@secure.local",
+      "approvedBy": "user@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-05T03:46:45.773Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "editHistory": [
+        {
+          "id": "hist_3b7bc6b7",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
         }
       ]
     },
@@ -134,15 +1112,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T09:50:10.436Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "updatedAt": "2026-10-08T02:37:14.651Z",
       "editHistory": [
+        {
+          "id": "hist_58c59606",
+          "timestamp": "2026-10-08T02:37:14.651Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_98ef8cc3",
           "timestamp": "2026-10-07T09:50:10.436Z",
@@ -153,23 +1145,78 @@
       ]
     },
     {
-      "id": "term_58ae1ea22ed0",
-      "sourceTerm": "at",
-      "targetTerm": "vị trí",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": "QA Stage Footwear Standard",
-      "category": "QA",
-      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
-      "status": "quarantined",
-      "priority": 2,
+      "id": "term_eecfddad0b39",
+      "sourceTerm": "Không hở keo",
+      "targetTerm": "No bond gap",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Lỗi chất lượng (Defect)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "status": "approved",
+      "priority": 1,
       "confidence": 0.95,
-      "createdBy": "anonymous@secure.local",
+      "createdBy": "Auto-Harvester",
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
-      "createdAt": "2026-09-28T01:23:35.772Z",
-      "updatedAt": "2026-10-07T09:02:23.528Z"
+      "createdAt": "2026-10-06T01:14:11.334Z",
+      "updatedAt": "2026-10-08T02:37:14.682Z",
+      "editHistory": [
+        {
+          "id": "hist_0ba091ba",
+          "timestamp": "2026-10-08T02:37:14.682Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_0ac54cc9",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_645186ca",
+          "timestamp": "2026-10-07T06:11:02.773Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_efca9a7b",
+          "timestamp": "2026-10-07T01:49:28.030Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d45de691",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_f6741ba1",
+          "timestamp": "2026-10-06T01:14:11.334Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
     },
     {
       "id": "term_89b91a0203c9",
@@ -277,26 +1324,26 @@
       ]
     },
     {
-      "id": "term_186b65fb221c",
-      "sourceTerm": "Vamp bị bao không,tràn keo",
-      "targetTerm": "Vamp has bubbles, cement overflow",
+      "id": "term_cb25a15d0ac9",
+      "sourceTerm": "Đổ keo",
+      "targetTerm": "Pouring cement",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
       "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Lỗi chất lượng (Defect)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
+      "status": "approved",
       "priority": 1,
-      "confidence": 0.95,
+      "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
-      "createdAt": "2026-10-06T01:14:11.334Z",
+      "createdAt": "2026-10-05T09:08:58.752Z",
       "updatedAt": "2026-10-07T09:50:10.436Z",
       "editHistory": [
         {
-          "id": "hist_3984bd8c",
+          "id": "hist_c8fffd5d",
           "timestamp": "2026-10-07T09:50:10.436Z",
           "editedBy": "Auto-Harvester",
           "action": "updated",
@@ -304,23 +1351,7 @@
           "note": "Cập nhật dữ liệu từ lần nhập mới"
         },
         {
-          "id": "hist_7a6b9687",
-          "timestamp": "2026-10-07T06:11:02.773Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_ed307e67",
-          "timestamp": "2026-10-07T01:49:28.030Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_c416363e",
+          "id": "hist_72072f87",
           "timestamp": "2026-10-07T01:11:18.209Z",
           "editedBy": "Auto-Harvester",
           "action": "updated",
@@ -328,7 +1359,7 @@
           "note": "Cập nhật dữ liệu từ lần nhập mới"
         },
         {
-          "id": "hist_4f1b07ae",
+          "id": "hist_b048b3e8",
           "timestamp": "2026-10-06T01:35:18.891Z",
           "editedBy": "Auto-Harvester",
           "action": "updated",
@@ -336,13 +1367,131 @@
           "note": "Cập nhật dữ liệu từ lần nhập mới"
         },
         {
-          "id": "hist_41c319d9",
+          "id": "hist_1a464033",
           "timestamp": "2026-10-06T01:14:11.334Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_52bf93a0",
+          "timestamp": "2026-10-05T09:39:55.629Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_3a1cb743",
+          "timestamp": "2026-10-05T09:31:33.732Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_facafc8b",
+          "timestamp": "2026-10-05T09:08:58.752Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
         }
       ]
+    },
+    {
+      "id": "term_7d566bd13c70",
+      "sourceTerm": "May rút mũi",
+      "targetTerm": "Gathering stitching",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 2,
+      "confidence": 1,
+      "createdBy": "benchmark_sync",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-09-25T09:00:54.085Z",
+      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "editHistory": [
+        {
+          "id": "hist_94e8a8e5",
+          "timestamp": "2026-10-07T09:50:10.436Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_8e27b4e4",
+          "timestamp": "2026-10-07T01:11:18.209Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_be48c514",
+          "timestamp": "2026-10-06T01:35:18.891Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_1b897bb6",
+          "timestamp": "2026-10-06T01:14:11.334Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d1001c21",
+          "timestamp": "2026-10-05T09:39:55.629Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_037002ad",
+          "timestamp": "2026-10-05T09:08:58.752Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        }
+      ]
+    },
+    {
+      "id": "term_58ae1ea22ed0",
+      "sourceTerm": "at",
+      "targetTerm": "vị trí",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": "QA Stage Footwear Standard",
+      "category": "QA",
+      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
+      "status": "quarantined",
+      "priority": 2,
+      "confidence": 0.95,
+      "createdBy": "anonymous@secure.local",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-09-28T01:23:35.772Z",
+      "updatedAt": "2026-10-07T09:02:23.528Z"
     },
     {
       "id": "term_2065cdfb22cf",
@@ -354,15 +1503,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T06:11:02.773Z",
-      "updatedAt": "2026-10-07T06:11:02.773Z",
+      "updatedAt": "2026-10-08T02:37:14.773Z",
       "editHistory": [
+        {
+          "id": "hist_1e045899",
+          "timestamp": "2026-10-08T02:37:14.773Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_1b3f55c4",
           "timestamp": "2026-10-07T06:11:02.773Z",
@@ -382,15 +1545,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T06:11:02.773Z",
-      "updatedAt": "2026-10-07T06:11:02.773Z",
+      "updatedAt": "2026-10-08T02:37:14.802Z",
       "editHistory": [
+        {
+          "id": "hist_4d0765b7",
+          "timestamp": "2026-10-08T02:37:14.802Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_507e2013",
           "timestamp": "2026-10-07T06:11:02.773Z",
@@ -410,130 +1587,32 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T06:11:02.773Z",
-      "updatedAt": "2026-10-07T06:11:02.773Z",
+      "updatedAt": "2026-10-08T02:37:14.832Z",
       "editHistory": [
+        {
+          "id": "hist_66205a4b",
+          "timestamp": "2026-10-08T02:37:14.832Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_50659638",
           "timestamp": "2026-10-07T06:11:02.773Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_b9d5edba0e59",
-      "sourceTerm": "Chặt mặt trước",
-      "targetTerm": "Vamp cutting",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-07T06:11:02.773Z",
-      "editHistory": [
-        {
-          "id": "hist_13ef9cf2",
-          "timestamp": "2026-10-07T06:11:02.773Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_90ee2546",
-          "timestamp": "2026-10-07T01:49:28.030Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_09d5f0bc",
-          "timestamp": "2026-10-06T01:35:18.891Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_d5052ba1",
-          "timestamp": "2026-10-06T01:14:11.334Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_eecfddad0b39",
-      "sourceTerm": "Không hở keo",
-      "targetTerm": "No bond gap",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Lỗi chất lượng (Defect)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.95,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
-      "editHistory": [
-        {
-          "id": "hist_0ac54cc9",
-          "timestamp": "2026-10-07T09:50:10.436Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_645186ca",
-          "timestamp": "2026-10-07T06:11:02.773Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_efca9a7b",
-          "timestamp": "2026-10-07T01:49:28.030Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_d45de691",
-          "timestamp": "2026-10-06T01:35:18.891Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_f6741ba1",
-          "timestamp": "2026-10-06T01:14:11.334Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
@@ -550,45 +1629,31 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T04:52:18.478Z",
-      "updatedAt": "2026-10-07T04:52:18.478Z",
+      "updatedAt": "2026-10-08T02:37:14.865Z",
       "editHistory": [
+        {
+          "id": "hist_d82fa131",
+          "timestamp": "2026-10-08T02:37:14.865Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_b478442f",
-          "timestamp": "2026-10-07T04:52:18.478Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_6f5a5c761b12",
-      "sourceTerm": "Định hình nóng/ lạnh",
-      "targetTerm": "cold shaping",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-07T04:52:18.478Z",
-      "updatedAt": "2026-10-07T04:52:18.478Z",
-      "editHistory": [
-        {
-          "id": "hist_7017c110",
           "timestamp": "2026-10-07T04:52:18.478Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
@@ -606,15 +1671,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T04:52:18.478Z",
-      "updatedAt": "2026-10-07T04:52:18.478Z",
+      "updatedAt": "2026-10-08T02:37:14.893Z",
       "editHistory": [
+        {
+          "id": "hist_93cbdac6",
+          "timestamp": "2026-10-08T02:37:14.893Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_8b7ab0c4",
           "timestamp": "2026-10-07T04:52:18.478Z",
@@ -634,15 +1713,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T04:52:18.478Z",
-      "updatedAt": "2026-10-07T04:52:18.478Z",
+      "updatedAt": "2026-10-08T02:37:14.916Z",
       "editHistory": [
+        {
+          "id": "hist_9bfe9b9d",
+          "timestamp": "2026-10-08T02:37:14.916Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_a2cf9061",
           "timestamp": "2026-10-07T04:52:18.478Z",
@@ -909,42 +2002,6 @@
       ]
     },
     {
-      "id": "term_cacdabae36cb",
-      "sourceTerm": "Thành phẩm giày hở keo",
-      "targetTerm": "Finished shoe with bond gap",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Lỗi chất lượng (Defect)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.95,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-07T01:49:28.030Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
-      "editHistory": [
-        {
-          "id": "hist_34a951e6",
-          "timestamp": "2026-10-07T09:50:10.436Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_1a38f552",
-          "timestamp": "2026-10-07T01:49:28.030Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
       "id": "term_4204020911e5",
       "sourceTerm": "Vamp RB bị tràn keo",
       "targetTerm": "Vamp RB has cement overflow",
@@ -954,15 +2011,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-07T01:49:28.030Z",
+      "updatedAt": "2026-10-08T02:37:14.943Z",
       "editHistory": [
+        {
+          "id": "hist_c8697a39",
+          "timestamp": "2026-10-08T02:37:14.943Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_30ca0a2f",
           "timestamp": "2026-10-07T01:49:28.030Z",
@@ -1073,15 +2144,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T01:49:28.030Z",
-      "updatedAt": "2026-10-07T01:49:28.030Z",
+      "updatedAt": "2026-10-08T02:37:15.014Z",
       "editHistory": [
+        {
+          "id": "hist_b084725b",
+          "timestamp": "2026-10-08T02:37:15.014Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_920774c7",
           "timestamp": "2026-10-07T01:49:28.030Z",
@@ -1101,15 +2186,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T01:49:28.030Z",
-      "updatedAt": "2026-10-07T01:49:28.030Z",
+      "updatedAt": "2026-10-08T02:37:15.044Z",
       "editHistory": [
+        {
+          "id": "hist_a999047d",
+          "timestamp": "2026-10-08T02:37:15.044Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_e71f7b20",
           "timestamp": "2026-10-07T01:49:28.030Z",
@@ -1129,15 +2228,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T01:49:28.030Z",
-      "updatedAt": "2026-10-07T01:49:28.030Z",
+      "updatedAt": "2026-10-08T02:37:15.072Z",
       "editHistory": [
+        {
+          "id": "hist_f8f148dc",
+          "timestamp": "2026-10-08T02:37:15.072Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_407bf5e0",
           "timestamp": "2026-10-07T01:49:28.030Z",
@@ -1157,15 +2270,29 @@
       "context": "Slide 6 - Tiêu đề Slide (Slide Title)",
       "category": "Lỗi chất lượng (CTQ Defect)",
       "sourceDocument": null,
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 1,
       "createdBy": "user@secure.local",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T01:11:50.617Z",
-      "updatedAt": "2026-10-07T01:11:50.617Z",
+      "updatedAt": "2026-10-08T02:37:15.103Z",
       "editHistory": [
+        {
+          "id": "hist_dcce20c2",
+          "timestamp": "2026-10-08T02:37:15.103Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_44ffb0eb",
           "timestamp": "2026-10-07T01:11:50.617Z",
@@ -1185,15 +2312,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T01:11:18.209Z",
-      "updatedAt": "2026-10-07T01:11:18.209Z",
+      "updatedAt": "2026-10-08T02:37:15.128Z",
       "editHistory": [
+        {
+          "id": "hist_cb55912c",
+          "timestamp": "2026-10-08T02:37:15.128Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_01750639",
           "timestamp": "2026-10-07T01:11:18.209Z",
@@ -1213,15 +2354,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T01:11:18.209Z",
-      "updatedAt": "2026-10-07T01:11:18.209Z",
+      "updatedAt": "2026-10-08T02:37:15.152Z",
       "editHistory": [
+        {
+          "id": "hist_727220a7",
+          "timestamp": "2026-10-08T02:37:15.152Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_fd338de2",
           "timestamp": "2026-10-07T01:11:18.209Z",
@@ -1241,45 +2396,31 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-07T01:11:18.209Z",
-      "updatedAt": "2026-10-07T01:11:18.209Z",
+      "updatedAt": "2026-10-08T02:37:15.182Z",
       "editHistory": [
+        {
+          "id": "hist_13e49ee4",
+          "timestamp": "2026-10-08T02:37:15.182Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_789b7ca7",
-          "timestamp": "2026-10-07T01:11:18.209Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_53aa381eb295",
-      "sourceTerm": "Để đảm bảo Tip",
-      "targetTerm": "For make sure Tip",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "category": "Lỗi chất lượng (Defect)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.95,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-07T01:11:18.209Z",
-      "updatedAt": "2026-10-07T01:11:18.209Z",
-      "editHistory": [
-        {
-          "id": "hist_970a8d01",
           "timestamp": "2026-10-07T01:11:18.209Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
@@ -1297,86 +2438,18 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC- ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-07T01:11:18.209Z",
-      "updatedAt": "2026-10-07T01:11:18.209Z",
-      "editHistory": [
-        {
-          "id": "hist_aee15ffb",
-          "timestamp": "2026-10-07T01:11:18.209Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_cb25a15d0ac9",
-      "sourceTerm": "Đổ keo",
-      "targetTerm": "Pouring cement",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC Manual -VN.pptx",
-      "status": "approved",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
-      "createdAt": "2026-10-05T09:08:58.752Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
+      "createdAt": "2026-10-07T01:11:18.209Z",
+      "updatedAt": "2026-10-08T02:37:15.271Z",
       "editHistory": [
         {
-          "id": "hist_c8fffd5d",
-          "timestamp": "2026-10-07T09:50:10.436Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_72072f87",
-          "timestamp": "2026-10-07T01:11:18.209Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_b048b3e8",
-          "timestamp": "2026-10-06T01:35:18.891Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_1a464033",
-          "timestamp": "2026-10-06T01:14:11.334Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_52bf93a0",
-          "timestamp": "2026-10-05T09:39:55.629Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_3a1cb743",
-          "timestamp": "2026-10-05T09:31:33.732Z",
+          "id": "hist_f4bebed3",
+          "timestamp": "2026-10-08T02:37:15.271Z",
           "editedBy": "reviewer@secure.local",
           "action": "status_changed",
           "changes": [
@@ -1389,80 +2462,11 @@
           "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
         },
         {
-          "id": "hist_facafc8b",
-          "timestamp": "2026-10-05T09:08:58.752Z",
+          "id": "hist_aee15ffb",
+          "timestamp": "2026-10-07T01:11:18.209Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_7d566bd13c70",
-      "sourceTerm": "May rút mũi",
-      "targetTerm": "Gathering stitching",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": null,
-      "status": "approved",
-      "priority": 2,
-      "confidence": 1,
-      "createdBy": "benchmark_sync",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-09-25T09:00:54.085Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
-      "editHistory": [
-        {
-          "id": "hist_94e8a8e5",
-          "timestamp": "2026-10-07T09:50:10.436Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_8e27b4e4",
-          "timestamp": "2026-10-07T01:11:18.209Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_be48c514",
-          "timestamp": "2026-10-06T01:35:18.891Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_1b897bb6",
-          "timestamp": "2026-10-06T01:14:11.334Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_d1001c21",
-          "timestamp": "2026-10-05T09:39:55.629Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_037002ad",
-          "timestamp": "2026-10-05T09:08:58.752Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
         }
       ]
     },
@@ -1476,15 +2480,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Lỗi chất lượng (Defect)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.95,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:35:18.891Z",
+      "updatedAt": "2026-10-08T02:37:15.307Z",
       "editHistory": [
+        {
+          "id": "hist_c2d5de9e",
+          "timestamp": "2026-10-08T02:37:15.307Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_4113f408",
           "timestamp": "2026-10-06T01:35:18.891Z",
@@ -1512,15 +2530,29 @@
       "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
       "category": "Quy trình (Process)",
       "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
+      "status": "approved",
       "priority": 1,
       "confidence": 0.98,
       "createdBy": "Auto-Harvester",
-      "approvedBy": null,
+      "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-06T01:14:11.334Z",
-      "updatedAt": "2026-10-06T01:35:18.891Z",
+      "updatedAt": "2026-10-08T02:37:15.336Z",
       "editHistory": [
+        {
+          "id": "hist_16db2537",
+          "timestamp": "2026-10-08T02:37:15.336Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
         {
           "id": "hist_ec8d1d23",
           "timestamp": "2026-10-06T01:35:18.891Z",
@@ -1532,34 +2564,6 @@
         {
           "id": "hist_f23257f3",
           "timestamp": "2026-10-06T01:14:11.334Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_4d1f50644d74",
-      "sourceTerm": "Định hình 3D mũi lạnh",
-      "targetTerm": "Tip cold 3D shaping",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-06T01:35:18.891Z",
-      "updatedAt": "2026-10-06T01:35:18.891Z",
-      "editHistory": [
-        {
-          "id": "hist_0b59ec96",
-          "timestamp": "2026-10-06T01:35:18.891Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
@@ -2929,49 +3933,6 @@
       ]
     },
     {
-      "id": "term_c5b0134e1450",
-      "sourceTerm": "Ép nosew mặt trước",
-      "targetTerm": "Press nosew vamp",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC manual-EN.pptx",
-      "status": "approved",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-10-01T02:16:16.548Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
-      "editHistory": [
-        {
-          "id": "hist_40ab1adb",
-          "timestamp": "2026-10-07T09:50:10.436Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_d9ebf5ff",
-          "timestamp": "2026-10-05T09:00:53.296Z",
-          "editedBy": "reviewer@secure.local",
-          "action": "status_changed",
-          "changes": [
-            {
-              "field": "status",
-              "oldValue": "review",
-              "newValue": "approved"
-            }
-          ],
-          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
-        }
-      ]
-    },
-    {
       "id": "term_98dd3af25a12",
       "sourceTerm": "Chú ý",
       "targetTerm": "Note",
@@ -4055,35 +5016,6 @@
       "version": "v1.0",
       "createdAt": "2026-10-05T04:41:21.409Z",
       "updatedAt": "2026-10-05T04:41:21.409Z"
-    },
-    {
-      "id": "term_ceb17fd771db",
-      "sourceTerm": "May bao trung đế",
-      "targetTerm": "Stitching strobel",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "context": "SOP: FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": null,
-      "status": "approved",
-      "priority": 1,
-      "confidence": 1,
-      "createdBy": "user@secure.local",
-      "approvedBy": "user@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-10-05T03:46:45.773Z",
-      "updatedAt": "2026-10-07T09:50:10.436Z",
-      "editHistory": [
-        {
-          "id": "hist_3b7bc6b7",
-          "timestamp": "2026-10-07T09:50:10.436Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        }
-      ]
     },
     {
       "id": "term_c599bfd8fa1a",
@@ -19800,6 +20732,160 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1791427035357_08829062",
+      "timestamp": "2026-10-08T02:37:15.357Z",
+      "userId": "reviewer",
+      "userEmail": "reviewer@secure.local",
+      "operation": "TERMINOLOGY_BATCH_APPROVED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 5,
+      "errorCode": null,
+      "details": {
+        "count": 37,
+        "status": "approved"
+      }
+    },
+    {
+      "id": "log_1791427026130_1fff1354",
+      "timestamp": "2026-10-08T02:37:06.130Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_4d1f50644d74"
+      }
+    },
+    {
+      "id": "log_1791427014005_a49f4462",
+      "timestamp": "2026-10-08T02:36:54.005Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_31a3887941be"
+      }
+    },
+    {
+      "id": "log_1791427005833_bb3cb169",
+      "timestamp": "2026-10-08T02:36:45.833Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_4bbff2589b9b"
+      }
+    },
+    {
+      "id": "log_1791426998731_6b7e9b08",
+      "timestamp": "2026-10-08T02:36:38.732Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_50d3bd25c87b"
+      }
+    },
+    {
+      "id": "log_1791426974880_ab96c617",
+      "timestamp": "2026-10-08T02:36:14.881Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_53aa381eb295"
+      }
+    },
+    {
+      "id": "log_1791426963520_d265eaa0",
+      "timestamp": "2026-10-08T02:36:03.520Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_6f5a5c761b12"
+      }
+    },
+    {
+      "id": "log_1791426929121_875c8e34",
+      "timestamp": "2026-10-08T02:35:29.122Z",
+      "userId": "reviewer",
+      "userEmail": "reviewer@secure.local",
+      "operation": "TERMINOLOGY_APPROVED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_b4892b38aed8",
+        "status": "approved"
+      }
+    },
+    {
+      "id": "log_1791424543163_d4abd894",
+      "timestamp": "2026-10-08T01:55:43.163Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 358832,
+      "errorCode": null,
+      "details": {
+        "fileName": "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx",
+        "totalSlides": 50,
+        "totalParagraphs": 1444,
+        "totalImagesProtected": 174,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
+    {
+      "id": "log_1791424033530_e6e9e38f",
+      "timestamp": "2026-10-08T01:47:13.530Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 21764,
+      "errorCode": null,
+      "details": {
+        "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ Manual -VN.pptx",
+        "totalSlides": 78,
+        "totalParagraphs": 1409,
+        "totalImagesProtected": 310,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
     {
       "id": "log_1791366610402_718943a8",
       "timestamp": "2026-10-07T09:50:10.403Z",

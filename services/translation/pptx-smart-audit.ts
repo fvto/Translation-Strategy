@@ -11,7 +11,7 @@ import type { AuditMemoryPair } from "./audit-intelligence";
 import { PPTX_PARAGRAPH_PATTERN, paragraphText, canReplaceParagraphText, replaceParagraphText, canTranslateParagraphText } from "../documents/pptx-text";
 import { orderedSlidePaths, readIsqSlidePairs } from "../documents/pptx-slide-order";
 import { dynamicDeckDetector } from "../documents/pptx-structure";
-import { classifyTextUnit, computeSourceHash, hasViDiacritics, isNonTranslatable, isPureEnglish } from "./smart-detector";
+import { classifyTextUnit, computeSourceHash, hasViDiacritics, isNonTranslatable, isPureEnglish, isShoeModelName } from "./smart-detector";
 import type { ScannedTextUnit, SmartAuditReport, TextUnitLocation, TranslationAuditGroup } from "./smart-detector";
 
 interface RawUnit { id: string; text: string; xml: string; location: TextUnitLocation; containerId: string; readOnly?: boolean }
@@ -422,22 +422,38 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         unit.status = "MIXED_LANGUAGE"; unit.reason = "Có cụm tiếng Anh trong nội dung tiếng Việt; cần xem ngữ cảnh."; unit.confidence = 0.83;
       } else { unit.status = "ALREADY_TRANSLATED"; }
     } else if (!paired.has(raw.id)) {
-      const rawMatches = lookup(sourceIndex, raw.text, "source");
-      const enforceGlossary = sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text, sourceLang);
-      const checked = enforceGlossary ? rawMatches.map(match => ({ match, check: checkCandidate(raw.text, match.target) })) : [];
-      // Historical source similarity says nothing about glossary compliance.
-      // Exclude unresolved targets before choosing, comparing or exposing a suggestion.
-      const matches = enforceGlossary ? checked.filter(({ check }) => check.isValid && !hasViDiacritics(check.text)).map(({ match, check }) => ({ ...match, target: check.text })) : rawMatches;
-      if (!decisionMemo.has(raw.text)) decisionMemo.set(raw.text, chooseAuditMatch(matches));
-      const decision = decisionMemo.get(raw.text)!;
-      if (decision.match) {
-        unit.matches = matches.slice(0, 5); unit.confidence = decision.match.confidence;
-        const prefix = raw.text.match(/^\s*(?:[\*•\#]|[-–—]\s+|\d{1,3}[.)]\s*)/)?.[0] || "";
-        unit.suggestedTranslation = prefix && !decision.match.target.startsWith(prefix.trim()) ? prefix + decision.match.target : decision.match.target;
-        unit.safeToApply = decision.safe;
-        unit.status = decision.conflict ? "TRANSLATION_CONFLICT" : decision.safe ? decision.match.origin === "approved" ? "LOCKED_TERMINOLOGY" : "TM_REUSE" : "POSSIBLE_TRANSLATION";
-        unit.reason = decision.conflict ? "Có nhiều bản dịch phù hợp; cần chọn theo ngữ cảnh." : decision.match.origin === "approved" ? "Bản dịch từ thuật ngữ đã duyệt." : decision.match.origin === "correction" ? "Bản dịch đã được người dùng chỉnh sửa và lưu." : decision.match.origin === "presentation" ? "Tìm thấy bản dịch trong PowerPoint hiện tại." : "Tìm thấy bản dịch trong tài liệu trước; cần xác nhận.";
-        if (enforceGlossary) {
+      // Check conditional prefix pattern: *Đối với <Model> / Đối với <Model>
+      // Rule: Translate "Đối với" -> "For", shoe model name stays as-is, never binds model into glossary!
+      const doiVoiAuditMatch = raw.text.match(/^(\s*\*?\s*)đối\s*với\s+(.+)$/i);
+      const isModelNote = doiVoiAuditMatch && (isShoeModelName(doiVoiAuditMatch[2].trim()) || /^[A-Z0-9\-\/\.\s]+$/i.test(doiVoiAuditMatch[2].trim()));
+
+      if (isModelNote) {
+        const prefix = doiVoiAuditMatch![1].includes("*") ? "*For " : "For ";
+        const remainder = doiVoiAuditMatch![2].trim();
+        unit.suggestedTranslation = prefix + remainder;
+        unit.status = "LOCKED_TERMINOLOGY";
+        unit.safeToApply = true;
+        unit.canApply = true;
+        unit.confidence = 1.0;
+        unit.reason = "Dịch 'Đối với' thành 'For' theo quy chuẩn (tên model giày giữ nguyên).";
+        unit.glossaryCorrections = [{ sourceTerm: "Đối với", expectedTarget: "For" }];
+      } else {
+        const rawMatches = lookup(sourceIndex, raw.text, "source");
+        const enforceGlossary = sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text, sourceLang);
+        const checked = enforceGlossary ? rawMatches.map(match => ({ match, check: checkCandidate(raw.text, match.target) })) : [];
+        // Historical source similarity says nothing about glossary compliance.
+        // Exclude unresolved targets before choosing, comparing or exposing a suggestion.
+        const matches = enforceGlossary ? checked.filter(({ check }) => check.isValid && !hasViDiacritics(check.text)).map(({ match, check }) => ({ ...match, target: check.text })) : rawMatches;
+        if (!decisionMemo.has(raw.text)) decisionMemo.set(raw.text, chooseAuditMatch(matches));
+        const decision = decisionMemo.get(raw.text)!;
+        if (decision.match) {
+          unit.matches = matches.slice(0, 5); unit.confidence = decision.match.confidence;
+          const prefix = raw.text.match(/^\s*(?:[\*•\#]|[-–—]\s+|\d{1,3}[.)]\s*)/)?.[0] || "";
+          unit.suggestedTranslation = prefix && !decision.match.target.startsWith(prefix.trim()) ? prefix + decision.match.target : decision.match.target;
+          unit.safeToApply = decision.safe;
+          unit.status = decision.conflict ? "TRANSLATION_CONFLICT" : decision.safe ? decision.match.origin === "approved" ? "LOCKED_TERMINOLOGY" : "TM_REUSE" : "POSSIBLE_TRANSLATION";
+          unit.reason = decision.conflict ? "Có nhiều bản dịch phù hợp; cần chọn theo ngữ cảnh." : decision.match.origin === "approved" ? "Bản dịch từ thuật ngữ đã duyệt." : decision.match.origin === "correction" ? "Bản dịch đã được người dùng chỉnh sửa và lưu." : decision.match.origin === "presentation" ? "Tìm thấy bản dịch trong PowerPoint hiện tại." : "Tìm thấy bản dịch trong tài liệu trước; cần xác nhận.";
+          if (enforceGlossary) {
           const selectedCheck = checked.find(({ check }) => check.isValid && check.text === decision.match!.target)?.check;
           if (selectedCheck?.corrections.length) {
             unit.glossaryCorrections = selectedCheck.corrections.map(({ sourceTerm, expectedTarget }) => ({ sourceTerm, expectedTarget }));
@@ -456,6 +472,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         unit.status = "REVIEW_REQUIRED"; unit.reason = "Chưa đủ bằng chứng ngôn ngữ; có thể là tên, mã hoặc tiếng Việt không dấu."; unit.confidence = 0.5;
       } else if (sourceLang === "en" && targetLang === "vi" && auditTextForms(raw.text).tokens.length === 1) {
         unit.status = "REVIEW_REQUIRED"; unit.reason = "Từ đơn cần ngữ cảnh để chọn nghĩa phù hợp."; unit.confidence = 0.6;
+      }
       }
     }
     // Also guard target-variant suggestions: corrupt history can contain VI

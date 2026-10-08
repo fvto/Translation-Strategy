@@ -63,8 +63,25 @@ export function harvestTerminologyFromSlides(
     status: "approved" | "review" = "review",
     confidence: number = 0.95
   ) => {
-    const src = cleanTerm(srcRaw);
-    const tgt = cleanTerm(tgtRaw);
+    let src = cleanTerm(srcRaw);
+    let tgt = cleanTerm(tgtRaw);
+
+    // Rule: Strip shoe model codes from conditional prefixes: "Đối với [Model]" -> only harvest "Đối với" -> "For"
+    const doiVoiSrcMatch = src.match(/^(\*?\s*)(?:đối\s*với|áp\s*dụng\s*cho|dành\s*cho)\s+(.+)$/i);
+    const doiVoiTgtMatch = tgt.match(/^(\*?\s*)(?:for|apply\s*to)\s+(.+)$/i);
+    if (doiVoiSrcMatch && doiVoiTgtMatch) {
+      const srcModel = doiVoiSrcMatch[2].trim();
+      const tgtModel = doiVoiTgtMatch[2].trim();
+      if (isShoeModelName(srcModel) || isShoeModelName(tgtModel) || /^[A-Z0-9\-\/\.\s]+$/i.test(srcModel)) {
+        src = "Đối với";
+        tgt = "For";
+      }
+    } else if (doiVoiSrcMatch) {
+      const srcModel = doiVoiSrcMatch[2].trim();
+      if (isShoeModelName(srcModel) || /^[A-Z0-9\-\/\.\s]+$/i.test(srcModel)) {
+        return;
+      }
+    }
 
     // Validation & Hygiene rules: Only specialized terms, strictly NO full sentences
     if (!src || !tgt) return;

@@ -711,6 +711,18 @@ export class PptxTranslatorService {
           continue;
         }
 
+        // Conditional note prefix pattern: *Đối với <Model> / Đối với <Model>
+        // User rule: Only translate "đối với" -> "For", keep shoe model untouched and never bind model into glossary!
+        const doiVoiMatch = p.originalText.match(/^(\s*\*?\s*)đối\s*với\s+(.+)$/i);
+        if (doiVoiMatch) {
+          const prefix = doiVoiMatch[1].includes("*") ? "*For " : "For ";
+          const remainder = doiVoiMatch[2].trim();
+          if (isShoeModelName(remainder) || /^[A-Z0-9\-\/\.\s]+$/i.test(remainder)) {
+            translationMap.set(p.id, prefix + remainder);
+            continue;
+          }
+        }
+
         // Direct check against approved domain glossary for standard short process headings and defect terms.
         // Direct check against approved domain glossary for exact matching paragraphs and headings
         const normKey = p.originalText.trim().toLowerCase().replace(/\s+/g, " ");
