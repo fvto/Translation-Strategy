@@ -573,5 +573,126 @@ test("PPTX Translator & Smart Audit: 'Đối với' translates to 'For' without 
   assert.ok(!slideAfter.includes("*Đối với"), "Vietnamese prefix must be removed");
 });
 
+test("Smart Audit: Same-slide block bilingual (Shape 1 EN steps 1-4, Shape 2 VI steps 1-4) are paired as ALREADY_TRANSLATED and unchecked", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.ts");
+  const zip = new JSZip();
+
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+  </p:sldIdLst>
+</p:presentation>`);
+
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+
+  // Slide with Shape 1 (EN steps 1-4) and Shape 2 (VI steps 1-4)
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <!-- Shape 1: EN steps -->
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1.Stitching collar &amp; collar lining must follow notch, margin 2mm, SPI 11-12 stitches/inch</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>2.Spraying cement for upper must consistent, reach marking, spraying cement for collar lining must margin 3-5mm</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>3.Attach foam follow notch/marking, attach higher than upper 3mm</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>4.Check if collar smooth, not off center, collar lining must higher collar 3mm after folding/hammering</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+    <!-- Shape 2: VI steps -->
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>1.Kiểm tra lót vòng cổ và vòng cổ ngay tâm,cách biên đều 3mm ,cách kim 11-12 mũi /inch</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>2.Kiểm tra phun keo mặt giày đều ,tới vị ,lót vòng cổ phun keo chừa đường cách biên lót vòng cổ 3-5mm</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>3.Kiểm tra dán mos ngay tân định vị ,cao hơn mặt giày 3mm</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>4.Kiểm tra sau khi lộn dập bằng vòng cổ suôn đều không méo,độ cao lót so với vòng cổ là 3mm</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const auditReport = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual"
+  });
+
+  assert.equal(auditReport.units.length, 8, "Must extract 8 paragraphs");
+  for (const unit of auditReport.units) {
+    assert.equal(unit.status, "ALREADY_TRANSLATED", `Unit "${unit.sourceText.slice(0, 20)}" must be ALREADY_TRANSLATED`);
+    assert.equal(unit.selectedForTranslation, false, `Unit "${unit.sourceText.slice(0, 20)}" must NOT be selected for translation`);
+    assert.equal(unit.requiresTranslation, false, `Unit "${unit.sourceText.slice(0, 20)}" must NOT require translation`);
+  }
+});
+
+test("Smart Audit: Zero EN->EN identity suggestions for 'CRITICAL TO QUALITY' and 'CRITICAL TO PROCESS'", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.ts");
+  const zip = new JSZip();
+
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:sldIdLst>
+    <p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+  </p:sldIdLst>
+</p:presentation>`);
+
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
+</Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>CRITICAL TO QUALITY</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>CRITICAL TO PROCESS</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const auditReport = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual"
+  });
+
+  const ctq = auditReport.units.find((u) => u.sourceText === "CRITICAL TO QUALITY");
+  const ctp = auditReport.units.find((u) => u.sourceText === "CRITICAL TO PROCESS");
+
+  assert.ok(ctq, "CTQ unit must exist");
+  assert.ok(ctp, "CTP unit must exist");
+
+  assert.equal(ctq.status, "ALREADY_TRANSLATED");
+  assert.equal(ctp.status, "ALREADY_TRANSLATED");
+
+  // STRICT REQUIREMENT: No EN -> EN identity suggested translation!
+  assert.equal(ctq.suggestedTranslation, undefined, "CTQ must NOT have identity suggestedTranslation");
+  assert.equal(ctp.suggestedTranslation, undefined, "CTP must NOT have identity suggestedTranslation");
+});
+
+
+
 
 

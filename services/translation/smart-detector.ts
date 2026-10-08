@@ -460,7 +460,6 @@ export function classifyTextUnit(
       reason: isShoe
         ? "Tên thương hiệu, hình thể giày hoặc mã mẫu kỹ thuật (giữ nguyên, không dịch lại)"
         : "Technical acronym, standard, model code, ID, date, or numeric value",
-      suggestedTranslation: text,
       confidence: 1.0,
     };
   }
@@ -471,7 +470,6 @@ export function classifyTextUnit(
       return {
         status: "ALREADY_TRANSLATED",
         reason: "Inspection item already contains bilingual EN-VI specification",
-        suggestedTranslation: text,
         confidence: 0.98,
       };
     }
@@ -482,21 +480,12 @@ export function classifyTextUnit(
     return {
       status: "ALREADY_TRANSLATED",
       reason: "Text container already has bilingual pair (English & Vietnamese)",
-      suggestedTranslation: options.existingTranslation || text,
+      suggestedTranslation: options.existingTranslation && options.existingTranslation.trim().toLowerCase() !== text.toLowerCase() ? options.existingTranslation : undefined,
       confidence: 0.95,
     };
   }
 
-  // 4. In-text Bilingual Check
-  if (isBilingualText(text)) {
-    return {
-      status: "MIXED_LANGUAGE",
-      reason: "Text unit contains mixed English and Vietnamese content",
-      confidence: 0.92,
-    };
-  }
-
-  // 5. Explicit Existing Target Translation check
+  // 4. Explicit Existing Target Translation check (Priority over in-text mixed words like 'mũi /inch')
   if (options.existingTranslation && options.existingTranslation.trim()) {
     const ext = options.existingTranslation.trim();
     if (ext.toLowerCase() !== text.toLowerCase()) {
@@ -507,6 +496,15 @@ export function classifyTextUnit(
         confidence: 0.95,
       };
     }
+  }
+
+  // 5. In-text Bilingual Check
+  if (isBilingualText(text)) {
+    return {
+      status: "MIXED_LANGUAGE",
+      reason: "Text unit contains mixed English and Vietnamese content",
+      confidence: 0.92,
+    };
   }
 
   // 6. Locked Terminology / Company Glossary Check (Priority 1)
@@ -576,7 +574,6 @@ export function classifyTextUnit(
         return {
           status: "ALREADY_TRANSLATED",
           reason: "English line paired with Vietnamese in the same container",
-          suggestedTranslation: text,
           confidence: 0.95,
         };
       }
@@ -589,7 +586,6 @@ export function classifyTextUnit(
       return {
         status: "ALREADY_TRANSLATED",
         reason: "Already translated English text",
-        suggestedTranslation: text,
         confidence: 0.9,
       };
     }
@@ -602,7 +598,6 @@ export function classifyTextUnit(
       return {
         status: "ALREADY_TRANSLATED",
         reason: "Already in Vietnamese target language",
-        suggestedTranslation: text,
         confidence: 0.95,
       };
     }
@@ -614,7 +609,6 @@ export function classifyTextUnit(
         return {
           status: "ALREADY_TRANSLATED",
           reason: "English source text already paired with Vietnamese translation",
-          suggestedTranslation: text,
           confidence: 0.95,
         };
       }

@@ -418,6 +418,20 @@ export class DocumentTranslationMemory {
 
     const exactKey = exactCanonicalKey(rawSrc);
     const canonKey = canonicalizeText(rawSrc);
+    if (exactKey === exactCanonicalKey(rawTgt)) {
+      return {
+        id: `ident_${Date.now()}`,
+        sourceOriginal: rawSrc,
+        sourceCanonical: canonKey,
+        target: rawTgt,
+        origin,
+        status: "ESTABLISHED",
+        confidence,
+        sourceLocation: location,
+        createdAt: new Date().toISOString(),
+        verified: false,
+      };
+    }
     const status: TMStatus = statusOverride || (origin === "GLOSSARY" ? "LOCKED" : origin === "RELATED_DOCUMENT" ? "APPROVED" : "ESTABLISHED");
 
     // 1. Check exact sentence map

@@ -233,6 +233,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     if (isNonTranslatable(source.text) || isNonTranslatable(target.text)) return;
     const sTrim = source.text.trim();
     const tTrim = target.text.trim();
+    if (sTrim.toLowerCase() === tTrim.toLowerCase()) return;
     if (/^\d+(?:[.,]\d+)?$/.test(sTrim) || /^\d+(?:[.,]\d+)?$/.test(tTrim)) return;
     if (sTrim.length <= 1 || tTrim.length <= 1) return;
     if (sTrim.length > 15 && tTrim.length < 4) return;
@@ -299,6 +300,41 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     const unpairedSources = members.filter((u) => !paired.has(u.id) && sourceEvidence(u.text, sourceLang));
     const unpairedTargets = members.filter((u) => !paired.has(u.id) && targetEvidence(u.text, targetLang));
     if (unpairedSources.length === 1 && unpairedTargets.length === 1) addPair(unpairedSources[0], unpairedTargets[0]);
+  }
+
+  // 5. Cross-container / Same-slide pairing (Block bilingual layout on the same slide:
+  // e.g. Textbox 1 has EN steps 1, 2, 3, 4; Textbox 2 has VI steps 1, 2, 3, 4 or vice-versa)
+  const slideUnitsMap = new Map<number, RawUnit[]>();
+  for (const unit of extracted.units) {
+    const sIdx = unit.location.slideIndex ?? 0;
+    if (!slideUnitsMap.has(sIdx)) slideUnitsMap.set(sIdx, []);
+    slideUnitsMap.get(sIdx)!.push(unit);
+  }
+
+  for (const [, slideUnits] of slideUnitsMap) {
+    const unpairedVi = slideUnits.filter((u) => !paired.has(u.id) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
+    const unpairedEn = slideUnits.filter((u) => !paired.has(u.id) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)));
+
+    // A. Match by step number on the same slide (e.g. 1.EN with 1.VI, 2.EN with 2.VI...)
+    for (const viUnit of unpairedVi) {
+      if (paired.has(viUnit.id)) continue;
+      const vStep = extractItemStepNumber(viUnit.text);
+      if (vStep) {
+        const matchingEn = unpairedEn.find((eu) => !paired.has(eu.id) && extractItemStepNumber(eu.text) === vStep);
+        if (matchingEn) {
+          addPair(viUnit, matchingEn);
+        }
+      }
+    }
+
+    // B. Symmetric ordinal matching on the same slide if equal counts (e.g. 4 steps in shape 1, 4 steps in shape 2)
+    const remVi = slideUnits.filter((u) => !paired.has(u.id) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
+    const remEn = slideUnits.filter((u) => !paired.has(u.id) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish));
+    if (remVi.length > 0 && remVi.length === remEn.length && remVi.length <= 8) {
+      for (let i = 0; i < remVi.length; i++) {
+        addPair(remVi[i], remEn[i]);
+      }
+    }
   }
 
   // Cross-slide pairing between paired EN and VI slides (Ching Luh SOP Option 1 pairs)
@@ -379,18 +415,41 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     }
     const isqSource = isqPaths.has(raw.location.partPath!) && sourceEvidence(raw.text,sourceLang);
     unit.location.isIsq=isqPaths.has(raw.location.partPath!);
-    if (paired.has(raw.id)) unit.existingTranslation=paired.get(raw.id);
+    if (paired.has(raw.id)) {
+      unit.existingTranslation = paired.get(raw.id);
+      if (!isqSource) {
+        preservedIds.add(unit.id);
+        unit.status = "ALREADY_TRANSLATED";
+        unit.reason = "Đã có bản dịch song ngữ tương ứng trong cùng slide/hộp văn bản.";
+        unit.requiresTranslation = false;
+        unit.selectedForTranslation = false;
+        if (unit.existingTranslation && unit.existingTranslation.trim().toLowerCase() !== raw.text.trim().toLowerCase()) {
+          unit.suggestedTranslation = unit.existingTranslation;
+        } else {
+          delete unit.suggestedTranslation;
+        }
+        return unit;
+      }
+    }
     if(sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text,"vi") && !paired.has(raw.id) && !inlineBilingual.has(raw.id) && unit.status === "ALREADY_TRANSLATED") {
       unit.status="NEEDS_TRANSLATION"; delete unit.suggestedTranslation;
     }
     if (unit.status === "NEEDS_TRANSLATION") unit.reason = "Nội dung có bằng chứng ngôn ngữ nguồn và chưa tìm thấy bản dịch.";
     if (unit.status === "ALREADY_TRANSLATED") unit.reason = paired.has(raw.id) ? "Đã có cặp dịch trong cùng hộp văn bản." : "Nội dung đã ở ngôn ngữ đích.";
-    if (isNonTranslatable(raw.text)) return unit;
+    if (isNonTranslatable(raw.text)) {
+      delete unit.suggestedTranslation;
+      return unit;
+    }
     // In VI -> EN repair, existing English is final content. Do not turn casing,
     // wording or historical/glossary variants into a request to edit it again.
     if (sourceLang === "vi" && targetLang === "en" && !sourceEvidence(raw.text,"vi")) {
       preservedIds.add(unit.id); unit.status="ALREADY_TRANSLATED";
       unit.reason=isPureEnglish(raw.text) || language.likelyEnglish ? "Nội dung đã là tiếng Anh; giữ nguyên, không dịch hoặc chỉnh lại." : "Không có bằng chứng tiếng Việt; giữ nguyên, không gợi ý chỉnh sửa.";
+      unit.requiresTranslation=false; delete unit.suggestedTranslation; return unit;
+    }
+    if (sourceLang === "en" && targetLang === "vi" && hasViDiacritics(raw.text)) {
+      preservedIds.add(unit.id); unit.status="ALREADY_TRANSLATED";
+      unit.reason="Nội dung đã ở tiếng Việt; giữ nguyên, không gợi ý chỉnh sửa.";
       unit.requiresTranslation=false; delete unit.suggestedTranslation; return unit;
     }
     if (inlineBilingual.has(raw.id) && !isqSource) { unit.status = "ALREADY_TRANSLATED"; unit.reason = "Đã có cặp song ngữ trong cùng đoạn văn."; return unit; }
@@ -504,6 +563,9 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     unit.selectedForTranslation = unit.requiresTranslation && !raw.readOnly && canTranslateParagraphText(raw.xml);
     if (isqSource) {unit.reason += " ISQ: xuất slide EN riêng, slide VI ở ngay sau.";unit.canApply=false;}
     if (unit.requiresTranslation && !unit.selectedForTranslation) unit.reason += raw.readOnly ? " Ghi chú/SmartArt cần chỉnh thủ công." : " Cần chỉnh thủ công để giữ định dạng hoặc ngắt dòng.";
+    if (unit.suggestedTranslation && unit.suggestedTranslation.trim().toLowerCase() === raw.text.trim().toLowerCase()) {
+      delete unit.suggestedTranslation;
+    }
     return unit;
   });
   const groups = buildGroups(units, pairs, preservedIds);

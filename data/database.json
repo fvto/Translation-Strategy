@@ -97,6 +97,34 @@
   ],
   "terminology": [
     {
+      "id": "term_c163ae46fefd",
+      "sourceTerm": "QAM cập nhật",
+      "targetTerm": "QAM updated",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": null,
+      "context": null,
+      "category": "QA",
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "user@secure.local",
+      "approvedBy": "user@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-08T02:59:10.893Z",
+      "updatedAt": "2026-10-08T02:59:10.893Z",
+      "editHistory": [
+        {
+          "id": "hist_1549f975",
+          "timestamp": "2026-10-08T02:59:10.893Z",
+          "editedBy": "user@secure.local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
       "id": "term_b4892b38aed8",
       "sourceTerm": "Ép H/F mặt trước /eo",
       "targetTerm": "H/F press vamp/quarter",
@@ -20732,6 +20760,20 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1791428350935_86bfd3f2",
+      "timestamp": "2026-10-08T02:59:10.936Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_CREATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 4,
+      "errorCode": null,
+      "details": {
+        "termId": "term_c163ae46fefd"
+      }
+    },
     {
       "id": "log_1791427035357_08829062",
       "timestamp": "2026-10-08T02:37:15.357Z",

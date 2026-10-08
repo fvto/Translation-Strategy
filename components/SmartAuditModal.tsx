@@ -172,13 +172,19 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
 
   const getEffectiveTranslation = (unit: ScannedTextUnit): string | undefined => {
     if (customEdits[unit.id] !== undefined) return customEdits[unit.id];
-    return unit.suggestedTranslation;
+    if (unit.suggestedTranslation && unit.suggestedTranslation.trim().toLowerCase() !== unit.sourceText.trim().toLowerCase()) {
+      return unit.suggestedTranslation;
+    }
+    return undefined;
   };
 
   const getGroupEffectiveTranslation = (group: TranslationAuditGroup): string | undefined => {
     const firstUnit = byId.get(group.unitIds[0]);
     if (firstUnit && customEdits[firstUnit.id] !== undefined) return customEdits[firstUnit.id];
-    return group.suggestedTranslation;
+    if (group.suggestedTranslation && firstUnit && group.suggestedTranslation.trim().toLowerCase() !== firstUnit.sourceText.trim().toLowerCase()) {
+      return group.suggestedTranslation;
+    }
+    return undefined;
   };
 
   const startEditGroup = (group: TranslationAuditGroup) => {
@@ -486,7 +492,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
                                         <p className="text-slate-800 dark:text-slate-200 mt-0.5 break-words">
                                           {u.sourceText}
                                         </p>
-                                        {effectiveTrans && !isEditing && (
+                                        {effectiveTrans && effectiveTrans.trim().toLowerCase() !== u.sourceText.trim().toLowerCase() && !isEditing && (
                                           <p className="text-emerald-700 dark:text-emerald-400 text-[11px] mt-0.5 break-words flex items-center gap-1">
                                             <ArrowRight className="w-2.5 h-2.5 shrink-0" />
                                             {effectiveTrans}
