@@ -48,3 +48,7 @@ data/translation_cache.json
 outputs/
 *.orig.pptx
 
+# audit traces
+data/audit_traces/*.json
+data/audit_traces/history/*
+

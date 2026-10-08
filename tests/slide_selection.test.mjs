@@ -1780,6 +1780,85 @@ test("Test 31: Block Bilingual Support - 1.EN..4.EN ... 1.VI..4.VI and vice vers
   assert.equal(s2Matches.length, 1, "Slide 2 has exactly 1 English step 1 (no duplicates)");
 });
 
+test("Test 32: In-Slide Focus Heading & Trailing Notes - All paired as ALREADY_TRANSLATED without leaking needs_translation", async () => {
+  const { auditPptxGaps } = await import("../services/translation/smart-detector.ts");
+  const fs = await import("fs");
+  const path = await import("path");
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp><p:txBody><a:p><a:r><a:t>Slide Title</a:t></a:r></a:p></p:txBody></p:sp>
+      <p:sp><p:txBody><a:p><a:r><a:t>IPQC Stitching Inspection Focuses: Swoosh stitching</a:t></a:r></a:p></p:txBody></p:sp>
+      <p:sp><p:txBody><a:p><a:r><a:t>Trọng điểm kiểm tra may logo</a:t></a:r></a:p></p:txBody></p:sp>
+      <p:sp><p:txBody>
+        <a:p><a:r><a:t>1.Place swoosh follow marking on quarter lateral &amp; foxing of left foot.</a:t></a:r></a:p>
+        <a:p><a:r><a:t>2.Check stitching swoosh if margin 1.5mm, 9-10 stitches/inch, marking line must not visible exposed</a:t></a:r></a:p>
+        <a:p><a:r><a:t>Due to the design, the natural Swoosh wave shape is acceptable follow QA manual</a:t></a:r></a:p>
+      </p:txBody></p:sp>
+      <p:sp><p:txBody>
+        <a:p><a:r><a:t>1.Kiểm tra logo được đặt đúng định vị trên eo ngoài và trang trí gót mặt sau của chân trái</a:t></a:r></a:p>
+        <a:p><a:r><a:t>2.Kiểm tra sau khi may logo nằm đúng vị trí cách biên 1.5mm 9-10 mũi/inch, không lỗi đường định vị</a:t></a:r></a:p>
+        <a:p><a:r><a:t>Do thiết kế phần eo có lập thể nên chấp nhận Swoosh gợn sóng tự nhiên cập nhật QAM</a:t></a:r></a:p>
+      </p:txBody></p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>`;
+
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+  zip.file("ppt/slides/slide1.xml", slideXml);
+
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+  const report = await auditPptxGaps(buffer, "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual",
+    autoAiCascade: false,
+  });
+
+  const headingVi = report.units.find((u) => u.sourceText.includes("Trọng điểm kiểm tra may logo"));
+  assert.ok(headingVi, "Vietnamese heading must be found");
+  assert.equal(headingVi.status, "ALREADY_TRANSLATED");
+  assert.equal(headingVi.requiresTranslation, false);
+  assert.ok(headingVi.existingTranslation?.includes("IPQC Stitching Inspection Focuses"));
+
+  const step1Vi = report.units.find((u) => u.sourceText.includes("Kiểm tra logo được đặt đúng định vị"));
+  assert.ok(step1Vi, "Vietnamese step 1 must be found");
+  assert.equal(step1Vi.status, "ALREADY_TRANSLATED");
+  assert.equal(step1Vi.requiresTranslation, false);
+  assert.ok(step1Vi.existingTranslation?.includes("Place swoosh follow marking"));
+
+  const step2Vi = report.units.find((u) => u.sourceText.includes("Kiểm tra sau khi may logo"));
+  assert.ok(step2Vi, "Vietnamese step 2 must be found");
+  assert.equal(step2Vi.status, "ALREADY_TRANSLATED");
+  assert.equal(step2Vi.requiresTranslation, false);
+  assert.ok(step2Vi.existingTranslation?.includes("Check stitching swoosh"));
+
+  const noteVi = report.units.find((u) => u.sourceText.includes("Do thiết kế phần eo có lập thể"));
+  assert.ok(noteVi, "Vietnamese note must be found");
+  assert.equal(noteVi.status, "ALREADY_TRANSLATED");
+  assert.equal(noteVi.requiresTranslation, false);
+  assert.ok(noteVi.existingTranslation?.includes("Due to the design"));
+
+  // Check telemetry trace file exists on disk
+  const tracePath = path.resolve(process.cwd(), "data", "audit_traces", "latest_trace.json");
+  assert.ok(fs.existsSync(tracePath), "latest_trace.json must exist");
+  const traceContent = JSON.parse(fs.readFileSync(tracePath, "utf-8"));
+  assert.equal(traceContent.fileName, "HO26 NIKE CPFM AIR FLEA 1QA IPQC manual-EN.pptx");
+  assert.equal(traceContent.summary.needsTranslation, 0);
+});
+
+
 
 
 

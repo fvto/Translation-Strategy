@@ -12,6 +12,7 @@ import {
 import { normalizeSpiTerminology, cleanTargetTerm } from "./casing";
 import { scanPptxTranslationIntelligence } from "./pptx-smart-audit";
 import { runAiDeepAudit } from "./ai-deep-audit";
+import { saveAuditTrace } from "./audit-trace";
 
 export type TextUnitStatus =
   | "ALREADY_TRANSLATED"
@@ -808,17 +809,29 @@ export async function auditPptxGaps(
         sourceLang: options?.sourceLang,
         targetLang: options?.targetLang,
       });
-      return {
+      const finalDeep: SmartAuditReport = {
         ...deep.report,
         requiresIsqDuplicate: hasIsq,
       };
+      saveAuditTrace(fileName, finalDeep, {
+        mode: options?.mode,
+        sourceLang: options?.sourceLang,
+        targetLang: options?.targetLang,
+      });
+      return finalDeep;
     }
   }
 
-  return {
+  const finalReport: SmartAuditReport = {
     ...report,
     requiresIsqDuplicate: hasIsq,
   };
+  saveAuditTrace(fileName, finalReport, {
+    mode: options?.mode,
+    sourceLang: options?.sourceLang,
+    targetLang: options?.targetLang,
+  });
+  return finalReport;
 }
 
 /**

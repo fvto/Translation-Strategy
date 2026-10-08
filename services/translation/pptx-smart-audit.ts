@@ -322,28 +322,73 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     }
 
     for (const scopeMembers of subScopes) {
-      // 1. Interleaved adjacent [EN, VI] or [VI, EN] paragraphs within container (1.EN 1.VI or 1.VI 1.EN)
-      for (let k = 0; k < scopeMembers.length - 1; k++) {
-        const u1 = scopeMembers[k], u2 = scopeMembers[k + 1];
-        if (paired.has(u1.id) || paired.has(u2.id)) continue;
-        if (isInspectionStatusLabel(u1.text) || isInspectionStatusLabel(u2.text)) continue;
+      // 0. Check if container itself is a block bilingual layout:
+      // (e.g. [E1, E2, E3, V1, V2, V3] or [V1, V2, V3, E1, E2, E3])
+      const firstIsVi = scopeMembers.length > 0 && hasViDiacritics(scopeMembers[0].text);
+      const transIdx = firstIsVi
+        ? scopeMembers.findIndex((u) => !hasViDiacritics(u.text) && (targetEvidence(u.text, targetLang) || /[a-zA-Z]{2,}/.test(u.text)))
+        : scopeMembers.findIndex((u) => hasViDiacritics(u.text) || sourceEvidence(u.text, sourceLang));
 
-        const s1 = sourceEvidence(u1.text, sourceLang), t1 = targetEvidence(u1.text, targetLang);
-        const s2 = sourceEvidence(u2.text, sourceLang), t2 = targetEvidence(u2.text, targetLang);
-        const step1 = extractItemStepNumber(u1.text), step2 = extractItemStepNumber(u2.text);
-        const sameStep = Boolean(step1 && step2 && step1 === step2);
-        const diffStep = Boolean(step1 && step2 && step1 !== step2);
-        if (diffStep) continue;
+      const isBlockLayout =
+        transIdx >= 2 &&
+        scopeMembers.length - transIdx >= 2 &&
+        (firstIsVi
+          ? scopeMembers.slice(0, transIdx).every((u) => hasViDiacritics(u.text)) &&
+            scopeMembers.slice(transIdx).every((u) => !hasViDiacritics(u.text))
+          : scopeMembers.slice(0, transIdx).every((u) => !hasViDiacritics(u.text)) &&
+            scopeMembers.slice(transIdx).every((u) => hasViDiacritics(u.text)));
 
-        const lenRatio = Math.min(u1.text.trim().length, u2.text.trim().length) / Math.max(u1.text.trim().length, u2.text.trim().length);
-        const plausibleLength = lenRatio >= 0.35 || (sameStep && lenRatio >= 0.25);
+      if (isBlockLayout) {
+        const b1 = scopeMembers.slice(0, transIdx);
+        const b2 = scopeMembers.slice(transIdx);
+        // Step matching within block
+        for (const u1 of b1) {
+          const s1 = extractItemStepNumber(u1.text);
+          if (s1) {
+            const u2 = b2.find((cand) => !paired.has(cand.id) && extractItemStepNumber(cand.text) === s1);
+            if (u2) addPair(u1, u2);
+          }
+        }
+        // Match unnumbered items by index if equal length
+        if (b1.length === b2.length) {
+          for (let i = 0; i < b1.length; i++) {
+            if (!paired.has(b1[i].id) && !paired.has(b2[i].id)) {
+              addPair(b1[i], b2[i]);
+            }
+          }
+        } else {
+          const rem1 = b1.filter((u) => !paired.has(u.id));
+          const rem2 = b2.filter((u) => !paired.has(u.id));
+          const minRem = Math.min(rem1.length, rem2.length);
+          for (let i = 0; i < minRem; i++) {
+            addPair(rem1[i], rem2[i]);
+          }
+        }
+      } else {
+        // 1. Interleaved adjacent [EN, VI] or [VI, EN] paragraphs within container (1.EN 1.VI or 1.VI 1.EN)
+        for (let k = 0; k < scopeMembers.length - 1; k++) {
+          const u1 = scopeMembers[k], u2 = scopeMembers[k + 1];
+          if (paired.has(u1.id) || paired.has(u2.id)) continue;
+          if (isInspectionStatusLabel(u1.text) || isInspectionStatusLabel(u2.text)) continue;
 
-        if (plausibleLength && ((s1 && t2 && lenRatio >= 0.4) || (sameStep && s1 && !s2))) {
-          addPair(u1, u2);
-          k++;
-        } else if (plausibleLength && ((t1 && s2 && lenRatio >= 0.4) || (sameStep && !s1 && s2))) {
-          addPair(u2, u1);
-          k++;
+          const s1 = sourceEvidence(u1.text, sourceLang), t1 = targetEvidence(u1.text, targetLang);
+          const s2 = sourceEvidence(u2.text, sourceLang), t2 = targetEvidence(u2.text, targetLang);
+          const step1 = extractItemStepNumber(u1.text), step2 = extractItemStepNumber(u2.text);
+          const sameStep = Boolean(step1 && step2 && step1 === step2);
+          const diffStep = Boolean(step1 && step2 && step1 !== step2);
+          if (diffStep) continue;
+          if (!sameStep && Boolean(step1) !== Boolean(step2)) continue;
+
+          const lenRatio = Math.min(u1.text.trim().length, u2.text.trim().length) / Math.max(u1.text.trim().length, u2.text.trim().length);
+          const plausibleLength = lenRatio >= 0.35 || (sameStep && lenRatio >= 0.25);
+
+          if (plausibleLength && ((s1 && t2 && lenRatio >= 0.4) || (sameStep && s1 && !s2))) {
+            addPair(u1, u2);
+            k++;
+          } else if (plausibleLength && ((t1 && s2 && lenRatio >= 0.4) || (sameStep && !s1 && s2))) {
+            addPair(u2, u1);
+            k++;
+          }
         }
       }
 
@@ -402,6 +447,14 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     slideUnitsMap.get(sIdx)!.push(unit);
   }
 
+  const isHeadingLike = (text: string): boolean => {
+    if (!text) return false;
+    const t = text.trim();
+    if (/[\*•#]/.test(t) || /:\s*$/.test(t)) return true;
+    if (/\b(?:focus|focuses|trọng\s*điểm|tiêu\s*chuẩn|inspection|kiểm\s*tra|standard|criterion|ctq|ctp|sop|quy\s*trình|hướng\s*dẫn|yêu\s*cầu|swoosh|may\s*logo)\b/i.test(t)) return true;
+    return false;
+  };
+
   for (const [, slideUnits] of slideUnitsMap) {
     const unpairedVi = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
     const unpairedEn = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)));
@@ -419,6 +472,34 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
             addPair(viUnit, matchingEn);
           }
         }
+      }
+    }
+
+    // B. Match technical process/inspection headings on the same slide
+    // (e.g. 'IPQC Stitching Inspection Focuses: Swoosh stitching' with 'Trọng điểm kiểm tra may logo')
+    const remViHeadings = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0) && isHeadingLike(u.text));
+    const remEnHeadings = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)) && isHeadingLike(u.text));
+    if (remViHeadings.length === 1 && remEnHeadings.length === 1) {
+      addPair(remViHeadings[0], remEnHeadings[0]);
+    } else if (remViHeadings.length > 0 && remViHeadings.length === remEnHeadings.length) {
+      for (let hIdx = 0; hIdx < remViHeadings.length; hIdx++) {
+        addPair(remViHeadings[hIdx], remEnHeadings[hIdx]);
+      }
+    }
+
+    // C. Match trailing notes / unnumbered items following step blocks on the same slide
+    // (e.g. 'Due to the design...' with 'Do thiết kế phần eo...')
+    const remViNotes = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
+    const remEnNotes = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)));
+    if (remViNotes.length === 1 && remEnNotes.length === 1) {
+      const vLen = remViNotes[0].text.trim().length, eLen = remEnNotes[0].text.trim().length;
+      const ratio = Math.min(vLen, eLen) / Math.max(vLen, eLen);
+      if (ratio >= 0.25 || (vLen >= 15 && eLen >= 15)) {
+        addPair(remViNotes[0], remEnNotes[0]);
+      }
+    } else if (remViNotes.length > 1 && remViNotes.length === remEnNotes.length) {
+      for (let nIdx = 0; nIdx < remViNotes.length; nIdx++) {
+        addPair(remViNotes[nIdx], remEnNotes[nIdx]);
       }
     }
   }
