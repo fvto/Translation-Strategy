@@ -171,3 +171,106 @@ export function harvestTerminologyFromSlides(
 
   return { added, skipped };
 }
+
+/**
+ * Extracts footwear terminology directly from SmartAuditReport paired slides and bilingual units.
+ */
+export function harvestTerminologyFromAuditReport(
+  auditReport: import("./smart-detector").SmartAuditReport,
+  fileName: string,
+  sourceLanguage: string = "vi",
+  targetLanguage: string = "en"
+): HarvestResult {
+  const existingTerms = db.getApprovedTerminology(sourceLanguage, targetLanguage);
+  const existingSourceMap = new Map<string, string>();
+  for (const t of existingTerms) {
+    existingSourceMap.set(t.sourceTerm.trim().toLowerCase(), t.targetTerm.trim().toLowerCase());
+  }
+
+  const candidateEntries: Omit<TerminologyEntry, "id" | "createdAt" | "updatedAt">[] = [];
+  const seenInBatch = new Set<string>();
+  let skipped = 0;
+
+  const pushCandidate = (
+    srcRaw: string,
+    tgtRaw: string,
+    category: string,
+    status: "approved" | "review" = "review",
+    confidence: number = 0.95
+  ) => {
+    const src = cleanTerm(srcRaw);
+    const tgt = cleanTerm(tgtRaw);
+    if (!src || !tgt || src === tgt) return;
+    if (sourceLanguage === "vi" && !VI_DIACRITICS_REGEX.test(src)) return;
+
+    const lowerSrc = src.toLowerCase();
+    if (seenInBatch.has(lowerSrc)) return;
+    if (existingSourceMap.has(lowerSrc)) {
+      skipped++;
+      return;
+    }
+
+    seenInBatch.add(lowerSrc);
+    candidateEntries.push({
+      sourceTerm: src,
+      targetTerm: tgt,
+      category,
+      sourceLanguage,
+      targetLanguage,
+      status,
+      priority: 1,
+      confidence,
+      context: `SOP: ${fileName}`,
+      definition: `Đề xuất thuật ngữ từ Smart Audit: ${fileName}`,
+      createdBy: "SmartAudit-Harvester",
+      sourceDocument: fileName,
+      version: "v1.0",
+    });
+  };
+
+  for (const unit of auditReport.units) {
+    const orig = (unit.sourceText || "").trim();
+    const trans = (unit.existingTranslation || unit.suggestedTranslation || "").trim();
+    if (!orig || !trans || orig === trans) continue;
+
+    // 1. Process Headings (*Ép nosew mặt trước -> Vamp nosew pressing)
+    if (orig.startsWith("*")) {
+      const cleanOrig = orig.replace(/^\*\s*/, "");
+      const cleanTrans = trans.replace(/^\*\s*/, "");
+      if (cleanOrig.includes(":") && cleanTrans.includes(":")) {
+        const [oHead] = cleanOrig.split(":").map((s) => s.trim());
+        const [tHead] = cleanTrans.split(":").map((s) => s.trim());
+        if (oHead && tHead && isSpecializedTerm(oHead) && isSpecializedTerm(tHead)) {
+          pushCandidate(oHead, tHead, "Quy trình (Process)", "review", 0.98);
+        }
+      } else if (isSpecializedTerm(cleanOrig) && isSpecializedTerm(cleanTrans)) {
+        pushCandidate(cleanOrig, cleanTrans, "Quy trình (Process)", "review", 0.98);
+      }
+    }
+
+    // 2. Inspection CTQ Criteria (Hình dạng mũi, Chất lượng in)
+    if (/^(hình\s*dạng|chất\s*lượng|độ\s*bám\s*dính|tiêu\s*chuẩn|độ\s*bo|độ\s*lệch|mũi|gót|vamp|mudguard|collar|tongue)\b/i.test(orig)) {
+      const oClause = orig.split(/[:\-\–\n]/)[0].trim();
+      const tClause = trans.split(/[:\-\–\n]/)[0].trim();
+      if (isSpecializedTerm(oClause) && isSpecializedTerm(tClause)) {
+        pushCandidate(oClause, tClause, "Tiêu chuẩn CTQ", "review", 0.96);
+      }
+    }
+
+    // 3. Defect Phrases (không lem, không tưa, tràn keo)
+    if (/\b(không\s+lem|không\s+tưa|không\s+hở|tràn\s+keo|trề\s+biên|hở\s+keo|nhăn\s+da|bỏ\s+mũi|đứt\s+chỉ)\b/i.test(orig)) {
+      const oClause = orig.split(/[:\-\–\n\.]/)[0].trim();
+      const tClause = trans.split(/[:\-\–\n\.]/)[0].trim();
+      if (isSpecializedTerm(oClause) && isSpecializedTerm(tClause)) {
+        pushCandidate(oClause, tClause, "Lỗi chất lượng (Defect)", "review", 0.95);
+      }
+    }
+  }
+
+  let added: TerminologyEntry[] = [];
+  if (candidateEntries.length > 0) {
+    added = db.addTerminology(candidateEntries);
+  }
+
+  return { added, skipped };
+}
