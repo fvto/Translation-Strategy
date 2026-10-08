@@ -12,7 +12,7 @@ import { pptxSessionStore, PptxSession } from "@/services/documents/pptx-session
 import { recordTranslationSession } from "@/services/translation/translation-memory";
 import { applyPptxAuditSuggestions } from "@/services/translation/pptx-smart-audit";
 import { harvestTerminologyFromSlides } from "@/services/translation/harvester";
-import { auditPptxGaps } from "@/services/translation/smart-detector";
+import { auditPptxGaps, runAiDeepAudit } from "@/services/translation/smart-detector";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -115,6 +115,45 @@ export async function POST(req: NextRequest) {
         fileName: file.name,
         action: "audit",
         auditReport,
+      });
+    }
+
+    if (action === "ai_deep_audit") {
+      let auditReport = null;
+      const reportJson = formData.get("auditReport");
+      if (reportJson) {
+        try {
+          auditReport = JSON.parse(String(reportJson));
+        } catch {}
+      }
+
+      // If auditReport wasn't provided, run base audit first
+      if (!auditReport && buffer && file) {
+        auditReport = await auditPptxGaps(buffer, file.name, {
+          sourceLang: sourceLanguage,
+          targetLang: targetLanguage,
+          mode,
+        });
+      }
+
+      if (!auditReport) {
+        return NextResponse.json({ error: "Thiếu dữ liệu auditReport hoặc file PowerPoint." }, { status: 400 });
+      }
+
+      const deepResult = await runAiDeepAudit(auditReport, {
+        sourceLang: sourceLanguage,
+        targetLang: targetLanguage,
+      });
+
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        action: "ai_deep_audit",
+        auditReport: deepResult.report,
+        pairedCount: deepResult.pairedCount,
+        immuneCount: deepResult.immuneCount,
+        verifiedCount: deepResult.verifiedCount,
+        error: deepResult.error,
       });
     }
 

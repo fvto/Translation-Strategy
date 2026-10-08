@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight } from "lucide-react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
 
 interface SmartAuditModalProps {
@@ -34,6 +34,11 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   const [busy, setBusy] = useState(false);
   const [harvesting, setHarvesting] = useState(false);
   const [harvestMsg, setHarvestMsg] = useState("");
+  const [aiAuditing, setAiAuditing] = useState(false);
+  const [aiReport, setAiReport] = useState<SmartAuditReport | null>(null);
+  const [aiAuditMsg, setAiAuditMsg] = useState("");
+
+  const report = aiReport || auditReport;
 
   // Slide selector states
   const [slideRangeInput, setSlideRangeInput] = useState("");
@@ -46,6 +51,9 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   const [editText, setEditText] = useState("");
 
   useEffect(() => {
+    setAiReport(null);
+    setAiAuditMsg("");
+    setAiAuditing(false);
     setSelected(new Set(auditReport?.units.filter((u) => u.selectedForTranslation).map((u) => u.id)));
     setIgnored(new Set());
     setCustomEdits({});
@@ -60,24 +68,24 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
     setTab("summary");
   }, [auditReport]);
 
-  const byId = useMemo(() => new Map(auditReport?.units.map((u) => [u.id, u])), [auditReport]);
+  const byId = useMemo(() => new Map(report?.units.map((u) => [u.id, u])), [report]);
 
   // Group all units by slide index
   const slideMap = useMemo(() => {
-    if (!auditReport) return new Map<number, ScannedTextUnit[]>();
+    if (!report) return new Map<number, ScannedTextUnit[]>();
     const map = new Map<number, ScannedTextUnit[]>();
-    for (const u of auditReport.units) {
+    for (const u of report.units) {
       const s = u.location.slideIndex ?? 0;
       if (!map.has(s)) map.set(s, []);
       map.get(s)!.push(u);
     }
     return map;
-  }, [auditReport]);
+  }, [report]);
 
   const slideList = useMemo(() => {
-    if (!auditReport) return [];
+    if (!report) return [];
     return Array.from(slideMap.keys()).sort((a, b) => a - b);
-  }, [slideMap, auditReport]);
+  }, [slideMap, report]);
 
   const toggleSlide = (slideNum: number) => {
     const units = slideMap.get(slideNum) || [];
@@ -95,7 +103,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   };
 
   const applySlideRange = (rangeStr: string) => {
-    if (!rangeStr.trim() || !auditReport) return;
+    if (!rangeStr.trim() || !report) return;
     const indices = new Set<number>();
     const normalized = rangeStr.replace(/\s*-\s*/g, "-");
     const parts = normalized.split(/[,;\s]+/).map((s) => s.trim()).filter(Boolean);
@@ -106,18 +114,18 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
         const end = parseInt(endStr, 10);
         if (!isNaN(start) && !isNaN(end)) {
           const min = Math.max(1, Math.min(start, end));
-          const max = Math.min(auditReport.totalSlides, Math.max(start, end));
+          const max = Math.min(report.totalSlides, Math.max(start, end));
           for (let i = min; i <= max; i++) indices.add(i);
         }
       } else {
         const num = parseInt(part, 10);
-        if (!isNaN(num) && num >= 1 && num <= auditReport.totalSlides) indices.add(num);
+        if (!isNaN(num) && num >= 1 && num <= report.totalSlides) indices.add(num);
       }
     }
     if (indices.size === 0) return;
     setSelected((prev) => {
       const next = new Set(prev);
-      for (const u of auditReport.units) {
+      for (const u of report.units) {
         if (!u.selectedForTranslation) continue;
         const s = u.location.slideIndex ?? 0;
         if (indices.has(s)) next.add(u.id);
@@ -128,8 +136,8 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   };
 
   const selectAllSlides = () => {
-    if (!auditReport) return;
-    setSelected(new Set(auditReport.units.filter((u) => u.selectedForTranslation).map((u) => u.id)));
+    if (!report) return;
+    setSelected(new Set(report.units.filter((u) => u.selectedForTranslation).map((u) => u.id)));
   };
 
   const deselectAllSlides = () => {
@@ -137,13 +145,13 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
   };
 
   const selectOnlyPending = () => {
-    if (!auditReport) return;
-    setSelected(new Set(auditReport.units.filter((u) => u.selectedForTranslation && u.status === "NEEDS_TRANSLATION").map((u) => u.id)));
+    if (!report) return;
+    setSelected(new Set(report.units.filter((u) => u.selectedForTranslation && u.status === "NEEDS_TRANSLATION").map((u) => u.id)));
   };
 
   const groups = useMemo(() => {
-    if (!auditReport) return [];
-    const base: TranslationAuditGroup[] = auditReport.groups || auditReport.units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => ({
+    if (!report) return [];
+    const base: TranslationAuditGroup[] = report.groups || report.units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => ({
       id: u.id, type: "translation", title: u.sourceText, unitIds: [u.id], reason: u.reason, confidence: u.confidence, safeToApply: false, suggestedTranslation: u.suggestedTranslation,
     }));
     return base.filter((g) => !ignored.has(g.id) && (filter !== "attention" || !g.safeToApply)).map((g) => ({ ...g, unitIds: g.unitIds.filter((id) => {
@@ -153,18 +161,18 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
         (filter === "attention" || filter === "all" || (filter === "reuse" && ["TM_REUSE", "LOCKED_TERMINOLOGY", "POSSIBLE_TRANSLATION"].includes(u.status)) || u.status === filter) &&
         (!query.trim() || (u.sourceText + " " + (effectiveTranslation || "")).toLocaleLowerCase().includes(query.toLocaleLowerCase()));
     }) })).filter((g) => g.unitIds.length);
-  }, [auditReport, byId, ignored, filter, slide, query, customEdits]);
+  }, [report, byId, ignored, filter, slide, query, customEdits]);
 
-  if (!isOpen || !auditReport) return null;
+  if (!isOpen || !report) return null;
 
   const loading = isLoading || busy;
-  const selectedMissing = auditReport.units.filter((u) => selected.has(u.id) && u.selectedForTranslation);
-  const safeIds = auditReport.units.filter((u) => u.safeToApply && u.canApply && !(auditReport.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
-  const attention = (auditReport.groups || []).filter((g) => !g.safeToApply && !ignored.has(g.id)).length || (auditReport.groups ? 0 : auditReport.needsTranslationCount);
+  const selectedMissing = report.units.filter((u) => selected.has(u.id) && u.selectedForTranslation);
+  const safeIds = report.units.filter((u) => u.safeToApply && u.canApply && !(report.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
+  const attention = (report.groups || []).filter((g) => !g.safeToApply && !ignored.has(g.id)).length || (report.groups ? 0 : report.needsTranslationCount);
 
   const toggle = (id: string) => setSelected((previous) => {
     const next = new Set(previous), unit = byId.get(id);
-    const ids = unit?.location.isIsq ? auditReport.units.filter(u => u.selectedForTranslation && u.location.partPath === unit.location.partPath).map(u => u.id) : [id];
+    const ids = unit?.location.isIsq ? report.units.filter(u => u.selectedForTranslation && u.location.partPath === unit.location.partPath).map(u => u.id) : [id];
     const remove = next.has(id);
     for (const target of ids) remove ? next.delete(target) : next.add(target);
     return next;
@@ -260,15 +268,49 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
     setSelected((previous) => new Set([...previous].filter((id) => !group.unitIds.includes(id) && !isqPaths.has(byId.get(id)?.location.partPath))));
   };
 
+  const handleAiDeepAudit = async () => {
+    if (!report) return;
+    setAiAuditing(true);
+    setAiAuditMsg("");
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("action", "ai_deep_audit");
+      formData.append("auditReport", JSON.stringify(report));
+      formData.append("sourceLanguage", "vi");
+      formData.append("targetLanguage", "en");
+
+      const res = await fetch("/api/documents/translate-pptx", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Không thể phân tích bằng AI Studio.");
+      }
+      if (data.auditReport) {
+        setAiReport(data.auditReport);
+        setSelected(new Set(data.auditReport.units.filter((u: any) => u.selectedForTranslation).map((u: any) => u.id)));
+        setAiAuditMsg(
+          `AI Studio đã phân tích xong: Tự động ghép ${data.pairedCount || 0} cặp song ngữ và bảo toàn ${data.immuneCount || 0} thuật ngữ!`
+        );
+      }
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : "Lỗi khi gọi AI Studio.");
+    } finally {
+      setAiAuditing(false);
+    }
+  };
+
   const handleHarvestPairs = async () => {
-    if (!auditReport) return;
+    if (!report) return;
     setHarvesting(true);
     setHarvestMsg("");
     try {
       const res = await fetch("/api/terminology/harvest-pairs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ auditReport, fileName: auditReport.fileName }),
+        body: JSON.stringify({ auditReport: report, fileName: report.fileName }),
       });
       const data = await res.json();
       if (data.success) {
@@ -294,18 +336,57 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
           <div>
             <h2 id="smart-audit-title" className="text-lg font-bold flex items-center gap-2">
               <Zap className="w-5 h-5 text-sky-500" /> Smart Audit
+              {report.aiAudited && (
+                <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-medium">
+                  <Sparkles className="w-3 h-3 text-emerald-500" />
+                  Đã xác thực bởi AI Studio
+                </span>
+              )}
               {customEditsCount > 0 && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700 font-medium">
                   {customEditsCount} câu tùy chỉnh
                 </span>
               )}
             </h2>
-            <p className="text-xs text-slate-500 mt-1">{auditReport.fileName} · {auditReport.totalSlides} slides · {auditReport.totalUnits} đoạn văn</p>
+            <p className="text-xs text-slate-500 mt-1">{report.fileName} · {report.totalSlides} slides · {report.totalUnits} đoạn văn</p>
           </div>
-          <button aria-label="Đóng Smart Audit" onClick={onClose} disabled={loading} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleAiDeepAudit}
+              disabled={aiAuditing || loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 via-indigo-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-white shadow-sm hover:shadow transition-all disabled:opacity-50 cursor-pointer"
+              title="Dùng Google AI Studio đọc ngữ cảnh các slide để tự động ghép cặp song ngữ và loại bỏ dịch trùng"
+            >
+              {aiAuditing ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>AI Studio đang đọc slide...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>AI Studio Deep Audit</span>
+                </>
+              )}
+            </button>
+            <button aria-label="Đóng Smart Audit" onClick={onClose} disabled={loading} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {aiAuditMsg && (
+          <div className="mx-6 mt-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{aiAuditMsg}</span>
+            </div>
+            <button onClick={() => setAiAuditMsg("")} className="text-emerald-500 hover:text-emerald-700 ml-2">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         <div className="flex gap-4 px-6 py-3 border-b border-slate-200 dark:border-slate-800 text-sm">
           <button onClick={() => setTab("summary")} aria-pressed={tab === "summary"} className={tab === "summary" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Tổng quan</button>
@@ -314,7 +395,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
           </button>
           <button onClick={() => setTab("review")} aria-pressed={tab === "review"} className={tab === "review" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Xem xét ({attention} nhóm)</button>
           <button onClick={() => setTab("pairs")} aria-pressed={tab === "pairs"} className={tab === "pairs" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1 flex items-center gap-1.5" : "text-slate-500 hover:text-slate-700 flex items-center gap-1.5"}>
-            <Layers className="w-3.5 h-3.5" /> Cặp slide ({auditReport.slidePairs?.length || 0})
+            <Layers className="w-3.5 h-3.5" /> Cặp slide ({report.slidePairs?.length || 0})
           </button>
         </div>
 
@@ -332,9 +413,9 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button type="button" className={button} onClick={selectAllSlides}>Chọn tất cả ({auditReport.units.filter((u) => u.selectedForTranslation).length})</button>
+                  <button type="button" className={button} onClick={selectAllSlides}>Chọn tất cả ({report.units.filter((u) => u.selectedForTranslation).length})</button>
                   <button type="button" className={button} onClick={deselectAllSlides}>Bỏ chọn tất cả</button>
-                  <button type="button" className={button + " text-sky-600 font-semibold"} onClick={selectOnlyPending}>Chỉ chọn slide thiếu ({auditReport.needsTranslationCount})</button>
+                  <button type="button" className={button + " text-sky-600 font-semibold"} onClick={selectOnlyPending}>Chỉ chọn slide thiếu ({report.needsTranslationCount})</button>
                 </div>
               </div>
 
@@ -580,13 +661,13 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
                     <Layers className="w-5 h-5 text-sky-600" /> Sơ đồ ghép cặp slide song ngữ
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Tự động nhận diện động {auditReport.slidePairs?.length || 0} cặp slide (1 trang EN bản dịch + 1 trang VI tham chiếu).
+                    Tự động nhận diện động {report.slidePairs?.length || 0} cặp slide (1 trang EN bản dịch + 1 trang VI tham chiếu).
                   </p>
                 </div>
                 <button
                   className={button + " bg-emerald-600 text-white hover:bg-emerald-500 flex items-center gap-1.5"}
                   onClick={handleHarvestPairs}
-                  disabled={harvesting || !(auditReport.slidePairs && auditReport.slidePairs.length > 0)}
+                  disabled={harvesting || !(report.slidePairs && report.slidePairs.length > 0)}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
                   {harvesting ? "Đang thu hoạch..." : "Thu hoạch thuật ngữ vào TM & Glossary"}
@@ -604,14 +685,14 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
                 </div>
               )}
 
-              {(!auditReport.slidePairs || auditReport.slidePairs.length === 0) ? (
+              {(!report.slidePairs || report.slidePairs.length === 0) ? (
                 <div className={card + " text-center py-8 text-slate-500"}>
                   <p>Không phát hiện chuỗi slide song ngữ xen kẽ trong tệp này.</p>
                   <p className="text-xs mt-1">Tệp này có thể là tệp dạng bảng IPQC đơn slide hoặc tệp chưa được ghép đôi.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
-                  {auditReport.slidePairs.map((pair, idx) => (
+                  {report.slidePairs.map((pair, idx) => (
                     <div key={idx} className={card + " border-slate-300 dark:border-slate-700 relative hover:border-sky-400 dark:hover:border-sky-500 transition-colors"}>
                       <div className="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2 pb-1.5 border-b border-slate-200 dark:border-slate-800">
                         <span className="text-sky-600 dark:text-sky-400">Cặp slide #{idx + 1}</span>
@@ -640,40 +721,40 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
           ) : tab === "summary" ? <>
             <p className="text-2xl font-bold">{attention} nhóm cần chú ý</p>
             <div className={card + " grid grid-cols-2 md:grid-cols-3 gap-5 text-sm"}>
-              <div><strong className="text-amber-600">{auditReport.untranslatedCount ?? auditReport.needsTranslationCount}</strong><p>Chưa dịch trong file</p></div>
-              <div><strong className="text-sky-600">{auditReport.tmReusableCount + auditReport.lockedTerminologyCount}</strong><p>Có bản dịch để dùng lại</p></div>
-              <div><strong className="text-rose-600">{auditReport.translationConflictCount || 0}</strong><p>Bản dịch khác nhau</p></div>
-              <div><strong>{auditReport.suspiciousTranslationCount || 0}</strong><p>Dấu / cách viết</p></div>
-              <div><strong>{auditReport.possibleTranslationCount + auditReport.reviewRequiredCount + auditReport.mixedLanguageCount}</strong><p>Cần kiểm tra ngữ cảnh</p></div>
+              <div><strong className="text-amber-600">{report.untranslatedCount ?? report.needsTranslationCount}</strong><p>Chưa dịch trong file</p></div>
+              <div><strong className="text-sky-600">{report.tmReusableCount + report.lockedTerminologyCount}</strong><p>Có bản dịch để dùng lại</p></div>
+              <div><strong className="text-rose-600">{report.translationConflictCount || 0}</strong><p>Bản dịch khác nhau</p></div>
+              <div><strong>{report.suspiciousTranslationCount || 0}</strong><p>Dấu / cách viết</p></div>
+              <div><strong>{report.possibleTranslationCount + report.reviewRequiredCount + report.mixedLanguageCount}</strong><p>Cần kiểm tra ngữ cảnh</p></div>
               <div><strong className="text-emerald-600">{safeIds.length}</strong><p>Gợi ý có thể áp dụng an toàn</p></div>
             </div>
 
-            {auditReport.slidePairs && auditReport.slidePairs.length > 0 && (
+            {report.slidePairs && report.slidePairs.length > 0 && (
               <div className={card + " flex items-center justify-between gap-3 text-sm border-sky-300 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/20"}>
                 <div className="flex items-center gap-3">
                   <Layers className="w-5 h-5 text-sky-600 shrink-0" />
                   <div>
-                    <p className="font-semibold text-sky-900 dark:text-sky-200">Đã nhận diện động {auditReport.slidePairs.length} cặp slide song ngữ (ISQ Option 1)</p>
+                    <p className="font-semibold text-sky-900 dark:text-sky-200">Đã nhận diện động {report.slidePairs.length} cặp slide song ngữ (ISQ Option 1)</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">Các slide tiếng Việt tham chiếu đã được tự động liên kết với slide tiếng Anh tương ứng và bảo vệ không dịch lại.</p>
                   </div>
                 </div>
-                <button className={button + " bg-sky-600 text-white hover:bg-sky-500"} onClick={() => setTab("pairs")}>Xem sơ đồ ({auditReport.slidePairs.length} cặp)</button>
+                <button className={button + " bg-sky-600 text-white hover:bg-sky-500"} onClick={() => setTab("pairs")}>Xem sơ đồ ({report.slidePairs.length} cặp)</button>
               </div>
             )}
 
-            <div className={card + " flex gap-3 text-sm"}><ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" /><p>{auditReport.alreadyTranslatedCount} đoạn đã dịch và {auditReport.nonTranslatableCount} mã/giá trị được giữ lại. Bạn có thể tùy chỉnh sửa trực tiếp câu dịch của bất kỳ nhóm hoặc slide nào trước khi dịch.</p></div>
+            <div className={card + " flex gap-3 text-sm"}><ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" /><p>{report.alreadyTranslatedCount} đoạn đã dịch và {report.nonTranslatableCount} mã/giá trị được giữ lại. Bạn có thể tùy chỉnh sửa trực tiếp câu dịch của bất kỳ nhóm hoặc slide nào trước khi dịch.</p></div>
             <p className="text-sm text-slate-500">Dịch và sửa trực tiếp phần chưa dịch, sau đó tự tải PPTX và quét lại. Các bản dịch đã tùy chỉnh thủ công sẽ được áp dụng trực tiếp mà không tốn quota AI.</p>
             <p className="text-sm text-slate-500">ISQ: chọn theo cả slide để xuất một slide EN và một slide VI liền sau. IPQC giữ bố cục song ngữ trong slide.</p>
-            {(auditReport.untranslatedCount ?? 0) > (auditReport.translatableMissingCount ?? 0) && <p className="text-sm text-amber-600">{(auditReport.untranslatedCount ?? 0) - (auditReport.translatableMissingCount ?? 0)} đoạn có định dạng hoặc cấu trúc đặc biệt cần chỉnh thủ công; xem chi tiết trong các nhóm.</p>}
+            {(report.untranslatedCount ?? 0) > (report.translatableMissingCount ?? 0) && <p className="text-sm text-amber-600">{(report.untranslatedCount ?? 0) - (report.translatableMissingCount ?? 0)} đoạn có định dạng hoặc cấu trúc đặc biệt cần chỉnh thủ công; xem chi tiết trong các nhóm.</p>}
             <div className="flex flex-wrap gap-3">
               <button type="button" className={button + " bg-sky-600 text-white hover:bg-sky-500 flex items-center gap-1.5 font-semibold"} onClick={() => setTab("slides")}>
                 <SlidersHorizontal className="w-3.5 h-3.5" /> Chọn slide &amp; chỗ cần dịch ({selectedMissing.length} đã chọn)
               </button>
               <button type="button" className={button} onClick={() => setTab("review")}>Xem &amp; Tùy chỉnh các nhóm</button>
               <button type="button" className={button} onClick={() => { setFilter("reuse"); setTab("review"); }}>Xem bản dịch có thể dùng lại</button>
-              {auditReport.slidePairs && auditReport.slidePairs.length > 0 && (
+              {report.slidePairs && report.slidePairs.length > 0 && (
                 <button type="button" className={button + " text-sky-600 flex items-center gap-1.5"} onClick={() => setTab("pairs")}>
-                  <Layers className="w-3.5 h-3.5" /> Sơ đồ cặp slide ({auditReport.slidePairs.length})
+                  <Layers className="w-3.5 h-3.5" /> Sơ đồ cặp slide ({report.slidePairs.length})
                 </button>
               )}
               {onApplySuggestions && <button type="button" className={button + " text-emerald-600"} disabled={loading || !safeIds.length} onClick={() => setPreview(safeIds)}>Xem trước {safeIds.length} sửa an toàn</button>}
@@ -688,7 +769,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, onTranslateMissi
               </select>
               <select aria-label="Lọc slide" className={button + " bg-transparent"} value={slide} onChange={(e) => setSlide(e.target.value)}>
                 <option value="all">Tất cả slide</option>
-                {auditReport.affectedSlides.map((s) => <option key={s} value={s}>Slide {s}</option>)}
+                {report.affectedSlides.map((s) => <option key={s} value={s}>Slide {s}</option>)}
               </select>
               {slide !== "all" && (
                 <>

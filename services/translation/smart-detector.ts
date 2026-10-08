@@ -112,6 +112,8 @@ export interface SmartAuditReport {
   safeFixCount?: number;
   suspiciousTranslationCount?: number;
   translationConflictCount?: number;
+  aiAudited?: boolean;
+  aiAuditedItemCount?: number;
 }
 
 /**
@@ -913,3 +915,5 @@ export async function auditXlsxGaps(
     units: scannedUnits,
   };
 }
+
+export { runAiDeepAudit } from "./ai-deep-audit";
