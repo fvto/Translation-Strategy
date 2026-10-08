@@ -44,3 +44,7 @@ scratch/
 *.tmp
 __pycache__/
 *.pyc
+data/translation_cache.json
+outputs/
+*.orig.pptx
+

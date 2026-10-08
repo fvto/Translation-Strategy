@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 export interface CacheStats {
   hits: number;
@@ -7,17 +9,7 @@ export interface CacheStats {
   hitRatio: number;
 }
 
-/**
- * Proactive Translation Cache & Deduplication Agent
- *
- * Provides high-speed in-memory & persistent exact hash caching for repetitive
- * manufacturing boilerplate, standard inspection steps, and recurring defect titles.
- * Eliminates 40-60% of redundant LLM network calls in long presentation decks.
- *
- * Fix #3: The underlying Map is stored on `globalThis` so it survives Next.js
- * hot-reloads in development. Without this, every hot-reload would reset the cache
- * and force re-calling Gemini for all previously translated items, wasting quota.
- */
+const CACHE_FILE_PATH = path.join(process.cwd(), "data", "translation_cache.json");
 
 const globalForCache = globalThis as unknown as {
   _translationCacheMap?: Map<string, string>;
@@ -29,6 +21,7 @@ export class TranslationCacheService {
   private cache: Map<string, string>;
   private _hits: number;
   private _misses: number;
+  private saveTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
     // Reuse the existing map if the module was hot-reloaded
@@ -36,10 +29,43 @@ export class TranslationCacheService {
       globalForCache._translationCacheMap = new Map<string, string>();
       globalForCache._translationCacheHits = 0;
       globalForCache._translationCacheMisses = 0;
+      this.loadFromDisk(globalForCache._translationCacheMap);
     }
     this.cache = globalForCache._translationCacheMap;
     this._hits = globalForCache._translationCacheHits ?? 0;
     this._misses = globalForCache._translationCacheMisses ?? 0;
+  }
+
+  private loadFromDisk(targetMap: Map<string, string>) {
+    try {
+      if (fs.existsSync(CACHE_FILE_PATH)) {
+        const raw = fs.readFileSync(CACHE_FILE_PATH, "utf-8");
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === "object" && parsed !== null) {
+          for (const [k, v] of Object.entries(parsed)) {
+            if (typeof v === "string") targetMap.set(k, v);
+          }
+        }
+      }
+    } catch (e) {
+      // non-fatal
+    }
+  }
+
+  private scheduleSaveToDisk() {
+    if (this.saveTimeout) return;
+    this.saveTimeout = setTimeout(() => {
+      this.saveTimeout = null;
+      try {
+        const dir = path.dirname(CACHE_FILE_PATH);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const obj: Record<string, string> = {};
+        for (const [k, v] of this.cache.entries()) obj[k] = v;
+        fs.writeFileSync(CACHE_FILE_PATH, JSON.stringify(obj, null, 2), "utf-8");
+      } catch (e) {
+        // non-fatal
+      }
+    }, 1500);
   }
 
   private get hits(): number { return globalForCache._translationCacheHits ?? 0; }
@@ -68,6 +94,7 @@ export class TranslationCacheService {
     if (!sourceText.trim() || !translatedText.trim()) return;
     const key = this.generateKey(sourceText, sourceLang, targetLang);
     this.cache.set(key, translatedText.trim());
+    this.scheduleSaveToDisk();
   }
 
   /**
@@ -152,9 +179,18 @@ export class TranslationCacheService {
   }
 
   clear(): void {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
     this.cache.clear();
     this.hits = 0;
     this.misses = 0;
+    try {
+      if (fs.existsSync(CACHE_FILE_PATH)) fs.unlinkSync(CACHE_FILE_PATH);
+    } catch (e) {
+      // non-fatal
+    }
   }
 }
 
