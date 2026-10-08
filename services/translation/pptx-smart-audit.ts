@@ -29,7 +29,9 @@ interface ScanOptions {
 function sourceEvidence(text: string, sourceLang: string): boolean {
   if (isNonTranslatable(text)) return false;
   const language = languageEvidence(text);
-  return sourceLang === "vi" ? hasViDiacritics(text) || language.vi.length > 0 : !hasViDiacritics(text) && !language.vi.length && language.likelyEnglish;
+  return sourceLang === "vi"
+    ? hasViDiacritics(text) || language.vi.length > 0
+    : !hasViDiacritics(text) && !language.vi.length && (language.likelyEnglish || isPureEnglish(text));
 }
 
 function targetEvidence(text: string, targetLang: string): boolean {

@@ -912,6 +912,62 @@ test("Test 14: English Immunity Shield protects pure English, inspection labels,
   assert.ok(slide1After.includes("PEGASUS 41"), "PEGASUS 41 preserved in output");
 });
 
+test("Test 15: Smart Audit correctly pairs in-slide bilingual defects ('Wrong material' / 'Sai liệu', 'Inconsistent pair matching label' / 'Tem số...') as ALREADY_TRANSLATED", async () => {
+  const { scanPptxTranslationIntelligence } = await import("../services/translation/pptx-smart-audit.js");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+  <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
+</Types>`);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldIdLst><p:sldId id="256" r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody><a:bodyPr/>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Inconsistent pair matching label</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Tem số phối đôi không đồng bộ.</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Wrong material</a:t></a:r></a:p>
+      <a:p><a:r><a:rPr sz="1200"/><a:t>Sai liệu</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+
+  const report = await scanPptxTranslationIntelligence(buffer, "test.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "ipqc_bilingual"
+  });
+
+  const wrongMat = report.units.find((u) => u.sourceText === "Wrong material");
+  const saiLieu = report.units.find((u) => u.sourceText === "Sai liệu");
+  const labelEn = report.units.find((u) => u.sourceText === "Inconsistent pair matching label");
+  const temSoVi = report.units.find((u) => u.sourceText === "Tem số phối đôi không đồng bộ.");
+
+  assert.ok(wrongMat && saiLieu && labelEn && temSoVi, "All 4 units found");
+
+  // Both English lines are ALREADY_TRANSLATED and unselected
+  assert.equal(wrongMat.status, "ALREADY_TRANSLATED");
+  assert.equal(wrongMat.selectedForTranslation, false);
+  assert.equal(labelEn.status, "ALREADY_TRANSLATED");
+  assert.equal(labelEn.selectedForTranslation, false);
+
+  // Both Vietnamese lines are recognized as paired with their English counterparts, so they are ALREADY_TRANSLATED and unchecked!
+  assert.equal(saiLieu.status, "ALREADY_TRANSLATED", "Sai liệu must be ALREADY_TRANSLATED");
+  assert.equal(saiLieu.selectedForTranslation, false, "Sai liệu must be unchecked");
+  assert.equal(saiLieu.existingTranslation, "Wrong material", "Sai liệu paired with Wrong material");
+
+  assert.equal(temSoVi.status, "ALREADY_TRANSLATED", "Tem so must be ALREADY_TRANSLATED");
+  assert.equal(temSoVi.selectedForTranslation, false, "Tem so must be unchecked");
+  assert.equal(temSoVi.existingTranslation, "Inconsistent pair matching label", "Tem so paired with Inconsistent pair matching label");
+});
+
 
 
 
