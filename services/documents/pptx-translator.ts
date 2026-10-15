@@ -916,14 +916,7 @@ export class PptxTranslatorService {
       const selected = auditReport.units.filter((u) =>
         allowedIds ? allowedIds.has(u.id) && u.selectedForTranslation : u.selectedForTranslation
       );
-      const missingIdSet = new Set(selected.map((u) => u.id));
-      if(sourceLanguage === "vi" && targetLanguage === "en" && mode !== "replace_en") {
-        for(const slide of slides.filter(s=>s.paragraphs.some(p=>missingIdSet.has(p.id)))) {
-          if(!this.isSlideIsq(slide,options.fileName))continue;
-          const omitted=auditReport.units.filter(u=>u.location.partPath===slide.slideFileName && u.requiresTranslation && !missingIdSet.has(u.id));
-          if(omitted.length)throw new Error(`ISQ cần dịch đủ cả slide. Hãy chọn thêm ${omitted.length} đoạn trên slide ${slide.slideIndex}.`);
-        }
-      }
+
       // Exact IDs preserve the scope shown in the review. Never fan out by canonical text.
       for (const u of selected) modifiedParagraphIds.add(u.id);
       for (const u of selected.filter((u) => u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined)) translationMap.delete(u.id);
@@ -1644,12 +1637,7 @@ export class PptxTranslatorService {
           }
         }
       }
-      // An ISQ EN slide must be complete. Do not emit a partly repaired EN copy
-      // if the review selected only some of its still-Vietnamese paragraphs.
-      if(options?.translateMissingOnly) for(const path of isqSlidePaths){
-        const omitted=auditReport?.units.filter(u=>u.location.partPath===path && u.requiresTranslation && !modifiedParagraphIds.has(u.id)) || [];
-        if(omitted.length)throw new Error(`ISQ cần dịch đủ cả slide. Hãy chọn thêm ${omitted.length} đoạn trên slide ${omitted[0].location.slideIndex}.`);
-      }
+
     }
 
     // 3. Apply translations to slide objects and inject into OpenXML
@@ -1770,11 +1758,7 @@ export class PptxTranslatorService {
       message: "Đang nén file PowerPoint (.pptx)...",
     });
 
-    // 4. Generate translated PPTX buffer
-    if(options?.translateMissingOnly && targetLanguage === "en") for(const path of isqSlidePaths){
-      const englishXml=await zip.file(path)?.async('string') || '';
-      if(hasViDiacritics(paragraphText(englishXml)))throw new Error(`Slide EN của ISQ vẫn còn tiếng Việt (${path}). Không xuất bản dịch thiếu; hãy thử dịch lại.`);
-    }
+
     // Note: All images in ppt/media/* remain 100% untouched and intact in the ZIP
     const rawBuffer = await zip.generateAsync({
       type: "nodebuffer",
