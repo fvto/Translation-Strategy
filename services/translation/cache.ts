@@ -79,10 +79,19 @@ export class TranslationCacheService {
     return hash;
   }
 
+  private hasViDiacritics(str: string): boolean {
+    return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i.test(str);
+  }
+
   get(sourceText: string, sourceLang: string, targetLang: string): string | undefined {
     const key = this.generateKey(sourceText, sourceLang, targetLang);
     const result = this.cache.get(key);
     if (result !== undefined) {
+      if (sourceLang === "vi" && targetLang === "en" && (this.hasViDiacritics(result) || (this.hasViDiacritics(sourceText) && sourceText.trim().toLowerCase() === result.trim().toLowerCase()))) {
+        this.cache.delete(key);
+        this.misses++;
+        return undefined;
+      }
       this.hits++;
       return result;
     }
@@ -92,6 +101,9 @@ export class TranslationCacheService {
 
   set(sourceText: string, translatedText: string, sourceLang: string, targetLang: string): void {
     if (!sourceText.trim() || !translatedText.trim()) return;
+    if (sourceLang === "vi" && targetLang === "en" && (this.hasViDiacritics(translatedText) || (this.hasViDiacritics(sourceText) && sourceText.trim().toLowerCase() === translatedText.trim().toLowerCase()))) {
+      return;
+    }
     const key = this.generateKey(sourceText, sourceLang, targetLang);
     this.cache.set(key, translatedText.trim());
     this.scheduleSaveToDisk();
@@ -106,7 +118,8 @@ export class TranslationCacheService {
     items: T[],
     sourceLang: string,
     targetLang: string,
-    bypassCacheTexts?: Set<string>
+    bypassCacheTexts?: Set<string>,
+    bypassAllCache = false
   ): {
     uniqueToTranslate: T[];
     resolveAll: (freshTranslations: Map<string, string>) => Map<string, string>;
@@ -128,7 +141,7 @@ export class TranslationCacheService {
       textToAllIds.get(normText)!.push(item.id);
 
       // Check if already in persistent memory cache
-      const cached = bypassCacheTexts?.has(normText) ? undefined : this.get(normText, sourceLang, targetLang);
+      const cached = (bypassAllCache || bypassCacheTexts?.has(normText)) ? undefined : this.get(normText, sourceLang, targetLang);
       if (cached) {
         resolvedTranslations.set(item.id, cached);
         cachedHits++;

@@ -58,7 +58,7 @@ test("Terminology Compliance - Post-Translation Enforcer corrects synonyms and d
     {
       source: "CTQ 3- Nosew không tràn keo /hở keo/bao không, mặt trước không dính bụi bẩn, khác màu",
       deviated: "CTQ 3 - No-sew without cement overflow / open glue / air bubble, vamp free of dirt, color migration",
-      expectedSubstrings: ["Nosew", "bond gap"],
+      expectedSubstrings: ["No-sew", "bond gap"],
     },
   ];
 

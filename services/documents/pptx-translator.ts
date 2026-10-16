@@ -671,6 +671,13 @@ export class PptxTranslatorService {
           const t1 = p1.originalText.trim(), t2 = p2.originalText.trim();
           if (isInspectionStatusLabel(t1) || isInspectionStatusLabel(t2)) continue;
           if (isNonTranslatable(t1) || isNonTranslatable(t2)) continue;
+          if (isShoeModelName(t1) || isShoeModelName(t2)) continue;
+
+          // Never pair a technical process heading (*Heading, •Bullet, #Title) with a non-heading instruction
+          const isHeading1 = /^[*•#]/.test(t1);
+          const isHeading2 = /^[*•#]/.test(t2);
+          if (isHeading1 !== isHeading2) continue;
+
           const hasVi1 = hasViDiacritics(t1), hasVi2 = hasViDiacritics(t2);
           const hasEn1 = !hasVi1 && /[a-zA-Z]{2,}/.test(t1);
           const hasEn2 = !hasVi2 && /[a-zA-Z]{2,}/.test(t2);
@@ -678,6 +685,7 @@ export class PptxTranslatorService {
           const sameStep = Boolean(step1 && step2 && step1 === step2);
           const diffStep = Boolean(step1 && step2 && step1 !== step2);
           if (diffStep) continue;
+          if (Boolean(step1) !== Boolean(step2)) continue;
 
           const lenRatio = Math.min(t1.length, t2.length) / Math.max(t1.length, t2.length);
           const plausibleLength = lenRatio >= 0.35 || (sameStep && lenRatio >= 0.25);
@@ -913,9 +921,28 @@ export class PptxTranslatorService {
       });
 
       const allowedIds = options.selectedUnitIds ? new Set(options.selectedUnitIds) : null;
+      if (allowedIds) {
+        const isqUnits = auditReport.units.filter((u) => u.location.isIsq && u.selectedForTranslation);
+        if (isqUnits.length > 0) {
+          const isqBySlide = new Map<number, typeof isqUnits>();
+          for (const u of isqUnits) {
+            const sIdx = u.location.slideIndex ?? 0;
+            if (!isqBySlide.has(sIdx)) isqBySlide.set(sIdx, []);
+            isqBySlide.get(sIdx)!.push(u);
+          }
+          for (const [slideIdx, slideIsqUnits] of isqBySlide) {
+            const selectedCount = slideIsqUnits.filter((u) => allowedIds.has(u.id)).length;
+            if (selectedCount > 0 && selectedCount < slideIsqUnits.length) {
+              throw new Error(`ISQ cần dịch đủ cả slide (slide ${slideIdx}) để đảm bảo nhân bản slide song ngữ hoàn chỉnh.`);
+            }
+          }
+        }
+      }
+
       const selected = auditReport.units.filter((u) =>
         allowedIds ? allowedIds.has(u.id) && u.selectedForTranslation : u.selectedForTranslation
       );
+      const missingIdSet = new Set(selected.map((u) => u.id));
 
       // Exact IDs preserve the scope shown in the review. Never fan out by canonical text.
       for (const u of selected) modifiedParagraphIds.add(u.id);
@@ -934,11 +961,13 @@ export class PptxTranslatorService {
     }
 
     // 2. Pre-flight Deduplication & Cache Resolution across presentation
+    const bypassAllCache = Boolean(options?.provider);
     const { uniqueToTranslate, resolveAll, stats: dedupStats } = translationCache.deduplicateItems(
       allItemsToTranslate,
       sourceLanguage,
       targetLanguage,
-      options?.translateMissingOnly ? new Set(auditReport?.units.filter((u) => modifiedParagraphIds.has(u.id) && (u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined)).map((u) => u.sourceText.trim())) : undefined
+      options?.translateMissingOnly ? new Set(auditReport?.units.filter((u) => modifiedParagraphIds.has(u.id) && (u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined)).map((u) => u.sourceText.trim())) : undefined,
+      bypassAllCache
     );
 
     // Populate pre-cached translations into translationMap
@@ -960,8 +989,9 @@ export class PptxTranslatorService {
 
     // 2. Batch translate across the entire presentation. Flash Lite is more
     // reliable with bounded JSON outputs than with one very large request.
-    if (typeof provider.translateBatch === "function" && itemsPendingTranslation.length > 0) {
-      let activeProvider: TranslationProvider = provider;
+    if (typeof provider.translateBatch === "function") {
+      if (itemsPendingTranslation.length > 0) {
+        let activeProvider: TranslationProvider = provider;
       // Strategy 3: Group into 25-item chunks for ultra-stable JSON generation without truncations
       const baseChunkSize = activeProvider.name === "airgapped" ? 50 : 25;
       const lateChunkSize = activeProvider.name === "airgapped" ? 50 : 15;
@@ -1445,35 +1475,41 @@ export class PptxTranslatorService {
           console.log(GeminiObservability.getInstance().formatReport());
         }
       }
-    } else if (allItemsToTranslate.length > 0) {
+    }
+  } else {
       // Fallback for providers without translateBatch (e.g. airgapped or google_translate)
-      const batchSize = 6;
-      for (let b = 0; b < allItemsToTranslate.length; b += batchSize) {
-        const chunk = allItemsToTranslate.slice(b, b + batchSize);
-        const progressPercent = 25 + Math.round((b / allItemsToTranslate.length) * 60);
-        options?.onProgress?.({
-          stage: "translating",
-          progress: progressPercent,
-          translatedItems: b,
-          totalItems: allItemsToTranslate.length,
-          message: `Đang dịch đoạn ${b + 1} - ${Math.min(b + batchSize, allItemsToTranslate.length)}/${allItemsToTranslate.length}...`,
-        });
+      const itemsToSingleTranslate = allItemsToTranslate.filter((it) => !translationMap.has(it.id));
+      if (itemsToSingleTranslate.length > 0) {
+        const batchSize = 6;
+        for (let b = 0; b < itemsToSingleTranslate.length; b += batchSize) {
+          const chunk = itemsToSingleTranslate.slice(b, b + batchSize);
+          const progressPercent = 25 + Math.round((b / itemsToSingleTranslate.length) * 60);
+          options?.onProgress?.({
+            stage: "translating",
+            progress: progressPercent,
+            translatedItems: b,
+            totalItems: itemsToSingleTranslate.length,
+            message: `Đang dịch đoạn ${b + 1} - ${Math.min(b + batchSize, itemsToSingleTranslate.length)}/${itemsToSingleTranslate.length}...`,
+          });
 
-        await Promise.all(
-          chunk.map(async (item) => {
-            try {
-              const res = await provider.translate({
-                sourceText: item.sourceText,
-                sourceLanguage,
-                targetLanguage,
-                approvedTerminology: approvedGlossary,
-              });
-              translationMap.set(item.id, normalizeSpiTerminology(res.translatedText));
-            } catch (e) {
-              translationMap.set(item.id, item.sourceText);
-            }
-          })
-        );
+          await Promise.all(
+            chunk.map(async (item) => {
+              try {
+                const res = await provider.translate({
+                  sourceText: item.sourceText,
+                  sourceLanguage,
+                  targetLanguage,
+                  approvedTerminology: approvedGlossary,
+                });
+                translationMap.set(item.id, normalizeSpiTerminology(res.translatedText));
+              } catch (e) {
+                if (!translationMap.has(item.id)) {
+                  translationMap.set(item.id, item.sourceText);
+                }
+              }
+            })
+          );
+        }
       }
     }
 
@@ -1487,7 +1523,6 @@ export class PptxTranslatorService {
         const t = translationMap.get(it.id);
         return needsTranslationRecovery(it.sourceText, t, sourceLanguage, targetLanguage);
       });
-
       if (stillUntranslatedItems.length > 0) {
         console.warn(
           `[EmergencyNMT] ${stillUntranslatedItems.length} item(s) still untranslated after all passes. ` +
@@ -2748,12 +2783,29 @@ export class PptxTranslatorService {
           const t2 = coreActiveItems[i + 1].pData?.originalText.trim() || "";
           if (!t1 || !t2) continue;
 
+          if (isInspectionStatusLabel(t1) || isInspectionStatusLabel(t2)) continue;
+          if (isNonTranslatable(t1) || isNonTranslatable(t2)) continue;
+          if (isShoeModelName(t1) || isShoeModelName(t2)) continue;
+
+          // Never pair a technical process heading (*Heading, •Bullet, #Title) with a non-heading instruction
+          const isHeading1 = /^[*•#]/.test(t1);
+          const isHeading2 = /^[*•#]/.test(t2);
+          if (isHeading1 !== isHeading2) continue;
+
           const step1 = extractItemStepNumber(t1);
           const step2 = extractItemStepNumber(t2);
+          const diffStep = Boolean(step1 && step2 && step1 !== step2);
+          if (diffStep) continue;
+          if (Boolean(step1) !== Boolean(step2)) continue;
+
           const hasVi1 = hasViDiacritics(t1);
           const hasVi2 = hasViDiacritics(t2);
           const hasEn1 = !hasVi1 && /[a-zA-Z]{2,}/.test(t1);
           const hasEn2 = !hasVi2 && /[a-zA-Z]{2,}/.test(t2);
+
+          const lenRatio = Math.min(t1.length, t2.length) / Math.max(t1.length, t2.length);
+          const plausibleLength = lenRatio >= 0.35 || (step1 && step2 && step1 === step2 && lenRatio >= 0.25);
+          if (!plausibleLength) continue;
 
           if (step1 && step2 && step1 === step2) {
             if (hasEn1 && hasVi2) {

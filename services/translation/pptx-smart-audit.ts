@@ -111,19 +111,22 @@ function buildGroups(units: ScannedTextUnit[], pairs: AuditMemoryPair[], preserv
     const variants = new Map<string, { text: string; count: number; approved: boolean; slides: number[] }>();
     for (const pair of entries) {
       if (!pair.target || !pair.target.trim()) continue;
+      // Only presentation translations and approved glossary entries participate in consistency variant grouping.
+      // Historical memory (history / correction) must never create consistency conflicts against existing deck translations.
+      if (pair.origin !== "presentation" && pair.origin !== "approved") continue;
       const trimmedTarget = pair.target.trim();
       // Bare numbers, non-translatables, and single-char targets must NEVER be treated as valid translation variants
       if (/^\d+(?:[.,]\d+)?$/.test(trimmedTarget) || isNonTranslatable(trimmedTarget) || trimmedTarget.length <= 1) continue;
       const targetKey = auditTextForms(pair.target).normalized;
-      if (!variants.has(targetKey)) variants.set(targetKey, { text: pair.target, count: 0, approved: pair.origin === "approved" || pair.origin === "correction", slides: [] });
+      if (!variants.has(targetKey)) variants.set(targetKey, { text: pair.target, count: 0, approved: pair.origin === "approved", slides: [] });
       const variant = variants.get(targetKey)!;
-      variant.approved ||= pair.origin === "approved" || pair.origin === "correction";
+      variant.approved ||= pair.origin === "approved";
       if (pair.origin === "presentation") { variant.count++; if (pair.slideIndex && !variant.slides.includes(pair.slideIndex)) variant.slides.push(pair.slideIndex); }
     }
     if (variants.size < 2) continue;
     const sorted = [...variants.values()].sort((a, b) => Number(b.approved) - Number(a.approved) || b.count - a.count);
     const ids = new Set(present.map((p) => p.targetUnitId!));
-    const affected = [...ids].map((id) => byId.get(id)).filter((u): u is ScannedTextUnit => Boolean(u) && !preservedIds.has(u!.id) && auditTextForms(u!.sourceText).normalized !== auditTextForms(sorted[0].text).normalized);
+    const affected = [...ids].map((id) => byId.get(id)).filter((u): u is ScannedTextUnit => Boolean(u) && auditTextForms(u!.sourceText).normalized !== auditTextForms(sorted[0].text).normalized);
     if (!affected.length) continue;
     for (const unit of affected) {
       unit.status = "TRANSLATION_CONFLICT"; unit.selectedForTranslation = false;
@@ -483,8 +486,9 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
   };
 
   for (const [, slideUnits] of slideUnitsMap) {
-    const unpairedVi = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
-    const unpairedEn = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)));
+    const isEnSlideUnit = (u: RawUnit) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !isNonTranslatable(u.text) && !hasViDiacritics(u.text) && languageEvidence(u.text).vi.length === 0 && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish);
+    const unpairedVi = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !isNonTranslatable(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
+    const unpairedEn = slideUnits.filter(isEnSlideUnit);
 
     // A. Match by step number on the same slide (e.g. 1.EN with 1.VI, 2.EN with 2.VI...)
     for (const viUnit of unpairedVi) {
@@ -549,7 +553,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     // B. Match technical process/inspection headings on the same slide
     // (e.g. 'IPQC Stitching Inspection Focuses: Swoosh stitching' with 'Trọng điểm kiểm tra may logo')
     const remViHeadings = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0) && isHeadingLike(u.text));
-    const remEnHeadings = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)) && isHeadingLike(u.text));
+    const remEnHeadings = slideUnits.filter((u) => isEnSlideUnit(u) && isHeadingLike(u.text));
     if (remViHeadings.length === 1 && remEnHeadings.length === 1) {
       addPair(remViHeadings[0], remEnHeadings[0]);
     } else if (remViHeadings.length > 0 && remViHeadings.length === remEnHeadings.length) {
@@ -560,17 +564,16 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
 
     // C. Match trailing notes / unnumbered items following step blocks on the same slide
     // (e.g. 'Due to the design...' with 'Do thiết kế phần eo...')
-    const remViNotes = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
-    const remEnNotes = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && !hasViDiacritics(u.text) && (isPureEnglish(u.text) || languageEvidence(u.text).likelyEnglish || /[a-zA-Z]{2,}/.test(u.text)));
-    if (remViNotes.length === 1 && remEnNotes.length === 1) {
-      const vLen = remViNotes[0].text.trim().length, eLen = remEnNotes[0].text.trim().length;
-      const ratio = Math.min(vLen, eLen) / Math.max(vLen, eLen);
-      if (ratio >= 0.25 || (vLen >= 15 && eLen >= 15)) {
-        addPair(remViNotes[0], remEnNotes[0]);
-      }
-    } else if (remViNotes.length > 1 && remViNotes.length === remEnNotes.length) {
-      for (let nIdx = 0; nIdx < remViNotes.length; nIdx++) {
-        addPair(remViNotes[nIdx], remEnNotes[nIdx]);
+    const hasAnchoredSteps = slideUnits.some((u) => paired.has(u.id) && extractItemStepNumber(u.text));
+    if (hasAnchoredSteps) {
+      const remViNotes = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
+      const remEnNotes = slideUnits.filter(isEnSlideUnit);
+      if (remViNotes.length === 1 && remEnNotes.length === 1) {
+        const vLen = remViNotes[0].text.trim().length, eLen = remEnNotes[0].text.trim().length;
+        const ratio = Math.min(vLen, eLen) / Math.max(vLen, eLen);
+        if (ratio >= 0.25 || (vLen >= 15 && eLen >= 15)) {
+          addPair(remViNotes[0], remEnNotes[0]);
+        }
       }
     }
   }
@@ -634,18 +637,28 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     const unit: ScannedTextUnit = { id: raw.id, sourceText: raw.text, sourceHash: computeSourceHash(raw.text), canonicalText: canonicalizeText(raw.text),
       location: raw.location, ...base, selectedForTranslation: false, safeToApply: false, canApply: false };
 
-    // Early guard: English Immunity Shield (inspection labels, pure English, shoe models, technical standards)
-    if (isEnglishImmunityProtected(raw.text, sourceLang)) {
+    // Early guard: Inspection labels and Non-translatable tokens (numbers, acronyms, shoe models)
+    if (isInspectionStatusLabel(raw.text) || isNonTranslatable(raw.text)) {
       preservedIds.add(unit.id);
-      const isLabel = isInspectionStatusLabel(raw.text);
-      unit.status = isLabel ? "NON_TRANSLATABLE" : "ALREADY_TRANSLATED";
-      unit.reason = isLabel
+      unit.status = "NON_TRANSLATABLE";
+      unit.reason = isInspectionStatusLabel(raw.text)
         ? "Ký hiệu nhãn đánh giá đạt chuẩn (GOOD / NO GOOD / OK / NG); giữ nguyên."
         : isShoeModelName(raw.text)
         ? "Tên model giày, thương hiệu hoặc mã mẫu kỹ thuật; giữ nguyên."
-        : isPureEnglish(raw.text)
-        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên, không cần dịch lại."
         : "Thuật ngữ kỹ thuật / mã chuẩn / số liệu; giữ nguyên.";
+      unit.requiresTranslation = false;
+      unit.selectedForTranslation = false;
+      if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
+      delete unit.suggestedTranslation;
+      return unit;
+    }
+
+    if (isEnglishImmunityProtected(raw.text, sourceLang)) {
+      preservedIds.add(unit.id);
+      unit.status = "ALREADY_TRANSLATED";
+      unit.reason = isPureEnglish(raw.text)
+        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên, không cần dịch lại."
+        : "Nội dung đã ở ngôn ngữ đích; giữ nguyên.";
       unit.requiresTranslation = false;
       unit.selectedForTranslation = false;
       if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
@@ -692,11 +705,6 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     if (sourceLang === "vi" && targetLang === "en" && !sourceEvidence(raw.text,"vi")) {
       preservedIds.add(unit.id); unit.status="ALREADY_TRANSLATED";
       unit.reason=isPureEnglish(raw.text) || language.likelyEnglish ? "Nội dung đã là tiếng Anh; giữ nguyên, không dịch hoặc chỉnh lại." : "Không có bằng chứng tiếng Việt; giữ nguyên, không gợi ý chỉnh sửa.";
-      unit.requiresTranslation=false; delete unit.suggestedTranslation; return unit;
-    }
-    if (sourceLang === "en" && targetLang === "vi" && hasViDiacritics(raw.text)) {
-      preservedIds.add(unit.id); unit.status="ALREADY_TRANSLATED";
-      unit.reason="Nội dung đã ở tiếng Việt; giữ nguyên, không gợi ý chỉnh sửa.";
       unit.requiresTranslation=false; delete unit.suggestedTranslation; return unit;
     }
     if ((inlineBilingual.has(raw.id) || isBilingualText(raw.text)) && !isqSource) {
@@ -830,7 +838,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
     unit.selectedForTranslation = unit.requiresTranslation && !raw.readOnly && canTranslateParagraphText(raw.xml);
     if (isqSource) {unit.reason += " ISQ: xuất slide EN riêng, slide VI ở ngay sau.";unit.canApply=false;}
     if (unit.requiresTranslation && !unit.selectedForTranslation) unit.reason += raw.readOnly ? " Ghi chú/SmartArt cần chỉnh thủ công." : " Cần chỉnh thủ công để giữ định dạng hoặc ngắt dòng.";
-    if (unit.suggestedTranslation && unit.suggestedTranslation.trim().toLowerCase() === raw.text.trim().toLowerCase()) {
+    if (unit.status !== "SUSPICIOUS_TRANSLATION" && unit.suggestedTranslation && unit.suggestedTranslation.trim().toLowerCase() === raw.text.trim().toLowerCase()) {
       delete unit.suggestedTranslation;
     }
     return unit;

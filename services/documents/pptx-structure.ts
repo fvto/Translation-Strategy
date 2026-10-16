@@ -190,6 +190,8 @@ export class DynamicDeckDetector {
     for (let i = 0; i < profiles.length - 1; i++) {
       const curr = profiles[i];
       const next = profiles[i + 1];
+      if (curr.isDivider || next.isDivider || curr.hasTable || next.hasTable) continue;
+      if (!curr.isIsq || !next.isIsq) continue;
       const currIsEn = curr.viRatio <= 0.05 && curr.enRatio >= 0.25;
       const nextIsVi = next.viRatio >= 0.15;
       const currIsVi = curr.viRatio >= 0.15;
@@ -255,7 +257,22 @@ export class DynamicDeckDetector {
         continue;
       }
 
-      if (hasParallelSections || hasInterleavedPairs) {
+      if (hasParallelSections) {
+        if (p.isDivider) {
+          targetSlideModes.set(p.slideIndex, "keep_original");
+        } else if (p.isIsq) {
+          if (p.viRatio >= 0.35) {
+            // Pre-existing Vietnamese reference slide kept as-is
+            targetSlideModes.set(p.slideIndex, "keep_original");
+          } else {
+            // Target English ISQ slide must be translated in-place
+            targetSlideModes.set(p.slideIndex, "replace_en");
+          }
+        } else {
+          // Non-ISQ (e.g. IPQC tables) kept in requested mode (e.g. ipqc_bilingual)
+          targetSlideModes.set(p.slideIndex, requestedMode);
+        }
+      } else if (hasInterleavedPairs) {
         if (p.isDivider) {
           targetSlideModes.set(p.slideIndex, "keep_original");
         } else if (p.viRatio >= 0.2) {

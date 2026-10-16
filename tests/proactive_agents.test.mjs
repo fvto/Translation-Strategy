@@ -193,6 +193,7 @@ test('Proactive Agent 1b: PPTX Post-Flight Gate - Auto-repairs Typos & Removes R
 
 test('Proactive Agent 3: Translation Cache Optimizer - Eliminates Redundant Tokens & Broadcasts', () => {
   const cache = new TranslationCacheService();
+  cache.clear();
 
   const deckItems = [
     { id: 's1_p1', sourceText: 'GOOD' },

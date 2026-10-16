@@ -13,6 +13,7 @@ import { normalizeSpiTerminology, cleanTargetTerm } from "./casing";
 import { scanPptxTranslationIntelligence } from "./pptx-smart-audit";
 import { runAiDeepAudit } from "./ai-deep-audit";
 import { saveAuditTrace } from "./audit-trace";
+import { languageEvidence } from "./audit-intelligence";
 
 export type TextUnitStatus =
   | "ALREADY_TRANSLATED"
@@ -133,9 +134,10 @@ export function hasViDiacritics(str: string): boolean {
 export function isPureEnglish(str: string): boolean {
   if (!str || !str.trim()) return false;
   if (hasViDiacritics(str)) return false;
+  if (languageEvidence(str).vi.length > 0) return false;
   // If string contains known Vietnamese footwear keywords without diacritics, it is NOT pure English
   if (
-    /\b(may|dan|mai|keo|got|de|mui|lot|nhan|chay|rap|phom|khuon|bien|chi|lon|dap|cuon|xo|cot|day|ban|lo|dinh|quet|vien|bao|trung|eo|may\s+mudguard|may\s+lot\s+vong\s+co|may\s+vong\s+co|lap|ghep|ep|go|luoi|than|dem|lot\s+giay)\b/i.test(
+    /\b(may|dan|mai|keo|got|de|mui|lot|nhan|chay|rap|phom|khuon|bien|chi|lon|dap|cuon|xo|cot|day|ban|lo|dinh|quet|vien|bao|trung|eo|kiem|tra|thiet|bi|huong|dan|an|toan|khan|cap|quy|trinh|san|xuat|nguyen|lieu|lap|ghep|ep|go|luoi|than|dem|lot\s+giay)\b/i.test(
       str
     )
   ) {
@@ -383,11 +385,11 @@ export function isNonTranslatable(text: string): boolean {
   const trimmed = text.trim();
   if (!trimmed) return true;
 
-  // Text with Vietnamese diacritics contains translatable words (e.g. *Mẫu:, *Hình thể:, *Đối với)
-  if (hasViDiacritics(trimmed)) return false;
-
   // 0. Shoe models & footwear brand series (Ching Luh SOP Rule: never translate model names)
   if (isShoeModelName(trimmed)) return true;
+
+  // Text with Vietnamese diacritics contains translatable words (e.g. *Mẫu:, *Hình thể:, *Đối với)
+  if (hasViDiacritics(trimmed)) return false;
 
   if (/^(?:AC|DC)\s*\d+(?:[.,]\d+)?\s*V$/i.test(trimmed)) return true;
   if (/^[A-Z]{2,6}\s+[A-Z]{1,6}\d+[A-Z0-9-]*$/.test(trimmed)) return true;
@@ -570,23 +572,15 @@ export function classifyTextUnit(
   const sourceLang = options.sourceLang || "vi";
   const targetLang = options.targetLang || "en";
 
-  // 0. English Immunity Shield: Non-translatable, inspection labels, pure English, or shoe models
-  if (isEnglishImmunityProtected(text, sourceLang)) {
-    const isLabel = isInspectionStatusLabel(text);
+  // 0. Non-translatable Check (Numbers, Acronyms, Model Codes, ISO, Shoe Models, Status Labels)
+  if (isInspectionStatusLabel(text)) {
     return {
-      status: isLabel ? "NON_TRANSLATABLE" : "ALREADY_TRANSLATED",
-      reason: isLabel
-        ? "Ký hiệu nhãn kiểm tra hình ảnh đạt chuẩn (GOOD/NO GOOD/OK/NG); bảo toàn nguyên trạng."
-        : isPureEnglish(text)
-        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên không dịch lại."
-        : isShoeModelName(text)
-        ? "Tên thương hiệu, hình thể giày hoặc mã mẫu kỹ thuật; giữ nguyên."
-        : "Thuật ngữ kỹ thuật/mã chuẩn/số liệu; giữ nguyên.",
+      status: "NON_TRANSLATABLE",
+      reason: "Ký hiệu nhãn kiểm tra hình ảnh đạt chuẩn (GOOD/NO GOOD/OK/NG); bảo toàn nguyên trạng.",
       confidence: 1.0,
     };
   }
 
-  // 1. Non-translatable Check (Numbers, Acronyms, Model Codes, ISO, Shoe Models)
   if (isNonTranslatable(text)) {
     const isShoe = isShoeModelName(text);
     return {
@@ -594,6 +588,19 @@ export function classifyTextUnit(
       reason: isShoe
         ? "Tên thương hiệu, hình thể giày hoặc mã mẫu kỹ thuật (giữ nguyên, không dịch lại)"
         : "Technical acronym, standard, model code, ID, date, or numeric value",
+      confidence: 1.0,
+    };
+  }
+
+  // 1. English Immunity Shield: Pure English content
+  if (isEnglishImmunityProtected(text, sourceLang)) {
+    return {
+      status: "ALREADY_TRANSLATED",
+      reason: isPureEnglish(text)
+        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên không dịch lại."
+        : isShoeModelName(text)
+        ? "Tên thương hiệu, hình thể giày hoặc mã mẫu kỹ thuật; giữ nguyên."
+        : "Thuật ngữ kỹ thuật/mã chuẩn/số liệu; giữ nguyên.",
       confidence: 1.0,
     };
   }

@@ -145,9 +145,20 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
   }
 
   // 2. Parallel block pairs (e.g. block of VI slides, followed by block of EN slides)
-  const viSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isViSlide(s));
-  const enSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isEnSlide(s));
-  if (viSlides.length >= 2 && enSlides.length >= 2 && Math.abs(viSlides.length - enSlides.length) <= 5) {
+  const viSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isViSlide(s) && s.slideIndex > 1);
+  const enSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isEnSlide(s) && s.slideIndex > 1);
+  const minViIndex = viSlides.length > 0 ? Math.min(...viSlides.map((s) => s.slideIndex)) : 0;
+  const maxViIndex = viSlides.length > 0 ? Math.max(...viSlides.map((s) => s.slideIndex)) : 0;
+  const minEnIndex = enSlides.length > 0 ? Math.min(...enSlides.map((s) => s.slideIndex)) : 0;
+  const maxEnIndex = enSlides.length > 0 ? Math.max(...enSlides.map((s) => s.slideIndex)) : 0;
+  const isSeparatedBlocks = (minEnIndex > maxViIndex) || (minViIndex > maxEnIndex);
+
+  if (
+    viSlides.length >= 5 &&
+    enSlides.length >= 5 &&
+    Math.abs(viSlides.length - enSlides.length) <= 10 &&
+    isSeparatedBlocks
+  ) {
     const pairs: IsqSlidePair[] = [];
     const minLen = Math.min(viSlides.length, enSlides.length);
     for (let k = 0; k < minLen; k++) {

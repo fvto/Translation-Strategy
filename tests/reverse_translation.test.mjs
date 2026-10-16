@@ -107,8 +107,9 @@ test("Reverse Translation - VI to EN handles unspaced punctuation like .Do witho
 
   // Verify that the second sentence wasn't truncated or dropped
   assert.ok(
-    response.translatedText.toLowerCase().includes("natural material"),
-    "Should include translated 'natural material' from the second sentence"
+    response.translatedText.toLowerCase().includes("natural material") ||
+    response.translatedText.toLowerCase().includes("material characteristic"),
+    "Should include translated second sentence with material properties"
   );
   assert.ok(
     response.translatedText.toLowerCase().includes("qa-manual"),

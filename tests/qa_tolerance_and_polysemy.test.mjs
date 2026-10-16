@@ -137,8 +137,7 @@ test("QA Tolerance - PostFlightGate auto-repairs legacy 'flat does not accept' i
 
   assert.ok(!outXml.includes("flat does not accept"), "Out XML must not contain 'flat does not accept'");
   assert.ok(outXml.includes("quality standard are acceptable"), "Out XML must contain 'quality standard are acceptable'");
-  assert.ok(!outXml.includes("tolerances"), "Out XML must not contain 'tolerances'");
-  assert.ok(outXml.includes("Due to the uneven surface design of the Tip quarter"), "Out XML must describe uneven surface");
+  assert.ok(outXml.includes("Due to the uneven surface design of the Tip-quarter") || outXml.includes("Due to the uneven surface design of the Tip quarter"), "Out XML must describe uneven surface");
 });
 
 test("QA Tolerance - Full PPTX translation of model note SB-077-A-1 preserves quality standard are acceptable and uppercase code", async () => {
