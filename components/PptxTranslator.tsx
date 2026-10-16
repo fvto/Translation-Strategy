@@ -267,6 +267,18 @@ export const PptxTranslator: React.FC = () => {
     }
     const response = await fetch("/api/documents/translate-pptx", { method: "POST", body: formData });
     if (!response.ok) { const data = await response.json(); throw new Error(data.error || "Không thể áp dụng gợi ý."); }
+    const appliedCount = response.headers.get("X-Audit-Applied-Count") || String(unitIds.length);
+    const unhandledCount = parseInt(response.headers.get("X-Audit-Unhandled-Count") || "0", 10);
+    const unhandledSlidesHeader = response.headers.get("X-Audit-Unhandled-Slides");
+    let unhandledSlidesText = "";
+    if (unhandledSlidesHeader) {
+      try {
+        const slides = JSON.parse(unhandledSlidesHeader);
+        if (Array.isArray(slides) && slides.length > 0) {
+          unhandledSlidesText = ` tại các slide: ${slides.join(", ")}`;
+        }
+      } catch {}
+    }
     const blob = await response.blob();
     const updatedFile = new File([blob], file.name, { type: file.type });
     const url = URL.createObjectURL(blob);
@@ -275,6 +287,9 @@ export const PptxTranslator: React.FC = () => {
     link.download = file.name.replace(/\.pptx$/i, "-audited.pptx");
     document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
     setFile(updatedFile); setSlides([]); setStats(null); setSessionId(null); setUnmappedTerms([]);
+    if (unhandledCount > 0) {
+      setErrorMessage(`Đã áp dụng ${appliedCount} vị trí. Vẫn còn ${unhandledCount} mục chưa được xử lý${unhandledSlidesText}. Đang tự động quét lại...`);
+    }
     await runSmartAudit(updatedFile);
   };
 

@@ -140,14 +140,29 @@ export function chooseAuditMatch(matches: AuditMatch[]) {
   return { match: preferred, conflict, safe: !conflict && !ambiguousSingle && preferred.exact && preferred.confidence >= AUDIT_CONFIDENCE.reuse && preferred.origin !== "history" };
 }
 
+import { isVietnameseText } from "./vietnamese-detector";
+
 // Small language evidence vocabulary, not a universal spell checker. Unknown Latin text stays reviewable.
 const EN_WORDS = new Set("emergency stop shutdown safety instructions inspection inspect quality control procedure production process material upper needle detection standard equipment machine device check operate operation report final use please open close start maintenance before after ensure test press button warning remove clean cutting stitch shape toe heel collar buffing cement apply attach spray tension prepare operator must should good reject defect critical measurement record door valve switch power off on instruction unexpected english note slide step tools sew sole panel lining assembly hot cool last lasting fit verify feed position set adjust select install replace handling temperature specification manual prevent during work wear protection".split(" "));
-const VI_PHRASES = ["kiểm tra", "thiết bị", "vui lòng", "trước khi", "vận hành", "hướng dẫn", "an toàn", "khẩn cấp", "quy trình", "sản xuất", "nguyên liệu", "mũ giày", "dừng máy"];
+const VI_PHRASES = [
+  "kiểm tra", "thiết bị", "vui lòng", "trước khi", "vận hành", "hướng dẫn", "an toàn", "khẩn cấp",
+  "quy trình", "sản xuất", "nguyên liệu", "mũ giày", "dừng máy", "chú ý", "lưu ý", "yêu cầu",
+  "thao tác", "thực hiện", "điều chỉnh", "tiêu chuẩn", "thông số", "kỹ thuật", "quét keo", "dán đế",
+  "mài đế", "ép đế", "gò mũi", "gò gót", "may lót", "may viền", "hở keo", "tràn keo", "bọt khí",
+  "sụp mí", "đế ngoài", "đế giữa", "lót giày", "mặt giày", "vòng cổ", "mũi giày", "gót giày",
+  "đường may", "mũi may", "mũi kim", "nhiệt độ", "áp lực", "thời gian", "không được", "cần phải",
+  "đối với", "áp dụng cho", "dành cho", "theo mẫu", "mẫu giày", "chất lượng", "khuyết tật"
+];
 export function languageEvidence(text: string) {
   const form = auditTextForms(text);
   const en = form.tokens.filter((token) => EN_WORDS.has(token));
   const vi = VI_PHRASES.filter((phrase) => form.compact.includes(auditTextForms(phrase).compact));
-  return { en, vi, likelyEnglish: en.length >= 2 || (form.tokens.length === 1 && en.length === 1) };
+  const isVi = isVietnameseText(text);
+  if (isVi && vi.length === 0) {
+    vi.push("vietnamese_detected");
+  }
+  const likelyEnglish = !isVi && (en.length >= 2 || (form.tokens.length === 1 && en.length === 1));
+  return { en, vi, likelyEnglish };
 }
 
 export function vietnameseQuality(text: string): { suggestion?: string; segments: string[] } {

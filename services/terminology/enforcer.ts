@@ -3,6 +3,7 @@ import { matchTerminology } from "./matcher";
 import { adaptTermCasing, cleanTargetTerm, formatUppercaseStructure, normalizeSpiTerminology } from "../translation/casing";
 import { polishSopText } from "../translation/sop-polisher";
 import { repairMistranslatedAcronyms } from "./acronym-resolver";
+import { hasVietnameseDiacritics, isVietnameseText } from "../translation/vietnamese-detector";
 
 export interface EnforcementReplacement {
   sourceTerm: string;
@@ -23,7 +24,11 @@ export interface EnforcementResult {
  */
 const KNOWN_SYNONYM_PATTERNS: { [canonicalTargetLower: string]: RegExp } = {
   // Activated only when a matched source term has the approved target X-ray.
-  "x-ray": /\b(?:being\s+lumpy|lumpy\s+feeling|lumpy|lumps?|lumping|lumpiness)\b/gi,
+  "x-ray": /\b(?:being\s+lumpy|lumpy\s+feeling|lumpy|lumps?|lumping|lumpiness|bulg(?:es?|ing|ed)?|protrusion[s]?|protrud(?:es?|ing|ed)?|bump[s]?|bumpy|swelling|swollen|knot[s]?|thickening)\b/gi,
+  "quality standard": /\b(?:inspection\s+standards?|production\s+standards?|work\s+standards?|standards?)\b/gi,
+  "finished shoe": /\b(?:finished\s+shoes?|complete\s+shoes?|completed\s+shoes?)\b/gi,
+  "material edge": /\b(?:edge\s+material|material\s+borders?|edge\s+of\s+material)\b/gi,
+  "jig fitting": /\b(?:fit\s+jig|fitting\s+jig|match\s+jig|matching\s+jig)\b/gi,
   // Footwear Defects VI -> EN
   "air bubble": /\b(?:air\s+)?bubbles?\b|\bblisters?\b|\bgas\s+bubbles?\b|\bfoaming\b/gi,
   "bond gap": /\b(?:open\s+glue|glue\s+opening|glue\s+open|glue\s+gap|gap\s+glue|unbonded|delamination|debonding|unglued|glue\s+separation|peeled\s+off\s+glue|loose\s+glue|un-bonded)\b/gi,
@@ -216,7 +221,8 @@ export function enforceTerminologyCompliance(
     let effectiveTarget = cleanTarget;
     if (!synonymRegex) {
       for (const [key, regex] of Object.entries(KNOWN_SYNONYM_PATTERNS)) {
-        if (cleanTargetLower.includes(key)) {
+        const keyPattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(key)}(?![\\p{L}\\p{N}])`, "iu");
+        if (keyPattern.test(cleanTargetLower)) {
           synonymRegex = regex;
           effectiveTarget = key;
           break;
@@ -250,6 +256,45 @@ export function enforceTerminologyCompliance(
 
         if (replacedAny) {
           continue;
+        }
+      }
+    }
+
+    // Contextual auto-repair for compound defect pairs (e.g. ngấn/cộm -> visible mark/X-ray)
+    if (!isTermPresentInTranslation(cleanTarget, currentText)) {
+      if (cleanTargetLower === "x-ray") {
+        if (/\b(?:visible\s+mark|demolding\s+mark|mark|indentation|dent)s?\s*\/\s*[a-zA-Z]+/i.test(currentText)) {
+          currentText = currentText.replace(/(\b(?:visible\s+mark|demolding\s+mark|mark|indentation|dent)s?\s*\/)\s*[a-zA-Z]+/gi, `$1${cleanTarget}`);
+          replacements.push({
+            sourceTerm: entry.sourceTerm,
+            expectedTarget: cleanTarget,
+            originalText: "compound slash defect",
+            replacementText: cleanTarget,
+          });
+        } else if (/\b(?:visible\s+mark|demolding\s+mark)\b/i.test(currentText) && !/\bx-ray\b/i.test(currentText) && /ngấn\s*[\/,]\s*cộm/i.test(sourceText)) {
+          currentText = currentText.replace(/\b(visible\s+mark|demolding\s+mark)\b/i, `$1/${cleanTarget}`);
+          replacements.push({
+            sourceTerm: entry.sourceTerm,
+            expectedTarget: cleanTarget,
+            originalText: "missing /X-ray",
+            replacementText: cleanTarget,
+          });
+        }
+      }
+
+      // Direct Vietnamese leak repair: if the source term leaked verbatim into translated text, replace it
+      // Only apply if entry.sourceTerm is genuine Vietnamese (contains diacritics or distinctive Vietnamese)
+      const isEnglishLoanword = /^(?:logo|size|pfc|tpu|eva|pu|ok|ng|ctq|spi|ipqc|isq|sop)$/i.test(entry.sourceTerm.trim());
+      if (!isEnglishLoanword && (hasVietnameseDiacritics(entry.sourceTerm) || isVietnameseText(entry.sourceTerm))) {
+        const leakedRegex = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(entry.sourceTerm)}(?![\\p{L}\\p{N}])`, "iu");
+        if (leakedRegex.test(currentText)) {
+          currentText = currentText.replace(leakedRegex, cleanTarget);
+          replacements.push({
+            sourceTerm: entry.sourceTerm,
+            expectedTarget: cleanTarget,
+            originalText: entry.sourceTerm,
+            replacementText: cleanTarget,
+          });
         }
       }
     }

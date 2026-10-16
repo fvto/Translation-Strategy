@@ -1,8 +1,13 @@
 import JSZip from "jszip";
 import { hasViDiacritics } from "../terminology/sanitizer";
-import { normalizeSpiTerminology, normalizeInvertedNounPhrases } from "../translation/casing";
+import { normalizeSpiTerminology, normalizeInvertedNounPhrases, cleanTargetTerm } from "../translation/casing";
 import { polishSopText } from "../translation/sop-polisher";
 import { readIsqSlidePairs } from "../documents/pptx-slide-order";
+import { db } from "../database/db";
+import { AirGappedTranslationProvider } from "../translation/offline";
+import { enforceTerminologyCompliance } from "../terminology/enforcer";
+import { replaceParagraphTranslation } from "../documents/pptx-text";
+import { isVietnameseText } from "../translation/vietnamese-detector";
 
 /** Escapes XML special characters for safe injection into <a:t> nodes. */
 function escapeXmlText(text: string): string {
@@ -27,6 +32,7 @@ export interface PostFlightAuditReport {
   issues: PostFlightIssue[];
   repairedCount: number;
   auditedBuffer: Buffer;
+  untranslatedRemaining?: { slide: string; text: string }[];
 }
 
 /**
@@ -43,7 +49,8 @@ export interface PostFlightAuditReport {
  */
 export async function auditAndRepairPptxPostFlight(
   pptxBuffer: Buffer,
-  mode: "replace_en" | "ipqc_bilingual" = "replace_en"
+  mode: "replace_en" | "ipqc_bilingual" = "replace_en",
+  targetLanguage: string = "en"
 ): Promise<PostFlightAuditReport> {
   const zip = await JSZip.loadAsync(pptxBuffer);
   const isqPairs = await readIsqSlidePairs(zip);
@@ -405,12 +412,13 @@ export async function auditAndRepairPptxPostFlight(
     });
 
     // 5. Audit & Clean Vietnamese Leaks on English slides (replace_en mode and ISQ top EN slides)
-    if (mode === "replace_en" || isqEnPaths.has(filename)) {
+    // Only applies if the target language is English!
+    if ((mode === "replace_en" || isqEnPaths.has(filename)) && targetLanguage.toLowerCase().startsWith("en")) {
       const pMatches = xml.match(/<a:p\b[\s\S]*?<\/a:p>/g) || [];
       for (const pXml of pMatches) {
         const tMatches = pXml.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g) || [];
         const fullText = tMatches.map((t) => t.replace(/<[^>]+>/g, "").trim()).join(" ");
-        if (hasViDiacritics(fullText)) {
+        if (hasViDiacritics(fullText) || isVietnameseText(fullText)) {
           if (isqEnPaths.has(filename)) {
             // SOP Section 4 & Production Rule #1: Zero Vietnamese Leakage on ISQ top EN slide
             xml = xml.replace(pXml, "");
@@ -423,14 +431,48 @@ export async function auditAndRepairPptxPostFlight(
               targetText: "",
               autoRepaired: true,
             });
-          } else if (fullText.length > 10) {
-            issues.push({
-              slide: filename,
-              type: "vi_leak",
-              message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
-              targetText: fullText,
-              autoRepaired: false,
-            });
+          } else {
+            // Regular slide in replace_en mode: Auto-translate untranslated Vietnamese content using Glossary Review
+            try {
+              const glossary = db.getGlossaryReviewTerminology("vi", "en");
+              const airgapped = new AirGappedTranslationProvider();
+              const translated = airgapped.translateVietnameseToEnglish(fullText, glossary);
+              const enforced = enforceTerminologyCompliance(fullText, translated, glossary, "vi", "en");
+              const candidate = cleanTargetTerm(enforced.text);
+
+              if (candidate && !hasViDiacritics(candidate) && candidate.toLowerCase() !== fullText.toLowerCase()) {
+                const repairedPXml = replaceParagraphTranslation(pXml, candidate, fullText);
+                xml = xml.replace(pXml, repairedPXml);
+                xmlModified = true;
+                repairedCount++;
+                issues.push({
+                  slide: filename,
+                  type: "vi_leak",
+                  message: `Auto-translated untranslated Vietnamese paragraph to English: "${fullText.slice(0, 60)}..." -> "${candidate.slice(0, 60)}..."`,
+                  originalText: fullText,
+                  targetText: candidate,
+                  autoRepaired: true,
+                });
+              } else if (fullText.length > 5) {
+                issues.push({
+                  slide: filename,
+                  type: "vi_leak",
+                  message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
+                  targetText: fullText,
+                  autoRepaired: false,
+                });
+              }
+            } catch {
+              if (fullText.length > 5) {
+                issues.push({
+                  slide: filename,
+                  type: "vi_leak",
+                  message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
+                  targetText: fullText,
+                  autoRepaired: false,
+                });
+              }
+            }
           }
         }
       }
@@ -447,7 +489,11 @@ export async function auditAndRepairPptxPostFlight(
     compressionOptions: { level: 1 },
   });
 
-  const passed = issues.filter((i) => !i.autoRepaired).length === 0;
+  const untranslatedRemaining = issues
+    .filter((i) => i.type === "vi_leak" && !i.autoRepaired)
+    .map((i) => ({ slide: i.slide, text: i.targetText || i.message }));
+
+  const passed = untranslatedRemaining.length === 0;
 
   return {
     passed,
@@ -455,5 +501,6 @@ export async function auditAndRepairPptxPostFlight(
     issues,
     repairedCount,
     auditedBuffer,
+    untranslatedRemaining,
   };
 }

@@ -90,12 +90,11 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
 
   const toggleSlide = (slideNum: number) => {
     const units = slideMap.get(slideNum) || [];
-    const translatable = units.filter((u) => u.selectedForTranslation);
-    if (!translatable.length) return;
-    const allSelected = translatable.every((u) => selected.has(u.id));
+    if (!units.length) return;
+    const allSelected = units.every((u) => selected.has(u.id));
     setSelected((prev) => {
       const next = new Set(prev);
-      for (const u of translatable) {
+      for (const u of units) {
         if (allSelected) next.delete(u.id);
         else next.add(u.id);
       }
@@ -127,7 +126,6 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     setSelected((prev) => {
       const next = new Set(prev);
       for (const u of report.units) {
-        if (!u.selectedForTranslation) continue;
         const s = u.location.slideIndex ?? 0;
         if (indices.has(s)) next.add(u.id);
         else next.delete(u.id);
@@ -138,7 +136,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
 
   const selectAllSlides = () => {
     if (!report) return;
-    setSelected(new Set(report.units.filter((u) => u.selectedForTranslation).map((u) => u.id)));
+    setSelected(new Set(report.units.map((u) => u.id)));
   };
 
   const deselectAllSlides = () => {
@@ -147,14 +145,27 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
 
   const selectOnlyPending = () => {
     if (!report) return;
-    setSelected(new Set(report.units.filter((u) => u.selectedForTranslation && u.status === "NEEDS_TRANSLATION").map((u) => u.id)));
+    setSelected(new Set(report.units.filter((u) => u.status === "NEEDS_TRANSLATION").map((u) => u.id)));
+  };
+
+  const selectHighConfidenceSafe = () => {
+    if (!report) return;
+    const safeUnits = report.units.filter((u) => u.safeToApply || u.status === "LOCKED_TERMINOLOGY" || u.status === "TM_REUSE");
+    setSelected(new Set(safeUnits.map((u) => u.id)));
   };
 
   const groups = useMemo(() => {
     if (!report) return [];
-    const base: TranslationAuditGroup[] = report.groups || report.units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => ({
-      id: u.id, type: "translation", title: u.sourceText, unitIds: [u.id], reason: u.reason, confidence: u.confidence, safeToApply: false, suggestedTranslation: u.suggestedTranslation,
-    }));
+    let base: TranslationAuditGroup[] = [];
+    if (filter === "ALREADY_TRANSLATED" || filter === "NON_TRANSLATABLE") {
+      base = report.units.filter((u) => u.status === filter).map((u) => ({
+        id: u.id, type: "translation" as const, title: u.sourceText, unitIds: [u.id], reason: u.reason, confidence: u.confidence, safeToApply: false, suggestedTranslation: u.suggestedTranslation,
+      }));
+    } else {
+      base = report.groups || report.units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => ({
+        id: u.id, type: "translation" as const, title: u.sourceText, unitIds: [u.id], reason: u.reason, confidence: u.confidence, safeToApply: false, suggestedTranslation: u.suggestedTranslation,
+      }));
+    }
     return base.filter((g) => !ignored.has(g.id) && (filter !== "attention" || !g.safeToApply)).map((g) => ({ ...g, unitIds: g.unitIds.filter((id) => {
       const u = byId.get(id);
       const effectiveTranslation = customEdits[id] !== undefined ? customEdits[id] : u?.suggestedTranslation;
@@ -167,15 +178,14 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   if (!isOpen || !report) return null;
 
   const loading = isLoading || busy;
-  const selectedMissing = report.units.filter((u) => selected.has(u.id) && u.selectedForTranslation);
+  const selectedMissing = report.units.filter((u) => selected.has(u.id));
   const safeIds = report.units.filter((u) => u.safeToApply && u.canApply && !(report.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
   const attention = (report.groups || []).filter((g) => !g.safeToApply && !ignored.has(g.id)).length || (report.groups ? 0 : report.needsTranslationCount);
 
   const toggle = (id: string) => setSelected((previous) => {
-    const next = new Set(previous), unit = byId.get(id);
-    const ids = unit?.location.isIsq ? report.units.filter(u => u.selectedForTranslation && u.location.partPath === unit.location.partPath).map(u => u.id) : [id];
-    const remove = next.has(id);
-    for (const target of ids) remove ? next.delete(target) : next.add(target);
+    const next = new Set(previous);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     return next;
   });
 
@@ -417,9 +427,12 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button type="button" className={button} onClick={selectAllSlides}>Chọn tất cả ({report.units.filter((u) => u.selectedForTranslation).length})</button>
+                  <button type="button" className={button} onClick={selectAllSlides}>Chọn tất cả ({report.units.length})</button>
                   <button type="button" className={button} onClick={deselectAllSlides}>Bỏ chọn tất cả</button>
                   <button type="button" className={button + " text-sky-600 font-semibold"} onClick={selectOnlyPending}>Chỉ chọn slide thiếu ({report.needsTranslationCount})</button>
+                  <button type="button" className={button + " bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 font-semibold"} onClick={selectHighConfidenceSafe}>
+                    Chọn nhanh gợi ý tin cậy ({report.units.filter((u) => u.safeToApply || u.status === "LOCKED_TERMINOLOGY" || u.status === "TM_REUSE").length})
+                  </button>
                 </div>
               </div>
 
@@ -449,12 +462,11 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               <div className="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
                 {slideList.map((slideNum) => {
                   const units = slideMap.get(slideNum) || [];
-                  const translatable = units.filter((u) => u.selectedForTranslation);
-                  const selectedInSlide = translatable.filter((u) => selected.has(u.id));
-                  const isAllSelected = translatable.length > 0 && selectedInSlide.length === translatable.length;
-                  const isPartiallySelected = selectedInSlide.length > 0 && selectedInSlide.length < translatable.length;
+                  const selectedInSlide = units.filter((u) => selected.has(u.id));
+                  const isAllSelected = units.length > 0 && selectedInSlide.length === units.length;
+                  const isPartiallySelected = selectedInSlide.length > 0 && selectedInSlide.length < units.length;
                   const isExpanded = expandedSlideIndex === slideNum;
-                  const needsTransCount = translatable.filter((u) => u.status === "NEEDS_TRANSLATION").length;
+                  const needsTransCount = units.filter((u) => u.status === "NEEDS_TRANSLATION").length;
 
                   // Find title or first substantive snippet
                   const titleUnit = units.find((u) => u.sourceText && u.sourceText.trim().length > 3);
@@ -476,7 +488,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                           <button
                             type="button"
                             onClick={() => toggleSlide(slideNum)}
-                            disabled={translatable.length === 0}
+                            disabled={units.length === 0 || loading}
                             className="text-slate-600 dark:text-slate-300 hover:text-sky-600 shrink-0 disabled:opacity-30 cursor-pointer"
                             aria-label={`Chọn toàn bộ Slide ${slideNum}`}
                           >
@@ -498,7 +510,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-medium">
                                   {needsTransCount} câu chưa dịch
                                 </span>
-                              ) : translatable.length > 0 ? (
+                              ) : units.some((u) => u.status === "ALREADY_TRANSLATED" || u.status === "TM_REUSE") ? (
                                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 font-medium">
                                   Đã dịch
                                 </span>
@@ -508,7 +520,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                                 </span>
                               )}
                               <span className="text-slate-400 text-[11px]">
-                                ({selectedInSlide.length}/{translatable.length} đoạn được chọn)
+                                ({selectedInSlide.length}/{units.length} đoạn được chọn)
                               </span>
                             </div>
                             <p className="text-slate-500 text-[11px] truncate mt-0.5 max-w-lg">
@@ -556,7 +568,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                                       <input
                                         type="checkbox"
                                         checked={isChecked}
-                                        disabled={!u.selectedForTranslation}
+                                        disabled={loading}
                                         onChange={() => toggle(u.id)}
                                         className="mt-0.5 rounded border-slate-300 dark:border-slate-700 text-sky-600 shrink-0 cursor-pointer"
                                       />
@@ -769,7 +781,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               <select aria-label="Lọc trạng thái" className={button + " bg-transparent"} value={filter} onChange={(e) => setFilter(e.target.value)}>
                 <option value="attention">Các nhóm cần chú ý</option><option value="all">Tất cả nhóm phát hiện</option>
                 <option value="reuse">Các bản dịch có thể dùng lại</option>
-                {Object.entries(LABELS).filter(([s]) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(s)).map(([s, label]) => <option key={s} value={s}>{label}</option>)}
+                {Object.entries(LABELS).map(([s, label]) => <option key={s} value={s}>{label}</option>)}
               </select>
               <select aria-label="Lọc slide" className={button + " bg-transparent"} value={slide} onChange={(e) => setSlide(e.target.value)}>
                 <option value="all">Tất cả slide</option>
@@ -782,7 +794,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                     const units = slideMap.get(slideNum) || [];
                     setSelected((prev) => {
                       const next = new Set(prev);
-                      for (const u of units) if (u.selectedForTranslation) next.add(u.id);
+                      for (const u of units) next.add(u.id);
                       return next;
                     });
                   }}>Chọn cả Slide {slide}</button>
@@ -913,16 +925,14 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                         return (
                           <div key={u.id} className="border-t border-slate-200 dark:border-slate-800 pt-2.5">
                             <div className="flex gap-2 items-start">
-                              {u.selectedForTranslation && (
-                                <input
-                                  aria-label={"Chọn dịch " + u.sourceText}
-                                  type="checkbox"
-                                  checked={selected.has(u.id)}
-                                  disabled={loading}
-                                  onChange={() => toggle(u.id)}
-                                  className="mt-0.5"
-                                />
-                              )}
+                              <input
+                                aria-label={"Chọn dịch " + u.sourceText}
+                                type="checkbox"
+                                checked={selected.has(u.id)}
+                                disabled={loading}
+                                onChange={() => toggle(u.id)}
+                                className="mt-0.5 cursor-pointer"
+                              />
                               <div className="flex-1">
                                 <div className="flex items-center justify-between gap-2">
                                   <strong className="text-slate-700 dark:text-slate-300">

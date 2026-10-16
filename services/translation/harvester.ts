@@ -46,7 +46,7 @@ export function harvestTerminologyFromSlides(
   sourceLanguage: string = "vi",
   targetLanguage: string = "en"
 ): HarvestResult {
-  const existingTerms = db.getApprovedTerminology(sourceLanguage, targetLanguage);
+  const existingTerms = db.getGlossaryReviewTerminology(sourceLanguage, targetLanguage);
   const existingSourceMap = new Map<string, string>();
   for (const t of existingTerms) {
     existingSourceMap.set(t.sourceTerm.trim().toLowerCase(), t.targetTerm.trim().toLowerCase());
@@ -202,7 +202,7 @@ export function harvestTerminologyFromAuditReport(
   sourceLanguage: string = "vi",
   targetLanguage: string = "en"
 ): HarvestResult {
-  const existingTerms = db.getApprovedTerminology(sourceLanguage, targetLanguage);
+  const existingTerms = db.getGlossaryReviewTerminology(sourceLanguage, targetLanguage);
   const existingSourceMap = new Map<string, string>();
   for (const t of existingTerms) {
     existingSourceMap.set(t.sourceTerm.trim().toLowerCase(), t.targetTerm.trim().toLowerCase());

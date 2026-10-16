@@ -2056,6 +2056,56 @@ test("Test 34: Universal Option 1 Dynamic Slide Pairing - Topic/Title matching a
   assert.ok(allNeedsTrans.every((u) => u.location.slideIndex === 5), "Only Slide 5 units can require translation across the deck");
 });
 
+test("Test 35: Free user selection overrides audit default selectedForTranslation: false and translates successfully", async () => {
+  const p = (t) => `<a:p><a:r><a:rPr sz="1200"/><a:t>${t}</a:t></a:r></a:p>`;
+  const box = (...paras) => `<p:sp><p:spPr><a:xfrm><a:off x="100" y="200"/><a:ext cx="300" cy="400"/></a:xfrm></p:spPr><p:txBody><a:bodyPr wrap="square"/><a:lstStyle/>${paras.join('')}</p:txBody></p:sp>`;
+
+  const zip = new JSZip();
+  zip.file('ppt/slides/slide1.xml', `<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree>${box(p('Title Slide'))}</p:spTree></p:cSld></p:sld>`);
+  // Slide 2 has an unaccented / English-looking term that audit might deem ALREADY_TRANSLATED
+  zip.file('ppt/slides/slide2.xml', `<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree>${box(p('Inspection standard - OK'), p('Không quét vào vị trí các lỗ Airbag'))}</p:spTree></p:cSld></p:sld>`);
+  zip.file('ppt/presentation.xml', '<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:sldIdLst><p:sldId id="256" r:id="rId1"/><p:sldId id="257" r:id="rId2"/></p:sldIdLst></p:presentation>');
+  zip.file('ppt/_rels/presentation.xml.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/></Relationships>');
+  zip.file('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/><Override PartName="/ppt/slides/slide2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>');
+
+  const deckBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+  const report = await auditPptxGaps(deckBuffer, 'manual.pptx', { sourceLang: 'vi', targetLang: 'en', mode: 'replace_en' });
+  
+  // Find the unit with "Không quét vào vị trí các lỗ Airbag"
+  const airbagUnit = report.units.find((u) => u.sourceText.includes('Airbag'));
+  assert.ok(airbagUnit, "Airbag unit must be present in scanned units");
+
+  // User manually selects this unit even if default or other units were unselected
+  let calledWithItem = false;
+  const mockProvider = {
+    name: 'mock',
+    translateBatch: async ({ items }) => {
+      calledWithItem = items.some((i) => i.id === airbagUnit.id);
+      return {
+        results: new Map(items.map((i) => [i.id, 'Do not apply adhesive on airbag window openings'])),
+        provider: 'mock',
+        durationMs: 0,
+      };
+    },
+  };
+
+  const result = await pptxTranslatorService.translate(deckBuffer, {
+    sourceLanguage: 'vi',
+    targetLanguage: 'en',
+    mode: 'replace_en',
+    fileName: 'manual.pptx',
+    provider: mockProvider,
+    translateMissingOnly: true,
+    selectedUnitIds: [airbagUnit.id],
+  });
+
+  assert.ok(calledWithItem, "Translator MUST call provider for user-selected unit even if default audit had different flags");
+  const resultZip = await JSZip.loadAsync(result.translatedBuffer);
+  const slide2Xml = await resultZip.file('ppt/slides/slide2.xml').async('string');
+  assert.ok(slide2Xml.includes('Do not apply adhesive on airbag window openings'), "Translated text must appear on slide 2");
+});
+
+
 
 
 

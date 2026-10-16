@@ -8,6 +8,9 @@ import { db } from "@/services/database/db";
 import { verifySessionToken } from "@/services/security/auth";
 import { normalizeSourcePunctuation } from "@/services/translation/casing";
 
+import { isVietnameseText, isPureEnglishText } from "@/services/translation/vietnamese-detector";
+import { TerminologyEntry } from "@/services/database/types";
+
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
   try {
@@ -38,20 +41,27 @@ export async function POST(req: NextRequest) {
     let effSource = sourceLanguage;
     let effTarget = targetLanguage;
 
-    const hasViChars = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i.test(effSourceText);
-    if (hasViChars && sourceLanguage === "en") {
+    const isVi = isVietnameseText(effSourceText);
+    const isPureEn = isPureEnglishText(effSourceText);
+    if (isVi && sourceLanguage === "en") {
       effSource = "vi";
       effTarget = "en";
-    } else if (!hasViChars && sourceLanguage === "vi") {
-      const hasEnWords = /\b(?:the|and|for|with|this|that|from|are|is|in|on|at|check|test|standard|inspection|quality|shape|defect)\b/i.test(effSourceText);
-      if (hasEnWords) {
-        effSource = "en";
-        effTarget = "vi";
-      }
+    } else if (isPureEn && sourceLanguage === "vi") {
+      effSource = "en";
+      effTarget = "vi";
     }
 
-    // 1. Fetch approved terminology from database for this language pair
-    const approvedGlossary = db.getApprovedTerminology(effSource, effTarget);
+    // 1. Fetch terminology from database for this language pair (including both approved and review, approved takes priority)
+    const rawGlossary = db.getGlossaryReviewTerminology(effSource, effTarget);
+    const approvedGlossaryMap = new Map<string, TerminologyEntry>();
+    for (const t of rawGlossary) {
+      const key = t.sourceTerm.toLowerCase().trim();
+      const existing = approvedGlossaryMap.get(key);
+      if (!existing || (existing.status === "review" && t.status === "approved")) {
+        approvedGlossaryMap.set(key, t);
+      }
+    }
+    const approvedGlossary = Array.from(approvedGlossaryMap.values());
 
     // 2. Identify all matched approved terms in source text
     const matchedTerms = matchTerminology(effSourceText, approvedGlossary);

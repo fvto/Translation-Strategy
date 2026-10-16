@@ -342,13 +342,16 @@ export class XlsxTranslatorService {
         ? options.provider
         : getTranslationProvider(typeof options?.provider === "string" ? options.provider : undefined);
 
-    const approvedGlossary = db.getApprovedTerminology(sourceLanguage, targetLanguage);
+    const approvedGlossary = db.getGlossaryReviewTerminology(sourceLanguage, targetLanguage);
 
-    // Map exact approved glossary terms
+    // Map exact approved & review glossary terms (approved takes precedence)
     const approvedExactMap = new Map<string, string>();
     for (const entry of approvedGlossary) {
       if (entry.sourceTerm && entry.targetTerm) {
-        approvedExactMap.set(entry.sourceTerm.trim().toLowerCase().replace(/\s+/g, " "), entry.targetTerm.trim());
+        const key = entry.sourceTerm.trim().toLowerCase().replace(/\s+/g, " ");
+        if (!approvedExactMap.has(key)) {
+          approvedExactMap.set(key, entry.targetTerm.trim());
+        }
       }
     }
 

@@ -14,6 +14,13 @@ import { scanPptxTranslationIntelligence } from "./pptx-smart-audit";
 import { runAiDeepAudit } from "./ai-deep-audit";
 import { saveAuditTrace } from "./audit-trace";
 import { languageEvidence } from "./audit-intelligence";
+import {
+  hasVietnameseDiacritics,
+  isVietnameseText,
+  isPureEnglishText,
+  isSemanticBilingualPair,
+} from "./vietnamese-detector";
+export { isVietnameseText, isSemanticBilingualPair };
 
 export type TextUnitStatus =
   | "ALREADY_TRANSLATED"
@@ -120,30 +127,19 @@ export interface SmartAuditReport {
   requiresIsqDuplicate?: boolean;
 }
 
-/**
- * Checks for Vietnamese diacritics
- */
 export function hasViDiacritics(str: string): boolean {
-  if (!str) return false;
-  return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i.test(str);
+  return hasVietnameseDiacritics(str);
 }
 
 /**
- * Checks whether text contains pure English characters and no Vietnamese diacritics
+ * Checks whether text contains pure English characters and no Vietnamese diacritics or words
  */
 export function isPureEnglish(str: string): boolean {
   if (!str || !str.trim()) return false;
   if (hasViDiacritics(str)) return false;
+  if (isVietnameseText(str)) return false;
   if (languageEvidence(str).vi.length > 0) return false;
-  // If string contains known Vietnamese footwear keywords without diacritics, it is NOT pure English
-  if (
-    /\b(may|dan|mai|keo|got|de|mui|lot|nhan|chay|rap|phom|khuon|bien|chi|lon|dap|cuon|xo|cot|day|ban|lo|dinh|quet|vien|bao|trung|eo|kiem|tra|thiet|bi|huong|dan|an|toan|khan|cap|quy|trinh|san|xuat|nguyen|lieu|lap|ghep|ep|go|luoi|than|dem|lot\s+giay)\b/i.test(
-      str
-    )
-  ) {
-    return false;
-  }
-  return /[a-zA-Z]{2,}/.test(str);
+  return isPureEnglishText(str);
 }
 
 /**
@@ -388,8 +384,8 @@ export function isNonTranslatable(text: string): boolean {
   // 0. Shoe models & footwear brand series (Ching Luh SOP Rule: never translate model names)
   if (isShoeModelName(trimmed)) return true;
 
-  // Text with Vietnamese diacritics contains translatable words (e.g. *Mẫu:, *Hình thể:, *Đối với)
-  if (hasViDiacritics(trimmed)) return false;
+  // Text with Vietnamese diacritics or recognized Vietnamese phrases contains translatable words
+  if (hasViDiacritics(trimmed) || isVietnameseText(trimmed)) return false;
 
   if (/^(?:AC|DC)\s*\d+(?:[.,]\d+)?\s*V$/i.test(trimmed)) return true;
   if (/^[A-Z]{2,6}\s+[A-Z]{1,6}\d+[A-Z0-9-]*$/.test(trimmed)) return true;
@@ -474,6 +470,9 @@ export function isInspectionStatusLabel(text: string): boolean {
 export function isEnglishImmunityProtected(text: string, sourceLang: string = "vi"): boolean {
   if (!text || !text.trim()) return false;
   const trimmed = text.trim();
+
+  // If text is recognized Vietnamese (accented or unaccented), it CANNOT be immune from translation!
+  if (sourceLang === "vi" && isVietnameseText(trimmed)) return false;
 
   // 1. Universal inspection evaluation labels (GOOD, NO GOOD, OK, NG, PASS, FAIL...)
   if (isInspectionStatusLabel(trimmed)) return true;
@@ -698,8 +697,8 @@ export function classifyTextUnit(
   // 8. Language Target Analysis
   // Scenario A: Document translation is Vietnamese -> English (SOP standard)
   if (sourceLang === "vi" && targetLang === "en") {
-    // If text already has Vietnamese diacritics, it definitely needs translation!
-    if (hasViDiacritics(text)) {
+    // If text has Vietnamese diacritics or is recognized as Vietnamese, it definitely needs translation!
+    if (hasViDiacritics(text) || isVietnameseText(text)) {
       return {
         status: "NEEDS_TRANSLATION",
         reason: "Vietnamese text requiring translation to English",
@@ -778,10 +777,12 @@ export function classifyTextUnit(
  */
 export async function auditPptxGaps(
   buffer: Buffer,
-  fileName: string,
+  fileNameOrOptions: string | any = "presentation.pptx",
   options?: {
     sourceLang?: string;
     targetLang?: string;
+    sourceLanguage?: string;
+    targetLanguage?: string;
     mode?: string;
     customDocTM?: DocumentTranslationMemory;
     approvedGlossary?: TerminologyEntry[];
@@ -789,7 +790,14 @@ export async function auditPptxGaps(
     autoAiCascade?: boolean;
   }
 ): Promise<SmartAuditReport> {
-  const report = await scanPptxTranslationIntelligence(buffer, fileName, options);
+  const fileName = typeof fileNameOrOptions === "string" ? fileNameOrOptions : "presentation.pptx";
+  const rawOpts = typeof fileNameOrOptions === "object" ? fileNameOrOptions : (options || {});
+  const effOptions = {
+    ...rawOpts,
+    sourceLang: rawOpts.sourceLang || rawOpts.sourceLanguage || "en",
+    targetLang: rawOpts.targetLang || rawOpts.targetLanguage || "vi",
+  };
+  const report = await scanPptxTranslationIntelligence(buffer, fileName, effOptions);
 
   // Smart Cascading Scan:
   // If presentation has complex signals (model headings, ISQ slides, or duplicate steps),
@@ -804,26 +812,26 @@ export async function auditPptxGaps(
   );
   const isComplex = hasModelSection || hasIsq;
 
-  if (isComplex && options?.autoAiCascade !== false) {
+  if (isComplex && effOptions.autoAiCascade !== false) {
     const geminiKey =
-      options?.apiKey ||
+      effOptions.apiKey ||
       process.env.GEMINI_KEY ||
       process.env.GEMINI_API_KEY ||
       (typeof db !== "undefined" && db.getSettings ? db.getSettings()?.geminiApiKey : undefined);
     if (geminiKey) {
       const deep = await runAiDeepAudit(report, {
         apiKey: geminiKey,
-        sourceLang: options?.sourceLang,
-        targetLang: options?.targetLang,
+        sourceLang: effOptions.sourceLang,
+        targetLang: effOptions.targetLang,
       });
       const finalDeep: SmartAuditReport = {
         ...deep.report,
         requiresIsqDuplicate: hasIsq,
       };
       saveAuditTrace(fileName, finalDeep, {
-        mode: options?.mode,
-        sourceLang: options?.sourceLang,
-        targetLang: options?.targetLang,
+        mode: effOptions.mode,
+        sourceLang: effOptions.sourceLang,
+        targetLang: effOptions.targetLang,
       });
       return finalDeep;
     }
@@ -834,9 +842,9 @@ export async function auditPptxGaps(
     requiresIsqDuplicate: hasIsq,
   };
   saveAuditTrace(fileName, finalReport, {
-    mode: options?.mode,
-    sourceLang: options?.sourceLang,
-    targetLang: options?.targetLang,
+    mode: effOptions.mode,
+    sourceLang: effOptions.sourceLang,
+    targetLang: effOptions.targetLang,
   });
   return finalReport;
 }
@@ -865,7 +873,7 @@ export async function auditXlsxGaps(
   await workbook.xlsx.load(buffer);
 
   const rawApprovedGlossary =
-    options?.approvedGlossary || db.getApprovedTerminology(sourceLang, targetLang);
+    options?.approvedGlossary || db.getGlossaryReviewTerminology(sourceLang, targetLang);
   const approvedGlossary = rawApprovedGlossary.filter((e) => e.sourceTerm && e.targetTerm);
 
   const docTM = options?.customDocTM || new DocumentTranslationMemory();

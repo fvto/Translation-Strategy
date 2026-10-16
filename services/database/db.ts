@@ -1043,16 +1043,25 @@ class Database {
       };
       const tempFile = `${DB_FILE}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
       fs.writeFileSync(tempFile, JSON.stringify(sanitizedData, null, 2), "utf-8");
-      try {
-        fs.renameSync(tempFile, DB_FILE);
-      } catch {
-        fs.copyFileSync(tempFile, DB_FILE);
+      let copied = false;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+          fs.copyFileSync(tempFile, DB_FILE);
+          copied = true;
+          break;
+        } catch (err: any) {
+          if (attempt === 3 || (err?.code !== "EBUSY" && err?.code !== "EPERM")) {
+            break;
+          }
+          const end = Date.now() + 40 * (attempt + 1);
+          while (Date.now() < end) {}
+        }
       }
       if (fs.existsSync(tempFile)) {
         try { fs.unlinkSync(tempFile); } catch {}
       }
     } catch (e) {
-      console.warn("Could not sync database.json backup:", e);
+      // Ignored for non-critical backup sync
     }
   }
 
@@ -1463,6 +1472,7 @@ class Database {
     }
 
     this.writeDb(db);
+    this.approvedTermCache.clear();
     return created;
   }
 
@@ -1496,6 +1506,7 @@ class Database {
     });
 
     this.writeDb(db);
+    this.approvedTermCache.clear();
     return term;
   }
 

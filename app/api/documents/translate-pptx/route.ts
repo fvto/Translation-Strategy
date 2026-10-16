@@ -145,6 +145,10 @@ export async function POST(req: NextRequest) {
         return new Response(result.buffer as any, { headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "X-Audit-Applied-Count": String(result.appliedCount),
+          "X-Audit-Unhandled-Count": String(result.unhandledCount ?? 0),
+          "X-Audit-Unhandled-Slides": JSON.stringify(result.unhandledSlides ?? []),
+          "X-Postflight-Passed": String(result.postFlightPassed),
+          "Access-Control-Expose-Headers": "X-Audit-Applied-Count, X-Audit-Unhandled-Count, X-Audit-Unhandled-Slides, X-Postflight-Passed",
           "Content-Disposition": `attachment; filename="${encodeURIComponent(file.name.replace(/\.pptx$/i, "-audited.pptx"))}"`,
         } });
       } catch (error: any) {
