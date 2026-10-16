@@ -2,6 +2,8 @@ import { SmartAuditReport, ScannedTextUnit } from "./smart-detector";
 import { GeminiCircuitBreaker } from "./gemini/circuit-breaker";
 import { GeminiRateLimiter } from "./gemini/rate-limiter";
 import { GeminiQuotaManager } from "./gemini/quota-manager";
+import { db } from "../database/db";
+import { enforceTerminologyCompliance } from "../terminology/enforcer";
 
 export interface AiDeepAuditOptions {
   apiKey?: string;
@@ -92,11 +94,23 @@ export async function runAiDeepAudit(
   let immuneCount = 0;
   let verifiedCount = 0;
   const unitMap = new Map(report.units.map((u) => [u.id, u]));
+  const glossary = db.getGlossaryReviewTerminology(options.sourceLang || "vi", options.targetLang || "en");
 
   // Process in chunks of 5 slides to keep prompt concise and within token bounds
   const CHUNK_SIZE = 5;
   for (let c = 0; c < slidesToAudit.length; c += CHUNK_SIZE) {
     const chunk = slidesToAudit.slice(c, c + CHUNK_SIZE);
+
+    const relevantGlossary = glossary.filter((t) => {
+      const src = (t.sourceTerm || "").toLowerCase().trim();
+      return src.length >= 2 && chunk.some((s) => s.units.some((u) => u.sourceText.toLowerCase().includes(src)));
+    });
+
+    const glossarySection = relevantGlossary.length > 0
+      ? `\n\n5. MANDATORY GLOSSARY REVIEW TERMINOLOGY:
+When suggesting translations ('NEEDS_TRANSLATION'), you MUST strictly use these approved footwear target terms:
+${relevantGlossary.slice(0, 30).map((t) => `- "${t.sourceTerm}" -> "${t.targetTerm}"`).join("\n")}`
+      : "";
 
     const payload = chunk.map((s) => ({
       slide: s.slideIndex,
@@ -121,7 +135,7 @@ Your task is to review slide text items that are candidates for translation and 
    -> Set verdict: 'NON_TRANSLATABLE', reason: '<Brief explanation in Vietnamese>'.
 
 4. 'NEEDS_TRANSLATION': The item is genuine Vietnamese text that has NO English counterpart on this slide, or is a sub-model step following a specific shoe model heading ('*Đối với [Model Code]', e.g. '*Đối với LQ-075W-1') where no model-specific English translation exists on this slide. Do NOT mark size conditions (e.g. 'Đối với size #13...') or standard notes as NEEDS_TRANSLATION if their corresponding English sentence is present on the slide. Note: Model names and codes (e.g. style codes like FD0736-001, CW2288-111, factory codes like LQ-075W-1, W-088, or brand lines) are dynamic entities across thousands of footwear models and must remain intact.
-   -> Set verdict: 'NEEDS_TRANSLATION', translation: '<Suggested English translation or null>', reason: '<Brief explanation in Vietnamese>'.
+   -> Set verdict: 'NEEDS_TRANSLATION', translation: '<Suggested English translation or null>', reason: '<Brief explanation in Vietnamese>'.${glossarySection}
 
 OUTPUT FORMAT:
 Respond ONLY with a valid JSON array of verdicts for candidate items:
@@ -213,9 +227,22 @@ Respond ONLY with a valid JSON array of verdicts for candidate items:
             unit.requiresTranslation = true;
             unit.selectedForTranslation = true;
             if (v.translation) {
-              unit.suggestedTranslation = v.translation;
+              const enforced = enforceTerminologyCompliance(
+                unit.sourceText,
+                v.translation,
+                glossary,
+                options.sourceLang || "vi",
+                options.targetLang || "en"
+              );
+              unit.suggestedTranslation = enforced.text;
               unit.safeToApply = true;
               unit.canApply = true;
+              if (enforced.replacements.length > 0) {
+                unit.glossaryCorrections = enforced.replacements.map((r) => ({
+                  sourceTerm: r.sourceTerm,
+                  expectedTarget: r.expectedTarget,
+                }));
+              }
             }
             unit.reason = v.reason || "AI Studio xác nhận: nội dung thuộc mục model riêng, cần dịch sang tiếng Anh.";
             verifiedCount++;

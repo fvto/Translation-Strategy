@@ -11,6 +11,7 @@ import {
 import { buildStructuredPrompt } from "./context";
 import { normalizeSpiTerminology } from "./casing";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
+import { TerminologyEntry } from "../database/types";
 import { AirGappedTranslationProvider } from "./offline";
 import { verifyConciseness, extractEntities, isConciseModeEligible } from "./concise-sop";
 
@@ -161,9 +162,22 @@ export class AntigravityCliTranslationProvider implements TranslationProvider {
     sourceTerm: string,
     context?: string,
     sourceLanguage: string = "en",
-    targetLanguage: string = "vi"
+    targetLanguage: string = "vi",
+    glossaryTerms: TerminologyEntry[] = []
   ): Promise<TermSuggestionResult> {
     const isEnToVi = sourceLanguage.toLowerCase().startsWith("en");
+
+    // Extract relevant glossary terms that match words in sourceTerm
+    const relevantGlossary = glossaryTerms.filter((t) => {
+      const src = (t.sourceTerm || "").toLowerCase().trim();
+      return src.length >= 2 && sourceTerm.toLowerCase().includes(src);
+    });
+
+    const glossarySection = relevantGlossary.length > 0
+      ? `\n\nGLOSSARY REVIEW TERMINOLOGY (MANDATORY TO PRESERVE):
+Whenever translating components, operations, or defects that match these terms, you MUST strictly use their exact target terms:
+${relevantGlossary.slice(0, 20).map((t) => `- "${t.sourceTerm}" -> "${t.targetTerm}"`).join("\n")}`
+      : "";
 
     // Construct footwear domain prompt
     const domainPrompt = `You are the lead footwear engineering and quality assurance translator for Ching Luh / Nike production operations.
@@ -172,7 +186,7 @@ Task: Provide the precise, standardized technical translation for the following 
 Source Term: "${sourceTerm}"
 Context / Standard: "${context || "Footwear Manufacturing SOP / IPQC / ISQ"}"
 Source Language: ${sourceLanguage.toUpperCase()}
-Target Language: ${targetLanguage.toUpperCase()}
+Target Language: ${targetLanguage.toUpperCase()}${glossarySection}
 
 STRICT DOMAIN RULES:
 1. Footwear Component Ordering:
@@ -210,9 +224,16 @@ Return ONLY a JSON object with this exact format:
 
       if (parsed && typeof parsed.targetTerm === "string" && parsed.targetTerm.trim()) {
         const targetClean = normalizeSpiTerminology(parsed.targetTerm.trim());
+        const enforced = enforceTerminologyCompliance(
+          sourceTerm,
+          targetClean,
+          glossaryTerms,
+          sourceLanguage,
+          targetLanguage
+        );
         return {
           sourceTerm,
-          targetTerm: targetClean,
+          targetTerm: enforced.text,
           category: parsed.category || "Footwear Engineering",
           definition: parsed.definition || undefined,
           confidence: parsed.confidence || 0.95,
@@ -227,13 +248,21 @@ Return ONLY a JSON object with this exact format:
         sourceText: sourceTerm,
         sourceLanguage,
         targetLanguage,
-        approvedTerminology: [],
+        approvedTerminology: glossaryTerms,
         context,
       });
 
+      const enforced = enforceTerminologyCompliance(
+        sourceTerm,
+        fallbackResult.translatedText,
+        glossaryTerms,
+        sourceLanguage,
+        targetLanguage
+      );
+
       return {
         sourceTerm,
-        targetTerm: fallbackResult.translatedText,
+        targetTerm: enforced.text,
         category: "Footwear Manufacturing",
         confidence: 0.8,
         provider: "Offline Dictionary (Fallback)",
@@ -243,9 +272,17 @@ Return ONLY a JSON object with this exact format:
     }
 
     // Default fallback if parsing fails
+    const defaultEnforced = enforceTerminologyCompliance(
+      sourceTerm,
+      sourceTerm,
+      glossaryTerms,
+      sourceLanguage,
+      targetLanguage
+    );
+
     return {
       sourceTerm,
-      targetTerm: sourceTerm,
+      targetTerm: defaultEnforced.text,
       confidence: 0.5,
       provider: "Antigravity CLI (agy)",
       isFallback: true,

@@ -1147,19 +1147,27 @@ class Database {
     });
   }
 
-  getApprovedTerminology(sourceLang = "en", targetLang = "vi"): TerminologyEntry[] {
+  getApprovedTerminology(
+    sourceLang = "en",
+    targetLang = "vi",
+    options?: { includeReview?: boolean }
+  ): TerminologyEntry[] {
+    const includeReview = options?.includeReview ?? false;
     // Fix #6: Return cached result if available (invalidated on every write)
-    const cacheKey = `${sourceLang}_${targetLang}`;
+    const cacheKey = `${sourceLang}_${targetLang}_${includeReview ? "all_review" : "approved"}`;
     const cached = this.approvedTermCache.get(cacheKey);
     if (cached) return cached;
 
     const db = this.readDb();
 
+    const isEligibleStatus = (status: string) =>
+      includeReview ? status === "approved" || status === "review" : status === "approved";
+
     // 1. Direct matches
     const direct = db.terminology
       .filter(
         (t) =>
-          t.status === "approved" &&
+          isEligibleStatus(t.status) &&
           t.sourceLanguage === sourceLang &&
           t.targetLanguage === targetLang
       )
@@ -1169,7 +1177,7 @@ class Database {
     const reversed = db.terminology
       .filter(
         (t) =>
-          t.status === "approved" &&
+          isEligibleStatus(t.status) &&
           t.sourceLanguage === targetLang &&
           t.targetLanguage === sourceLang
       )
@@ -1323,6 +1331,10 @@ class Database {
       if (a.isDirect && !b.isDirect) return -1;
       if (!a.isDirect && b.isDirect) return 1;
 
+      // Status priority: approved terms take precedence over review terms
+      if (a.status === "approved" && b.status !== "approved") return -1;
+      if (a.status !== "approved" && b.status === "approved") return 1;
+
       // Priority comparison
       const prioDiff = (b.priority ?? 1) - (a.priority ?? 1);
       if (prioDiff !== 0) return prioDiff;
@@ -1367,6 +1379,14 @@ class Database {
     // Fix #6: Store in cache for next call
     this.approvedTermCache.set(cacheKey, result);
     return result;
+  }
+
+  /**
+   * Retrieves all terminology entries present in Glossary Review (both approved and review status),
+   * strictly prioritizing approved terms over review terms.
+   */
+  getGlossaryReviewTerminology(sourceLang = "en", targetLang = "vi"): TerminologyEntry[] {
+    return this.getApprovedTerminology(sourceLang, targetLang, { includeReview: true });
   }
 
   addTerminology(entries: Omit<TerminologyEntry, "id" | "createdAt" | "updatedAt">[]): TerminologyEntry[] {

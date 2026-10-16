@@ -153,17 +153,19 @@ export function enforceTerminologyCompliance(
   // Machine translation frequently inverts this into "[flat] does not accept quality standard...".
   if (
     /\bkhông\s+bằng\s+phẳng\b/i.test(sourceText) &&
-    /\bchấp\s+nhận\s+(?:mức\s+độ\s+)?tiêu\s+chuẩn\b/i.test(sourceText) &&
-    (/\bflat\s+does\s+not\s+accept\b/i.test(currentText) || /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(currentText))
+    /\bchấp\s+nhận\s+(?:mức\s+độ\s+)?tiêu\s+chuẩn\b/i.test(sourceText)
   ) {
-    const fixedTolerance = currentText.replace(
-      /(?:Due\s+to\s+(?:the\s+)?surface\s+Tip\s*quarter\s+design,?\s*)?flat\s+does\s+not\s+accept\s+(?:the\s+)?quality\s+standard\s+(?:swoosh|logo)?\s*paint\s+printing\s+level,?\s*(?:it\s+is\s+)?not\s+smooth,?\s*(?:the\s+)?base\s+paint\s+flows\s+after\s+nosew(?:\s+as\s+shown\s+in\s+(?:the\s+)?updated\s+QA\s+manual(?:\s+cập\s+nhật)?)?/gi,
-      "Due to the uneven surface design of the Tip quarter, quality standard tolerances are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual"
-    );
-    if (fixedTolerance !== currentText) {
+    if (
+      !/\bquality\s+standard\s+are\s+acceptable\b/i.test(currentText) ||
+      /\btolerances\b/i.test(currentText) ||
+      /\bflat\s+does\s+not\s+accept\b/i.test(currentText) ||
+      /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(currentText) ||
+      /\baccept\s+the\s+quality\s+standard\b/i.test(currentText)
+    ) {
+      const fixedTolerance = "Due to the uneven surface design of the Tip quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual";
       replacements.push({
         sourceTerm: "Do thiết kế bề mặt Tip quarter không bằng phẳng chấp nhận mức độ tiêu chuẩn...",
-        expectedTarget: "Due to the uneven surface design of the Tip quarter, quality standard tolerances are acceptable...",
+        expectedTarget: "Due to the uneven surface design of the Tip quarter, quality standard are acceptable...",
         originalText: currentText,
         replacementText: fixedTolerance,
       });

@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
 
     const trimmedSource = sourceTerm.trim();
 
-    // 1. First check if term already exists in local approved database
-    const existingTerms = db.getTerminology({ search: trimmedSource });
-    const exactMatch = existingTerms.find(
-      (t) => t.sourceTerm.toLowerCase() === trimmedSource.toLowerCase() && t.status === "approved"
+    // 1. First check if term already exists in Glossary Review database (both approved and review)
+    const glossaryReviewTerms = db.getGlossaryReviewTerminology(sourceLanguage, targetLanguage);
+    const exactMatch = glossaryReviewTerms.find(
+      (t) => t.sourceTerm.toLowerCase() === trimmedSource.toLowerCase()
     );
 
     if (exactMatch) {
@@ -33,15 +33,17 @@ export async function POST(req: NextRequest) {
         success: true,
         sourceTerm: exactMatch.sourceTerm,
         targetTerm: exactMatch.targetTerm,
-        category: exactMatch.category || "Approved Glossary",
-        confidence: 1.0,
-        provider: "Internal Approved Glossary",
-        notes: "Thuật ngữ đã được chuẩn hóa trong cơ sở dữ liệu.",
+        category: exactMatch.category || "Glossary Review",
+        confidence: exactMatch.status === "approved" ? 1.0 : 0.95,
+        provider: exactMatch.status === "approved" ? "Internal Approved Glossary" : "Glossary Review (Chờ duyệt)",
+        notes: exactMatch.status === "approved"
+          ? "Thuật ngữ đã được chuẩn hóa trong cơ sở dữ liệu."
+          : "Thuật ngữ đã được thêm vào trong Glossary Review.",
         isExisting: true,
       });
     }
 
-    // 2. Use Antigravity CLI Provider with full domain engineering context
+    // 2. Use Antigravity CLI Provider with full domain engineering context & glossary review terms
     const agyProvider = new AntigravityCliTranslationProvider();
 
     try {
@@ -49,7 +51,8 @@ export async function POST(req: NextRequest) {
         trimmedSource,
         context,
         sourceLanguage,
-        targetLanguage
+        targetLanguage,
+        glossaryReviewTerms
       );
 
       return NextResponse.json({
@@ -64,7 +67,7 @@ export async function POST(req: NextRequest) {
         sourceText: trimmedSource,
         sourceLanguage,
         targetLanguage,
-        approvedTerminology: [],
+        approvedTerminology: glossaryReviewTerms,
         context,
       });
 
@@ -73,7 +76,7 @@ export async function POST(req: NextRequest) {
         sourceTerm: trimmedSource,
         targetTerm: fallbackTranslation.translatedText,
         category: "Footwear Manufacturing",
-        confidence: 0.75,
+        confidence: 0.8,
         provider: "Offline Glossary (Fallback)",
         authRequired: isAuthError,
         authUrl: isAuthError ? cliErr.authUrl : undefined,

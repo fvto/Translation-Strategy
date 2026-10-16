@@ -216,18 +216,20 @@ export async function auditAndRepairPptxPostFlight(
       }
 
       // Auto-Repair QA Tolerance sentence on Tip quarter uneven surface
-      if (/\bflat\s+does\s+not\s+accept\b/i.test(updated) || /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\s+(?:swoosh|logo)?\s*paint\b/i.test(updated)) {
-        const fixed = updated.replace(
-          /(?:Due\s+to\s+(?:the\s+)?surface\s+Tip\s*quarter\s+design,?\s*)?flat\s+does\s+not\s+accept\s+(?:the\s+)?quality\s+standard\s+(?:swoosh|logo)?\s*paint\s+printing\s+level,?\s*(?:it\s+is\s+)?not\s+smooth,?\s*(?:the\s+)?base\s+paint\s+flows\s+after\s+nosew(?:\s+as\s+shown\s+in\s+(?:the\s+)?updated\s+QA\s+manual(?:\s+cập\s+nhật)?)?/gi,
-          "Due to the uneven surface design of the Tip quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual"
-        );
+      if (
+        /\bflat\s+does\s+not\s+accept\b/i.test(updated) ||
+        /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(updated) ||
+        /\baccept\s+the\s+quality\s+standard\s+level\b/i.test(updated) ||
+        (/\buneven\s+(?:surface\s+design\s+of\s+the\s+)?Tip[- ]quarter\b/i.test(updated) && !/\bquality\s+standard\s+are\s+acceptable\b/i.test(updated))
+      ) {
+        const fixed = "Due to the uneven surface design of the Tip quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual";
         if (fixed !== updated) {
           xmlModified = true;
           repairedCount++;
           issues.push({
             slide: filename,
             type: "typo_repair",
-            message: "Auto-repaired QA standard sentence from inverted 'flat does not accept' to 'quality standard are acceptable'",
+            message: "Auto-repaired QA standard sentence to 'quality standard are acceptable'",
             targetText: fixed,
             autoRepaired: true,
           });

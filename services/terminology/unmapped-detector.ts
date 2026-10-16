@@ -418,13 +418,24 @@ export function isVietnameseCandidate(term: string): boolean {
 export function generateSuggestions(
   sourceTerm: string,
   currentTranslation: string = "",
-  category: UnmappedTermItem["category"] = "Thuật ngữ chung (General)"
+  category: UnmappedTermItem["category"] = "Thuật ngữ chung (General)",
+  existingGlossary: TerminologyEntry[] = []
 ): UnmappedTermOption[] {
   const norm = normalizeKey(sourceTerm);
   const rawOptions: UnmappedTermOption[] = [];
 
-  // 1. Direct hit from domain suggestion map
-  if (DOMAIN_SUGGESTION_MAP[norm]) {
+  // 0. Direct hit from existing Glossary Review entries
+  const glossaryHit = existingGlossary.find((item) => normalizeKey(item.sourceTerm) === norm);
+  if (glossaryHit && cleanTargetTerm(glossaryHit.targetTerm)) {
+    const cleanEn = cleanTargetTerm(glossaryHit.targetTerm);
+    const casedEn = adaptTermCasing(cleanEn, true);
+    rawOptions.push(
+      { targetTerm: casedEn, label: "Khuyên dùng (Từ Glossary Review)", isRecommended: true },
+      { targetTerm: currentTranslation && currentTranslation !== casedEn ? currentTranslation : `${casedEn} (Process Variant)`, label: "Phương án thay thế" },
+      { targetTerm: `Standard ${casedEn}`, label: "Thuật ngữ mở rộng" }
+    );
+  } else if (DOMAIN_SUGGESTION_MAP[norm]) {
+    // 1. Direct hit from domain suggestion map
     const entry = DOMAIN_SUGGESTION_MAP[norm];
     rawOptions.push(
       { targetTerm: entry.options[0], label: "Khuyên dùng (Chuẩn SOP)", isRecommended: true },
@@ -576,7 +587,7 @@ export function detectUnmappedTerminology(
                 const transMatch = transText.match(/^\*\s*([^:\n\r]+)(?::|$)/);
                 const transHeading = transMatch ? transMatch[1].trim() : transText.slice(0, 40);
 
-                const suggestions = generateSuggestions(rawTerm, transHeading, "Quy trình (Process)");
+                const suggestions = generateSuggestions(rawTerm, transHeading, "Quy trình (Process)", existingGlossary);
                 if (suggestions.length > 0) {
                   const currentTranslationValid = transHeading && normalizeKey(transHeading) !== normTerm && !hasViDiacritics(transHeading);
 
@@ -612,7 +623,7 @@ export function detectUnmappedTerminology(
               seenTermPerSlide.add(dedupKey);
 
               const transClause = transText.split(/[:\-\–\n]/)[0].trim();
-              const suggestions = generateSuggestions(clause, transClause, "Lỗi chất lượng (CTQ Defect)");
+              const suggestions = generateSuggestions(clause, transClause, "Lỗi chất lượng (CTQ Defect)", existingGlossary);
               if (suggestions.length > 0) {
                 const currentTranslationValid = transClause && normalizeKey(transClause) !== normClause && !hasViDiacritics(transClause);
 
@@ -643,7 +654,7 @@ export function detectUnmappedTerminology(
             if (!seenTermPerSlide.has(dedupKey)) {
               seenTermPerSlide.add(dedupKey);
 
-              const suggestions = generateSuggestions(keyTerm, meta.options[0], meta.category);
+              const suggestions = generateSuggestions(keyTerm, meta.options[0], meta.category, existingGlossary);
               if (suggestions.length > 0) {
                 unmappedItems.push({
                   id: `unmapped_${slideNumber}_${unmappedItems.length + 1}`,

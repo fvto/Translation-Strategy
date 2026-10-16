@@ -14,6 +14,9 @@ import { dynamicDeckDetector } from "../documents/pptx-structure";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName, isEnglishImmunityProtected, isBilingualText, isItemPrefixOrCode } from "./smart-detector";
 import type { ScannedTextUnit, SmartAuditReport, TextUnitLocation, TranslationAuditGroup } from "./smart-detector";
+import { AirGappedTranslationProvider } from "./offline";
+import { matchTerminology } from "../terminology/matcher";
+import { enforceTerminologyCompliance } from "../terminology/enforcer";
 
 interface RawUnit { id: string; text: string; xml: string; location: TextUnitLocation; containerId: string; readOnly?: boolean }
 interface ScanOptions {
@@ -175,10 +178,11 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
       if(containsHfpa)afterHfpa=true;
     }
   }
-  const glossary = (options.approvedGlossary || db.getApprovedTerminology(sourceLang, targetLang)).filter((e) => e.status === "approved" && isSafeTerminologyEntry(e) &&
+  const rawGlossary = options.approvedGlossary || db.getGlossaryReviewTerminology(sourceLang, targetLang);
+  const glossary = rawGlossary.filter((e) => (e.status === "approved" || e.status === "review") && isSafeTerminologyEntry(e) &&
     !(sourceLang === "vi" && targetLang === "en" && hasViDiacritics(cleanTargetTerm(e.targetTerm))) &&
     auditTextForms(e.sourceTerm).compact !== auditTextForms(e.targetTerm).compact);
-  const pairs: AuditMemoryPair[] = glossary.map((e) => ({ source: e.sourceTerm, target: cleanTargetTerm(e.targetTerm), origin: "approved" }));
+  const pairs: AuditMemoryPair[] = glossary.map((e) => ({ source: e.sourceTerm, target: cleanTargetTerm(e.targetTerm), origin: e.status === "approved" ? "approved" : "review" }));
   pairs.push(...(options.historyPairs || getAuditHistoryPairs(sourceLang, targetLang)));
   for (const entry of options.customDocTM?.getAllEntries() || []) pairs.push({ source: entry.sourceOriginal, target: entry.target,
     origin: entry.status === "LOCKED" || entry.status === "APPROVED" ? "approved" : "presentation", slideIndex: entry.sourceLocation.slide });
@@ -786,7 +790,7 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
           unit.suggestedTranslation = prefix && !decision.match.target.startsWith(prefix.trim()) ? prefix + decision.match.target : decision.match.target;
           unit.safeToApply = decision.safe;
           unit.status = decision.conflict ? "TRANSLATION_CONFLICT" : decision.safe ? decision.match.origin === "approved" ? "LOCKED_TERMINOLOGY" : "TM_REUSE" : "POSSIBLE_TRANSLATION";
-          unit.reason = decision.conflict ? "Có nhiều bản dịch phù hợp; cần chọn theo ngữ cảnh." : decision.match.origin === "approved" ? "Bản dịch từ thuật ngữ đã duyệt." : decision.match.origin === "correction" ? "Bản dịch đã được người dùng chỉnh sửa và lưu." : decision.match.origin === "presentation" ? "Tìm thấy bản dịch trong PowerPoint hiện tại." : "Tìm thấy bản dịch trong tài liệu trước; cần xác nhận.";
+          unit.reason = decision.conflict ? "Có nhiều bản dịch phù hợp; cần chọn theo ngữ cảnh." : decision.match.origin === "approved" ? "Bản dịch từ thuật ngữ đã duyệt." : decision.match.origin === "review" ? "Bản dịch từ thuật ngữ trong Glossary Review." : decision.match.origin === "correction" ? "Bản dịch đã được người dùng chỉnh sửa và lưu." : decision.match.origin === "presentation" ? "Tìm thấy bản dịch trong PowerPoint hiện tại." : "Tìm thấy bản dịch trong tài liệu trước; cần xác nhận.";
           if (enforceGlossary) {
           const selectedCheck = checked.find(({ check }) => check.isValid && check.text === decision.match!.target)?.check;
           if (selectedCheck?.corrections.length) {
@@ -806,6 +810,26 @@ export async function scanPptxTranslationIntelligence(buffer: Buffer, fileName: 
         unit.status = "REVIEW_REQUIRED"; unit.reason = "Chưa đủ bằng chứng ngôn ngữ; có thể là tên, mã hoặc tiếng Việt không dấu."; unit.confidence = 0.5;
       } else if (sourceLang === "en" && targetLang === "vi" && auditTextForms(raw.text).tokens.length === 1) {
         unit.status = "REVIEW_REQUIRED"; unit.reason = "Từ đơn cần ngữ cảnh để chọn nghĩa phù hợp."; unit.confidence = 0.6;
+      } else if (sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text, sourceLang) && !isInspectionStatusLabel(raw.text) && !isShoeModelName(raw.text)) {
+        const matchedGlossary = matchTerminology(raw.text, glossary);
+        if (matchedGlossary.length > 0) {
+          const airgapped = new AirGappedTranslationProvider();
+          const translated = airgapped.translateVietnameseToEnglish(raw.text, glossary);
+          const enforced = enforceTerminologyCompliance(raw.text, translated, glossary, sourceLang, targetLang);
+          const candidate = cleanTargetTerm(enforced.text);
+          if (candidate && !hasViDiacritics(candidate) && candidate.toLowerCase() !== raw.text.toLowerCase()) {
+            unit.suggestedTranslation = candidate;
+            unit.status = "NEEDS_TRANSLATION";
+            unit.confidence = 0.85;
+            unit.safeToApply = true;
+            unit.canApply = !raw.readOnly && canReplaceParagraphText(raw.xml, candidate);
+            const matchedTermsStr = [...new Set(matchedGlossary.map((m) => `${m.entry.sourceTerm} → ${cleanTargetTerm(m.entry.targetTerm)}`))].join("; ");
+            unit.reason = "Gợi ý dịch sử dụng thuật ngữ từ Glossary Review: " + matchedTermsStr + ".";
+            if (enforced.replacements.length) {
+              unit.glossaryCorrections = enforced.replacements.map(({ sourceTerm, expectedTarget }) => ({ sourceTerm, expectedTarget }));
+            }
+          }
+        }
       }
       }
     }
