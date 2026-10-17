@@ -84,18 +84,13 @@ export class DynamicDeckDetector {
     // Check for Section Divider / Cover slide:
     // Has very few text tags (<= 5), no large tables, and short title/season code
     const title = (slide.title || "").trim();
-    const isDivider =
-      totalTexts <= 5 &&
-      !hasTable &&
-      (/^(FA|SU|SP|HO)\d{2}\b/i.test(title) ||
-        /\b(section|chương|phần|quy\s*trình|process|tiêu\s*chuẩn|manual)\b/i.test(title));
 
     // Check if slide matches ISQ / CTQ / CTP criteria
     let isIsq = false;
     if (fileName) {
       const lowerFile = fileName.toLowerCase();
       if (
-        (/\b(isq|in-station\s*quality)\b/i.test(lowerFile) && !/\bipqc\b/i.test(lowerFile)) ||
+        (/(?:^|[^a-z0-9])(?:isq|in-station\s*quality)(?:[^a-z0-9]|$)/i.test(lowerFile) && !/(?:ipqc|sop)/i.test(lowerFile)) ||
         /(cutting\s*dies?\s*manual|sổ\s*tay\s*khuôn\s*dao)/i.test(lowerFile)
       ) {
         isIsq = true;
@@ -104,16 +99,15 @@ export class DynamicDeckDetector {
 
     if (!isIsq) {
       isIsq =
-        /\b(isq|ctq|ctp|critical\s*to\s*(quality|process)|in-station\s*quality)\b/i.test(title) ||
+        /(?:^|[^a-z0-9])(?:isq|ctq|ctp|critical\s*to\s*(?:quality|process)|in-station\s*quality)(?:[^a-z0-9]|$)/i.test(title) ||
         /(cutting\s*dies?\s*manual|sổ\s*tay\s*khuôn\s*dao)/i.test(title) ||
         slide.paragraphs.some((p) =>
-          /\b(isq|ctq|ctp|critical\s*to\s*(quality|process)|translate\s+for\s+isq|\bfor\s+isq\b|\bisq\s+manual\b|in-station\s*quality)\b/i.test(p.originalText)
+          /(?:^|[^a-z0-9])(?:isq|ctq|ctp|translate\s+for\s+isq|\bfor\s+isq\b|\bisq\s+manual\b|in-station\s*quality)(?:[^a-z0-9]|$)/i.test(p.originalText) ||
+          /\bcritical\s*to\s*(?:quality|process)\b/i.test(p.originalText)
         );
     }
 
     // Post-HFPA Inspection Strategy / Focuses sections:
-    // User requirement: Starting after HFPA Inspection Strategy, Cutting Inspection Strategy
-    // and Inspection strategy slides are treated like ISQ (1 slide EN on top, 1 slide VI below; no EN on top VI below in-place).
     if (!isIsq && isPostHfpa) {
       const allText = (title + " " + slide.paragraphs.map((p) => p.originalText).join(" ")).toLowerCase();
       if (
@@ -125,6 +119,20 @@ export class DynamicDeckDetector {
         isIsq = true;
       }
     }
+
+    // Check for Section Divider / Cover slide:
+    // Has very few text tags (<= 5), no instructions/steps, no large tables, and short title/season code
+    const hasInstructions = slide.paragraphs.some((p) =>
+      /^\s*(?:bước\s*\d+|step\s*\d+|\d+[\.:\-])\s+/i.test(p.originalText) ||
+      /\b(?:kiểm\s*tra|thao\s*tác|đảm\s*bảo|yêu\s*cầu)\b/i.test(p.originalText)
+    );
+    const isDivider =
+      !hasInstructions &&
+      totalTexts <= 5 &&
+      !hasTable &&
+      (/^(FA|SU|SP|HO)\d{2}\b/i.test(title) ||
+        /^\s*(?:section|chương|phần)\s*\d*\b/i.test(title) ||
+        /^\s*(?:quy\s*trình|process|tiêu\s*chuẩn|manual)\s*$/i.test(title));
 
     return {
       slideIndex: slide.slideIndex,
@@ -270,7 +278,7 @@ export class DynamicDeckDetector {
           }
         } else {
           // Non-ISQ (e.g. IPQC tables) kept in requested mode (e.g. ipqc_bilingual)
-          targetSlideModes.set(p.slideIndex, requestedMode);
+          targetSlideModes.set(p.slideIndex, requestedMode === "isq_duplicate" ? "ipqc_bilingual" : requestedMode);
         }
       } else if (hasInterleavedPairs) {
         if (p.isDivider) {

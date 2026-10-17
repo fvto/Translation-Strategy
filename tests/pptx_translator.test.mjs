@@ -1280,6 +1280,114 @@ test("Defect Card Table Cell - Prevents duplication of bilingual defect titles w
   ]);
 });
 
+test("ISQ Detection & Mixed EN/VI Text: Duplicates ISQ slides and translates mixed instruction sentences without skipping", async () => {
+  const { isBilingualText, classifyTextUnit, auditPptxGaps } = await import("../services/translation/smart-detector.ts");
+
+  // 1. Verify unit-level detection of mixed EN/VI sentences vs genuine bilingual pairs
+  const mixedSentence1 = "1. Kiểm tra vị trí logo (Tongue label) - Phải cân đối hai bên";
+  const mixedSentence2 = "2. May viền (Collar stitch): Mũi may đều không đứt chỉ";
+  const mixedSentence3 = "3. Mũi giày (Toe cap) không bị lệch tâm";
+  const genuineBilingual1 = "Toe shape - Hình dạng mũi";
+  const genuineBilingual2 = "Final Inspection\nKiểm tra cuối cùng";
+
+  assert.strictEqual(isBilingualText(mixedSentence1), false, "Mixed instruction with loanword is NOT a bilingual pair");
+  assert.strictEqual(isBilingualText(mixedSentence2), false, "Mixed instruction with colon is NOT a bilingual pair");
+  assert.strictEqual(isBilingualText(mixedSentence3), false, "Sentence with parenthesized part is NOT a bilingual pair");
+  assert.strictEqual(isBilingualText(genuineBilingual1), true, "Genuine parallel pair is bilingual");
+  assert.strictEqual(isBilingualText(genuineBilingual2), true, "Genuine multi-line pair is bilingual");
+
+  const classification = classifyTextUnit(mixedSentence1, { slideIndex: 1 }, { sourceLang: "vi", targetLang: "en" });
+  assert.strictEqual(classification.status, "NEEDS_TRANSLATION", "Must require translation, never ALREADY_TRANSLATED");
+
+  // 2. Build mock ISQ PPTX deck with mixed EN/VI instructions
+  const zip = new JSZip();
+  const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:sp>
+        <p:txBody>
+          <a:p><a:r><a:rPr lang="vi-VN" sz="1800"/><a:t>ISQ - Tiêu chuẩn kiểm tra may</a:t></a:r></a:p>
+          <a:p><a:r><a:rPr lang="vi-VN" sz="1400"/><a:t>${mixedSentence1}</a:t></a:r></a:p>
+          <a:p><a:r><a:rPr lang="vi-VN" sz="1400"/><a:t>${mixedSentence2}</a:t></a:r></a:p>
+          <a:p><a:r><a:rPr lang="vi-VN" sz="1400"/><a:t>${mixedSentence3}</a:t></a:r></a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+</p:sld>`;
+
+  zip.file("ppt/slides/slide1.xml", slideXml);
+  zip.file("ppt/presentation.xml", `<?xml version="1.0"?><p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:sldIdLst><p:sldId id="256" r:id="rId1"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/_rels/presentation.xml.rels", `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/></Relationships>`);
+  zip.file("[Content_Types].xml", `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/></Types>`);
+
+  const buf = await zip.generateAsync({ type: "nodebuffer" });
+
+  // 3. Test Smart Audit gap scan
+  const auditReport = await auditPptxGaps(buf, "ISQ_Stitching_SOP.pptx", {
+    sourceLang: "vi",
+    targetLang: "en",
+    mode: "isq_duplicate",
+  });
+
+  const mixedUnits = auditReport.units.filter((u) => u.sourceText.includes("Kiểm tra vị trí logo"));
+  assert.strictEqual(mixedUnits.length, 1);
+  assert.strictEqual(mixedUnits[0].status, "NEEDS_TRANSLATION", "Must be marked NEEDS_TRANSLATION in audit");
+  assert.strictEqual(mixedUnits[0].selectedForTranslation, true, "Must be selected for translation in audit");
+  assert.strictEqual(auditReport.requiresIsqDuplicate, true, "Must require ISQ duplication");
+
+  // 4. Test Translation & Duplication
+  const mockProvider = {
+    name: "isq_mixed_test_mock",
+    async translateBatch(req) {
+      const results = new Map();
+      for (const item of req.items) {
+        if (item.sourceText.includes("Tiêu chuẩn kiểm tra may")) {
+          results.set(item.id, "ISQ - Stitching Inspection Standard");
+        } else if (item.sourceText.includes("Kiểm tra vị trí logo")) {
+          results.set(item.id, "1. Inspect logo position (Tongue label) - Must be balanced on both sides");
+        } else if (item.sourceText.includes("May viền")) {
+          results.set(item.id, "2. Collar stitch: Even stitches without broken thread");
+        } else if (item.sourceText.includes("Mũi giày")) {
+          results.set(item.id, "3. Toe cap not misaligned");
+        } else {
+          results.set(item.id, "Translated: " + item.sourceText);
+        }
+      }
+      return { results, provider: "mock", durationMs: 2 };
+    },
+    async translate(req) {
+      return { translatedText: "Translated: " + req.sourceText, provider: "mock", durationMs: 2 };
+    },
+  };
+
+  const result = await pptxTranslatorService.translate(buf, {
+    provider: mockProvider,
+    sourceLanguage: "vi",
+    targetLanguage: "en",
+    mode: "isq_duplicate",
+    fileName: "ISQ_Stitching_SOP.pptx",
+  });
+
+  const outZip = await JSZip.loadAsync(result.translatedBuffer);
+  const outPresXml = await outZip.file("ppt/presentation.xml")?.async("string");
+  const sldIds = Array.from(outPresXml?.matchAll(/<p:sldId\b[^>]*\/>/g) || []);
+
+  // Slide must be duplicated into 2 slides (1 EN top slide, 1 VI bottom slide)
+  assert.strictEqual(sldIds.length, 2, "ISQ slide must be duplicated into 2 slides");
+
+  // Top slide (slide1.xml) must be pure English
+  const topSlideXml = await outZip.file("ppt/slides/slide1.xml")?.async("string");
+  assert.ok(topSlideXml?.includes("1. Inspect logo position (Tongue label) - Must be balanced on both sides"), "Top slide has English translation");
+  assert.ok(!topSlideXml?.includes("Phải cân đối hai bên"), "Top slide must not contain Vietnamese leakage");
+
+  // Bottom duplicated slide must contain the original Vietnamese intact
+  const bottomSlideXml = await outZip.file("ppt/slides/slide1001.xml")?.async("string");
+  assert.ok(bottomSlideXml?.includes(mixedSentence1), "Bottom slide must retain original Vietnamese");
+  assert.ok(bottomSlideXml?.includes(mixedSentence2), "Bottom slide must retain original Vietnamese");
+});
+
 
 
 

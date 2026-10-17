@@ -6,7 +6,7 @@ export const AUDIT_CONFIDENCE = Object.freeze({
   maxFuzzyLength: 350, historySessions: 20, historyPairs: 12000,
 });
 
-export type AuditMemoryOrigin = "approved" | "correction" | "presentation" | "history";
+export type AuditMemoryOrigin = "approved" | "review" | "correction" | "presentation" | "history";
 export interface AuditMemoryPair {
   source: string;
   target: string;
@@ -65,7 +65,7 @@ function grams(text: string): string[] {
   return [...result];
 }
 
-export const memoryPriority = (origin: AuditMemoryOrigin) => ({ approved: 4, correction: 3, presentation: 2, history: 1 })[origin];
+export const memoryPriority = (origin: AuditMemoryOrigin) => ({ approved: 5, review: 4, correction: 3, presentation: 2, history: 1 })[origin];
 
 /** Exact/compact hashes plus a bounded inverted index, built once per scan. */
 export class AuditMemoryIndex {

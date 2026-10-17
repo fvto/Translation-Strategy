@@ -6,6 +6,7 @@ import {auditPptxGaps,hasViDiacritics} from '../services/translation/smart-detec
 import {paragraphText,replaceParagraphTranslation,canTranslateParagraphText} from '../services/documents/pptx-text.ts';
 import {orderedSlidePaths,readIsqSlidePairs} from '../services/documents/pptx-slide-order.ts';
 import {translationCache} from '../services/translation/cache.ts';
+import {applyPptxAuditSuggestions} from '../services/translation/pptx-smart-audit.ts';
 const ctq1='CTQ 1-Lập thể mặt trước ép phải nổi';
 const ctq5='CTQ 5-Màu chỉ may đế trung đúng màu đường may suôn đều,đúng vị trí';
 const p=t=>`<a:p><a:r><a:rPr sz="1200"/><a:t>${t}</a:t></a:r></a:p>`;
@@ -108,3 +109,120 @@ test('Multiline translation preserves line breaks while using the dominant sourc
   assert.equal((edited.match(/<a:br\/>/g)||[]).length,1);
   assert.ok(!hasViDiacritics(paragraphText(edited)));
 });
+
+test('Smart Audit detects paired ISQ slides and marks VI reference with isIsqReference and pairedSlideIndex', async () => {
+  translationCache.clear();
+  const original = await deck(box(mixed1) + box(mixed5));
+  const result = await pptxTranslatorService.translate(original, {
+    sourceLanguage: 'vi',
+    targetLanguage: 'en',
+    mode: 'ipqc_bilingual',
+    fileName: 'ISQ-manual.pptx',
+    provider: mock,
+    translateMissingOnly: true,
+    selectedUnitIds: ['s2_p1', 's2_p2']
+  });
+
+  const audit = await auditPptxGaps(result.translatedBuffer, 'ISQ-manual.pptx', opts);
+  assert.ok(audit.slidePairs && audit.slidePairs.length >= 1, 'Audit reports at least 1 slide pair');
+  const pair = audit.slidePairs[0];
+  assert.equal(pair.enSlide, 2, 'EN slide is slide 2');
+  assert.equal(pair.viSlide, 3, 'VI slide is slide 3');
+
+  const viUnits = audit.units.filter(u => u.location.slideIndex === 3);
+  assert.ok(viUnits.length > 0, 'VI slide has scanned units');
+  for (const u of viUnits) {
+    assert.equal(u.location.isIsqReference, true, 'VI reference slide unit must have isIsqReference = true');
+    assert.equal(u.location.pairedSlideIndex, 2, 'VI reference slide unit must point to pairedSlideIndex = 2');
+    assert.equal(u.status, 'ALREADY_TRANSLATED', 'VI reference slide must not be marked NEEDS_TRANSLATION');
+    assert.equal(u.selectedForTranslation, false, 'VI reference slide must not be selected for translation');
+    assert.match(u.reason, /Slide tiếng Việt tham chiếu của cặp ISQ/);
+  }
+});
+
+test('VI reference slide handling: "duplicate" preserves original VI reference slide and creates new EN slide', async () => {
+  translationCache.clear();
+  const original = await deck(box(mixed1) + box(mixed5));
+  const paired = await pptxTranslatorService.translate(original, {
+    sourceLanguage: 'vi',
+    targetLanguage: 'en',
+    mode: 'ipqc_bilingual',
+    fileName: 'ISQ-manual.pptx',
+    provider: mock,
+    translateMissingOnly: true,
+    selectedUnitIds: ['s2_p1', 's2_p2']
+  });
+
+  const audit = await auditPptxGaps(paired.translatedBuffer, 'ISQ-manual.pptx', opts);
+  const viUnits = audit.units.filter(u => u.location.slideIndex === 3);
+  assert.ok(viUnits.length > 0);
+  const targetUnit = viUnits[0];
+  assert.equal(targetUnit.location.isIsqReference, true);
+
+  const customTranslations = { [targetUnit.id]: 'Custom Translated EN' };
+  const applyResult = await applyPptxAuditSuggestions(
+    paired.translatedBuffer,
+    'ISQ-manual.pptx',
+    [targetUnit.id],
+    {
+      sourceLang: 'vi',
+      targetLang: 'en',
+      mode: 'ipqc_bilingual',
+      customTranslations,
+      viRefAction: 'duplicate'
+    }
+  );
+
+  const afterZip = await JSZip.loadAsync(applyResult.buffer);
+  const order = await orderedSlidePaths(afterZip);
+  assert.equal(order.length, 4, 'Should have duplicated to 4 slides');
+
+  // The original VI slide content must remain 100% unchanged!
+  const beforeZip = await JSZip.loadAsync(paired.translatedBuffer);
+  const viPartPath = targetUnit.location.partPath;
+  const viBefore = await beforeZip.file(viPartPath).async('string');
+  const viAfter = await afterZip.file(viPartPath).async('string');
+  assert.equal(viAfter, viBefore, 'Original VI reference slide XML must be 100% identical and untouched');
+});
+
+test('VI reference slide handling: "overwrite" replaces text directly on VI slide without increasing slide count', async () => {
+  translationCache.clear();
+  const original = await deck(box(mixed1) + box(mixed5));
+  const paired = await pptxTranslatorService.translate(original, {
+    sourceLanguage: 'vi',
+    targetLanguage: 'en',
+    mode: 'ipqc_bilingual',
+    fileName: 'ISQ-manual.pptx',
+    provider: mock,
+    translateMissingOnly: true,
+    selectedUnitIds: ['s2_p1', 's2_p2']
+  });
+
+  const audit = await auditPptxGaps(paired.translatedBuffer, 'ISQ-manual.pptx', opts);
+  const viUnits = audit.units.filter(u => u.location.slideIndex === 3);
+  const targetUnit = viUnits[0];
+
+  const customTranslations = { [targetUnit.id]: 'Overwritten English Text' };
+  const applyResult = await applyPptxAuditSuggestions(
+    paired.translatedBuffer,
+    'ISQ-manual.pptx',
+    [targetUnit.id],
+    {
+      sourceLang: 'vi',
+      targetLang: 'en',
+      mode: 'ipqc_bilingual',
+      customTranslations,
+      viRefAction: 'overwrite'
+    }
+  );
+
+  const afterZip = await JSZip.loadAsync(applyResult.buffer);
+  const order = await orderedSlidePaths(afterZip);
+  assert.equal(order.length, 3, 'Slide count must remain 3 with overwrite');
+
+  const viPartPath = targetUnit.location.partPath;
+  const viAfter = await afterZip.file(viPartPath).async('string');
+  assert.ok(viAfter.includes('Overwritten English Text'), 'VI reference slide must have been overwritten directly');
+});
+
+

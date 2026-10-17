@@ -9,7 +9,7 @@ import { getAuditHistoryPairs } from "./translation-memory";
 import { AUDIT_CONFIDENCE, AuditMemoryIndex, auditTextForms, chooseAuditMatch, languageEvidence, memoryPriority, vietnameseQuality } from "./audit-intelligence";
 import type { AuditMemoryPair } from "./audit-intelligence";
 import { PPTX_PARAGRAPH_PATTERN, paragraphText, canReplaceParagraphText, replaceParagraphText, canTranslateParagraphText, replaceParagraphTranslation } from "../documents/pptx-text";
-import { orderedSlidePaths, readIsqSlidePairs, duplicateIsqSlides } from "../documents/pptx-slide-order";
+import { orderedSlidePaths, readIsqSlidePairs, duplicateIsqSlides, duplicateViReferenceSlides } from "../documents/pptx-slide-order";
 import { dynamicDeckDetector } from "../documents/pptx-structure";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName, isEnglishImmunityProtected, isBilingualText, isItemPrefixOrCode } from "./smart-detector";
@@ -29,6 +29,8 @@ interface ScanOptions {
   historyPairs?: AuditMemoryPair[];
   expectedSuggestions?: { id: string; sourceText: string; suggestedTranslation: string }[];
   customTranslations?: Record<string, string>;
+  viRefAction?: "duplicate" | "overwrite" | "bilingual";
+  slideViHandling?: Record<number, "duplicate" | "overwrite" | "bilingual">;
 }
 
 function sourceEvidence(text: string, sourceLang: string): boolean {
@@ -164,8 +166,8 @@ export async function scanPptxTranslationIntelligence(
 ): Promise<SmartAuditReport> {
   const fileName = typeof fileNameOrOptions === "string" ? fileNameOrOptions : "presentation.pptx";
   const options = typeof fileNameOrOptions === "object" ? fileNameOrOptions : (rawOptions || {});
-  const sourceLang = (options.sourceLang || (options as any).sourceLanguage || "en").toLowerCase();
-  const targetLang = (options.targetLang || (options as any).targetLanguage || "vi").toLowerCase();
+  const sourceLang = (options.sourceLang || (options as any).sourceLanguage || "vi").toLowerCase();
+  const targetLang = (options.targetLang || (options as any).targetLanguage || "en").toLowerCase();
   const zip = await JSZip.loadAsync(buffer);
   const extracted = await extractUnits(zip);
   const isqSlidePairs = await readIsqSlidePairs(zip);
@@ -182,7 +184,9 @@ export async function scanPptxTranslationIntelligence(
       const profile=dynamicDeckDetector.profileSlide({slideIndex:members[0].location.slideIndex!,slideFileName:part,title:members[0].text,
         paragraphs:members.map(u=>({id:u.id,originalText:u.text,translatedText:'',slideIndex:u.location.slideIndex!,shapeIndex:0,paragraphIndex:u.location.paragraphIndex!}))},await zip.file(part)!.async('string'),fileName,afterHfpa);
       const ipqcTable=/\bIPQC\b/i.test(fileName) && !afterHfpa && profile.hasTable && profile.totalTexts>15;
-      if(profile.isIsq && !profile.isDivider && !ipqcTable && !referencePaths.has(part))isqPaths.add(part);
+      const hasVi = profile.viCount > 0 || members.some(u => sourceEvidence(u.text, "vi"));
+      const isModeIsq = options.mode === "isq_duplicate" && hasVi;
+      if((profile.isIsq || isModeIsq) && !profile.isDivider && !ipqcTable && !referencePaths.has(part))isqPaths.add(part);
       if(containsHfpa)afterHfpa=true;
     }
   }
@@ -641,12 +645,44 @@ export async function scanPptxTranslationIntelligence(
     return memo.get(key)!;
   };
   const preservedIds = new Set<string>();
+  const partToPair = new Map<string, { role: "en" | "vi"; partnerSlide: number; partnerPart: string; pairNum: number }>();
+  for (let idx = 0; idx < isqSlidePairs.length; idx++) {
+    const pair = isqSlidePairs[idx];
+    const enUnits = (slidePartUnits.get(pair.en) || []);
+    const viUnits = (slidePartUnits.get(pair.vi) || []);
+    const enSlide = enUnits[0]?.location.slideIndex || Number(pair.en.match(/slide(\d+)/)?.[1] || 0);
+    const viSlide = viUnits[0]?.location.slideIndex || Number(pair.vi.match(/slide(\d+)/)?.[1] || 0);
+    partToPair.set(pair.en, { role: "en", partnerSlide: viSlide, partnerPart: pair.vi, pairNum: idx + 1 });
+    partToPair.set(pair.vi, { role: "vi", partnerSlide: enSlide, partnerPart: pair.en, pairNum: idx + 1 });
+  }
+
   const units: ScannedTextUnit[] = extracted.units.map((raw) => {
     const language = languageEvidence(raw.text);
     const base = classifyTextUnit(raw.text, raw.location, { sourceLang, targetLang,
       existingTranslation: paired.has(raw.id) ? paired.get(raw.id) : undefined });
     const unit: ScannedTextUnit = { id: raw.id, sourceText: raw.text, sourceHash: computeSourceHash(raw.text), canonicalText: canonicalizeText(raw.text),
-      location: raw.location, ...base, selectedForTranslation: false, safeToApply: false, canApply: false };
+      location: { ...raw.location }, ...base, selectedForTranslation: false, safeToApply: false, canApply: false };
+
+    if (raw.location.partPath && partToPair.has(raw.location.partPath)) {
+      const pInfo = partToPair.get(raw.location.partPath)!;
+      unit.location.pairedSlideIndex = pInfo.partnerSlide;
+      if (pInfo.role === "vi") {
+        unit.location.isIsqReference = true;
+      }
+    }
+
+    if (referencePaths.has(raw.location.partPath!)) {
+      preservedIds.add(unit.id);
+      unit.status = "ALREADY_TRANSLATED";
+      const partnerSlide = unit.location.pairedSlideIndex ? ` (thuộc cặp ISQ với Slide ${unit.location.pairedSlideIndex} EN trên)` : "";
+      unit.reason = `Slide tiếng Việt tham chiếu của cặp ISQ${partnerSlide}; giữ nguyên 100% tiếng Việt đối chiếu, không cần dịch lại.`;
+      unit.selectedForTranslation = false;
+      unit.requiresTranslation = false;
+      unit.location.isIsqReference = true;
+      if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
+      delete unit.suggestedTranslation;
+      return unit;
+    }
 
     // Early guard: Inspection labels and Non-translatable tokens (numbers, acronyms, shoe models)
     if (isInspectionStatusLabel(raw.text) || isNonTranslatable(raw.text)) {
@@ -676,22 +712,11 @@ export async function scanPptxTranslationIntelligence(
       delete unit.suggestedTranslation;
       return unit;
     }
-
-    if (referencePaths.has(raw.location.partPath!)) {
-      preservedIds.add(unit.id);
-      unit.status = "ALREADY_TRANSLATED";
-      unit.reason = "Slide tiếng Việt tham chiếu của cặp ISQ; giữ nguyên, không cần dịch lại.";
-      unit.selectedForTranslation = false;
-      unit.requiresTranslation = false;
-      if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
-      delete unit.suggestedTranslation;
-      return unit;
-    }
     const isqSource = isqPaths.has(raw.location.partPath!) && sourceEvidence(raw.text,sourceLang);
     unit.location.isIsq=isqPaths.has(raw.location.partPath!);
     if (paired.has(raw.id)) {
       unit.existingTranslation = paired.get(raw.id);
-      const isPureIsqCtq = isqSource && /^\s*CT[QP]\s*\d+/i.test(raw.text);
+      const isPureIsqCtq = Boolean(isqSource);
       if (!isPureIsqCtq) {
         preservedIds.add(unit.id);
         unit.status = "ALREADY_TRANSLATED";
@@ -719,13 +744,19 @@ export async function scanPptxTranslationIntelligence(
       unit.requiresTranslation=false; delete unit.suggestedTranslation; return unit;
     }
     if ((inlineBilingual.has(raw.id) || isBilingualText(raw.text)) && !isqSource) {
-      preservedIds.add(unit.id);
-      unit.status = "ALREADY_TRANSLATED";
-      unit.reason = "Nội dung đã có sẵn cả tiếng Anh và tiếng Việt trong cùng đoạn văn (song ngữ).";
-      unit.requiresTranslation = false;
-      unit.selectedForTranslation = false;
-      delete unit.suggestedTranslation;
-      return unit;
+      if (options.mode === "replace_en" || options.mode === "isq_duplicate" || unit.location.isIsq) {
+        unit.status = "NEEDS_TRANSLATION";
+        unit.requiresTranslation = true;
+        unit.selectedForTranslation = true;
+      } else {
+        preservedIds.add(unit.id);
+        unit.status = "ALREADY_TRANSLATED";
+        unit.reason = "Nội dung đã có sẵn cả tiếng Anh và tiếng Việt trong cùng đoạn văn (song ngữ).";
+        unit.requiresTranslation = false;
+        unit.selectedForTranslation = false;
+        delete unit.suggestedTranslation;
+        return unit;
+      }
     }
     // A leaked VI history target cannot prove that a VI paragraph is translated.
     const targetMatches = lookup(targetIndex, raw.text, "target").filter(match =>
@@ -858,7 +889,9 @@ export async function scanPptxTranslationIntelligence(
         }
       }
     }
-    if (!["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(unit.status) && unit.suggestedTranslation && unit.suggestedTranslation !== raw.text) unit.canApply = !raw.readOnly && canReplaceParagraphText(raw.xml, unit.suggestedTranslation);
+    if (!["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(unit.status) && unit.suggestedTranslation && unit.suggestedTranslation !== raw.text) {
+      unit.canApply = !raw.readOnly && canReplaceParagraphText(raw.xml, unit.suggestedTranslation);
+    }
     unit.safeToApply = Boolean(unit.safeToApply && unit.canApply);
     // A candidate in memory is not a translation already present in the file.
     // Include unresolved source text even when history disagrees or a glossary
@@ -879,7 +912,9 @@ export async function scanPptxTranslationIntelligence(
   const rawById = new Map(extracted.units.map((r) => [r.id, r]));
   for (const unit of units) {
     const raw = rawById.get(unit.id)!;
-    if (unit.status === "TRANSLATION_CONFLICT" && unit.suggestedTranslation) unit.canApply = !raw.readOnly && canReplaceParagraphText(raw.xml, unit.suggestedTranslation);
+    if (unit.status === "TRANSLATION_CONFLICT" && unit.suggestedTranslation) {
+      unit.canApply = !raw.readOnly && canReplaceParagraphText(raw.xml, unit.suggestedTranslation);
+    }
     if(unit.location.isIsq && unit.requiresTranslation){unit.canApply=false;unit.safeToApply=false;}
   }
   const count = (status: ScannedTextUnit["status"]) => units.filter((u) => u.status === status).length;
@@ -928,7 +963,7 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
       }
     }
   }
-  if (!selected.length || selected.length !== requested.size || selected.some((u) => (!u.canApply && !u.location.isIsq) || !u.suggestedTranslation)) {
+  if (!selected.length || selected.length !== requested.size || selected.some((u) => (!u.canApply && !u.location.isIsq && !options.customTranslations?.[u.id]) || !u.suggestedTranslation)) {
     throw new Error("Một số gợi ý không còn hợp lệ hoặc cần chỉnh sửa thủ công để giữ định dạng. Hãy quét lại.");
   }
   if (options.expectedSuggestions) {
@@ -938,13 +973,36 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
     }
   }
   const zip = await JSZip.loadAsync(buffer);
+  const defaultViMode = options.viRefAction || "duplicate";
 
-  // Identify all ISQ slide parts
+  // Check which VI reference slides should be duplicated vs overwritten
+  const viRefSlidesToDuplicate = new Set<string>();
+  for (const u of selected) {
+    if (u.location.isIsqReference && u.location.partPath) {
+      const sIndex = u.location.slideIndex || 0;
+      const handling = options.slideViHandling?.[sIndex] || defaultViMode;
+      if (handling === "duplicate") {
+        viRefSlidesToDuplicate.add(u.location.partPath);
+      }
+    }
+  }
+
+  // Duplicate VI reference slides where user chose "duplicate"
+  let viToEnMap = new Map<string, string>();
+  if (viRefSlidesToDuplicate.size > 0) {
+    viToEnMap = await duplicateViReferenceSlides(zip, viRefSlidesToDuplicate);
+  }
+
+  // Identify normal ISQ slides to duplicate (skip if user explicitly chose "overwrite")
   const isqSlideParts = new Set<string>();
   if (options.mode !== "replace_en") {
     for (const u of report.units) {
-      if (u.location.isIsq && u.location.partPath) {
-        isqSlideParts.add(u.location.partPath);
+      if (u.location.isIsq && u.location.partPath && !u.location.isIsqReference && !viRefSlidesToDuplicate.has(u.location.partPath)) {
+        const sIndex = u.location.slideIndex || 0;
+        const handling = options.slideViHandling?.[sIndex] || defaultViMode;
+        if (handling !== "overwrite") {
+          isqSlideParts.add(u.location.partPath);
+        }
       }
     }
   }
@@ -954,13 +1012,19 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
   if (isqSlideParts.size > 0) {
     duplicatedPairs = await duplicateIsqSlides(zip, isqSlideParts);
   }
-  const isqEnPaths = new Set(duplicatedPairs.map((p) => p.en));
+  const isqEnPaths = new Set([
+    ...duplicatedPairs.map((p) => p.en),
+    ...Array.from(viToEnMap.values()),
+  ]);
 
   const byPart = new Map<string, Map<number, ScannedTextUnit>>();
   for (const unit of selected) {
-    const part = unit.location.partPath!;
-    if (!byPart.has(part)) byPart.set(part, new Map());
-    byPart.get(part)!.set(unit.location.paragraphIndex!, unit);
+    const origPart = unit.location.partPath!;
+    const targetPart = (unit.location.isIsqReference && viToEnMap.has(origPart))
+      ? viToEnMap.get(origPart)!
+      : origPart;
+    if (!byPart.has(targetPart)) byPart.set(targetPart, new Map());
+    byPart.get(targetPart)!.set(unit.location.paragraphIndex!, unit);
   }
   for (const [part, replacements] of byPart) {
     const xml = await zip.file(part)!.async("string");

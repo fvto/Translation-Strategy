@@ -1,17 +1,32 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
+
+export type ViReferenceHandlingMode = "overwrite" | "duplicate" | "bilingual";
+
+export interface ViHandlingOptions {
+  viHandlingMode?: ViReferenceHandlingMode;
+  slideViHandling?: Record<number, ViReferenceHandlingMode>;
+}
 
 interface SmartAuditModalProps {
   isOpen: boolean;
   onClose: () => void;
   auditReport: SmartAuditReport | null;
   file?: File | null;
-  onTranslateMissingOnly: (selectedUnitIds?: string[], customTranslations?: Record<string, string>) => void;
+  onTranslateMissingOnly: (
+    selectedUnitIds?: string[],
+    customTranslations?: Record<string, string>,
+    options?: ViHandlingOptions
+  ) => void;
   onTranslateAll?: () => void;
-  onApplySuggestions?: (unitIds: string[], customTranslations?: Record<string, string>) => Promise<void>;
+  onApplySuggestions?: (
+    unitIds: string[],
+    customTranslations?: Record<string, string>,
+    options?: ViHandlingOptions
+  ) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -44,6 +59,14 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   // Slide selector states
   const [slideRangeInput, setSlideRangeInput] = useState("");
   const [expandedSlideIndex, setExpandedSlideIndex] = useState<number | null>(null);
+
+  // VI Reference handling options ("duplicate" | "overwrite" | "bilingual")
+  const [viHandlingMode, setViHandlingMode] = useState<ViReferenceHandlingMode>("duplicate");
+  const [slideViHandling, setSlideViHandling] = useState<Record<number, ViReferenceHandlingMode>>({});
+
+  const getSlideViMode = (slideNum: number): ViReferenceHandlingMode => {
+    return slideViHandling[slideNum] || viHandlingMode;
+  };
 
   // Custom translation editing states
   const [customEdits, setCustomEdits] = useState<Record<string, string>>({});
@@ -87,6 +110,28 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     if (!report) return [];
     return Array.from(slideMap.keys()).sort((a, b) => a - b);
   }, [slideMap, report]);
+
+  // Dynamic map of slide pairs for ISQ linking
+  const slidePairMap = useMemo(() => {
+    const map = new Map<number, { role: "en" | "vi"; partnerSlide: number; pairIndex: number }>();
+    if (!report) return map;
+    if (report.slidePairs) {
+      report.slidePairs.forEach((pair, idx) => {
+        if (pair.enSlide && pair.viSlide) {
+          map.set(pair.enSlide, { role: "en", partnerSlide: pair.viSlide, pairIndex: idx + 1 });
+          map.set(pair.viSlide, { role: "vi", partnerSlide: pair.enSlide, pairIndex: idx + 1 });
+        }
+      });
+    }
+    for (const u of report.units) {
+      const s = u.location.slideIndex;
+      if (s && !map.has(s) && u.location.pairedSlideIndex) {
+        const role = u.location.isIsqReference ? "vi" : "en";
+        map.set(s, { role, partnerSlide: u.location.pairedSlideIndex, pairIndex: Math.floor(map.size / 2) + 1 });
+      }
+    }
+    return map;
+  }, [report]);
 
   const toggleSlide = (slideNum: number) => {
     const units = slideMap.get(slideNum) || [];
@@ -175,10 +220,20 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     }) })).filter((g) => g.unitIds.length);
   }, [report, byId, ignored, filter, slide, query, customEdits]);
 
+  const selectedMissing = useMemo(() => {
+    if (!report) return [];
+    return report.units.filter((u) => selected.has(u.id));
+  }, [report, selected]);
+
+  const selectedViRefUnits = useMemo(() => {
+    return selectedMissing.filter(
+      (u) => u.location.isIsqReference || slidePairMap.get(u.location.slideIndex || 0)?.role === "vi"
+    );
+  }, [selectedMissing, slidePairMap]);
+
   if (!isOpen || !report) return null;
 
   const loading = isLoading || busy;
-  const selectedMissing = report.units.filter((u) => selected.has(u.id));
   const safeIds = report.units.filter((u) => u.safeToApply && u.canApply && !(report.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
   const attention = (report.groups || []).filter((g) => !g.safeToApply && !ignored.has(g.id)).length || (report.groups ? 0 : report.needsTranslationCount);
 
@@ -264,7 +319,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     if (!preview || !onApplySuggestions) return;
     setBusy(true); setError("");
     try {
-      await onApplySuggestions(preview, customEdits);
+      await onApplySuggestions(preview, customEdits, { viHandlingMode, slideViHandling });
       setPreview(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể áp dụng gợi ý.");
@@ -468,6 +523,11 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                   const isExpanded = expandedSlideIndex === slideNum;
                   const needsTransCount = units.filter((u) => u.status === "NEEDS_TRANSLATION").length;
 
+                  const pairInfo = slidePairMap.get(slideNum);
+                  const isViReferenceSlide = pairInfo?.role === "vi" || units.some((u) => u.location.isIsqReference);
+                  const isEnPairedSlide = pairInfo?.role === "en";
+                  const partnerSlideNum = pairInfo?.partnerSlide || units.find((u) => u.location.pairedSlideIndex)?.location.pairedSlideIndex;
+
                   // Find title or first substantive snippet
                   const titleUnit = units.find((u) => u.sourceText && u.sourceText.trim().length > 3);
                   const titlePreview = titleUnit ? titleUnit.sourceText : `Slide ${slideNum}`;
@@ -475,11 +535,16 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                   return (
                     <div
                       key={slideNum}
+                      id={`slide-card-${slideNum}`}
                       className={card + " transition-colors " + (
                         isAllSelected
                           ? "border-sky-400 dark:border-sky-700 bg-sky-50/40 dark:bg-sky-950/25"
                           : isPartiallySelected
                           ? "border-amber-400 dark:border-amber-700 bg-amber-50/20 dark:bg-amber-950/15"
+                          : isViReferenceSlide
+                          ? "border-amber-300 dark:border-amber-800 bg-amber-50/15 dark:bg-amber-950/10 shadow-sm"
+                          : isEnPairedSlide
+                          ? "border-sky-300 dark:border-sky-800 bg-sky-50/15 dark:bg-sky-950/10 shadow-sm"
                           : "border-slate-200 dark:border-slate-800"
                       )}
                     >
@@ -504,9 +569,56 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                           </button>
 
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-slate-800 dark:text-slate-100">Slide {slideNum}</span>
-                              {needsTransCount > 0 ? (
+                              {isViReferenceSlide ? (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 flex items-center gap-1">
+                                    <ShieldCheck className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                                    Slide VI gốc đối chiếu ISQ (Giữ nguyên)
+                                  </span>
+                                  {selectedInSlide.length > 0 && (
+                                    <div className="inline-flex items-center rounded-md border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 p-0.5 text-[10px]">
+                                      <span className="text-[10px] text-slate-500 dark:text-slate-400 px-1 font-medium">Khi dịch:</span>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSlideViHandling((prev) => ({ ...prev, [slideNum]: "duplicate" }));
+                                        }}
+                                        className={`px-2 py-0.5 rounded font-medium cursor-pointer transition-colors ${
+                                          getSlideViMode(slideNum) === "duplicate"
+                                            ? "bg-emerald-600 text-white font-bold"
+                                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                        }`}
+                                        title="Giữ nguyên slide VI này, tự động tạo thêm một Slide EN mới"
+                                      >
+                                        Tạo thêm
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSlideViHandling((prev) => ({ ...prev, [slideNum]: "overwrite" }));
+                                        }}
+                                        className={`px-2 py-0.5 rounded font-medium cursor-pointer transition-colors ${
+                                          getSlideViMode(slideNum) === "overwrite"
+                                            ? "bg-rose-600 text-white font-bold"
+                                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                        }`}
+                                        title="Ghi đè tiếng Anh trực tiếp lên slide này"
+                                      >
+                                        Đè lên
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : isEnPairedSlide ? (
+                                <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-200 border border-sky-300 dark:border-sky-700 flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3 text-sky-600 dark:text-sky-400" />
+                                  Slide EN bản dịch ISQ (Trên)
+                                </span>
+                              ) : needsTransCount > 0 ? (
                                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-medium">
                                   {needsTransCount} câu chưa dịch
                                 </span>
@@ -519,6 +631,27 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                                   Không cần dịch
                                 </span>
                               )}
+
+                              {partnerSlideNum && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setExpandedSlideIndex(partnerSlideNum);
+                                    setTimeout(() => {
+                                      const el = document.getElementById(`slide-card-${partnerSlideNum}`);
+                                      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                                    }, 60);
+                                  }}
+                                  className="text-[10px] px-2 py-0.5 rounded font-medium bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition-colors flex items-center gap-1 cursor-pointer"
+                                  title={`Nhấp để chuyển nhanh tới Slide ${partnerSlideNum}`}
+                                >
+                                  <Link2 className="w-3 h-3 text-sky-600 dark:text-sky-400" />
+                                  {isViReferenceSlide
+                                    ? `Cặp ISQ: Ghép với Slide ${partnerSlideNum} (EN trên)`
+                                    : `Cặp ISQ: Ghép với Slide ${partnerSlideNum} (VI dưới)`}
+                                </button>
+                              )}
+
                               <span className="text-slate-400 text-[11px]">
                                 ({selectedInSlide.length}/{units.length} đoạn được chọn)
                               </span>
@@ -544,6 +677,41 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                       {/* Granular paragraph-by-paragraph toggle */}
                       {isExpanded && (
                         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                          {isViReferenceSlide && (
+                            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 text-xs space-y-1.5 animate-in fade-in">
+                              <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-200">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                                <span>Slide Tiếng Việt tham chiếu ISQ {partnerSlideNum ? `(ghép cặp với Slide ${partnerSlideNum} EN trên)` : ""}</span>
+                              </div>
+                              <p className="text-amber-700 dark:text-amber-300 text-[11px] leading-relaxed">
+                                Theo tiêu chuẩn SOP sản xuất Ching Luh, tài liệu ISQ luôn bắt buộc có <strong>1 slide EN ở trên + 1 slide VI ở dưới</strong> để công nhân xưởng có bản tiếng Việt đối chiếu trực tiếp. Slide này được hệ thống <strong>giữ nguyên 100% tiếng Việt gốc có chủ đích</strong>. Khuyến nghị <strong>không tích chọn dịch</strong> vì sẽ làm biến slide này thành tiếng Anh và mất bản tiếng Việt đối chiếu!
+                              </p>
+                            </div>
+                          )}
+
+                          {isEnPairedSlide && partnerSlideNum && (
+                            <div className="p-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/60 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+                              <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-200">
+                                <Link2 className="w-4 h-4 text-sky-600 shrink-0" />
+                                <span>Slide EN này đi kèm với <strong>Slide {partnerSlideNum} (Gốc tiếng Việt đối chiếu xưởng ở dưới)</strong></span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setExpandedSlideIndex(partnerSlideNum);
+                                  setTimeout(() => {
+                                    const el = document.getElementById(`slide-card-${partnerSlideNum}`);
+                                    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                                  }, 60);
+                                }}
+                                className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold hover:underline flex items-center gap-1 shrink-0 cursor-pointer"
+                              >
+                                <span>Xem Slide {partnerSlideNum} VI</span>
+                                <ChevronRight className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+
                           <p className="text-[11px] font-semibold text-slate-500">
                             Các vị trí văn bản trong Slide {slideNum} (tick để chọn từng chỗ/phần cần dịch):
                           </p>
@@ -577,9 +745,15 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                                           <span className="font-semibold text-slate-700 dark:text-slate-300">
                                             Đoạn {(u.location.paragraphIndex ?? 0) + 1}
                                           </span>
-                                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
-                                            {LABELS[u.status]}
-                                          </span>
+                                          {u.location.isIsqReference ? (
+                                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-semibold border border-amber-300 dark:border-amber-700">
+                                              Gốc VI tham chiếu (Giữ nguyên)
+                                            </span>
+                                          ) : (
+                                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                              {LABELS[u.status]}
+                                            </span>
+                                          )}
                                           {isCustom && (
                                             <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-semibold">
                                               Đã sửa thủ công
@@ -589,6 +763,58 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                                         <p className="text-slate-800 dark:text-slate-200 mt-0.5 break-words">
                                           {u.sourceText}
                                         </p>
+                                        {u.location.isIsqReference && isChecked && (
+                                          <div className="flex flex-wrap items-center justify-between gap-1.5 mt-1.5 px-2.5 py-1.5 rounded-md bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-[11px] animate-in fade-in">
+                                            <div className="flex items-center gap-1.5">
+                                              {getSlideViMode(u.location.slideIndex || 0) === "duplicate" ? (
+                                                <>
+                                                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                                  <span className="text-emerald-900 dark:text-emerald-200 font-medium">
+                                                    Slide VI đối chiếu: Đang chọn <strong>Tạo thêm</strong> (giữ nguyên slide VI, tạo thêm slide EN mới).
+                                                  </span>
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                                                  <span className="text-rose-900 dark:text-rose-200 font-medium">
+                                                    Slide VI đối chiếu: Đang chọn <strong>Đè lên</strong> (sẽ ghi đè thành tiếng Anh lên slide này).
+                                                  </span>
+                                                </>
+                                              )}
+                                            </div>
+                                            <div className="inline-flex items-center gap-1">
+                                              <span className="text-[10px] text-slate-500">Tùy chọn:</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const s = u.location.slideIndex || 0;
+                                                  setSlideViHandling((prev) => ({ ...prev, [s]: "duplicate" }));
+                                                }}
+                                                className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors ${
+                                                  getSlideViMode(u.location.slideIndex || 0) === "duplicate"
+                                                    ? "bg-emerald-600 text-white font-bold"
+                                                    : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300"
+                                                }`}
+                                              >
+                                                Tạo thêm
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const s = u.location.slideIndex || 0;
+                                                  setSlideViHandling((prev) => ({ ...prev, [s]: "overwrite" }));
+                                                }}
+                                                className={`px-1.5 py-0.5 rounded text-[10px] cursor-pointer transition-colors ${
+                                                  getSlideViMode(u.location.slideIndex || 0) === "overwrite"
+                                                    ? "bg-rose-600 text-white font-bold"
+                                                    : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300"
+                                                }`}
+                                              >
+                                                Đè lên
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
                                         {effectiveTrans && effectiveTrans.trim().toLowerCase() !== u.sourceText.trim().toLowerCase() && !isEditing && (
                                           <p className="text-emerald-700 dark:text-emerald-400 text-[11px] mt-0.5 break-words flex items-center gap-1">
                                             <ArrowRight className="w-2.5 h-2.5 shrink-0" />
@@ -727,6 +953,23 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                         <div className="p-2.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60">
                           <span className="font-bold text-amber-700 dark:text-amber-300 block mb-0.5">Slide {pair.viSlide} (Gốc VI tham chiếu xưởng)</span>
                           <p className="text-slate-700 dark:text-slate-300 line-clamp-2 italic">{pair.viTitle || "(Không có tiêu đề)"}</p>
+                        </div>
+                        <div className="pt-1.5 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTab("slides");
+                              setExpandedSlideIndex(pair.enSlide);
+                              setTimeout(() => {
+                                const el = document.getElementById(`slide-card-${pair.enSlide}`);
+                                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }, 60);
+                            }}
+                            className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Xem chi tiết Slide {pair.enSlide} &amp; {pair.viSlide}</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1083,28 +1326,103 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
         </div>
 
         {/* Modal footer actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 text-xs bg-slate-50/50 dark:bg-slate-950/30">
-          <div>
-            <span>Đã chọn <strong className="text-sky-600 dark:text-sky-400 font-semibold">{selectedMissing.length}</strong> đoạn cần dịch AI</span>
-            {customEditsCount > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-medium">
-                · {customEditsCount} đoạn đã sửa thủ công (0 token AI)
-              </span>
-            )}
-            <span className="ml-2 text-slate-400">· khoảng {Math.ceil(new Set(selectedMissing.map((u) => u.canonicalText)).size / 25)} yêu cầu AI</span>
-          </div>
-          <div className="flex gap-2">
-            <button className={button} onClick={onClose} disabled={loading}>
-              Đóng
-            </button>
-            <button
-              id="btn-translate-missing-only"
-              className={button + " bg-sky-600 text-white hover:bg-sky-500"}
-              disabled={loading || (!selectedMissing.length && customEditsCount === 0)}
-              onClick={() => onTranslateMissingOnly(selectedMissing.map((u) => u.id), customEdits)}
-            >
-              {loading ? "Đang xử lý..." : `Dịch & sửa phần chưa dịch (${selectedMissing.length + customEditsCount})`}
-            </button>
+        <div className="flex flex-col gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 text-xs bg-slate-50/50 dark:bg-slate-950/30">
+          {selectedViRefUnits.length > 0 && (
+            <div className="w-full p-3 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-xs text-amber-900 dark:text-amber-200 flex flex-col gap-2.5 animate-in fade-in">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>
+                    <strong>Lưu ý Slide VI đối chiếu:</strong> Bạn đang chọn <strong>{selectedViRefUnits.length}</strong> đoạn trên Slide tiếng Việt tham chiếu.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelected((prev) => {
+                      const next = new Set(prev);
+                      for (const u of selectedViRefUnits) next.delete(u.id);
+                      return next;
+                    });
+                  }}
+                  className="px-2.5 py-1 rounded text-[11px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer shrink-0"
+                >
+                  Bỏ chọn {selectedViRefUnits.length} đoạn VI này
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-amber-200 dark:border-amber-800/60">
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                  Tùy chọn xử lý:
+                </span>
+                <div className="inline-flex items-center gap-2 flex-wrap">
+                  <label className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer transition-all ${
+                    viHandlingMode === "duplicate"
+                      ? "bg-emerald-100 dark:bg-emerald-950/80 border-emerald-500 text-emerald-900 dark:text-emerald-100 font-semibold shadow-2xs ring-1 ring-emerald-500/30"
+                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                  }`}>
+                    <input
+                      type="radio"
+                      name="viHandlingMode"
+                      value="duplicate"
+                      checked={viHandlingMode === "duplicate"}
+                      onChange={() => setViHandlingMode("duplicate")}
+                      className="text-emerald-600 cursor-pointer"
+                    />
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Tạo thêm (Khuyên dùng)</span>
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-normal">
+                      — Giữ 100% slide VI gốc, tạo thêm slide EN mới
+                    </span>
+                  </label>
+
+                  <label className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer transition-all ${
+                    viHandlingMode === "overwrite"
+                      ? "bg-rose-100 dark:bg-rose-950/80 border-rose-500 text-rose-900 dark:text-rose-100 font-semibold shadow-2xs ring-1 ring-rose-500/30"
+                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                  }`}>
+                    <input
+                      type="radio"
+                      name="viHandlingMode"
+                      value="overwrite"
+                      checked={viHandlingMode === "overwrite"}
+                      onChange={() => setViHandlingMode("overwrite")}
+                      className="text-rose-600 cursor-pointer"
+                    />
+                    <RefreshCw className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                    <span>Đè lên</span>
+                    <span className="text-[10px] text-rose-700 dark:text-rose-300 font-normal">
+                      — Ghi đè tiếng Anh trực tiếp lên slide này
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <span>Đã chọn <strong className="text-sky-600 dark:text-sky-400 font-semibold">{selectedMissing.length}</strong> đoạn cần dịch AI</span>
+              {customEditsCount > 0 && (
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-medium">
+                  · {customEditsCount} đoạn đã sửa thủ công (0 token AI)
+                </span>
+              )}
+              <span className="ml-2 text-slate-400">· khoảng {Math.ceil(new Set(selectedMissing.map((u) => u.canonicalText)).size / 25)} yêu cầu AI</span>
+            </div>
+            <div className="flex gap-2">
+              <button className={button} onClick={onClose} disabled={loading}>
+                Đóng
+              </button>
+              <button
+                id="btn-translate-missing-only"
+                className={button + " bg-sky-600 text-white hover:bg-sky-500"}
+                disabled={loading || (!selectedMissing.length && customEditsCount === 0)}
+                onClick={() => onTranslateMissingOnly(selectedMissing.map((u) => u.id), customEdits, { viHandlingMode, slideViHandling })}
+              >
+                {loading ? "Đang xử lý..." : `Dịch & sửa phần chưa dịch (${selectedMissing.length + customEditsCount})`}
+              </button>
+            </div>
           </div>
         </div>
       </div>

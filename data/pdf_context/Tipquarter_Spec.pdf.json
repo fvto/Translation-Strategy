@@ -1,0 +1,176 @@
+{
+  "fileName": "Tipquarter_Spec.pdf",
+  "totalPages": 1,
+  "totalCharacters": 160,
+  "extractedAt": "2026-10-17T08:04:54.804Z",
+  "imageShieldActive": true,
+  "imagesExtracted": 0,
+  "sections": [
+    {
+      "page": 1,
+      "snippet": "Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\nĐộ nhạt màu Tip-quarter : Tip-quarter color fading\nĐộ lệch màu Tip-quarter : Tip-quarter color variation"
+    }
+  ],
+  "harvestedTerms": [
+    {
+      "sourceTerm": "Độ nhạt màu Tip-quarter",
+      "targetTerm": "Tip-quarter color fading",
+      "category": "Assembly",
+      "context": "Trang 1: Độ nhạt màu Tip-quarter : Tip-quarter color fading",
+      "definition": "Trích xuất từ tài liệu PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Độ lệch màu Tip-quarter",
+      "targetTerm": "Tip-quarter color variation",
+      "category": "Assembly",
+      "context": "Trang 1: Độ lệch màu Tip-quarter : Tip-quarter color variation",
+      "definition": "Trích xuất từ tài liệu PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Trang 1",
+      "targetTerm": "Trang 1 standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tiêu chuẩn",
+      "targetTerm": "Condition",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "kiểm tra",
+      "targetTerm": "Check",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "tra Tip-quarter",
+      "targetTerm": "Tra Tip-quarter standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Trang",
+      "targetTerm": "Trang standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "tra",
+      "targetTerm": "Tra standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tip-quarter",
+      "targetTerm": "Tip-quarter (Process Variant)",
+      "category": "Assembly",
+      "context": "Trang 1: \"Trang 1: Tiêu chuẩn kiểm tra Tip-quarter và Tip-quarter\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tip-quarter : Tip-quarter color",
+      "targetTerm": "Tip-quarter : Tip-quarter color standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tip-quarter color fading",
+      "targetTerm": "Tip-quarter color fading standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tip-quarter : Tip-quarter",
+      "targetTerm": "Tip-quarter : Tip-quarter standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tip-quarter color",
+      "targetTerm": "Tip-quarter color standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "nhạt màu",
+      "targetTerm": "Faded color",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "color fading",
+      "targetTerm": "Color fading standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "color",
+      "targetTerm": "Color standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "fading",
+      "targetTerm": "Fading standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ nhạt màu Tip-quarter : Tip-quarter color fading\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "Tip-quarter color variation",
+      "targetTerm": "Tip-quarter color variation standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ lệch màu Tip-quarter : Tip-quarter color variation\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "color variation",
+      "targetTerm": "Color variation standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ lệch màu Tip-quarter : Tip-quarter color variation\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    },
+    {
+      "sourceTerm": "variation",
+      "targetTerm": "Variation standard",
+      "category": "Assembly",
+      "context": "Trang 1: \"Độ lệch màu Tip-quarter : Tip-quarter color variation\"",
+      "definition": "Thuật ngữ đề xuất từ ngữ cảnh PDF: Tipquarter_Spec.pdf",
+      "page": 1
+    }
+  ]
+}

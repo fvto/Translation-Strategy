@@ -90,7 +90,7 @@ export class AirGappedTranslationProvider implements TranslationProvider {
   /**
    * Translates English text to Vietnamese using the 4-tier local hierarchy.
    */
-  private translateEnglishToVietnamese(text: string, approvedTerminology: any[]): string {
+  public translateEnglishToVietnamese(text: string, approvedTerminology: any[]): string {
     // ─── Tier 1: Match and lock user's approved terminology (Cuu-am-chan-kinh.xlsx, etc.) ───
     const matches = matchTerminology(text, approvedTerminology);
     const lockedSegments: { placeholder: string; targetTerm: string }[] = [];
@@ -233,7 +233,7 @@ export class AirGappedTranslationProvider implements TranslationProvider {
   /**
    * Translates Vietnamese text to English using reverse lookup.
    */
-  private translateVietnameseToEnglish(text: string, approvedTerminology: any[]): string {
+  public translateVietnameseToEnglish(text: string, approvedTerminology: any[]): string {
     let workingText = text;
     const placeholders: { placeholder: string; target: string }[] = [];
 

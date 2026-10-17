@@ -64,6 +64,15 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
+    const viRefAction = ((formData.get("viRefAction") as string) || "duplicate") as "duplicate" | "overwrite" | "bilingual";
+    const slideViHandlingRaw = formData.get("slideViHandling") as string | null;
+    let slideViHandling: Record<number, "duplicate" | "overwrite" | "bilingual"> | undefined;
+    if (slideViHandlingRaw) {
+      try {
+        slideViHandling = JSON.parse(slideViHandlingRaw);
+      } catch {}
+    }
+
     const sessionId = `pptx_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
 
     if (action === "ai_deep_audit") {
@@ -141,7 +150,7 @@ export async function POST(req: NextRequest) {
         if (!Array.isArray(expectedSuggestions) || expectedSuggestions.length !== new Set(selectedUnitIds).size || expectedSuggestions.some((u) => !u || typeof u.id !== "string" || typeof u.sourceText !== "string" || typeof u.suggestedTranslation !== "string")) {
           return NextResponse.json({ error: "Thiếu nội dung xem trước. Hãy quét lại." }, { status: 400 });
         }
-        const result = await applyPptxAuditSuggestions(buffer, file.name, selectedUnitIds, { sourceLang: sourceLanguage, targetLang: targetLanguage, mode, expectedSuggestions, customTranslations });
+        const result = await applyPptxAuditSuggestions(buffer, file.name, selectedUnitIds, { sourceLang: sourceLanguage, targetLang: targetLanguage, mode, expectedSuggestions, customTranslations, viRefAction, slideViHandling });
         return new Response(result.buffer as any, { headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
           "X-Audit-Applied-Count": String(result.appliedCount),
@@ -246,6 +255,8 @@ export async function POST(req: NextRequest) {
               slideRange,
               selectedSlideIndices,
               customTranslations,
+              viRefAction,
+              slideViHandling,
               onProgress: (progressUpdate) => {
                 sendEvent("progress", progressUpdate);
               },
@@ -354,6 +365,8 @@ export async function POST(req: NextRequest) {
       slideRange,
       selectedSlideIndices,
       customTranslations,
+      viRefAction,
+      slideViHandling,
     });
 
     const pptxSession: PptxSession = {

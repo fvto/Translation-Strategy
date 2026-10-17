@@ -9,6 +9,7 @@
     "test": "tsx --test tests/*.test.mjs"
   },
   "dependencies": {
+    "@types/three": "^0.186.0",
     "better-sqlite3": "^13.0.3",
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",
@@ -20,6 +21,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.5.4",
+    "three": "^0.186.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

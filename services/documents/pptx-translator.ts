@@ -15,7 +15,7 @@ import { translationCache } from "../translation/cache";
 import { DocumentTranslationMemory, TranslationUnitWithMeta, documentTM, DocumentTMConflict, canonicalizeText } from "../translation/document-tm";
 import { auditPptxGaps, SmartAuditReport, ScannedTextUnit, isNonTranslatable, isShoeModelName, isInspectionStatusLabel, isEnglishImmunityProtected } from "../translation/smart-detector";
 import { paragraphText, PPTX_PARAGRAPH_PATTERN, replaceParagraphTranslation } from "./pptx-text";
-import { orderedSlidePaths, readIsqSlidePairs, ISQ_PAIRS_PART, parseSlideRange } from "./pptx-slide-order";
+import { orderedSlidePaths, readIsqSlidePairs, duplicateViReferenceSlides, ISQ_PAIRS_PART, parseSlideRange } from "./pptx-slide-order";
 import { detectUnmappedTerminology, UnmappedTermItem } from "../terminology/unmapped-detector";
 import { polishSopText } from "../translation/sop-polisher";
 import { isVietnameseText, isSemanticBilingualPair } from "../translation/vietnamese-detector";
@@ -561,6 +561,8 @@ export class PptxTranslatorService {
       selectedSlideIndices?: number[];
       slideRange?: string;
       customTranslations?: Record<string, string>;
+      viRefAction?: "duplicate" | "overwrite" | "bilingual";
+      slideViHandling?: Record<number, "duplicate" | "overwrite" | "bilingual">;
     }
   ): Promise<PptxTranslationResult> {
     const startTime = Date.now();
@@ -760,13 +762,15 @@ export class PptxTranslatorService {
           continue;
         }
 
+        const isIsqSlide = mode === "isq_duplicate" || this.isSlideIsq(slide, options?.fileName);
+
         // In-shape interleaved bilingual pair: 1.EN 1.VI 2.EN 2.VI
         const pairInfo = pairedParagraphMap.get(p.id);
         if (pairInfo) {
           if (mode === "ipqc_bilingual") {
             translationMap.set(p.id, p.originalText);
             continue;
-          } else if (mode === "replace_en") {
+          } else if (mode === "replace_en" || mode === "isq_duplicate") {
             translationMap.set(p.id, pairInfo.isEn ? p.originalText : pairInfo.partner.originalText);
             continue;
           }
@@ -781,14 +785,13 @@ export class PptxTranslatorService {
         if (p.isInspectionItem) {
           const hybrid = splitBilingualText(p.originalText, true);
           if (hybrid) {
-            // Hybrid bilingual: in replace_en keep only EN part; in bilingual keep as-is
-            translationMap.set(p.id, mode === "replace_en" ? hybrid.en : p.originalText);
+            // Hybrid bilingual: in replace_en/isq_duplicate keep only EN part; in bilingual keep as-is
+            translationMap.set(p.id, (mode === "replace_en" || isIsqSlide) ? hybrid.en : p.originalText);
           } else if (sourceLanguage === "vi" && isPureEnglish(p.originalText) && !hasViDiacritics(p.originalText)) {
             // Already pure English — no translation needed
             translationMap.set(p.id, p.originalText);
           } else {
-            // Fix #2: Pure VI Inspection Item cells must also be translated!
-            // Previously these were silently skipped causing "dịch sót".
+            // Pure VI Inspection Item cells must also be translated
             allItemsToTranslate.push({ id: p.id, sourceText: p.originalText });
           }
           continue;
@@ -797,7 +800,7 @@ export class PptxTranslatorService {
         // Outside of Inspection Item: only multi-line \n is considered hybrid, never hyphen/delimiter:
         const hybrid = splitBilingualText(p.originalText, false);
         if (hybrid) {
-          translationMap.set(p.id, mode === "replace_en" ? hybrid.en : p.originalText);
+          translationMap.set(p.id, (mode === "replace_en" || isIsqSlide) ? hybrid.en : p.originalText);
           continue;
         }
 
@@ -1686,7 +1689,7 @@ export class PptxTranslatorService {
     // Only applies to Option 1 (ipqc_bilingual / isq_duplicate), NEVER to Option 2 (replace_en)
     if ((mode === "isq_duplicate" || mode === "ipqc_bilingual") && !zonePlan.hasParallelSections && !zonePlan.hasInterleavedPairs && sourceLanguage === "vi" && targetLanguage === "en") {
       const selectedPaths = options?.translateMissingOnly ? new Set(slides.filter(s=>s.paragraphs.some(p=>modifiedParagraphIds.has(p.id))).map(s=>s.slideFileName)) : undefined;
-      isqSlidePaths = await this.duplicateDeck(zip, slides, options?.fileName, false, mode, selectedPaths);
+      isqSlidePaths = await this.duplicateDeck(zip, slides, options?.fileName, false, mode, selectedPaths, options?.viRefAction, options?.slideViHandling);
       if(options?.translateMissingOnly){
         for(const pair of await readIsqSlidePairs(zip)){
           if(!selectedPaths?.has(pair.en))continue;
@@ -1771,8 +1774,24 @@ export class PptxTranslatorService {
         }
       }
 
+      // Check if this slide is an existing VI reference slide
+      let targetSlideFileName = slide.slideFileName;
+      if (options?.translateMissingOnly) {
+        const existingIsqPairs = await readIsqSlidePairs(zip);
+        const viReferencePaths = new Set(existingIsqPairs.map((p) => p.vi));
+        if (viReferencePaths.has(slide.slideFileName)) {
+          const sHandling = options?.slideViHandling?.[slide.slideIndex] || options?.viRefAction || "duplicate";
+          if (sHandling === "duplicate") {
+            const viMap = await duplicateViReferenceSlides(zip, new Set([slide.slideFileName]));
+            if (viMap.has(slide.slideFileName)) {
+              targetSlideFileName = viMap.get(slide.slideFileName)!;
+            }
+          }
+        }
+      }
+
       // Inject translated text back into slide XML
-      const originalXml = await zip.file(slide.slideFileName)?.async("string");
+      const originalXml = await zip.file(targetSlideFileName)?.async("string");
       if (originalXml) {
         const updatedXml = options?.translateMissingOnly ? originalXml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (() => {
           let paragraphIndex = 0;
@@ -1788,7 +1807,7 @@ export class PptxTranslatorService {
             }
             try { translated = replaceParagraphTranslation(pXml, p.translatedText || p.originalText, p.originalText); }
             catch (error) { throw new Error(`Không thể giữ định dạng tại ${p.id}: ${error instanceof Error ? error.message : error}`); }
-            if (targetMode === "replace_en") return translated;
+            if (targetMode === "replace_en" || targetSlideFileName !== slide.slideFileName) return translated;
             return targetLanguage === "en" ? translated + pXml : pXml + translated;
           };
         })()) : this.replaceParagraphsInXml(
@@ -1797,7 +1816,7 @@ export class PptxTranslatorService {
           targetMode,
           options?.translateMissingOnly ? modifiedParagraphIds : undefined
         );
-        zip.file(slide.slideFileName, updatedXml);
+        zip.file(targetSlideFileName, updatedXml);
       }
 
       // Update notes XML if present
@@ -1882,11 +1901,11 @@ export class PptxTranslatorService {
    * 3. Slide paragraphs contain "translate for isq", "for isq", "cutting die", "khuôn dao", etc.
    */
   isSlideIsq(slide: PptxSlideData, fileName?: string, isPostHfpa?: boolean): boolean {
-    // 1. Filename indicates pure ISQ or cutting die manual
+    // 1. Filename indicates pure ISQ or cutting die manual (without IPQC or SOP mixed prefix)
     if (fileName) {
       const lowerFile = fileName.toLowerCase();
       if (
-        (/\b(isq|in-station\s*quality)\b/i.test(lowerFile) && !/\bipqc\b/i.test(lowerFile)) ||
+        (/(?:^|[^a-z0-9])(?:isq|in-station\s*quality)(?:[^a-z0-9]|$)/i.test(lowerFile) && !/(?:ipqc|sop)/i.test(lowerFile)) ||
         /(cutting\s*dies?\s*manual|sổ\s*tay\s*khuôn\s*dao)/i.test(lowerFile)
       ) {
         return true;
@@ -1896,8 +1915,8 @@ export class PptxTranslatorService {
     const title = (slide.title || "").toLowerCase();
     // 2. Explicit ISQ / CTQ / CTP or cutting die manual in title
     if (
-      /\b(isq|ctq|ctp|critical\s*to\s*(quality|process)|in-station\s*quality)\b/i.test(title) ||
-      /(cutting\s*dies?\s*manual|sổ\s*tay\s*khuôn\s*dao)/i.test(title)
+      /(?:^|[^a-z0-9])(?:isq|ctq|ctp|critical\s*to\s*(?:quality|process)|in-station\s*quality)(?:[^a-z0-9]|$)/i.test(title) ||
+      /(cutting\s*dies?\s*manual|sổ\s*tay\s*khuôn\s*dao|khuôn\s*dao|dao\s*chặt)/i.test(title)
     ) {
       return true;
     }
@@ -1906,8 +1925,8 @@ export class PptxTranslatorService {
     for (const p of slide.paragraphs) {
       const text = p.originalText.toLowerCase();
       if (
-        /\b(isq|ctq|ctp|translate\s+for\s+isq|\bfor\s+isq\b|\bisq\s+manual\b|in-station\s*quality)\b/i.test(text) ||
-        /\bcritical\s*to\s*(quality|process)\b/i.test(text)
+        /(?:^|[^a-z0-9])(?:isq|ctq|ctp|translate\s+for\s+isq|\bfor\s+isq\b|\bisq\s+manual\b|in-station\s*quality)(?:[^a-z0-9]|$)/i.test(text) ||
+        /\bcritical\s*to\s*(?:quality|process)\b/i.test(text)
       ) {
         return true;
       }
@@ -2018,7 +2037,9 @@ export class PptxTranslatorService {
     fileName?: string,
     forceAll = false,
     mode: PptxTranslationMode = "ipqc_bilingual",
-    selectedSlidePaths?: Set<string>
+    selectedSlidePaths?: Set<string>,
+    viRefAction?: string,
+    slideViHandling?: Record<number, string>
   ): Promise<Set<string>> {
     const isqSlidePaths = new Set<string>();
 
@@ -2106,7 +2127,9 @@ export class PptxTranslatorService {
       // If a slide is already pure English, it stays 1 slide ("Đã có tiếng Anh thì giữ nguyên tiếng Anh").
       const texts = sData ? sData.paragraphs.map((p) => p.originalText).join(" ") : "";
       const viMatches = texts.match(/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/gi) || [];
-      const hasVi = viMatches.length >= 3 || (texts.length > 0 && viMatches.length / texts.length >= 0.15);
+      const hasVi =
+        viMatches.length >= 1 ||
+        Boolean(sData?.paragraphs.some((p) => hasViDiacritics(p.originalText) || isVietnameseText(p.originalText)));
 
       let hasTable = false;
       const origXml = await zip.file(origSlidePath)?.async("string");
@@ -2114,16 +2137,26 @@ export class PptxTranslatorService {
         hasTable = true;
       }
       const title = (sData?.title || "").trim();
+      const hasInstructions = sData?.paragraphs.some((p) =>
+        /^\s*(?:bước\s*\d+|step\s*\d+|\d+[\.:\-])\s+/i.test(p.originalText) ||
+        /\b(?:kiểm\s*tra|thao\s*tác|đảm\s*bảo|yêu\s*cầu)\b/i.test(p.originalText)
+      );
       const isDivider = sData
-        ? sData.paragraphs.length <= 5 &&
+        ? !isIsq &&
+          !hasInstructions &&
+          sData.paragraphs.length <= 5 &&
           !hasTable &&
           (/^(FA|SU|SP|HO)\d{2}\b/i.test(title) ||
-            /\b(section|chương|phần|quy\s*trình|process|tiêu\s*chuẩn|manual)\b/i.test(title))
+            /^\s*(?:section|chương|phần)\s*\d*\b/i.test(title) ||
+            /^\s*(?:quy\s*trình|process|tiêu\s*chuẩn|manual)\s*$/i.test(title))
         : false;
 
       // In an IPQC presentation with HFPA, pre-HFPA inspection tables are bilingual in-place and must NEVER be duplicated!
       const isPreHfpaTable = lastHfpaIndex !== -1 && !isPostHfpa && hasTable && (sData ? sData.paragraphs.length > 15 : true);
-      const shouldDuplicate = !isPreHfpaTable && isIsq && (forceAll || (hasVi && !isDivider));
+      const isTargetIsq = isIsq || mode === "isq_duplicate";
+      const sIndex = sData?.slideIndex || (i + 1);
+      const handling = slideViHandling?.[sIndex] || viRefAction || "duplicate";
+      const shouldDuplicate = handling !== "overwrite" && !isPreHfpaTable && (forceAll || isTargetIsq) && (forceAll || (hasVi && !isDivider));
 
       if (shouldDuplicate) {
         isqSlidePaths.add(origSlidePath);

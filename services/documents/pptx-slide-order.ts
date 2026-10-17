@@ -37,6 +37,10 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     stepNumber: string | null;
     hasEnMarker: boolean;
     hasViMarker: boolean;
+    title1?: string;
+    title2?: string;
+    viLong: number;
+    enLong: number;
   }
 
   const profiles: SlideProfile[] = [];
@@ -99,7 +103,7 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     const sameMainTitle = Boolean(curr.title1 && next.title1 && (curr.title1 === next.title1 || curr.title1.includes(next.title1) || next.title1.includes(curr.title1)));
     const sameSubTitle = Boolean(curr.title2 && next.title2 && (curr.title2 === next.title2));
     const titleTopicMatch = Boolean(
-      ((sameMainTitle && curr.title1.length >= 8) || (sameSubTitle && curr.title2.length >= 8)) &&
+      ((sameMainTitle && curr.title1 && curr.title1.length >= 8) || (sameSubTitle && curr.title2 && curr.title2.length >= 8)) &&
       ((curr.enLong >= 2 && next.viLong >= 2) || (curr.viLong >= 2 && next.enLong >= 2))
     );
 
@@ -379,4 +383,134 @@ export async function duplicateIsqSlides(
 
   return newPairs;
 }
+
+/**
+ * Duplicates specific VI reference slides into EN + VI pairs.
+ * The new slide becomes the EN slide positioned immediately BEFORE the VI reference slide.
+ * The original VI reference slide remains 100% intact.
+ * Returns a mapping of viSlidePath -> newEnSlidePath.
+ */
+export async function duplicateViReferenceSlides(
+  zip: JSZip,
+  targetViPaths: Set<string>
+): Promise<Map<string, string>> {
+  const viToEnMap = new Map<string, string>();
+  if (!targetViPaths || !targetViPaths.size) return viToEnMap;
+
+  let presXml = await zip.file("ppt/presentation.xml")?.async("string");
+  let relsXml = await zip.file("ppt/_rels/presentation.xml.rels")?.async("string");
+  let contentTypesXml = await zip.file("[Content_Types].xml")?.async("string");
+
+  if (!presXml || !relsXml || !contentTypesXml) return viToEnMap;
+
+  const existingPairs = await readIsqSlidePairs(zip);
+  const newPairs = [...existingPairs];
+
+  const sldEntries = Array.from(
+    presXml.matchAll(/<p:sldId[^>]*id="(\d+)"[^>]*r:id="([^"]+)"[^>]*\/>/g)
+  ).map((m) => ({
+    fullTag: m[0],
+    id: parseInt(m[1], 10),
+    rId: m[2],
+  }));
+
+  if (sldEntries.length === 0) return viToEnMap;
+
+  const allIds = sldEntries.map((s) => s.id);
+  let maxId = Math.max(255, ...allIds);
+
+  const rids = Array.from(relsXml.matchAll(/Id="rId(\d+)"/g)).map((m) => parseInt(m[1], 10));
+  let maxRId = Math.max(10, ...rids);
+
+  const relTargetMap = new Map<string, string>();
+  const relMatches = Array.from(
+    relsXml.matchAll(/<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/>/g)
+  );
+  for (const rm of relMatches) {
+    relTargetMap.set(rm[1], rm[2]);
+  }
+
+  const newRels: string[] = [];
+  const newOverrides: string[] = [];
+  const pairedEntries: string[] = [];
+  let didDuplicate = false;
+
+  for (let i = 0; i < sldEntries.length; i++) {
+    const orig = sldEntries[i];
+    const targetFile = relTargetMap.get(orig.rId) || `slides/slide${i + 1}.xml`;
+    const origSlidePath = targetFile.startsWith("ppt/") ? targetFile : `ppt/${targetFile}`;
+
+    // If this is one of our target VI reference slides, create the EN slide immediately BEFORE it
+    if (targetViPaths.has(origSlidePath)) {
+      let newSlideNum = 1000 + i + 1;
+      while (zip.file(`ppt/slides/slide${newSlideNum}.xml`)) newSlideNum++;
+      const newSlideTarget = `slides/slide${newSlideNum}.xml`;
+      const newSlidePath = `ppt/${newSlideTarget}`;
+
+      // 1. Copy slide XML to new EN slide
+      const slideData = await zip.file(origSlidePath)?.async("nodebuffer");
+      if (slideData) {
+        zip.file(newSlidePath, slideData);
+
+        // 2. Copy slide rels if exists
+        const origRelPath = origSlidePath.replace("slides/", "slides/_rels/") + ".rels";
+        const relData = await zip.file(origRelPath)?.async("nodebuffer");
+        if (relData) {
+          const newRelPath = newSlidePath.replace("slides/", "slides/_rels/") + ".rels";
+          zip.file(newRelPath, relData);
+        }
+
+        maxRId++;
+        maxId++;
+        const newRId = `rId${maxRId}`;
+        const newSldId = maxId;
+
+        newRels.push(
+          `<Relationship Id="${newRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="${newSlideTarget}"/>`
+        );
+        newOverrides.push(
+          `<Override PartName="/ppt/${newSlideTarget}" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`
+        );
+
+        // Insert new EN slide immediately BEFORE original VI reference slide
+        pairedEntries.push(`<p:sldId id="${newSldId}" r:id="${newRId}"/>`);
+        viToEnMap.set(origSlidePath, newSlidePath);
+        newPairs.push({ en: newSlidePath, vi: origSlidePath });
+        didDuplicate = true;
+      }
+    }
+
+    pairedEntries.push(orig.fullTag);
+  }
+
+  if (didDuplicate) {
+    zip.file(
+      ISQ_PAIRS_PART,
+      `<?xml version="1.0" encoding="UTF-8"?><pairs xmlns="urn:smart-audit:isq-pairs">${newPairs
+        .map((p) => `<pair en="${p.en}" vi="${p.vi}"/>`)
+        .join("")}</pairs>`
+    );
+    if (!existingPairs.length) {
+      maxRId++;
+      newRels.push(
+        `<Relationship Id="rId${maxRId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" Target="../${ISQ_PAIRS_PART}"/>`
+      );
+      newOverrides.push(`<Override PartName="/${ISQ_PAIRS_PART}" ContentType="application/xml"/>`);
+    }
+
+    relsXml = relsXml.replace("</Relationships>", `${newRels.join("")}</Relationships>`);
+    presXml = presXml.replace(
+      /<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/,
+      `<p:sldIdLst>${pairedEntries.join("")}</p:sldIdLst>`
+    );
+    contentTypesXml = contentTypesXml.replace("</Types>", `${newOverrides.join("")}</Types>`);
+
+    zip.file("ppt/_rels/presentation.xml.rels", relsXml);
+    zip.file("ppt/presentation.xml", presXml);
+    zip.file("[Content_Types].xml", contentTypesXml);
+  }
+
+  return viToEnMap;
+}
+
 

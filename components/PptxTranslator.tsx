@@ -33,7 +33,8 @@ import {
 } from "lucide-react";
 import { TranslationMemoryDrawer } from "./TranslationMemoryDrawer";
 import { SlideReviewModal } from "./SlideReviewModal";
-import { SmartAuditModal } from "./SmartAuditModal";
+import { SmartAuditModal, ViHandlingOptions } from "./SmartAuditModal";
+import { ThreeInteractiveOrb } from "./ThreeInteractiveOrb";
 import { SmartAuditReport } from "@/services/translation/smart-detector";
 import { QaAuditWidget } from "./QaAuditWidget";
 import { auditPresentationCompliance } from "@/services/qa/compliance-scorer";
@@ -247,7 +248,11 @@ export const PptxTranslator: React.FC = () => {
     }
   };
 
-  const applyAuditSuggestions = async (unitIds: string[], customTranslations?: Record<string, string>) => {
+  const applyAuditSuggestions = async (
+    unitIds: string[],
+    customTranslations?: Record<string, string>,
+    options?: ViHandlingOptions
+  ) => {
     if (!file || !auditReport) return;
     const formData = new FormData();
     formData.append("file", file);
@@ -256,6 +261,12 @@ export const PptxTranslator: React.FC = () => {
     formData.append("targetLanguage", tgtLang);
     formData.append("mode", mode);
     formData.append("selectedUnitIds", JSON.stringify(unitIds));
+    if (options?.viHandlingMode) {
+      formData.append("viRefAction", options.viHandlingMode);
+    }
+    if (options?.slideViHandling && Object.keys(options.slideViHandling).length > 0) {
+      formData.append("slideViHandling", JSON.stringify(options.slideViHandling));
+    }
     const previewList = auditReport.units.filter((u) => unitIds.includes(u.id)).map((u) => ({
       id: u.id,
       sourceText: u.sourceText,
@@ -326,6 +337,8 @@ export const PptxTranslator: React.FC = () => {
       translateMissingOnly?: boolean;
       selectedUnitIds?: string[];
       customTranslations?: Record<string, string>;
+      viRefAction?: string;
+      slideViHandling?: Record<number, string>;
     }
   ) => {
     if (!file) return;
@@ -368,6 +381,12 @@ export const PptxTranslator: React.FC = () => {
       }
       if (options.customTranslations && Object.keys(options.customTranslations).length > 0) {
         formData.append("customTranslations", JSON.stringify(options.customTranslations));
+      }
+      if (options.viRefAction) {
+        formData.append("viRefAction", options.viRefAction);
+      }
+      if (options.slideViHandling && Object.keys(options.slideViHandling).length > 0) {
+        formData.append("slideViHandling", JSON.stringify(options.slideViHandling));
       }
     }
 
@@ -807,15 +826,15 @@ export const PptxTranslator: React.FC = () => {
         </div>
 
         {/* Security Shield Badge */}
-        <div className="flex items-center space-x-3 bg-emerald-950/50 border border-emerald-700/50 px-4 py-2.5 rounded-xl text-xs text-emerald-300 shadow-inner">
-          <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="flex items-center space-x-3 bg-emerald-950/40 border border-emerald-700/50 px-4 py-2.5 rounded-xl text-xs text-emerald-300 shadow-inner">
+          <ThreeInteractiveOrb size={36} status={isProcessing ? "translating" : "shield"} />
           <div>
             <div className="font-semibold text-white flex items-center gap-1.5">
-              <span>Image &amp; Diagram Shield</span>
+              <span>Image &amp; Diagram Shield (Three.js 3D)</span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             </div>
             <div className="text-[11px] text-emerald-300/80">
-              0 hình ảnh gửi sang AI • 100% sơ đồ, biểu đồ, hình vẽ và layout được giữ nguyên vẹn
+              0 hình ảnh gửi sang AI • 100% sơ đồ, biểu đồ, hình vẽ và layout được bảo vệ
             </div>
           </div>
         </div>
@@ -1878,12 +1897,14 @@ export const PptxTranslator: React.FC = () => {
         auditReport={auditReport}
         file={file}
         onApplySuggestions={applyAuditSuggestions}
-        onTranslateMissingOnly={(selectedUnitIds, customTranslations) => {
+        onTranslateMissingOnly={(selectedUnitIds, customTranslations, viOptions) => {
           setIsAuditModalOpen(false);
           executeAction("translate", {
             translateMissingOnly: true,
             selectedUnitIds,
             customTranslations,
+            viRefAction: viOptions?.viHandlingMode,
+            slideViHandling: viOptions?.slideViHandling,
           });
         }}
         onTranslateAll={() => {

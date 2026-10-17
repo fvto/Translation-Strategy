@@ -97,8 +97,560 @@
   ],
   "terminology": [
     {
-      "id": "term_86f028e54b06",
-      "sourceTerm": "Polysemy_Test_1792126399757",
+      "id": "term_1fafc1c730b7",
+      "sourceTerm": "Kiểm tra keo dán",
+      "targetTerm": "Cement application inspection",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": null,
+      "approvedBy": null,
+      "version": null,
+      "createdAt": "2026-10-16T07:19:33.830Z",
+      "updatedAt": "2026-10-17T08:04:54.277Z",
+      "editHistory": [
+        {
+          "id": "hist_43e4eecc",
+          "timestamp": "2026-10-17T08:04:54.277Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_fc3a2f47",
+          "timestamp": "2026-10-17T07:35:41.556Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_6c1506d4",
+          "timestamp": "2026-10-17T07:00:16.451Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_cfae44b4",
+          "timestamp": "2026-10-17T06:58:56.579Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d4718057",
+          "timestamp": "2026-10-17T06:53:06.293Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_cbf7e217",
+          "timestamp": "2026-10-17T06:41:19.808Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_46706969",
+          "timestamp": "2026-10-17T06:29:36.802Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_b2c561c1",
+          "timestamp": "2026-10-17T06:22:37.458Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_ed926c5b",
+          "timestamp": "2026-10-17T06:20:05.033Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_07a283a4",
+          "timestamp": "2026-10-17T06:17:51.896Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_700f60ce",
+          "timestamp": "2026-10-17T06:07:31.295Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_2c86b59c",
+          "timestamp": "2026-10-17T04:06:27.282Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_14fe11b7",
+          "timestamp": "2026-10-17T04:04:42.934Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_56f9c942",
+          "timestamp": "2026-10-17T04:02:43.349Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_886195d4",
+          "timestamp": "2026-10-17T04:01:14.423Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_7dd193d8",
+          "timestamp": "2026-10-17T03:59:51.925Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_15e4dc3e",
+          "timestamp": "2026-10-17T03:58:00.460Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_5ef4e048",
+          "timestamp": "2026-10-17T03:53:26.785Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_b720733f",
+          "timestamp": "2026-10-17T03:37:38.837Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_057c1f72",
+          "timestamp": "2026-10-17T03:21:54.420Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_ec40e093",
+          "timestamp": "2026-10-16T08:47:18.690Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_1b83dca8",
+          "timestamp": "2026-10-16T08:34:35.372Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_b14a50cf",
+          "timestamp": "2026-10-16T08:17:13.002Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_f523184b",
+          "timestamp": "2026-10-16T07:58:19.774Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_2c66890b",
+          "timestamp": "2026-10-16T07:58:08.425Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_6831f37c",
+          "timestamp": "2026-10-16T07:54:54.687Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_6af2f0f2",
+          "timestamp": "2026-10-16T07:54:43.429Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_7cb08ab8",
+          "timestamp": "2026-10-16T07:53:36.888Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d7fe86e3",
+          "timestamp": "2026-10-16T07:50:27.558Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_17c12dc6",
+          "timestamp": "2026-10-16T07:23:14.196Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_da43ac14",
+          "timestamp": "2026-10-16T07:19:41.639Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_778ae324",
+          "timestamp": "2026-10-16T07:19:33.830Z",
+          "editedBy": "system",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_c5dc89b77ccb",
+      "sourceTerm": "Kiểm tra keo dán",
+      "targetTerm": "Glue inspection draft",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "review",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": null,
+      "approvedBy": null,
+      "version": null,
+      "createdAt": "2026-10-16T07:19:33.830Z",
+      "updatedAt": "2026-10-17T08:04:54.277Z",
+      "editHistory": [
+        {
+          "id": "hist_ea0e937f",
+          "timestamp": "2026-10-17T08:04:54.277Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_00675657",
+          "timestamp": "2026-10-17T07:35:41.556Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_0e89b59a",
+          "timestamp": "2026-10-17T07:00:16.451Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_cbcc7697",
+          "timestamp": "2026-10-17T06:58:56.579Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_ebff6804",
+          "timestamp": "2026-10-17T06:53:06.293Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_58a6d226",
+          "timestamp": "2026-10-17T06:41:19.808Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_b43dd283",
+          "timestamp": "2026-10-17T06:29:36.802Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_89a0d051",
+          "timestamp": "2026-10-17T06:22:37.458Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_3090ff47",
+          "timestamp": "2026-10-17T06:20:05.033Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_3c7cd802",
+          "timestamp": "2026-10-17T06:17:51.896Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_32ef6b1c",
+          "timestamp": "2026-10-17T06:07:31.295Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_7cc11865",
+          "timestamp": "2026-10-17T04:06:27.282Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_387c1de1",
+          "timestamp": "2026-10-17T04:04:42.934Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_905a433c",
+          "timestamp": "2026-10-17T04:02:43.349Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_21a78ca5",
+          "timestamp": "2026-10-17T04:01:14.423Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_c86c6d5a",
+          "timestamp": "2026-10-17T03:59:51.925Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_85b8fa4e",
+          "timestamp": "2026-10-17T03:58:00.460Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_37f6ec2c",
+          "timestamp": "2026-10-17T03:53:26.785Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_94730cc7",
+          "timestamp": "2026-10-17T03:37:38.837Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_ffa8df64",
+          "timestamp": "2026-10-17T03:21:54.420Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_c875d77e",
+          "timestamp": "2026-10-16T08:47:18.690Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_1b6ebdf4",
+          "timestamp": "2026-10-16T08:34:35.372Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_0277403d",
+          "timestamp": "2026-10-16T08:17:13.002Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_e7729b55",
+          "timestamp": "2026-10-16T07:58:19.774Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_4fdcdfe0",
+          "timestamp": "2026-10-16T07:58:08.425Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_c3f40203",
+          "timestamp": "2026-10-16T07:54:54.687Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_146bb4c5",
+          "timestamp": "2026-10-16T07:54:43.429Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_512a40e0",
+          "timestamp": "2026-10-16T07:53:36.888Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_3ff733d1",
+          "timestamp": "2026-10-16T07:50:27.558Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_7bad6036",
+          "timestamp": "2026-10-16T07:23:14.196Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_9cea8ea8",
+          "timestamp": "2026-10-16T07:19:41.639Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_807bdabc",
+          "timestamp": "2026-10-16T07:19:33.830Z",
+          "editedBy": "system",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_bbbca556c41f",
+      "sourceTerm": "Polysemy_Test_1792220417076",
       "targetTerm": "ý nghĩa thứ hai",
       "sourceLanguage": "en",
       "targetLanguage": "vi",
@@ -112,12 +664,12 @@
       "createdBy": "test@local",
       "approvedBy": null,
       "version": "v1.0",
-      "createdAt": "2026-10-16T04:53:19.804Z",
-      "updatedAt": "2026-10-16T04:53:19.804Z",
+      "createdAt": "2026-10-17T07:00:17.117Z",
+      "updatedAt": "2026-10-17T07:00:17.117Z",
       "editHistory": [
         {
-          "id": "hist_0973cfcf",
-          "timestamp": "2026-10-16T04:53:19.804Z",
+          "id": "hist_e90f6c9c",
+          "timestamp": "2026-10-17T07:00:17.117Z",
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
@@ -125,8 +677,36 @@
       ]
     },
     {
-      "id": "term_c290995627a9",
-      "sourceTerm": "Polysemy_Test_1792126399757",
+      "id": "term_a567e495fe59",
+      "sourceTerm": "Polysemy_Test_1792218577110",
+      "targetTerm": "ý nghĩa thứ hai",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-17T06:29:37.183Z",
+      "updatedAt": "2026-10-17T06:29:37.183Z",
+      "editHistory": [
+        {
+          "id": "hist_bdd3b026",
+          "timestamp": "2026-10-17T06:29:37.183Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_f15354906da2",
+      "sourceTerm": "Polysemy_Test_1792217872445",
       "targetTerm": "ý nghĩa thứ nhất",
       "sourceLanguage": "en",
       "targetLanguage": "vi",
@@ -140,12 +720,12 @@
       "createdBy": "test@local",
       "approvedBy": null,
       "version": "v1.0",
-      "createdAt": "2026-10-16T04:53:19.758Z",
-      "updatedAt": "2026-10-16T04:53:19.758Z",
+      "createdAt": "2026-10-17T06:17:52.446Z",
+      "updatedAt": "2026-10-17T06:17:52.446Z",
       "editHistory": [
         {
-          "id": "hist_26b80931",
-          "timestamp": "2026-10-16T04:53:19.758Z",
+          "id": "hist_fb8c9682",
+          "timestamp": "2026-10-17T06:17:52.446Z",
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
@@ -153,9 +733,9 @@
       ]
     },
     {
-      "id": "term_999e30aee6d1",
-      "sourceTerm": "Polysemy_Test_1792123989455",
-      "targetTerm": "ý nghĩa thứ hai",
+      "id": "term_3683488efe78",
+      "sourceTerm": "Polysemy_Test_1792207314866",
+      "targetTerm": "ý nghĩa thứ nhất",
       "sourceLanguage": "en",
       "targetLanguage": "vi",
       "definition": null,
@@ -168,89 +748,15 @@
       "createdBy": "test@local",
       "approvedBy": null,
       "version": "v1.0",
-      "createdAt": "2026-10-16T04:13:09.520Z",
-      "updatedAt": "2026-10-16T04:13:09.520Z",
+      "createdAt": "2026-10-17T03:21:54.871Z",
+      "updatedAt": "2026-10-17T03:21:54.871Z",
       "editHistory": [
         {
-          "id": "hist_4c680ac4",
-          "timestamp": "2026-10-16T04:13:09.520Z",
+          "id": "hist_a759594c",
+          "timestamp": "2026-10-17T03:21:54.871Z",
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_733306cc2f33",
-      "sourceTerm": "Dán Airbag vào MS",
-      "targetTerm": "Attach Airbag to MS",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "status": "approved",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-10-15T03:13:09.571Z",
-      "updatedAt": "2026-10-15T09:58:35.290Z",
-      "editHistory": [
-        {
-          "id": "hist_6b6f6bd9",
-          "timestamp": "2026-10-15T09:58:35.290Z",
-          "editedBy": "reviewer@secure.local",
-          "action": "status_changed",
-          "changes": [
-            {
-              "field": "status",
-              "oldValue": "review",
-              "newValue": "approved"
-            }
-          ],
-          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
-        },
-        {
-          "id": "hist_2352f1b3",
-          "timestamp": "2026-10-15T09:50:04.551Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_a2b2e992",
-          "timestamp": "2026-10-15T09:42:33.352Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_281749dd",
-          "timestamp": "2026-10-15T04:15:13.173Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_41dafda5",
-          "timestamp": "2026-10-15T04:14:58.684Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_bf64feec",
-          "timestamp": "2026-10-15T03:13:09.571Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
         }
       ]
     },
@@ -271,8 +777,24 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-15T03:13:09.571Z",
-      "updatedAt": "2026-10-15T09:50:04.551Z",
+      "updatedAt": "2026-10-17T08:07:03.130Z",
       "editHistory": [
+        {
+          "id": "hist_c6ae4aa8",
+          "timestamp": "2026-10-17T08:07:03.130Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_40767120",
+          "timestamp": "2026-10-16T08:52:46.865Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_7b4cfb1b",
           "timestamp": "2026-10-15T09:50:04.551Z",
@@ -371,8 +893,24 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-15T09:41:36.024Z",
-      "updatedAt": "2026-10-15T09:50:04.551Z",
+      "updatedAt": "2026-10-17T08:07:03.130Z",
       "editHistory": [
+        {
+          "id": "hist_1e8c05a3",
+          "timestamp": "2026-10-17T08:07:03.130Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_782b47ae",
+          "timestamp": "2026-10-16T08:52:46.865Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_78554856",
           "timestamp": "2026-10-15T09:50:04.551Z",
@@ -407,146 +945,170 @@
       ]
     },
     {
-      "id": "term_705f12cbdbf7",
-      "sourceTerm": "Quét keo Airbag",
-      "targetTerm": "Cementing Airbag",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "status": "review",
+      "id": "term_2def7fc8eff7",
+      "sourceTerm": "Polysemy_Test_1792137500517",
+      "targetTerm": "ý nghĩa thứ hai",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
       "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
+      "confidence": 1,
+      "createdBy": "test@local",
       "approvedBy": null,
       "version": "v1.0",
-      "createdAt": "2026-10-15T08:57:00.849Z",
-      "updatedAt": "2026-10-15T09:39:51.618Z",
+      "createdAt": "2026-10-16T07:58:20.602Z",
+      "updatedAt": "2026-10-16T07:58:20.602Z",
       "editHistory": [
         {
-          "id": "hist_0d01ae08",
-          "timestamp": "2026-10-15T09:39:51.618Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_2a168e2b",
-          "timestamp": "2026-10-15T09:39:35.357Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_efa391a1",
-          "timestamp": "2026-10-15T09:33:51.153Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_d051206b",
-          "timestamp": "2026-10-15T09:32:38.867Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_06c317f0",
-          "timestamp": "2026-10-15T08:57:00.849Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
+          "id": "hist_b2b8f1e8",
+          "timestamp": "2026-10-16T07:58:20.602Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
         }
       ]
     },
     {
-      "id": "term_45136f9469f9",
-      "sourceTerm": "Vẽ chỉ Airbag",
-      "targetTerm": "Thread line drawing Airbag",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "status": "review",
+      "id": "term_5dcfdd9d40b1",
+      "sourceTerm": "Polysemy_Test_1792135182432",
+      "targetTerm": "ý nghĩa thứ hai",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
       "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
+      "confidence": 1,
+      "createdBy": "test@local",
       "approvedBy": null,
       "version": "v1.0",
-      "createdAt": "2026-10-15T04:41:48.977Z",
-      "updatedAt": "2026-10-15T09:39:51.618Z",
+      "createdAt": "2026-10-16T07:19:42.492Z",
+      "updatedAt": "2026-10-16T07:19:42.492Z",
       "editHistory": [
         {
-          "id": "hist_741ea290",
-          "timestamp": "2026-10-15T09:39:51.618Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
+          "id": "hist_c91bc367",
+          "timestamp": "2026-10-16T07:19:42.492Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_afcc89589720",
+      "sourceTerm": "Kiểm tra keo dán",
+      "targetTerm": "Cement application inspection",
+      "sourceLanguage": null,
+      "targetLanguage": null,
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": null,
+      "approvedBy": null,
+      "version": null,
+      "createdAt": "2026-10-16T07:16:43.086Z",
+      "updatedAt": "2026-10-16T07:16:43.086Z",
+      "editHistory": [
         {
-          "id": "hist_a0f34bd3",
-          "timestamp": "2026-10-15T09:39:35.357Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
+          "id": "hist_b5f90ec8",
+          "timestamp": "2026-10-16T07:16:43.086Z",
+          "editedBy": "system",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_8f8f513067e9",
+      "sourceTerm": "Kiểm tra keo dán",
+      "targetTerm": "Glue inspection draft",
+      "sourceLanguage": null,
+      "targetLanguage": null,
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "review",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": null,
+      "approvedBy": null,
+      "version": null,
+      "createdAt": "2026-10-16T07:16:43.086Z",
+      "updatedAt": "2026-10-16T07:16:43.086Z",
+      "editHistory": [
         {
-          "id": "hist_958521f5",
-          "timestamp": "2026-10-15T09:33:51.153Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
+          "id": "hist_740a6998",
+          "timestamp": "2026-10-16T07:16:43.086Z",
+          "editedBy": "system",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_86f028e54b06",
+      "sourceTerm": "Polysemy_Test_1792126399757",
+      "targetTerm": "ý nghĩa thứ hai",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-16T04:53:19.804Z",
+      "updatedAt": "2026-10-16T04:53:19.804Z",
+      "editHistory": [
         {
-          "id": "hist_2c3b8df7",
-          "timestamp": "2026-10-15T09:32:38.867Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
+          "id": "hist_0973cfcf",
+          "timestamp": "2026-10-16T04:53:19.804Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_c290995627a9",
+      "sourceTerm": "Polysemy_Test_1792126399757",
+      "targetTerm": "ý nghĩa thứ nhất",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-16T04:53:19.758Z",
+      "updatedAt": "2026-10-16T04:53:19.758Z",
+      "editHistory": [
         {
-          "id": "hist_6bc3a29c",
-          "timestamp": "2026-10-15T08:57:00.849Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_a26fae42",
-          "timestamp": "2026-10-15T05:59:50.066Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_97383b50",
-          "timestamp": "2026-10-15T04:49:43.770Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_58de8d5e",
-          "timestamp": "2026-10-15T04:41:48.977Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
+          "id": "hist_26b80931",
+          "timestamp": "2026-10-16T04:53:19.758Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
         }
       ]
     },
@@ -912,6 +1474,252 @@
         {
           "id": "hist_89ffbf4b",
           "timestamp": "2026-10-13T04:05:13.231Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_999e30aee6d1",
+      "sourceTerm": "Polysemy_Test_1792123989455",
+      "targetTerm": "ý nghĩa thứ hai",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-16T04:13:09.520Z",
+      "updatedAt": "2026-10-16T04:13:09.520Z",
+      "editHistory": [
+        {
+          "id": "hist_4c680ac4",
+          "timestamp": "2026-10-16T04:13:09.520Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_733306cc2f33",
+      "sourceTerm": "Dán Airbag vào MS",
+      "targetTerm": "Attach Airbag to MS",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "status": "approved",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": "reviewer@secure.local",
+      "version": "v1.0",
+      "createdAt": "2026-10-15T03:13:09.571Z",
+      "updatedAt": "2026-10-15T09:58:35.290Z",
+      "editHistory": [
+        {
+          "id": "hist_6b6f6bd9",
+          "timestamp": "2026-10-15T09:58:35.290Z",
+          "editedBy": "reviewer@secure.local",
+          "action": "status_changed",
+          "changes": [
+            {
+              "field": "status",
+              "oldValue": "review",
+              "newValue": "approved"
+            }
+          ],
+          "note": "Thay đổi trạng thái từ 'review' sang 'approved'"
+        },
+        {
+          "id": "hist_2352f1b3",
+          "timestamp": "2026-10-15T09:50:04.551Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_a2b2e992",
+          "timestamp": "2026-10-15T09:42:33.352Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_281749dd",
+          "timestamp": "2026-10-15T04:15:13.173Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_41dafda5",
+          "timestamp": "2026-10-15T04:14:58.684Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_bf64feec",
+          "timestamp": "2026-10-15T03:13:09.571Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_705f12cbdbf7",
+      "sourceTerm": "Quét keo Airbag",
+      "targetTerm": "Cementing Airbag",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "status": "review",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-15T08:57:00.849Z",
+      "updatedAt": "2026-10-15T09:39:51.618Z",
+      "editHistory": [
+        {
+          "id": "hist_0d01ae08",
+          "timestamp": "2026-10-15T09:39:51.618Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_2a168e2b",
+          "timestamp": "2026-10-15T09:39:35.357Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_efa391a1",
+          "timestamp": "2026-10-15T09:33:51.153Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_d051206b",
+          "timestamp": "2026-10-15T09:32:38.867Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_06c317f0",
+          "timestamp": "2026-10-15T08:57:00.849Z",
+          "editedBy": "Auto-Harvester",
+          "action": "auto_harvested",
+          "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_45136f9469f9",
+      "sourceTerm": "Vẽ chỉ Airbag",
+      "targetTerm": "Thread line drawing Airbag",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "category": "Quy trình (Process)",
+      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+      "status": "review",
+      "priority": 1,
+      "confidence": 0.98,
+      "createdBy": "Auto-Harvester",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-15T04:41:48.977Z",
+      "updatedAt": "2026-10-15T09:39:51.618Z",
+      "editHistory": [
+        {
+          "id": "hist_741ea290",
+          "timestamp": "2026-10-15T09:39:51.618Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_a0f34bd3",
+          "timestamp": "2026-10-15T09:39:35.357Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_958521f5",
+          "timestamp": "2026-10-15T09:33:51.153Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_2c3b8df7",
+          "timestamp": "2026-10-15T09:32:38.867Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_6bc3a29c",
+          "timestamp": "2026-10-15T08:57:00.849Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_a26fae42",
+          "timestamp": "2026-10-15T05:59:50.066Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_97383b50",
+          "timestamp": "2026-10-15T04:49:43.770Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_58de8d5e",
+          "timestamp": "2026-10-15T04:41:48.977Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
@@ -21960,6 +22768,664 @@
   ],
   "auditLogs": [
     {
+      "id": "log_1792224423086_a11ab581",
+      "timestamp": "2026-10-17T08:07:03.086Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 62828,
+      "errorCode": null,
+      "details": {
+        "fileName": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+        "totalSlides": 4,
+        "totalParagraphs": 51,
+        "totalImagesProtected": 31,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
+    {
+      "id": "log_1792224294875_6eee149f",
+      "timestamp": "2026-10-17T08:04:54.876Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792222542403_681e4139",
+      "timestamp": "2026-10-17T07:35:42.403Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792220417330_bd37ed39",
+      "timestamp": "2026-10-17T07:00:17.331Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792219280321_49da0930",
+      "timestamp": "2026-10-17T06:41:20.322Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792218577319_044feb65",
+      "timestamp": "2026-10-17T06:29:37.319Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792218158128_e88e8b5c",
+      "timestamp": "2026-10-17T06:22:38.129Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792218005502_0b7d8c3a",
+      "timestamp": "2026-10-17T06:20:05.502Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792217872630_5ae92d97",
+      "timestamp": "2026-10-17T06:17:52.630Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792217252724_16a559ea",
+      "timestamp": "2026-10-17T06:07:32.725Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792209987944_63f5b978",
+      "timestamp": "2026-10-17T04:06:27.944Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792209883366_0db5a8e6",
+      "timestamp": "2026-10-17T04:04:43.367Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792209763827_24d5a4a4",
+      "timestamp": "2026-10-17T04:02:43.828Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792209674874_0fff48f5",
+      "timestamp": "2026-10-17T04:01:14.875Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792209592460_17ad0881",
+      "timestamp": "2026-10-17T03:59:52.460Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792209480428_779a0b56",
+      "timestamp": "2026-10-17T03:58:00.428Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792209206949_4ca85a80",
+      "timestamp": "2026-10-17T03:53:26.950Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792208259424_6080cc7f",
+      "timestamp": "2026-10-17T03:37:39.424Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792207315025_b31a2d83",
+      "timestamp": "2026-10-17T03:21:55.025Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792207288158_30fbbb94",
+      "timestamp": "2026-10-17T03:21:28.158Z",
+      "userId": "admin",
+      "userEmail": "admin@secure.local",
+      "operation": "SETTINGS_UPDATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 4,
+      "errorCode": null,
+      "details": {
+        "provider": "airgapped",
+        "retentionPolicy": "delete_immediately"
+      }
+    },
+    {
+      "id": "log_1792207179471_c14c2a2c",
+      "timestamp": "2026-10-17T03:19:39.471Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792207167844_19a23177",
+      "timestamp": "2026-10-17T03:19:27.844Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3545,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 28,
+        "matchedTermsCount": 2,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1792207153758_2aab2a31",
+      "timestamp": "2026-10-17T03:19:13.758Z",
+      "userId": "admin",
+      "userEmail": "admin@secure.local",
+      "operation": "SETTINGS_UPDATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 4,
+      "errorCode": null,
+      "details": {
+        "provider": "gemini",
+        "retentionPolicy": "delete_immediately"
+      }
+    },
+    {
+      "id": "log_1792206219290_96608a6e",
+      "timestamp": "2026-10-17T03:03:39.290Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 45,
+      "errorCode": null,
+      "details": {
+        "provider": "Unlimited Offline Dictionary + Glossary CAT",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 72,
+        "matchedTermsCount": 1,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1792204936377_3e97bc35",
+      "timestamp": "2026-10-17T02:42:16.377Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 8823,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 30,
+        "matchedTermsCount": 2,
+        "complianceScore": 50,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1792204923204_e222b6db",
+      "timestamp": "2026-10-17T02:42:03.204Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 45,
+      "errorCode": null,
+      "details": {
+        "provider": "Unlimited Offline Dictionary + Glossary CAT",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 17,
+        "matchedTermsCount": 1,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1792204623948_a7e96856",
+      "timestamp": "2026-10-17T02:37:03.949Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792140766814_44d6de32",
+      "timestamp": "2026-10-16T08:52:46.815Z",
+      "userId": "user_admin_01",
+      "userEmail": "admin@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 20822,
+      "errorCode": null,
+      "details": {
+        "fileName": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+        "totalSlides": 4,
+        "totalParagraphs": 51,
+        "totalImagesProtected": 31,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
+    {
+      "id": "log_1792140439536_aef1e906",
+      "timestamp": "2026-10-16T08:47:19.536Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792139676313_afdd075a",
+      "timestamp": "2026-10-16T08:34:36.313Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792138634292_131467d9",
+      "timestamp": "2026-10-16T08:17:14.295Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792137720597_e60a507f",
+      "timestamp": "2026-10-16T08:02:00.597Z",
+      "userId": "user_admin_01",
+      "userEmail": "admin@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 27045,
+      "errorCode": null,
+      "details": {
+        "fileName": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+        "totalSlides": 4,
+        "totalParagraphs": 51,
+        "totalImagesProtected": 31,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
+    {
+      "id": "log_1792137500779_173a2c0f",
+      "timestamp": "2026-10-16T07:58:20.780Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792137295390_11d5ade5",
+      "timestamp": "2026-10-16T07:54:55.391Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792137028690_c01b0e59",
+      "timestamp": "2026-10-16T07:50:28.690Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792135562324_8aec3e9a",
+      "timestamp": "2026-10-16T07:26:02.324Z",
+      "userId": "user_admin_01",
+      "userEmail": "admin@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 37120,
+      "errorCode": null,
+      "details": {
+        "fileName": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+        "totalSlides": 4,
+        "totalParagraphs": 51,
+        "totalImagesProtected": 31,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
+    {
+      "id": "log_1792135395184_b8fdc064",
+      "timestamp": "2026-10-16T07:23:15.184Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792135182743_2a1d2012",
+      "timestamp": "2026-10-16T07:19:42.744Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792134795787_b27b407a",
+      "timestamp": "2026-10-16T07:13:15.787Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792133551310_096c41ec",
+      "timestamp": "2026-10-16T06:52:31.311Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792132524312_c3f846f9",
+      "timestamp": "2026-10-16T06:35:24.312Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792132430560_78c47ef7",
+      "timestamp": "2026-10-16T06:33:50.560Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792128815483_4b8eb2d0",
+      "timestamp": "2026-10-16T05:33:35.483Z",
+      "userId": "user_admin_01",
+      "userEmail": "admin@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 16361,
+      "errorCode": null,
+      "details": {
+        "fileName": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+        "totalSlides": 4,
+        "totalParagraphs": 51,
+        "totalImagesProtected": 31,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
+    {
       "id": "log_1792126399908_bf9a0fd6",
       "timestamp": "2026-10-16T04:53:19.908Z",
       "userId": "test_user",
@@ -32665,7 +34131,7 @@
     "localLlmUrl": "http://127.0.0.1:11434/v1",
     "localLlmModel": "qwen3:4b",
     "openaiModel": "gpt-4o-mini",
-    "geminiModel": "gemini-3.5-flash-lite",
+    "geminiModel": "gemini-3.8-flash",
     "huggingFaceModel": "Helsinki-NLP/opus-mt-en-vi",
     "googleApiKey": "",
     "openaiApiKey": "",

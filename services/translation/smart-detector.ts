@@ -49,6 +49,8 @@ export interface TextUnitLocation {
   isTitle?: boolean;
   isInspectionItem?: boolean;
   isIsq?: boolean;
+  isIsqReference?: boolean;
+  pairedSlideIndex?: number;
 }
 
 export interface ScannedTextUnit {
@@ -499,8 +501,10 @@ export function isItemPrefixOrCode(str: string): boolean {
 }
 
 /**
- * Detects whether a string is bilingual containing both English and Vietnamese components
+ * Detects whether a string is genuine parallel bilingual text containing both English and Vietnamese components
  * (e.g. "Final Inspection\nKiểm tra cuối cùng", or "Toe shape - Hình dạng mũi", or "Color matching-Phối màu liệu")
+ * Distinguishes genuine parallel bilingual pairs from Vietnamese sentences with embedded loanwords/parentheses
+ * (e.g. "Kiểm tra vị trí logo (Tongue label) - Phải cân đối hai bên", "May viền (Collar stitch): Mũi may đều").
  */
 export function isBilingualText(text: string): boolean {
   if (!text) return false;
@@ -521,14 +525,44 @@ export function isBilingualText(text: string): boolean {
     }
   }
 
-  // Single-line hyphen / slash / bracket / colon / pipe delimited bilingual check
-  if (/[-–—\/\(\)\|:]/.test(trimmed)) {
-    // Delimit by hyphen, slash, colon, pipe, or parentheses
-    const parts = trimmed.split(/[-–—\/\(\)\|:]/).map((p) => p.trim()).filter(Boolean);
-    if (parts.length >= 2) {
-      const hasEn = parts.some((p) => isPureEnglish(p) && !isNonTranslatable(p) && !isItemPrefixOrCode(p));
-      const hasVi = parts.some((p) => hasViDiacritics(p));
-      if (hasEn && hasVi) return true;
+  // Standalone Parenthetical bilingual check: e.g. "Toe shape (Hình dạng mũi)" or "Hình dạng mũi (Toe shape)"
+  // The ENTIRE string is of the form Term1 (Term2) with no additional clauses/instructions
+  const parenMatch = trimmed.match(/^([^\(\)]+?)\s*\(([^\(\)]+?)\)$/);
+  if (parenMatch) {
+    const part1 = parenMatch[1].trim();
+    const part2 = parenMatch[2].trim();
+    const p1En = isPureEnglish(part1) && !isNonTranslatable(part1) && !isItemPrefixOrCode(part1);
+    const p1Vi = hasViDiacritics(part1);
+    const p2En = isPureEnglish(part2) && !isNonTranslatable(part2) && !isItemPrefixOrCode(part2);
+    const p2Vi = hasViDiacritics(part2);
+    if ((p1En && p2Vi) || (p1Vi && p2En)) {
+      return true;
+    }
+  }
+
+  // Single-line hyphen / slash / pipe delimited bilingual check
+  // Note: Parentheses are NOT delimiters for this check; strip parenthesized loanwords/specs first
+  const textWithoutParens = trimmed.replace(/\([^\(\)]*\)/g, " ").replace(/\s+/g, " ").trim();
+
+  if (/[-–—\/\|]/.test(textWithoutParens)) {
+    // Delimit by hyphen, dash, slash, or pipe
+    const parts = textWithoutParens.split(/\s*[-–—\/\|]\s*|[-–—\/\|]/).map((p) => p.trim()).filter(Boolean);
+    if (parts.length === 2) {
+      const p0En = isPureEnglish(parts[0]) && !isNonTranslatable(parts[0]) && !isItemPrefixOrCode(parts[0]);
+      const p0Vi = hasViDiacritics(parts[0]);
+      const p1En = isPureEnglish(parts[1]) && !isNonTranslatable(parts[1]) && !isItemPrefixOrCode(parts[1]);
+      const p1Vi = hasViDiacritics(parts[1]);
+
+      // Exactly one side must be English and the other side must have Vietnamese diacritics
+      if ((p0En && p1Vi && !p0Vi) || (p1En && p0Vi && !p1En)) {
+        return true;
+      }
+    } else if (parts.length > 2) {
+      const viParts = parts.filter(hasViDiacritics);
+      const enParts = parts.filter((p) => isPureEnglish(p) && !isNonTranslatable(p) && !isItemPrefixOrCode(p));
+      if (enParts.length >= 1 && viParts.length === 1 && (enParts.length + viParts.length === parts.length)) {
+        return true;
+      }
     }
   }
 
@@ -808,7 +842,8 @@ export async function auditPptxGaps(
   const hasIsq = Boolean(
     report.requiresIsqDuplicate ||
     report.units.some((u) => u.location.isIsq) ||
-    /\b(isq|ctq|ctp|strategy)\b/i.test(fileName)
+    /(?:^|[^a-z0-9])(?:isq|ctq|ctp|strategy)(?:[^a-z0-9]|$)/i.test(fileName) ||
+    effOptions.mode === "isq_duplicate"
   );
   const isComplex = hasModelSection || hasIsq;
 

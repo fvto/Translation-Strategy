@@ -17,7 +17,9 @@ import {
   Info,
   Zap,
   ClipboardPaste,
+  Cpu,
 } from "lucide-react";
+import { ThreeTranslationVisualizer } from "./ThreeTranslationVisualizer";
 
 interface MatchedTerm {
   entry: {
@@ -71,6 +73,7 @@ export const TranslationWorkspace: React.FC = () => {
   const [qaReport, setQaReport] = useState<QAReport | null>(null);
   const [providerUsed, setProviderUsed] = useState<string>("");
   const [selectedEngine, setSelectedEngine] = useState<string>("default");
+  const [showVisualizer, setShowVisualizer] = useState<boolean>(true);
 
   // Restore saved workspace draft on mount
   useEffect(() => {
@@ -467,6 +470,20 @@ function applySmartTerminologyFix(
 
         <div className="flex items-center space-x-2">
           <button
+            type="button"
+            onClick={() => setShowVisualizer(!showVisualizer)}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs rounded-lg transition-all border cursor-pointer ${
+              showVisualizer
+                ? "bg-cyan-950/60 text-cyan-300 border-cyan-700/60 shadow-sm shadow-cyan-500/20"
+                : "bg-slate-800/60 text-slate-400 border-slate-800 hover:text-white"
+            }`}
+            title="Bật/Tắt mô hình 3D Three.js Pipeline"
+          >
+            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+            <span>3D Stage</span>
+          </button>
+
+          <button
             onClick={handleClear}
             className="flex items-center space-x-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-800 rounded-lg transition-colors border border-slate-800"
           >
@@ -502,6 +519,15 @@ function applySmartTerminologyFix(
           </button>
         </div>
       </div>
+
+      {/* Three.js Interactive Neural Pipeline Visualizer */}
+      {showVisualizer && (
+        <ThreeTranslationVisualizer
+          isTranslating={isLoading}
+          sourceLang={sourceLang.toUpperCase()}
+          targetLang={targetLang.toUpperCase()}
+        />
+      )}
 
       {/* Dual Pane Editors */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

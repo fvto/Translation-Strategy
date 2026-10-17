@@ -14,6 +14,8 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 
+import { ThreeInteractiveOrb } from "./ThreeInteractiveOrb";
+
 interface NavbarProps {
   activeTab: "translate" | "pptx" | "xlsx" | "documents" | "glossary" | "audit";
   setActiveTab: (tab: "translate" | "pptx" | "xlsx" | "documents" | "glossary" | "audit") => void;
@@ -32,7 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   providerName,
 }) => {
   return (
-    <header className="border-b border-slate-800 bg-[#0c1222]/90 backdrop-blur-md sticky top-0 z-40">
+    <header className="border-b border-slate-800/80 bg-[#0c1222]/80 backdrop-blur-xl sticky top-0 z-40 transition-colors">
       {/* Top Security Banner */}
       <div className="bg-gradient-to-r from-blue-950/60 via-indigo-950/40 to-slate-950 border-b border-blue-900/30 px-4 py-1 text-xs flex items-center justify-between text-blue-300">
         <div className="flex items-center space-x-2">
@@ -59,16 +61,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
         <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-xl bg-blue-600/10 border border-blue-500/30 text-blue-400 shadow-inner">
-            <ShieldCheck className="w-6 h-6" />
+          <div className="p-1 rounded-xl bg-gradient-to-br from-blue-600/20 to-cyan-500/10 border border-blue-500/30 shadow-inner flex items-center justify-center">
+            <ThreeInteractiveOrb size={36} status={activeTab === "pptx" ? "shield" : "idle"} interactive={true} />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-lg text-white tracking-tight">
+              <span className="font-bold text-lg text-white tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text">
                 SecureTranslator
               </span>
-              <span className="bg-slate-800 text-slate-300 text-[10px] font-mono px-1.5 py-0.5 rounded border border-slate-700">
-                CAT v1.0
+              <span className="bg-blue-950/60 text-cyan-300 border border-cyan-800/40 text-[10px] font-mono px-1.5 py-0.5 rounded">
+                Three.js 3D
               </span>
             </div>
             <p className="text-xs text-slate-400">
