@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GeminiRateLimitError, GeminiTranslationProvider } from "../services/translation/gemini.ts";
+import {
+  GeminiRateLimitError,
+  GeminiTranslationProvider,
+  GeminiCircuitBreaker,
+  GeminiQuotaManager,
+} from "../services/translation/gemini.ts";
 import { GoogleTranslationProvider } from "../services/translation/google.ts";
 
 test("Gemini Provider - Initialization and Name", () => {
@@ -132,6 +137,8 @@ test("Google NMT - honors the requested VI to EN direction for bilingual content
 });
 
 test("Gemini Provider - Automatically switches from 3.5-flash-lite to 3.5-flash on 429 limit", async () => {
+  GeminiCircuitBreaker.getInstance().reset();
+  GeminiQuotaManager.getInstance().reset();
   const originalFetch = globalThis.fetch;
   const calledModels = [];
 
@@ -144,8 +151,8 @@ test("Gemini Provider - Automatically switches from 3.5-flash-lite to 3.5-flash 
         { status: 429, headers: { "Content-Type": "application/json" } }
       );
     }
-    if (urlStr.includes("gemini-3.5-flash")) {
-      calledModels.push("gemini-3.5-flash");
+    if (urlStr.includes("gemini-3.1-flash-lite")) {
+      calledModels.push("gemini-3.1-flash-lite");
       return new Response(
         JSON.stringify({
           candidates: [
@@ -177,8 +184,57 @@ test("Gemini Provider - Automatically switches from 3.5-flash-lite to 3.5-flash 
 
     assert.ok(res.results.has("p1"));
     assert.equal(res.results.get("p1"), "Quality inspection");
-    assert.deepEqual(calledModels, ["gemini-3.5-flash-lite", "gemini-3.5-flash"]);
-    assert.equal(provider.getModel(), "gemini-3.5-flash", "Active model must be promoted to gemini-3.5-flash");
+    assert.deepEqual(calledModels, ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]);
+    assert.equal(provider.getModel(), "gemini-3.1-flash-lite", "Active model must be promoted to gemini-3.1-flash-lite");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("Gemini Provider - Single text translate fallbacks from 3.5 to 3.1 Flash Lite upon 429", async () => {
+  GeminiCircuitBreaker.getInstance().reset();
+  GeminiQuotaManager.getInstance().reset();
+  const originalFetch = globalThis.fetch;
+  const calledModels = [];
+
+  globalThis.fetch = async (url) => {
+    const urlStr = String(url);
+    if (urlStr.includes("gemini-3.5-flash-lite")) {
+      calledModels.push("gemini-3.5-flash-lite");
+      return new Response(
+        JSON.stringify({ error: { message: "Quota exceeded 429." } }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    if (urlStr.includes("gemini-3.1-flash-lite")) {
+      calledModels.push("gemini-3.1-flash-lite");
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: "Airbag thread line drawing" }]
+              }
+            }
+          ]
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    return new Response(JSON.stringify({}), { status: 404 });
+  };
+
+  try {
+    const provider = new GeminiTranslationProvider("test_key", "gemini-3.5-flash-lite");
+    const res = await provider.translate({
+      sourceText: "Vẽ chỉ Airbag",
+      sourceLanguage: "vi",
+      targetLanguage: "en",
+    });
+
+    assert.equal(res.translatedText, "Airbag thread line drawing");
+    assert.deepEqual(calledModels, ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]);
+    assert.equal(provider.getModel(), "gemini-3.1-flash-lite");
   } finally {
     globalThis.fetch = originalFetch;
   }

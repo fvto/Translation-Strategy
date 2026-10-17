@@ -7,7 +7,7 @@ export async function GET() {
   // Mask API key for frontend safety
   const safeSettings = {
     ...settings,
-    geminiModel: settings.geminiModel || "gemini-3.8-flash",
+    geminiModel: settings.geminiModel || "gemini-3.5-flash-lite",
     googleApiKey: settings.googleApiKey ? "••••••••••••••••" : "",
     openaiApiKey: settings.openaiApiKey ? "••••••••••••••••" : "",
     geminiApiKey: settings.geminiApiKey || envGeminiKey ? "••••••••••••••••" : "",

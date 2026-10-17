@@ -437,18 +437,18 @@ test("Gemini Reliability - 20. Model circuit breaker never locks into dead model
   const circuitBreaker = GeminiCircuitBreaker.getInstance();
   circuitBreaker.reset();
 
-  // Initially both are available
+  // Initially both 3.5 Flash Lite and 3.1 Flash Lite are available
   const initial = circuitBreaker.getCandidateModels("gemini-3.5-flash-lite");
-  assert.deepEqual(initial, ["gemini-3.5-flash-lite", "gemini-3.5-flash"]);
+  assert.deepEqual(initial, ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]);
 
-  // Simulate gemini-3.5-flash having exhausted RPD
-  const flashRpdError = new GeminiRateLimitError("Daily limit reached", undefined, GeminiErrorType.RATE_LIMIT_RPD, "gemini-3.5-flash");
-  circuitBreaker.recordFailure("gemini-3.5-flash", flashRpdError);
+  // Simulate gemini-3.1-flash-lite having exhausted RPD
+  const flashRpdError = new GeminiRateLimitError("Daily limit reached", undefined, GeminiErrorType.RATE_LIMIT_RPD, "gemini-3.1-flash-lite");
+  circuitBreaker.recordFailure("gemini-3.1-flash-lite", flashRpdError);
 
-  // Now candidate models must NOT include dead flash model
+  // Now candidate models must NOT include dead fallback model
   const healthyCandidates = circuitBreaker.getCandidateModels("gemini-3.5-flash-lite");
   assert.deepEqual(healthyCandidates, ["gemini-3.5-flash-lite"]);
-  assert.equal(circuitBreaker.isModelAvailable("gemini-3.5-flash"), false);
+  assert.equal(circuitBreaker.isModelAvailable("gemini-3.1-flash-lite"), false);
 });
 
 test("Gemini Reliability - 21 & 23. Global rate limiter serializes concurrent callers", async () => {

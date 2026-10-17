@@ -18,6 +18,7 @@ export class GeminiQuotaManager {
 
   private defaultLimits: Record<string, number> = {
     "gemini-3.5-flash-lite": 500,
+    "gemini-3.1-flash-lite": 500,
     "gemini-3.5-flash": 20,
     "gemini-2.5-flash": 20,
     "gemini-2.0-flash": 20,
@@ -45,8 +46,10 @@ export class GeminiQuotaManager {
 
   private normalizeModelKey(modelName: string): string {
     const lower = modelName.toLowerCase().trim();
+    if (lower.includes("3.1")) return "gemini-3.1-flash-lite";
+    if (lower.includes("3.5")) return "gemini-3.5-flash-lite";
     if (lower.includes("lite")) return "gemini-3.5-flash-lite";
-    if (lower.includes("flash")) return "gemini-3.5-flash";
+    if (lower.includes("flash")) return "gemini-3.1-flash-lite";
     return lower || "gemini-3.5-flash-lite";
   }
 

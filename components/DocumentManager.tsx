@@ -139,62 +139,62 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({ onNavigateToGl
   return (
     <div className="space-y-6">
       {/* Privacy Notice Banner */}
-      <div className="p-4 rounded-2xl bg-blue-950/30 border border-blue-800/40 text-blue-200 flex items-start space-x-3 text-xs">
-        <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-3xl bg-blue-50 border border-blue-200 text-blue-900 flex items-start space-x-3 text-xs shadow-2xs">
+        <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <span className="font-semibold text-white">
+          <span className="font-bold text-blue-950">
             Zero-Leak Local Document Ingestion
           </span>
-          <p className="text-blue-200/80">
+          <p className="text-blue-800/80 leading-relaxed">
             Uploaded files are stored strictly in protected server-side storage outside any public web paths. With the default &quot;Delete after processing&quot; policy, documents are parsed in temporary memory, terms are extracted for review, and the source file is immediately shredded from disk.
           </p>
         </div>
       </div>
 
       {/* Upload Box */}
-      <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+      <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-bold text-white tracking-tight">
+            <h2 className="text-base font-bold text-slate-900 tracking-tight">
               Ingest Reference Terminology Files
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 mt-0.5">
               Supported formats: .XLSX / .XLS / .CSV (Excel), .DOCX (Word), .PPTX (PowerPoint), .PDF (Text/Scanned)
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Classification */}
-            <div className="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-              <span className="text-slate-400">Classification:</span>
+            <div className="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 text-xs">
+              <span className="text-slate-500 font-medium">Classification:</span>
               <select
                 value={classification}
                 onChange={(e) => setClassification(e.target.value as any)}
-                className="bg-transparent text-blue-400 font-semibold focus:outline-none cursor-pointer capitalize"
+                className="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer capitalize"
               >
-                <option value="internal" className="bg-slate-900 text-slate-200">Internal</option>
-                <option value="confidential" className="bg-slate-900 text-slate-200">Confidential</option>
-                <option value="highly_confidential" className="bg-slate-900 text-slate-200">Highly Confidential</option>
+                <option value="internal" className="bg-white text-slate-900">Internal</option>
+                <option value="confidential" className="bg-white text-slate-900">Confidential</option>
+                <option value="highly_confidential" className="bg-white text-slate-900">Highly Confidential</option>
               </select>
             </div>
 
             {/* Retention */}
-            <div className="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
-              <span className="text-slate-400">Retention:</span>
+            <div className="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 text-xs">
+              <span className="text-slate-500 font-medium">Retention:</span>
               <select
                 value={retentionPolicy}
                 onChange={(e) => setRetentionPolicy(e.target.value as any)}
-                className="bg-transparent text-emerald-400 font-semibold focus:outline-none cursor-pointer"
+                className="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer"
               >
-                <option value="delete_immediately" className="bg-slate-900 text-slate-200">Delete after processing</option>
-                <option value="persist_until_manual" className="bg-slate-900 text-slate-200">Keep until manually deleted</option>
+                <option value="delete_immediately" className="bg-white text-slate-900">Delete after processing</option>
+                <option value="persist_until_manual" className="bg-white text-slate-900">Keep until manually deleted</option>
               </select>
             </div>
           </div>
         </div>
 
         {/* Dropzone Area */}
-        <label className="relative border-2 border-dashed border-slate-700 hover:border-blue-500 bg-slate-950/50 hover:bg-slate-950/80 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all group">
+        <label className="relative border-2 border-dashed border-slate-300 hover:border-slate-400 bg-slate-50/60 hover:bg-slate-50 rounded-3xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all group">
           <input
             type="file"
             accept=".xlsx,.xls,.csv,.docx,.pptx,.pdf"
@@ -202,14 +202,14 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({ onNavigateToGl
             disabled={isUploading}
             className="hidden"
           />
-          <div className="p-3 rounded-full bg-blue-900/20 group-hover:bg-blue-900/30 text-blue-400 mb-3 transition-colors">
+          <div className="p-3.5 rounded-2xl bg-rose-50 text-[#E60023] mb-3 transition-colors">
             {isUploading ? (
-              <RefreshCw className="w-8 h-8 animate-spin text-blue-400" />
+              <RefreshCw className="w-7 h-7 animate-spin text-[#E60023]" />
             ) : (
-              <UploadCloud className="w-8 h-8" />
+              <UploadCloud className="w-7 h-7" />
             )}
           </div>
-          <span className="text-sm font-semibold text-white group-hover:text-blue-300">
+          <span className="text-sm font-semibold text-slate-800 group-hover:text-[#E60023]">
             {isUploading ? "Extracting document structure & terminology..." : "Click or drag document to ingest"}
           </span>
           <span className="text-xs text-slate-500 mt-1">
@@ -218,14 +218,14 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({ onNavigateToGl
         </label>
 
         {uploadResult && (
-          <div className="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs flex items-center justify-between">
+          <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{uploadResult}</span>
             </div>
             <button
               onClick={onNavigateToGlossary}
-              className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-200 font-semibold underline underline-offset-2 ml-4 shrink-0"
+              className="inline-flex items-center space-x-1 text-emerald-700 hover:text-emerald-900 font-semibold underline underline-offset-2 ml-4 shrink-0"
             >
               <span>Review in Glossary</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -235,29 +235,29 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({ onNavigateToGl
       </div>
 
       {/* Ingested Documents List */}
-      <div className="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <FileText className="w-4 h-4 text-blue-400" />
-            <h3 className="font-semibold text-sm text-white">
+            <FileText className="w-4 h-4 text-slate-600" />
+            <h3 className="font-bold text-sm text-slate-900">
               Ingested Documents History
             </h3>
           </div>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-slate-500 font-mono">
             {documents.length} recorded
           </span>
         </div>
 
         {documents.length === 0 ? (
           <div className="p-10 text-center text-slate-500 text-xs space-y-2">
-            <AlertCircle className="w-6 h-6 mx-auto text-slate-600" />
-            <p>No reference documents ingested yet.</p>
-            <p className="text-slate-600">Upload a policy or glossary file above to extract terminology pairs.</p>
+            <AlertCircle className="w-6 h-6 mx-auto text-slate-400" />
+            <p className="font-medium text-slate-600">No reference documents ingested yet.</p>
+            <p className="text-slate-400">Upload a policy or glossary file above to extract terminology pairs.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/60 text-slate-400 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-3">Document Name</th>
                   <th className="px-4 py-3">Type</th>
@@ -268,14 +268,14 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({ onNavigateToGl
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-3.5 font-medium text-white flex items-center space-x-3">
+                  <tr key={doc.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="px-6 py-3.5 font-medium text-slate-900 flex items-center space-x-3">
                       {getFileIcon(doc.fileType)}
-                      <span className="truncate max-w-xs">{doc.fileName}</span>
+                      <span className="truncate max-w-xs font-semibold">{doc.fileName}</span>
                     </td>
-                    <td className="px-4 py-3.5 uppercase font-mono text-[11px] text-slate-300">
+                    <td className="px-4 py-3.5 uppercase font-mono text-[11px] text-slate-600">
                       .{doc.fileType}
                     </td>
                     <td className="px-4 py-3.5">
@@ -284,12 +284,12 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({ onNavigateToGl
                       </span>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 font-mono">
-                        <Clock className="w-3 h-3 text-slate-500" />
+                      <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-mono">
+                        <Clock className="w-3 h-3 text-slate-400" />
                         {doc.retentionPolicy === "delete_immediately" ? "Shredded" : "Preserved"}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 font-semibold text-emerald-400 font-mono">
+                    <td className="px-4 py-3.5 font-semibold text-emerald-700 font-mono">
                       {doc.termCount} terms
                     </td>
                     <td className="px-4 py-3.5 text-slate-500 text-[11px]">
@@ -298,7 +298,7 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({ onNavigateToGl
                     <td className="px-4 py-3.5 text-right">
                       <button
                         onClick={() => handleDelete(doc.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
                         title="Explicit Delete"
                       >
                         <Trash2 className="w-4 h-4" />

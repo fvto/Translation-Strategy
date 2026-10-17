@@ -395,24 +395,24 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   };
 
   const customEditsCount = Object.keys(customEdits).length;
-  const card = "rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 p-4";
-  const button = "px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 cursor-pointer";
+  const card = "rounded-2xl border border-slate-200 bg-slate-50/50 p-4 shadow-2xs";
+  const button = "px-4 py-2 rounded-full border border-slate-200 text-xs font-semibold hover:bg-slate-100 text-slate-700 disabled:opacity-40 cursor-pointer transition-all";
 
   return (
-    <div id="smart-audit-modal-backdrop" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div role="dialog" aria-modal="true" aria-labelledby="smart-audit-title" id="smart-audit-modal-container" className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+    <div id="smart-audit-modal-backdrop" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+      <div role="dialog" aria-modal="true" aria-labelledby="smart-audit-title" id="smart-audit-modal-container" className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
           <div>
             <h2 id="smart-audit-title" className="text-lg font-bold flex items-center gap-2">
-              <Zap className="w-5 h-5 text-sky-500" /> Smart Audit
+              <Zap className="w-5 h-5 text-amber-500" /> Smart Audit
               {report.aiAudited && (
-                <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 font-medium">
+                <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                   <Sparkles className="w-3 h-3 text-emerald-500" />
                   Đã xác thực bởi AI Studio
                 </span>
               )}
               {customEditsCount > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700 font-medium">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-medium">
                   {customEditsCount} câu tùy chỉnh
                 </span>
               )}
@@ -424,7 +424,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               type="button"
               onClick={handleAiDeepAudit}
               disabled={aiAuditing || loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 via-indigo-600 to-sky-600 hover:from-violet-500 hover:to-sky-500 text-white shadow-sm hover:shadow transition-all disabled:opacity-50 cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-900 hover:bg-black text-white shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
               title="Dùng Google AI Studio đọc ngữ cảnh các slide để tự động ghép cặp song ngữ và loại bỏ dịch trùng"
             >
               {aiAuditing ? (
@@ -439,14 +439,14 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                 </>
               )}
             </button>
-            <button aria-label="Đóng Smart Audit" onClick={onClose} disabled={loading} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+            <button aria-label="Đóng Smart Audit" onClick={onClose} disabled={loading} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {aiAuditMsg && (
-          <div className="mx-6 mt-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
+          <div className="mx-6 mt-3 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{aiAuditMsg}</span>
@@ -457,15 +457,55 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
           </div>
         )}
 
-        <div className="flex gap-4 px-6 py-3 border-b border-slate-200 dark:border-slate-800 text-sm">
-          <button onClick={() => setTab("summary")} aria-pressed={tab === "summary"} className={tab === "summary" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Tổng quan</button>
-          <button onClick={() => setTab("slides")} aria-pressed={tab === "slides"} className={tab === "slides" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1 flex items-center gap-1.5" : "text-slate-500 hover:text-slate-700 flex items-center gap-1.5"}>
-            <SlidersHorizontal className="w-3.5 h-3.5" /> Chọn Slide &amp; Chỗ cần dịch ({selectedMissing.length})
-          </button>
-          <button onClick={() => setTab("review")} aria-pressed={tab === "review"} className={tab === "review" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1" : "text-slate-500 hover:text-slate-700"}>Xem xét ({attention} nhóm)</button>
-          <button onClick={() => setTab("pairs")} aria-pressed={tab === "pairs"} className={tab === "pairs" ? "font-bold text-sky-600 border-b-2 border-sky-600 pb-1 flex items-center gap-1.5" : "text-slate-500 hover:text-slate-700 flex items-center gap-1.5"}>
-            <Layers className="w-3.5 h-3.5" /> Cặp slide ({report.slidePairs?.length || 0})
-          </button>
+        <div className="px-6 py-3 border-b border-slate-100 flex items-center">
+          <div className="bg-slate-100/90 p-1 rounded-full flex gap-1 text-xs">
+            <button
+              onClick={() => setTab("summary")}
+              aria-pressed={tab === "summary"}
+              className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
+                tab === "summary"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Tổng quan
+            </button>
+            <button
+              onClick={() => setTab("slides")}
+              aria-pressed={tab === "slides"}
+              className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                tab === "slides"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Chọn Slide &amp; Chỗ cần dịch ({selectedMissing.length})</span>
+            </button>
+            <button
+              onClick={() => setTab("review")}
+              aria-pressed={tab === "review"}
+              className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
+                tab === "review"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Xem xét ({attention} nhóm)
+            </button>
+            <button
+              onClick={() => setTab("pairs")}
+              aria-pressed={tab === "pairs"}
+              className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                tab === "pairs"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Cặp slide ({report.slidePairs?.length || 0})</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -1410,13 +1450,17 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               )}
               <span className="ml-2 text-slate-400">· khoảng {Math.ceil(new Set(selectedMissing.map((u) => u.canonicalText)).size / 25)} yêu cầu AI</span>
             </div>
-            <div className="flex gap-2">
-              <button className={button} onClick={onClose} disabled={loading}>
+            <div className="flex items-center gap-2">
+              <button
+                className="px-4 py-2 rounded-full border border-slate-200 text-xs font-semibold hover:bg-slate-100 text-slate-700 transition-all cursor-pointer"
+                onClick={onClose}
+                disabled={loading}
+              >
                 Đóng
               </button>
               <button
                 id="btn-translate-missing-only"
-                className={button + " bg-sky-600 text-white hover:bg-sky-500"}
+                className="px-5 py-2 rounded-full bg-[#E60023] hover:bg-[#CC001F] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 cursor-pointer"
                 disabled={loading || (!selectedMissing.length && customEditsCount === 0)}
                 onClick={() => onTranslateMissingOnly(selectedMissing.map((u) => u.id), customEdits, { viHandlingMode, slideViHandling })}
               >

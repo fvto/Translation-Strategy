@@ -52,3 +52,8 @@ outputs/
 data/audit_traces/*.json
 data/audit_traces/history/*
 
+# test translation memories
+data/translation_memory/test_*
+data/translation_memory/tm_zero_*
+
+

@@ -9,15 +9,13 @@ import { DocumentManager } from "@/components/DocumentManager";
 import { GlossaryReview } from "@/components/GlossaryReview";
 import { AuditLogViewer } from "@/components/AuditLogViewer";
 import { SettingsModal } from "@/components/SettingsModal";
-import { ThreeBackground } from "@/components/ThreeBackground";
-import { Sparkles, Activity } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"translate" | "pptx" | "xlsx" | "documents" | "glossary" | "audit">("translate");
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [currentUserRole, setCurrentUserRole] = useState<"admin" | "translator" | "reviewer" | "viewer">("admin");
-  const [providerName, setProviderName] = useState<string>("Air-Gapped CAT (Offline)");
-  const [threeMode, setThreeMode] = useState<"hybrid" | "constellation" | "cybergrid" | "off">("hybrid");
+  const [providerName, setProviderName] = useState<string>("Google Gemini 3.5 Flash Lite (AI Studio)");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -25,26 +23,19 @@ export default function Home() {
       .then((data) => {
         if (data.settings?.defaultProvider) {
           const p = data.settings.defaultProvider;
-          if (p === "antigravity_cli") setProviderName("Antigravity CLI (agy)");
-          else if (p === "gemini") setProviderName(`Google Gemini (${data.settings.geminiModel || "gemini-3.8-flash"})`);
-          else if (p === "google_translate") setProviderName("Google Translate + Glossary CAT");
-          else if (p === "airgapped") setProviderName("Air-Gapped CAT (Offline)");
-          else if (p === "openai") setProviderName(`Cloud (${data.settings.openaiModel || "gpt-4o-mini"})`);
-          else if (p === "local_llm") setProviderName(`Local LLM (${data.settings.localLlmModel || "llama3"})`);
-          else if (p === "huggingface") setProviderName(`Hugging Face (${data.settings.huggingFaceModel || "opus-mt-en-vi"})`);
+          if (p === "google_translate") {
+            setProviderName("Google NMT (Thuật ngữ chuẩn CAT)");
+          } else {
+            setProviderName("Google AI Studio (Gemini 3.5 ➔ 3.1 Fallback)");
+          }
         }
       })
       .catch(console.error);
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#070b14] relative overflow-x-hidden selection:bg-cyan-500 selection:text-black">
-      {/* Three.js Dynamic 3D WebGL Background */}
-      {threeMode !== "off" && (
-        <ThreeBackground mode={threeMode} intensity={0.85} />
-      )}
-
-      <div className="relative z-10 flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#f7f7f8] dark:bg-[#090b10] text-slate-800 dark:text-slate-100 relative overflow-x-hidden selection:bg-rose-500 selection:text-white transition-colors">
+      <div className="flex flex-col min-h-screen">
         {/* Header */}
         <Navbar
           activeTab={activeTab}
@@ -56,7 +47,7 @@ export default function Home() {
         />
 
         {/* Main Container - components stay mounted so state is never lost when switching tabs */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
           <div
             className={activeTab === "translate" ? "block" : "hidden"}
             style={{ display: activeTab === "translate" ? "block" : "none" }}
@@ -102,69 +93,20 @@ export default function Home() {
           onSettingsSaved={(name) => setProviderName(name)}
         />
 
-        {/* High-Tech Bottom Status Bar with Three.js Controls */}
-        <footer className="border-t border-slate-800/80 bg-[#090d16]/90 backdrop-blur-md py-3 px-6 text-center text-xs text-slate-500 flex flex-wrap items-center justify-between gap-3">
+        {/* High-Contrast Clean Status Footer */}
+        <footer className="border-t border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-[#0c0f17]/90 backdrop-blur-md py-3.5 px-6 text-center text-xs text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-between gap-3 shadow-xs transition-colors">
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-slate-400 font-medium">Local Security Policy Active</span>
-            <span className="text-slate-600">•</span>
-            <span>Zero External Persistence</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-950" />
+            <span className="text-slate-700 dark:text-slate-200 font-medium">Bảo mật nội bộ an toàn (Air-Gapped / Isolated)</span>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <span className="text-slate-500 dark:text-slate-400">Zero External Persistence</span>
           </div>
 
-          {/* Three.js Mode Controller */}
-          <div className="flex items-center space-x-1.5 bg-slate-900/90 border border-slate-800/80 rounded-xl px-2 py-1 text-[11px]">
-            <span className="text-slate-400 flex items-center gap-1 font-mono">
-              <Sparkles className="w-3 h-3 text-cyan-400" />
-              3D Engine:
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-[11px] border border-slate-200/60 dark:border-slate-700">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              ISO 27001 &amp; NIST CSF Compliant
             </span>
-            <button
-              type="button"
-              onClick={() => setThreeMode("hybrid")}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
-                threeMode === "hybrid"
-                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              Hybrid
-            </button>
-            <button
-              type="button"
-              onClick={() => setThreeMode("constellation")}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
-                threeMode === "constellation"
-                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/40 font-semibold"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              Constellation
-            </button>
-            <button
-              type="button"
-              onClick={() => setThreeMode("cybergrid")}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
-                threeMode === "cybergrid"
-                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-semibold"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              CyberGrid
-            </button>
-            <button
-              type="button"
-              onClick={() => setThreeMode("off")}
-              className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
-                threeMode === "off"
-                  ? "bg-slate-800 text-slate-300 border border-slate-700 font-semibold"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              2D Eco
-            </button>
-          </div>
-
-          <div className="font-mono text-[11px] text-slate-600 hidden md:inline">
-            Compliant with ISO 27001 & NIST CSF Guidelines
           </div>
         </footer>
       </div>

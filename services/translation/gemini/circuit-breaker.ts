@@ -27,8 +27,10 @@ export class GeminiCircuitBreaker {
 
   private normalizeKey(model: string): string {
     const lower = model.toLowerCase().trim();
+    if (lower.includes("3.1")) return "gemini-3.1-flash-lite";
+    if (lower.includes("3.5")) return "gemini-3.5-flash-lite";
     if (lower.includes("lite")) return "gemini-3.5-flash-lite";
-    if (lower.includes("flash")) return "gemini-3.5-flash";
+    if (lower.includes("flash")) return "gemini-3.1-flash-lite";
     return lower || "gemini-3.5-flash-lite";
   }
 
@@ -132,7 +134,10 @@ export class GeminiCircuitBreaker {
   public getCandidateModels(requestedModel?: string): string[] {
     const envModel = process.env.GEMINI_MODEL || "";
     const primary = this.normalizeKey(requestedModel || envModel || "gemini-3.5-flash-lite");
-    const secondary = primary.includes("lite") ? "gemini-3.5-flash" : "gemini-3.5-flash-lite";
+    // Fallback: 3.5 Flash Lite -> 3.1 Flash Lite
+    const secondary = primary === "gemini-3.5-flash-lite"
+      ? "gemini-3.1-flash-lite"
+      : "gemini-3.5-flash-lite";
 
     const candidates = [primary, secondary];
     const available = candidates.filter((m) => this.isModelAvailable(m));

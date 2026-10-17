@@ -22,12 +22,12 @@ function hashPassword(password: string): string {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  defaultProvider: "airgapped",
+  defaultProvider: "gemini",
   retentionPolicy: "delete_immediately",
   localLlmUrl: "http://127.0.0.1:11434/v1",
   localLlmModel: "qwen3:4b",
   openaiModel: "gpt-4o-mini",
-  geminiModel: "gemini-3.8-flash",
+  geminiModel: "gemini-3.5-flash-lite",
   huggingFaceModel: "Helsinki-NLP/opus-mt-en-vi",
 };
 

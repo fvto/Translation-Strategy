@@ -2,17 +2,17 @@
   "gemini-3.5-flash-lite": {
     "model": "gemini-3.5-flash-lite",
     "dailyLimit": 500,
-    "used": 2,
-    "remaining": 498,
+    "used": 10,
+    "remaining": 490,
     "retriesConsumed": 1,
     "date": "2026-10-17"
   },
-  "gemini-3.5-flash": {
-    "model": "gemini-3.5-flash",
-    "dailyLimit": 20,
-    "used": 6,
-    "remaining": 14,
-    "retriesConsumed": 3,
+  "gemini-3.1-flash-lite": {
+    "model": "gemini-3.1-flash-lite",
+    "dailyLimit": 500,
+    "used": 3,
+    "remaining": 497,
+    "retriesConsumed": 1,
     "date": "2026-10-17"
   }
 }

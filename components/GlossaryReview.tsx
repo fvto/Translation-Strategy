@@ -563,81 +563,81 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
   return (
     <div className="space-y-6">
       {/* Workflow Rule Notice (Section 14) */}
-      <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 text-slate-300 flex items-start space-x-3 text-xs shadow-lg">
-        <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-3xl bg-blue-50 border border-blue-200 text-blue-900 flex items-start space-x-3 text-xs shadow-2xs">
+        <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <span className="font-semibold text-white">
+          <span className="font-bold text-blue-950">
             Controlled Vocabulary Approval Gate (Section 14)
           </span>
-          <p className="text-slate-400">
+          <p className="text-blue-800/80 leading-relaxed">
             Terms extracted from uploaded documents always enter in &quot;Review&quot; status. Only terms explicitly approved by a Reviewer or Administrator will be applied with maximum priority during translation.
           </p>
         </div>
       </div>
 
       {/* Action Header: 2 Clean Rows */}
-      <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-xl space-y-3">
+      <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
         {/* Row 1: Filters (Status & Direction) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
           {/* Status Filters */}
-          <div className="flex flex-wrap items-center space-x-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
+          <div className="flex flex-wrap items-center space-x-1 bg-slate-100/90 p-1 rounded-full border border-slate-200 text-xs">
             <button
               onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
                 statusFilter === "all"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               All Terms ({terms.length})
             </button>
             <button
               onClick={() => setStatusFilter("review")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
                 statusFilter === "review"
-                  ? "bg-amber-600 text-white shadow-sm"
-                  : "text-amber-400/80 hover:text-amber-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>Needs Review</span>
               {reviewCount > 0 && (
-                <span className="bg-amber-950 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full border border-amber-800 font-mono">
+                <span className="bg-rose-50 text-[#E60023] text-[10px] px-1.5 py-0.2 rounded-full border border-rose-200 font-mono">
                   {reviewCount}
                 </span>
               )}
             </button>
             <button
               onClick={() => setStatusFilter("approved")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
                 statusFilter === "approved"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-emerald-400/80 hover:text-emerald-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Approved ({approvedCount})
             </button>
             <button
               onClick={() => setStatusFilter("auto_harvested")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
                 statusFilter === "auto_harvested"
-                  ? "bg-purple-600 text-white shadow-sm"
-                  : "text-purple-400/80 hover:text-purple-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>Auto-Harvested</span>
               {autoHarvestCount > 0 && (
-                <span className="bg-purple-950 text-purple-300 text-[10px] px-1.5 py-0.2 rounded-full border border-purple-800 font-mono">
+                <span className="bg-slate-200 text-slate-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">
                   {autoHarvestCount}
                 </span>
               )}
             </button>
             <button
               onClick={() => setStatusFilter("rejected")}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
                 statusFilter === "rejected"
-                  ? "bg-rose-600 text-white shadow-sm"
-                  : "text-rose-400/80 hover:text-rose-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Rejected
@@ -645,50 +645,50 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
           </div>
 
           {/* Direction Filter Segmented Control */}
-          <div className="flex items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
+          <div className="flex items-center space-x-1 bg-slate-100/90 p-1 rounded-full border border-slate-200 text-xs">
             <button
               onClick={() => { setDirectionFilter("all"); setCurrentPage(1); }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
                 directionFilter === "all"
-                  ? "bg-slate-700 text-white shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               All Directions
             </button>
             <button
               onClick={() => { setDirectionFilter("vi_en"); setCurrentPage(1); }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
                 directionFilter === "vi_en"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-emerald-400/80 hover:text-emerald-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
               title="Vietnamese ➔ English (SOP Standard)"
             >
-              <span className="font-semibold">VI ➔ EN</span>
-              <span className="bg-emerald-950 text-emerald-300 text-[10px] px-1.5 py-0.2 rounded-full border border-emerald-800 font-mono">
+              <span>VI ➔ EN</span>
+              <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full border border-emerald-200 font-mono">
                 {viToEnCount}
               </span>
             </button>
             <button
               onClick={() => { setDirectionFilter("en_vi"); setCurrentPage(1); }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1.5 ${
+              className={`px-3.5 py-1.5 rounded-full font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
                 directionFilter === "en_vi"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-blue-400/80 hover:text-blue-300"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
               title="English ➔ Vietnamese"
             >
-              <span className="font-semibold">EN ➔ VI</span>
-              <span className="bg-blue-950 text-blue-300 text-[10px] px-1.5 py-0.2 rounded-full border border-blue-800 font-mono">
+              <span>EN ➔ VI</span>
+              <span className="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.2 rounded-full border border-blue-200 font-mono">
                 {enToViCount}
               </span>
             </button>
           </div>
 
           {/* Stage / Category Filters */}
-          <div className="flex flex-wrap items-center space-x-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-xs">
-            <span className="text-[11px] text-slate-500 px-1.5 font-medium">Công đoạn:</span>
+          <div className="flex flex-wrap items-center space-x-1 bg-slate-100/90 p-1 rounded-full border border-slate-200 text-xs">
+            <span className="text-[11px] text-slate-500 px-2 font-medium">Công đoạn:</span>
             {[
               { id: "all", label: "Tất cả", count: stageCounts.all },
               { id: "cutting", label: "✂️ Cutting", count: stageCounts.cutting },
@@ -701,15 +701,15 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
               <button
                 key={cat.id}
                 onClick={() => { setCategoryFilter(cat.id); setCurrentPage(1); }}
-                className={`px-2.5 py-1 rounded-lg font-medium transition-all flex items-center space-x-1.5 cursor-pointer ${
+                className={`px-2.5 py-1 rounded-full font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
                   categoryFilter === cat.id
-                    ? "bg-amber-600 text-white shadow-sm font-semibold"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-slate-900 text-white shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>{cat.label}</span>
                 <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
-                  categoryFilter === cat.id ? "bg-amber-950/80 text-amber-200" : "bg-slate-900 text-slate-500"
+                  categoryFilter === cat.id ? "bg-slate-700 text-white" : "bg-white text-slate-500 border border-slate-200"
                 }`}>
                   {cat.count}
                 </span>
@@ -722,45 +722,40 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[240px] max-w-md">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search source or target term..."
-              className="w-full pl-9 pr-8 py-1.5 bg-slate-950/80 text-xs text-white placeholder-slate-500 rounded-xl border border-slate-800 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full pl-9 pr-8 py-2 bg-slate-50 text-xs text-slate-900 placeholder-slate-400 rounded-full border border-slate-200 focus:outline-none focus:border-slate-400 shadow-2xs transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-2 text-slate-500 hover:text-slate-300"
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {/* Sort Selection */}
-            <div className="flex items-center space-x-1.5 bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800 text-xs">
-              <ArrowUpDown className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <div className="flex items-center space-x-1.5 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 text-xs">
+              <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-slate-300 font-medium focus:outline-none cursor-pointer text-xs"
+                className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer text-xs"
                 title="Sort Order"
               >
-                <option value="newest" className="bg-slate-900 text-slate-200">Newest First</option>
-                <option value="oldest" className="bg-slate-900 text-slate-200">Oldest First</option>
-                <option value="az_en" className="bg-slate-900 text-slate-200">A - Z (English)</option>
-                <option value="az_vi" className="bg-slate-900 text-slate-200">A - Z (Tiếng Việt)</option>
-                <option value="priority" className="bg-slate-900 text-slate-200">Priority & Length</option>
+                <option value="newest" className="bg-white text-slate-900">Newest First</option>
+                <option value="oldest" className="bg-white text-slate-900">Oldest First</option>
+                <option value="az_en" className="bg-white text-slate-900">A - Z (English)</option>
+                <option value="az_vi" className="bg-white text-slate-900">A - Z (Tiếng Việt)</option>
+                <option value="priority" className="bg-white text-slate-900">Priority & Length</option>
               </select>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-purple-950/40 border border-purple-800/40 text-[11px] text-purple-300 font-medium shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-              <span>Antigravity CLI</span>
             </div>
 
             {/* Hidden Excel File Input */}
@@ -777,13 +772,13 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
               type="button"
               onClick={handleExportExcel}
               disabled={isExporting}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-800/60 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-              title="Xuất 936 thuật ngữ ra file Excel (.xlsx)"
+              className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-all cursor-pointer disabled:opacity-50"
+              title="Xuất thuật ngữ ra file Excel (.xlsx)"
             >
               {isExporting ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <Download className="w-3.5 h-3.5 text-slate-600" />
               )}
               <span>{isExporting ? "Đang xuất..." : "Xuất Excel"}</span>
             </button>
@@ -793,13 +788,13 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
               type="button"
               onClick={() => excelFileInputRef.current?.click()}
               disabled={isImporting}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-semibold text-blue-300 bg-blue-950/60 hover:bg-blue-900/60 border border-blue-800/60 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-all cursor-pointer disabled:opacity-50"
               title="Nhập thêm thuật ngữ từ file Excel (.xlsx)"
             >
               {isImporting ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <UploadCloud className="w-3.5 h-3.5 text-blue-400" />
+                <UploadCloud className="w-3.5 h-3.5 text-slate-600" />
               )}
               <span>{isImporting ? "Đang nạp..." : "Nhập Excel"}</span>
             </button>
@@ -808,16 +803,16 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
             <button
               type="button"
               onClick={() => setIsPdfFeedModalOpen(true)}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-semibold text-red-300 bg-red-950/60 hover:bg-red-900/60 border border-red-800/60 rounded-xl transition-all cursor-pointer shadow-sm"
-              title="Nạp ngữ cảnh & thuật ngữ từ tài liệu PDF (Zero-Image Confidentiality Shield)"
+              className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-all cursor-pointer"
+              title="Nạp ngữ cảnh & thuật ngữ từ tài liệu PDF"
             >
-              <FileText className="w-3.5 h-3.5 text-red-400" />
+              <FileText className="w-3.5 h-3.5 text-slate-600" />
               <span>Feed Context PDF</span>
             </button>
 
             <button
               onClick={() => setIsAddingTerm(true)}
-              className="flex items-center space-x-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-md shadow-blue-600/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center space-x-1.5 px-5 py-2 text-xs font-bold text-white bg-[#E60023] hover:bg-[#CC001F] rounded-full shadow-sm transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Term</span>
@@ -1282,17 +1277,17 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
       )}
 
       {/* Terminology Review Table */}
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
         {displayedTerms.length === 0 ? (
           <div className="p-12 text-center text-slate-500 text-xs space-y-2">
-            <AlertCircle className="w-6 h-6 mx-auto text-slate-600" />
+            <AlertCircle className="w-6 h-6 mx-auto text-slate-400" />
             <p>Không có thuật ngữ nào phù hợp với bộ lọc hiện tại.</p>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-950">
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-50">
               <table className="w-full min-w-[880px] text-left text-xs border-collapse">
-                <thead className="bg-slate-950/80 text-slate-400 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-800">
+                <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="w-10 px-3 py-3 text-center">
                       <input
@@ -1301,7 +1296,7 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                         checked={allSelected}
                         onChange={handleToggleSelectAll}
                         aria-label="Select all terms"
-                        className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer accent-blue-600 align-middle"
+                        className="w-4 h-4 rounded border-slate-300 bg-white text-[#E60023] focus:ring-rose-500 cursor-pointer accent-[#E60023] align-middle"
                       />
                     </th>
                     <th className="px-4 py-3 min-w-[170px]">SOURCE TERM</th>
@@ -1309,18 +1304,18 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                     <th className="px-4 py-3 min-w-[170px]">TARGET TERM</th>
                     <th className="px-3 py-3 w-40">CONTEXT & SOURCE</th>
                     <th className="px-3 py-3 w-32 whitespace-nowrap">
-                      <div className="flex items-center space-x-1 text-blue-400">
+                      <div className="flex items-center space-x-1 text-slate-600">
                         <Clock className="w-3.5 h-3.5" />
                         <span>TIMESTAMP</span>
                       </div>
                     </th>
                     <th className="px-3 py-3 w-28 text-center whitespace-nowrap">STATUS</th>
-                    <th className="px-3 py-3 w-36 text-right sticky right-0 bg-slate-950/95 shadow-[-12px_0_16px_-4px_rgba(0,0,0,0.6)] border-l border-slate-800 whitespace-nowrap z-10">
+                    <th className="px-3 py-3 w-36 text-right sticky right-0 bg-slate-50/95 shadow-[-12px_0_16px_-4px_rgba(0,0,0,0.05)] border-l border-slate-200 whitespace-nowrap z-10">
                       ACTIONS
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-100 text-slate-700">
                   {displayedTerms.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((term) => {
                     const isRecent = term.id === recentlyAddedId;
                     const isSelected = selectedTermIds.includes(term.id);
@@ -1329,10 +1324,10 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                         key={term.id}
                         className={`group transition-all duration-150 ${
                           isRecent
-                            ? "bg-emerald-950/40 border-l-4 border-l-emerald-400"
+                            ? "bg-emerald-50/60 border-l-4 border-l-emerald-500"
                             : isSelected
-                            ? "bg-blue-950/40 border-l-2 border-l-blue-500"
-                            : "hover:bg-slate-800/40"
+                            ? "bg-slate-100/70 border-l-2 border-l-slate-900"
+                            : "hover:bg-slate-50/80"
                         }`}
                       >
                         <td className="w-10 px-3 py-3.5 text-center">
@@ -1341,25 +1336,25 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                             checked={isSelected}
                             onChange={() => handleToggleSelectTerm(term.id)}
                             aria-label={`Select ${term.sourceTerm}`}
-                            className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer accent-blue-600 align-middle"
+                            className="w-4 h-4 rounded border-slate-300 bg-white text-[#E60023] focus:ring-rose-500 cursor-pointer accent-[#E60023] align-middle"
                           />
                         </td>
 
                         {/* Source Term */}
-                        <td className="px-4 py-3.5 font-medium text-white">
+                        <td className="px-4 py-3.5 font-medium text-slate-900">
                           <div className="flex items-start space-x-2">
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold shrink-0 mt-0.5 ${
                               term.sourceLanguage === "vi"
-                                ? "bg-emerald-950/90 text-emerald-300 border border-emerald-800/80"
-                                : "bg-blue-950/90 text-blue-300 border border-blue-800/80"
+                                ? "bg-rose-50 text-[#E60023] border border-rose-200"
+                                : "bg-slate-100 text-slate-700 border border-slate-200"
                             }`}>
                               {term.sourceLanguage ? term.sourceLanguage.toUpperCase() : "VI"}
                             </span>
                             <div className="flex-1 min-w-0">
-                              <span className="break-words">{term.sourceTerm}</span>
+                              <span className="break-words font-semibold text-slate-900">{term.sourceTerm}</span>
                               {isRecent && (
-                                <span className="ml-1.5 inline-flex items-center space-x-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
-                                  <Sparkles className="w-2.5 h-2.5 text-emerald-400" />
+                                <span className="ml-1.5 inline-flex items-center space-x-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
                                   <span>Mới</span>
                                 </span>
                               )}
@@ -1373,10 +1368,10 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                             type="button"
                             onClick={() => handleSwapTermDirection(term.id)}
                             title="Click để đảo chiều nhanh (VI ⇄ EN)"
-                            className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-medium font-mono hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                            className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold font-mono hover:scale-105 active:scale-95 transition-all cursor-pointer ${
                               term.sourceLanguage === "vi"
-                                ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20"
-                                : "bg-blue-500/10 text-blue-300 border border-blue-500/30 hover:bg-blue-500/20"
+                                ? "bg-rose-50 text-[#E60023] border border-rose-200"
+                                : "bg-slate-100 text-slate-700 border border-slate-200"
                             }`}
                           >
                             <span>{term.sourceLanguage === "vi" ? "VI ➔ EN" : "EN ➔ VI"}</span>
@@ -1384,12 +1379,12 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                         </td>
 
                         {/* Target Term */}
-                        <td className="px-4 py-3.5 font-semibold text-emerald-400">
+                        <td className="px-4 py-3.5 font-semibold text-slate-900">
                           <div className="flex items-start space-x-2">
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold shrink-0 mt-0.5 ${
                               term.targetLanguage === "en"
-                                ? "bg-blue-950/90 text-blue-300 border border-blue-800/80"
-                                : "bg-emerald-950/90 text-emerald-300 border border-emerald-800/80"
+                                ? "bg-slate-100 text-slate-700 border border-slate-200"
+                                : "bg-rose-50 text-[#E60023] border border-rose-200"
                             }`}>
                               {term.targetLanguage ? term.targetLanguage.toUpperCase() : "EN"}
                             </span>
@@ -1402,23 +1397,15 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                           <div className="flex flex-col space-y-1 max-w-[160px]">
                             {term.category && (
                               <div>
-                                <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-semibold uppercase tracking-wider ${
-                                  /nosew|no-sew/i.test(term.category) ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" :
-                                  /stitch/i.test(term.category) ? "bg-purple-500/20 text-purple-300 border border-purple-500/30" :
-                                  /cut/i.test(term.category) ? "bg-blue-500/20 text-blue-300 border border-blue-500/30" :
-                                  /assembl|gò|dán/i.test(term.category) ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
-                                  /stock/i.test(term.category) ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" :
-                                  /qa|qc|defect|lỗi/i.test(term.category) ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" :
-                                  "bg-slate-800 text-slate-300 border border-slate-700"
-                                }`}>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
                                   {term.category}
                                 </span>
                               </div>
                             )}
-                            <span className="text-slate-200 font-medium text-xs truncate" title={term.context || term.category || "General"}>
+                            <span className="text-slate-800 font-medium text-xs truncate" title={term.context || term.category || "General"}>
                               {term.context || term.category || "General"}
                             </span>
-                            <span className="text-slate-500 font-mono text-[10px] truncate" title={term.sourceDocument || "Manual Entry"}>
+                            <span className="text-slate-400 font-mono text-[10px] truncate" title={term.sourceDocument || "Manual Entry"}>
                               {term.sourceDocument || "Manual Entry"}
                             </span>
                           </div>
@@ -1427,14 +1414,14 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                         {/* Timestamp */}
                         <td className="px-3 py-3.5 whitespace-nowrap">
                           <div className="flex flex-col space-y-0.5 font-mono">
-                            <div className="flex items-center space-x-1.5 text-slate-300 text-[11px]">
-                              <Clock className="w-3 h-3 text-slate-500 shrink-0" />
+                            <div className="flex items-center space-x-1.5 text-slate-600 text-[11px]">
+                              <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                               <span>{formatTimestamp(term.updatedAt || term.createdAt)}</span>
                             </div>
-                            <div className="flex items-center space-x-1 text-[10px] pl-4 font-sans text-blue-400">
+                            <div className="flex items-center space-x-1 text-[10px] pl-4 font-sans text-slate-500">
                               <span>{formatRelativeTime(term.updatedAt || term.createdAt)}</span>
                               {term.updatedAt && term.createdAt && term.updatedAt !== term.createdAt && (
-                                <span className="text-slate-500">• đã sửa</span>
+                                <span className="text-slate-400">• đã sửa</span>
                               )}
                             </div>
                           </div>
@@ -1446,17 +1433,17 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
                                 term.status === "approved"
-                                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                   : term.status === "review"
-                                  ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                                  : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                                  ? "bg-amber-50 text-amber-800 border border-amber-200"
+                                  : "bg-rose-50 text-rose-700 border border-rose-200"
                               }`}
                             >
                               {term.status}
                             </span>
                             {term.createdBy === "Auto-Harvester" && (
-                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded text-[8px] font-mono bg-purple-950/80 text-purple-300 border border-purple-800/60">
-                                <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                              <span className="inline-flex items-center space-x-1 px-1.5 py-0.2 rounded-full text-[8px] font-mono bg-slate-100 text-slate-700 border border-slate-200">
+                                <Sparkles className="w-2.5 h-2.5 text-amber-500" />
                                 <span>Auto</span>
                               </span>
                             )}
@@ -1464,26 +1451,26 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                         </td>
 
                         {/* Actions (Sticky Right column) */}
-                        <td className={`px-3 py-3.5 text-right whitespace-nowrap sticky right-0 shadow-[-12px_0_16px_-4px_rgba(0,0,0,0.6)] border-l border-slate-800/80 z-10 ${
+                        <td className={`px-3 py-3.5 text-right whitespace-nowrap sticky right-0 shadow-[-12px_0_16px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100 z-10 ${
                           isRecent
-                            ? "bg-slate-900"
+                            ? "bg-emerald-50/70"
                             : isSelected
-                            ? "bg-slate-900"
-                            : "bg-slate-900 group-hover:bg-slate-850"
+                            ? "bg-slate-100/90"
+                            : "bg-white group-hover:bg-slate-50"
                         }`}>
                           <div className="inline-flex items-center justify-end space-x-1">
                             {term.status === "review" && canApprove && (
                               <>
                                 <button
                                   onClick={() => handleUpdateStatus(term.id, "approved")}
-                                  className="p-1.5 text-emerald-400 hover:text-white bg-emerald-950/40 hover:bg-emerald-600 rounded-lg border border-emerald-800/50 transition-colors cursor-pointer"
+                                  className="p-1.5 text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 rounded-full border border-emerald-200 transition-colors cursor-pointer"
                                   title="Approve Term"
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleUpdateStatus(term.id, "rejected")}
-                                  className="p-1.5 text-rose-400 hover:text-white bg-rose-950/40 hover:bg-rose-600 rounded-lg border border-rose-800/50 transition-colors cursor-pointer"
+                                  className="p-1.5 text-rose-700 hover:text-white bg-rose-50 hover:bg-rose-600 rounded-full border border-rose-200 transition-colors cursor-pointer"
                                   title="Reject Term"
                                 >
                                   <X className="w-3.5 h-3.5" />
@@ -1494,7 +1481,7 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                             {term.status === "approved" && canApprove && (
                               <button
                                 onClick={() => handleUpdateStatus(term.id, "rejected")}
-                                className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
                                 title="Revoke Approval"
                               >
                                 <X className="w-3.5 h-3.5" />
@@ -1503,7 +1490,7 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
 
                             <button
                               onClick={() => handleSwapTermDirection(term.id)}
-                              className="p-1.5 text-slate-400 hover:text-cyan-300 hover:bg-cyan-950/40 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
                               title="Đảo chiều thuật ngữ (VI ⇄ EN)"
                             >
                               <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -1511,7 +1498,7 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
 
                             <button
                               onClick={() => setEditingTerm(term)}
-                              className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-amber-950/30 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
                               title="Edit Term"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -1519,7 +1506,7 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
 
                             <button
                               onClick={() => setHistoryTerm(term)}
-                              className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-blue-950/30 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
                               title="Xem lịch sử chỉnh sửa thuật ngữ"
                             >
                               <History className="w-3.5 h-3.5" />
@@ -1527,7 +1514,7 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
 
                             <button
                               onClick={() => handleDelete(term.id)}
-                              className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
                               title="Delete Term"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1542,15 +1529,15 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
             </div>
           {/* Fix #12: Pagination controls */}
           {displayedTerms.length > PAGE_SIZE && (
-            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-800/60 bg-slate-900/50">
-              <span className="text-sm text-slate-400">
+            <div className="flex items-center justify-between px-6 py-3 border-t border-slate-100 bg-slate-50/50">
+              <span className="text-xs text-slate-500">
                 Hiển thị {Math.min((currentPage - 1) * PAGE_SIZE + 1, displayedTerms.length)}–{Math.min(currentPage * PAGE_SIZE, displayedTerms.length)} / {displayedTerms.length} thuật ngữ
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 text-sm rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >← Trước</button>
                 {Array.from({ length: Math.ceil(displayedTerms.length / PAGE_SIZE) }, (_, i) => i + 1)
                   .filter((p) => p === 1 || p === Math.ceil(displayedTerms.length / PAGE_SIZE) || Math.abs(p - currentPage) <= 2)
@@ -1561,30 +1548,30 @@ export const GlossaryReview: React.FC<GlossaryReviewProps> = ({ currentUserRole 
                   }, [])
                   .map((p, i) =>
                     p === "..." ? (
-                      <span key={`ellipsis-${i}`} className="text-slate-500 px-1">…</span>
+                      <span key={`ellipsis-${i}`} className="text-slate-400 px-1">…</span>
                     ) : (
                       <button
                         key={p}
                         onClick={() => setCurrentPage(p as number)}
-                        className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                        className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
                           currentPage === p
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                            ? "bg-slate-900 text-white shadow-2xs"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                         }`}
                       >{p}</button>
                     )
                   )}
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(Math.ceil(displayedTerms.length / PAGE_SIZE), p + 1))}
-                  disabled={currentPage >= Math.ceil(displayedTerms.length / PAGE_SIZE)}
-                  className="px-3 py-1.5 text-sm rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >Tiếp →</button>
+                  disabled={currentPage === Math.ceil(displayedTerms.length / PAGE_SIZE)}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >Sau →</button>
               </div>
             </div>
           )}
-          </>
-        )}
-      </div>
+        </>
+      )}
+    </div>
 
       {/* Term Edit History Modal */}
       {historyTerm && (

@@ -3,15 +3,29 @@
 @tailwind utilities;
 
 :root {
-  --background: #090d16;
-  --foreground: #f1f5f9;
-  --card-bg: #0f172a;
-  --card-border: #1e293b;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
+  --background: #f7f7f8;
+  --foreground: #0f172a;
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --accent: #e60023;
+  --accent-hover: #cc001f;
+  --accent-light: #fff1f2;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
+}
+
+.dark {
+  --background: #090b10;
+  --foreground: #f8fafc;
+  --card-bg: #11141c;
+  --card-border: #1e2535;
+  --accent: #ff334b;
+  --accent-hover: #e60023;
+  --accent-light: rgba(255, 51, 75, 0.15);
+  --success: #10b981;
+  --warning: #fbbf24;
+  --danger: #f87171;
 }
 
 body {
@@ -22,58 +36,294 @@ body {
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbars */
+/* Pinterest-style clean scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
+  background: #cbd5e1;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
 }
 
-/* Badge styles */
+.dark ::-webkit-scrollbar-track {
+  background: #090b10;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #232c3d;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3b4860;
+}
+
+/* Pinterest Pill Badges */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
 }
 
 .badge-approved {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+.dark .badge-approved {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.4) !important;
 }
 
 .badge-review {
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.dark .badge-review {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251, 191, 36, 0.4) !important;
 }
 
 .badge-rejected {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.dark .badge-rejected {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(248, 113, 113, 0.4) !important;
 }
 
 .badge-security {
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.dark .badge-security {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(96, 165, 250, 0.4) !important;
+}
+
+/* ==========================================================================
+   HIGH CONTRAST DARK MODE SYSTEM
+   Provides razor-sharp surfaces, deep black background, pure white headings,
+   and luminous accents across all screens and nested modals.
+   ========================================================================== */
+
+/* High Contrast Canvas & Surfaces */
+.dark body,
+.dark .bg-\[\#f7f7f8\] {
+  background-color: #090b10 !important;
+}
+.dark .bg-white {
+  background-color: #11141c !important;
+}
+.dark .bg-slate-50,
+.dark .bg-slate-50\/20,
+.dark .bg-slate-50\/40,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/60,
+.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-50\/90 {
+  background-color: #161b26 !important;
+}
+.dark .bg-slate-100,
+.dark .bg-slate-100\/90 {
+  background-color: #1c2333 !important;
+}
+.dark .bg-slate-200 {
+  background-color: #273144 !important;
+}
+
+/* Hover States */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-50\/80:hover {
+  background-color: #1c2333 !important;
+}
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-100\/70:hover,
+.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-slate-200\/60:hover,
+.dark .hover\:bg-slate-200\/70:hover,
+.dark .hover\:bg-slate-200\/80:hover {
+  background-color: #263147 !important;
+}
+
+/* Sharp High Contrast Borders */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200\/60,
+.dark .border-slate-200\/70,
+.dark .border-slate-200\/80,
+.dark .border-slate-300 {
+  border-color: #222b3d !important;
+}
+
+/* Razor-Sharp High Contrast Typography */
+.dark .text-slate-900,
+.dark .text-slate-800 {
+  color: #ffffff !important;
+}
+.dark .text-slate-700 {
+  color: #f1f5f9 !important;
+}
+.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+.dark .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Active solid dark pill in Light mode inverts into crisp White pill in Dark mode */
+.dark .bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #090b10 !important;
+}
+.dark .bg-slate-900 * {
+  color: #090b10 !important;
+}
+.dark .hover\:bg-black:hover {
+  background-color: #f1f5f9 !important;
+  color: #090b10 !important;
+}
+
+/* Form Controls in Dark Mode */
+.dark input[type="text"],
+.dark input[type="password"],
+.dark input[type="search"],
+.dark textarea,
+.dark select {
+  background-color: #0c0f17 !important;
+  color: #f8fafc !important;
+  border-color: #2b364c !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+.dark select option {
+  background-color: #11141c !important;
+  color: #f8fafc !important;
+}
+
+/* Luminous Accent Red Buttons (Pinterest Red) in Dark Mode */
+.dark .bg-\[\#E60023\] {
+  background-color: #ff334b !important;
+  color: #ffffff !important;
+}
+.dark .hover\:bg-\[\#CC001F\]:hover {
+  background-color: #e60023 !important;
+}
+.dark .text-\[\#E60023\] {
+  color: #ff4d63 !important;
+}
+.dark .border-\[\#E60023\] {
+  border-color: #ff4d63 !important;
+}
+
+/* Luminous Alert & Context Banners */
+.dark .bg-blue-50 {
+  background-color: rgba(30, 58, 138, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  color: #93c5fd !important;
+}
+.dark .text-blue-900,
+.dark .text-blue-950 {
+  color: #dbeafe !important;
+}
+.dark .text-blue-800,
+.dark .text-blue-700 {
+  color: #93c5fd !important;
+}
+.dark .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  color: #bfdbfe !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-emerald-50\/20,
+.dark .bg-emerald-50\/80 {
+  background-color: rgba(6, 78, 59, 0.3) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #6ee7b7 !important;
+}
+.dark .text-emerald-950,
+.dark .text-emerald-900 {
+  color: #a7f3d0 !important;
+}
+.dark .text-emerald-800,
+.dark .text-emerald-700 {
+  color: #34d399 !important;
+}
+.dark .text-emerald-600 {
+  color: #10b981 !important;
+}
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.25) !important;
+  color: #6ee7b7 !important;
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-50\/40,
+.dark .bg-amber-50\/60,
+.dark .bg-amber-50\/70,
+.dark .bg-amber-50\/80 {
+  background-color: rgba(120, 53, 15, 0.3) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #fde68a !important;
+}
+.dark .text-amber-950,
+.dark .text-amber-900 {
+  color: #fef3c7 !important;
+}
+.dark .text-amber-800,
+.dark .text-amber-700 {
+  color: #fcd34d !important;
+}
+.dark .text-amber-600 {
+  color: #fbbf24 !important;
+}
+
+.dark .bg-rose-50,
+.dark .bg-rose-50\/20,
+.dark .bg-rose-50\/40,
+.dark .bg-rose-50\/60,
+.dark .bg-rose-50\/80 {
+  background-color: rgba(136, 19, 55, 0.3) !important;
+  border-color: rgba(244, 63, 94, 0.4) !important;
+  color: #fecdd3 !important;
+}
+.dark .text-rose-950,
+.dark .text-rose-900 {
+  color: #ffe4e6 !important;
+}
+.dark .text-rose-800,
+.dark .text-rose-700 {
+  color: #fda4af !important;
+}
+.dark .text-rose-600 {
+  color: #fb7185 !important;
 }
 
 /* Ensure hidden elements are always suppressed */
