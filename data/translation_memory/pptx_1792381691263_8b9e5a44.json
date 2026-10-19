@@ -1,0 +1,394 @@
+{
+  "sessionId": "pptx_1792381691263_8b9e5a44",
+  "fileName": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
+  "mode": "ipqc_bilingual",
+  "sourceLanguage": "vi",
+  "targetLanguage": "en",
+  "createdAt": "2026-10-19T03:49:37.404Z",
+  "slideCount": 4,
+  "totalPairs": 51,
+  "harvestedCount": 2,
+  "slides": [
+    {
+      "slideIndex": 1,
+      "title": "SP27 STOCKFIT AIR MAX FEMME (MS/WS) QA ISQ MANUAL",
+      "pairs": [
+        {
+          "id": "s1_p0",
+          "sourceText": "SP27 STOCKFIT AIR MAX FEMME (MS/WS) QA ISQ MANUAL",
+          "translatedText": "SP27 STOCKFIT AIR MAX FEMME (MS/WS) QA ISQ MANUAL",
+          "isTitle": true,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 2,
+      "title": "ISQ-STRAGETY-CTQ-CTP",
+      "pairs": [
+        {
+          "id": "s2_p0",
+          "sourceText": "ISQ-STRAGETY-CTQ-CTP",
+          "translatedText": "ISQ-STRAGETY-CTQ-CTP",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p1",
+          "sourceText": "AIR MAX FEMME (MS/WS)",
+          "translatedText": "AIR MAX FEMME (MS/WS)",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p2",
+          "sourceText": "CTQ 1- Window inconsistent",
+          "translatedText": "CTQ 1- Window inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p3",
+          "sourceText": "Cửa sổ không đều",
+          "translatedText": "Cửa sổ không đều",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p4",
+          "sourceText": "CTQ 2: Bottom attachment",
+          "translatedText": "CTQ 2: Bottom attachment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s2_p5",
+          "sourceText": "Dán đế",
+          "translatedText": "Dán đế",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 3,
+      "title": "CRITICAL TO QUALITY",
+      "pairs": [
+        {
+          "id": "s3_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p3",
+          "sourceText": "CTQ 1 –  Window inconsistent",
+          "translatedText": "CTQ 1 –  Window inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p4",
+          "sourceText": "Cửa sổ không đều",
+          "translatedText": "CTQ 1- Window inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p5",
+          "sourceText": "*Vẽ chỉ Airbag:",
+          "translatedText": "*Airbag thread line drawing:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p7",
+          "sourceText": "1.Airbag phải sử dụng bằng máy vẽ chỉ, đều chỉnh áp lực máy 1.8kg /cm2  theo tiêu chuẩn PFC",
+          "translatedText": "1. Airbag must be processed using a thread line drawing machine, adjust machine pressure to 1.8kg/cm2 according to PFC quality standard.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p11",
+          "sourceText": "2.Đặt Airbag vào khuôn vẽ, mặt có cuốn liệu luôn hướng lên trên và đúng định vị khớp với khuôn.",
+          "translatedText": "2. Place the Airbag into the gauge mold, with the side containing the wrap material facing upward and aligned correctly with the mold.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p15",
+          "sourceText": "3.Sử dụng bút vẽ có ngòi nhỏ, màu khác biệt để vẽ. Sau khi vẽ, đánh dấu tâm giữa gót theo định vị khuôn và thêm dấu “V” trên Airbag bên chân R để phân biệt R/L.",
+          "translatedText": "3. Use a fine-tip marker in a contrasting color for drawing. After drawing, mark the heel center according to the mold positioning and add a “V” mark on the R-foot Airbag to distinguish between R/L.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p17",
+          "sourceText": "*Quét keo Airbag:",
+          "translatedText": "*Airbag cementing:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p18",
+          "sourceText": "1.Sử dụng cọ 8# để quét keo, cọ thay mỗi 30’/ lần.",
+          "translatedText": "1. Use an 8# brush for cementing; replace the brush every 30 minutes.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p19",
+          "sourceText": "2.Quét keo mặt trên airbag bằng mí đường vẽ, “mặt dưới quét theo sát mí seam  Airbag”",
+          "translatedText": "2. Cementing the top surface of the Airbag edge even with the drawn line; “bottom surface cementing must be close to the Airbag seam edge”.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p20",
+          "sourceText": "3.Không quét vào vị trí các lỗ Airbag “Đặt biệt chú ý không được tràn keo”",
+          "translatedText": "3. Do not apply cement to the Airbag hole locations “Pay special note to avoid cement overflow”",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p22",
+          "sourceText": "Cửa sổ Airbag",
+          "translatedText": "Airbag window",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p23",
+          "sourceText": "Không đều",
+          "translatedText": "Inconsistent",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p24",
+          "sourceText": "ISQ AIR MAX FEMME (MS/WS)-Cửa sổ không đều",
+          "translatedText": "ISQ AIR MAX FEMME (MS/WS)-Inconsistent window",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p25",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p26",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p27",
+          "sourceText": "Cuốn liệu",
+          "translatedText": "Wrap material",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p28",
+          "sourceText": "Định vị khuôn",
+          "translatedText": "Gauge mold positioning",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p29",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p33",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p34",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p35",
+          "sourceText": "Không quét vào vị trí lỗ Airbag màu vàng",
+          "translatedText": "Do not apply cement to the yellow Airbag hole locations",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p36",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s3_p37",
+          "sourceText": "1,8kg",
+          "translatedText": "1,8kg",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    },
+    {
+      "slideIndex": 4,
+      "title": "CRITICAL TO QUALITY",
+      "pairs": [
+        {
+          "id": "s4_p1",
+          "sourceText": "CRITICAL TO QUALITY",
+          "translatedText": "CRITICAL TO QUALITY",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p2",
+          "sourceText": "CRITICAL TO PROCESS",
+          "translatedText": "CRITICAL TO PROCESS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p3",
+          "sourceText": "CTQ 2 – Bottom Attachment",
+          "translatedText": "CTQ 2 – Bottom Attachment",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p4",
+          "sourceText": "Dán đế",
+          "translatedText": "Dán đế",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p5",
+          "sourceText": "*Dán Airbag vào MS:",
+          "translatedText": "*Attach Airbag to MS:",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p6",
+          "sourceText": "1.Thao tác dán Airbag vào MS đúng phân đoạn size, theo trình tự SOP (từ eo ngoài vào trong)",
+          "translatedText": "1. Operation: Attach Airbag to MS according to the correct size segment, following the SOP sequence (from lateral Quarter outside in).",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p10",
+          "sourceText": "2.Thao tác dán MS trên. Airbag dán vào MS dán sát theo đường vẽ chỉ đã quét keo, tâm giữa MS phải trùng tâm Airbag thẳng và suôn",
+          "translatedText": "2. Operation: Apply top MS. The Airbag attached to the MS must be applied close to the thread line drawing where cementing was performed; the center of the MS must align with the Airbag notch, straight and smooth.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p13",
+          "sourceText": "3.Dán MS dưới: Đặt MS sát mí seam Airbag, tâm giữa gót MS trùng tâm Airbag, đường dán sát mí seam Airbag",
+          "translatedText": "3. Apply bottom MS: Place MS close to the Airbag seam edge, the heel center of the MS must align with the Airbag notch, and the application line must be close to the Airbag seam edge.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p15",
+          "sourceText": "-Sau khi dán hoàn thành MS trên và MS dưới vào Airbag, sử dụng cây ấn, ấn dọc đường dán để keo bám chắc",
+          "translatedText": "- After completing the application of the top MS and bottom MS to the Airbag, use a pressing tool to press along the application line to ensure the cement bonds tightly.",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p19",
+          "sourceText": "4.OS dán vào MS đặt OS vào MS cân chỉnh mặt dưới đều vị, dán từ phía ngoài vào phía trong, phải ngay tâm gót và khớp vị, không bị chồng lấn lên mép của MS, dùng cây ấn chặt (tiêu chuẩn hở vị mặt dưới ≤ 0.5mm)",
+          "translatedText": "4. OS applied to MS: Place OS onto MS, align the bottom surface evenly, apply from outside in, must be centered at the heel and match the position, without overlapping the edge of the MS, use a pressing tool to press tightly (quality standard for bottom bond gap ≤ 0.5mm).",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p25",
+          "sourceText": "NO GOOD",
+          "translatedText": "NO GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p26",
+          "sourceText": "GOOD",
+          "translatedText": "GOOD",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p27",
+          "sourceText": "Dán Airbag không suôn,",
+          "translatedText": "Airbag application is not smooth,",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p28",
+          "sourceText": "OS không tới vị MS",
+          "translatedText": "OS does not reach marking of MS",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p29",
+          "sourceText": "ISQ AIR MAX FEMME (MS/WS)- Dán đế",
+          "translatedText": "ISQ AIR MAX FEMME (MS/WS)- Bottom attaching",
+          "isTitle": true,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p31",
+          "sourceText": "3",
+          "translatedText": "3",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p33",
+          "sourceText": "4",
+          "translatedText": "4",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p34",
+          "sourceText": "1",
+          "translatedText": "1",
+          "isTitle": false,
+          "isInspectionItem": false
+        },
+        {
+          "id": "s4_p35",
+          "sourceText": "2",
+          "translatedText": "2",
+          "isTitle": false,
+          "isInspectionItem": false
+        }
+      ]
+    }
+  ]
+}

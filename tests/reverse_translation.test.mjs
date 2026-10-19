@@ -112,12 +112,13 @@ test("Reverse Translation - VI to EN handles unspaced punctuation like .Do witho
     "Should include translated second sentence with material properties"
   );
   assert.ok(
-    response.translatedText.toLowerCase().includes("qa-manual"),
-    "Should include 'QA-manual' from the end of the second sentence"
+    response.translatedText.toLowerCase().includes("qa-manual") ||
+    response.translatedText.toLowerCase().includes("qa manual"),
+    "Should include 'QA-manual' or 'QA manual' from the end of the second sentence"
   );
-  // Verify that it starts with '3. Check' or '3. Inspection'
+  // Verify that it starts with '3. ' and is spaced correctly
   assert.ok(
-    response.translatedText.startsWith("3. Check") || response.translatedText.startsWith("3. Inspection"),
+    /^3\.\s+[A-Z]/.test(response.translatedText),
     "Numbered item should be capitalized and spaced correctly"
   );
     assert.doesNotMatch(

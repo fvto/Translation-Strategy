@@ -8,11 +8,39 @@ export interface TranslationRequest {
   context?: string;
 }
 
+export interface AiStudioMetrics {
+  model: string;
+  rpm: {
+    current: number;
+    limit: number;
+    minIntervalMs: number;
+    safetyRateRpm: number;
+  };
+  rpd: {
+    used: number;
+    limit: number;
+    remaining: number;
+    percentRemaining: number;
+    date: string;
+  };
+  tokens?: {
+    promptTokens: number;
+    candidatesTokens: number;
+    totalTokens: number;
+    tpmLimit: number;
+  };
+  latencyMs: number;
+  status: "HEALTHY" | "RATE_LIMITED" | "FALLBACK" | "COOLDOWN";
+  queueLength: number;
+  timestamp: number;
+}
+
 export interface TranslationResponse {
   translatedText: string;
   provider: string;
   durationMs: number;
   modelName?: string;
+  aiStudioMetrics?: AiStudioMetrics;
 }
 
 export interface BatchTranslationItem {
@@ -33,6 +61,7 @@ export interface BatchTranslationResponse {
   provider: string;
   durationMs: number;
   modelName?: string;
+  aiStudioMetrics?: AiStudioMetrics;
 }
 
 export interface TranslationProvider {

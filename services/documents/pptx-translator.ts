@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { getTranslationProvider, GeminiRateLimitError, GoogleTranslationProvider, TranslationProvider, BatchTranslationResponse } from "../translation";
+import { getTranslationProvider, GeminiRateLimitError, GoogleTranslationProvider, TranslationProvider, BatchTranslationResponse, AiStudioMetrics } from "../translation";
 import { GeminiObservability } from "../translation/gemini";
 import { db } from "../database/db";
 import { readPptxWithMarkItDown } from "./markitdown";
@@ -94,6 +94,7 @@ export interface PptxProgressUpdate {
   totalItems?: number;
   currentSlide?: number;
   totalSlides?: number;
+  aiStudioMetrics?: AiStudioMetrics;
 }
 
 export interface PptxTranslationResult {
@@ -105,6 +106,7 @@ export interface PptxTranslationResult {
   documentTMStats?: any;
   conflicts?: DocumentTMConflict[];
   auditReport?: SmartAuditReport;
+  aiStudioMetrics?: AiStudioMetrics;
 }
 
 export type PptxTranslationMode = "ipqc_bilingual" | "isq_duplicate" | "replace_en";
@@ -986,6 +988,7 @@ export class PptxTranslatorService {
       translationMap.set(id, trans);
     }
 
+    let latestAiStudioMetrics: AiStudioMetrics | undefined = undefined;
     const itemsPendingTranslation = uniqueToTranslate.filter((it) => !translationMap.has(it.id));
 
     // Progress 2: Crawling complete
@@ -1128,6 +1131,9 @@ export class PptxTranslatorService {
             approvedTerminology: effectiveGlossary,
             context: stageContext,
           });
+          if (batchRes?.aiStudioMetrics) {
+            latestAiStudioMetrics = batchRes.aiStudioMetrics;
+          }
         } catch (err) {
           hadRecentTransientError = true;
           if (err instanceof GeminiRateLimitError) {
@@ -1144,6 +1150,9 @@ export class PptxTranslatorService {
                   approvedTerminology: effectiveGlossary,
                   context: stageContext,
                 });
+                if (batchRes?.aiStudioMetrics) {
+                  latestAiStudioMetrics = batchRes.aiStudioMetrics;
+                }
                 consecutiveQuotaHits = 0; // reset on success
                 hadRecentTransientError = false;
               } catch (retryQuotaErr) {
@@ -1268,6 +1277,7 @@ export class PptxTranslatorService {
           translatedItems: Math.min(i + chunk.length, itemsPendingTranslation.length),
           totalItems: itemsPendingTranslation.length,
           message: `Đã hoàn tất gói ${currentBatch}/${totalBatches}.`,
+          aiStudioMetrics: latestAiStudioMetrics,
         });
 
         // Strategy 1: Adaptive inter-batch delay — ramp up from 400ms → 1200ms
@@ -1891,6 +1901,7 @@ export class PptxTranslatorService {
       documentTMStats: docTM.getSummary(),
       conflicts: docTM.getConflicts(),
       auditReport,
+      aiStudioMetrics: latestAiStudioMetrics,
     };
   }
 

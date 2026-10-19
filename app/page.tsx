@@ -15,7 +15,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"translate" | "pptx" | "xlsx" | "documents" | "glossary" | "audit">("translate");
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [currentUserRole, setCurrentUserRole] = useState<"admin" | "translator" | "reviewer" | "viewer">("admin");
-  const [providerName, setProviderName] = useState<string>("Google Gemini 3.5 Flash Lite (AI Studio)");
+  const [providerName, setProviderName] = useState<string>("Google AI Studio (Gemini 3.5 & 3.1 Flash Lite)");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -26,7 +26,7 @@ export default function Home() {
           if (p === "google_translate") {
             setProviderName("Google NMT (Thuật ngữ chuẩn CAT)");
           } else {
-            setProviderName("Google AI Studio (Gemini 3.5 ➔ 3.1 Fallback)");
+            setProviderName("Google AI Studio (Gemini 3.5 & 3.1 Flash Lite)");
           }
         }
       })

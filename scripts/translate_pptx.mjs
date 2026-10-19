@@ -103,7 +103,7 @@ async function translateBatch(items, srcLang = "vi", tgtLang = "en") {
       geminiModel,
       "gemini-3.5-flash-lite",
       "gemini-3.5-flash",
-      "gemini-3.8-flash"
+      "gemini-3.1-flash-lite"
     ]));
 
     for (const model of models) {
@@ -185,7 +185,7 @@ async function translateText(text, srcLang = "vi", tgtLang = "en") {
       geminiModel,
       "gemini-3.5-flash-lite",
       "gemini-3.5-flash",
-      "gemini-3.8-flash"
+      "gemini-3.1-flash-lite"
     ]));
     for (const model of models) {
       for (let attempt = 0; attempt < 3; attempt++) {

@@ -34,6 +34,41 @@ export type TextUnitStatus =
   | "TRANSLATION_CONFLICT"
   | "REVIEW_REQUIRED";
 
+export interface BoundingBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface SlideVisualElement {
+  id: string;
+  type: "text" | "image" | "table" | "cell";
+  box: BoundingBox;
+  text?: string;
+  unitId?: string;
+  unitIds?: string[];
+  isTitle?: boolean;
+  shapeName?: string;
+  fill?: string;
+  textColor?: string;
+  fontSizePt?: number;
+  isBold?: boolean;
+  align?: "left" | "center" | "right";
+  border?: string;
+  tableRow?: number;
+  tableCol?: number;
+}
+
+export interface SlideVisualLayout {
+  slideIndex: number;
+  widthEmu: number;
+  heightEmu: number;
+  aspectRatio: number;
+  elements: SlideVisualElement[];
+  backgroundColor?: string;
+}
+
 export interface TextUnitLocation {
   partPath?: string;
   containerId?: string;
@@ -51,6 +86,7 @@ export interface TextUnitLocation {
   isIsq?: boolean;
   isIsqReference?: boolean;
   pairedSlideIndex?: number;
+  box?: BoundingBox;
 }
 
 export interface ScannedTextUnit {
@@ -127,6 +163,7 @@ export interface SmartAuditReport {
   aiAudited?: boolean;
   aiAuditedItemCount?: number;
   requiresIsqDuplicate?: boolean;
+  visualLayouts?: SlideVisualLayout[];
 }
 
 export function hasViDiacritics(str: string): boolean {

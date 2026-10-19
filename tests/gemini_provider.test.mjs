@@ -9,7 +9,7 @@ import {
 import { GoogleTranslationProvider } from "../services/translation/google.ts";
 
 test("Gemini Provider - Initialization and Name", () => {
-  const provider = new GeminiTranslationProvider("test_key", "gemini-3.8-flash");
+  const provider = new GeminiTranslationProvider("test_key", "gemini-3.5-flash-lite");
   assert.equal(provider.name, "gemini");
 });
 
@@ -38,7 +38,7 @@ test("Gemini Provider - Throws error when no API key is provided", async () => {
 test("Gemini Provider - Translates with live or mocked response", async () => {
   const provider = new GeminiTranslationProvider(
     process.env.GEMINI_KEY,
-    "gemini-3.8-flash"
+    "gemini-3.5-flash-lite"
   );
 
   if (process.env.GEMINI_KEY) {

@@ -4,6 +4,7 @@ import {
   TranslationResponse,
   BatchTranslationRequest,
   BatchTranslationResponse,
+  AiStudioMetrics,
 } from "./types";
 import { buildStructuredPrompt } from "./context";
 import { normalizeSpiTerminology } from "./casing";
@@ -75,6 +76,51 @@ export class GeminiTranslationProvider implements TranslationProvider {
 
   setModel(model: string): void {
     this.model = model;
+  }
+
+  public buildAiStudioMetrics(
+    modelName: string,
+    startTime: number,
+    usageMetadata?: any
+  ): AiStudioMetrics {
+    const quotaManager = GeminiQuotaManager.getInstance();
+    const quotaState = quotaManager.getQuotaState(modelName);
+    const minInterval = GeminiRateLimiter.getMinInterval(modelName);
+    const safeRpm = minInterval > 0 ? Math.round((60000 / minInterval) * 10) / 10 : 15;
+
+    const displayModel =
+      modelName.includes("3.5") || modelName.includes("3.1")
+        ? "gemini-3.5-flash-lite & gemini-3.1-flash-lite"
+        : modelName;
+
+    return {
+      model: displayModel,
+      rpm: {
+        current: GeminiRateLimiter.getCurrentRpm(),
+        limit: GeminiRateLimiter.getRpmLimit(modelName),
+        minIntervalMs: minInterval,
+        safetyRateRpm: safeRpm,
+      },
+      rpd: {
+        used: quotaState.used,
+        limit: quotaState.dailyLimit,
+        remaining: quotaState.remaining,
+        percentRemaining: Math.round((quotaState.remaining / quotaState.dailyLimit) * 100),
+        date: quotaState.date,
+      },
+      tokens: usageMetadata
+        ? {
+            promptTokens: Number(usageMetadata.promptTokenCount) || 0,
+            candidatesTokens: Number(usageMetadata.candidatesTokenCount) || 0,
+            totalTokens: Number(usageMetadata.totalTokenCount) || 0,
+            tpmLimit: 1_000_000,
+          }
+        : undefined,
+      latencyMs: Date.now() - startTime,
+      status: "HEALTHY",
+      queueLength: GeminiRateLimiter.getQueueLength(),
+      timestamp: Date.now(),
+    };
   }
 
   // Compatibility proxy for static throttle
@@ -241,11 +287,18 @@ export class GeminiTranslationProvider implements TranslationProvider {
             missingItems: 0,
           });
 
+          const aiStudioMetrics = this.buildAiStudioMetrics(
+            successfulModel,
+            startTime,
+            data.usageMetadata
+          );
+
           return {
             translatedText: enforced.text,
             provider: `Google Gemini (${successfulModel})`,
             durationMs: Date.now() - startTime,
             modelName: successfulModel,
+            aiStudioMetrics,
           };
         } catch (err: any) {
           clearTimeout(timeoutId);
@@ -360,6 +413,7 @@ Return strictly a valid JSON array of objects with keys "id" and "translatedText
     const candidateModels = this.getCandidateModels();
     let lastClassifiedError: GeminiError | null = null;
     let successfulModel = this.model;
+    let lastUsageMetadata: any = undefined;
 
     // Items pending translation in this batch session
     let itemsToProcess = [...request.items];
@@ -465,6 +519,7 @@ ${JSON.stringify(promptItems, null, 2)}`;
           }
 
           const data = await res.json();
+          lastUsageMetadata = data.usageMetadata;
           const parseResult = GeminiResponseParser.parseGeminiResponse(data, itemsToProcess);
 
           if (parseResult.items.length === 0) {
@@ -569,11 +624,17 @@ ${JSON.stringify(promptItems, null, 2)}`;
 
     // If partial success was achieved, preserve all successful items rather than throwing
     if (results.size > 0) {
+      const aiStudioMetrics = this.buildAiStudioMetrics(
+        successfulModel,
+        startTime,
+        lastUsageMetadata
+      );
       return {
         results,
         provider: `Google Gemini (${successfulModel})`,
         durationMs: Date.now() - startTime,
         modelName: successfulModel,
+        aiStudioMetrics,
       };
     }
 

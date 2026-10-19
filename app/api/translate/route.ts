@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
       provider: translationResult.provider,
       modelName: translationResult.modelName,
       durationMs: translationResult.durationMs,
+      aiStudioMetrics: translationResult.aiStudioMetrics,
       matchedTerms,
       validation: validationReport,
       qaReport,

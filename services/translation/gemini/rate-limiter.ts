@@ -10,6 +10,7 @@ export class GeminiRateLimiter {
   private static lastRequestTime = 0;
   private static requestQueue: Promise<void> = Promise.resolve();
   private static activeQueueCount = 0;
+  private static requestTimestamps: number[] = [];
 
   public static minIntervalMs: number =
     typeof process !== "undefined" &&
@@ -26,6 +27,7 @@ export class GeminiRateLimiter {
     GeminiRateLimiter.lastRequestTime = 0;
     GeminiRateLimiter.requestQueue = Promise.resolve();
     GeminiRateLimiter.activeQueueCount = 0;
+    GeminiRateLimiter.requestTimestamps = [];
   }
 
   /**
@@ -36,10 +38,54 @@ export class GeminiRateLimiter {
   }
 
   /**
+   * Records a request dispatch time in a 60-second sliding window to calculate real-time RPM.
+   */
+  public static recordRequest(): void {
+    const now = Date.now();
+    GeminiRateLimiter.requestTimestamps.push(now);
+    GeminiRateLimiter.requestTimestamps = GeminiRateLimiter.requestTimestamps.filter(
+      (t) => now - t <= 60_000
+    );
+  }
+
+  /**
+   * Returns the count of requests made within the last 60 seconds (current RPM).
+   */
+  public static getCurrentRpm(): number {
+    const now = Date.now();
+    GeminiRateLimiter.requestTimestamps = GeminiRateLimiter.requestTimestamps.filter(
+      (t) => now - t <= 60_000
+    );
+    return GeminiRateLimiter.requestTimestamps.length;
+  }
+
+  /**
+   * Returns the Google AI Studio RPM quota limit for the given model.
+   */
+  public static getRpmLimit(modelName = "gemini-3.5-flash-lite"): number {
+    const lower = modelName.toLowerCase();
+    if (lower.includes("flash") && !lower.includes("lite")) {
+      return 5;
+    }
+    return 15;
+  }
+
+  /**
+   * Returns the minimum safe interval between calls for the given model.
+   */
+  public static getMinInterval(modelName = "gemini-3.5-flash-lite"): number {
+    const isLite = modelName.toLowerCase().includes("lite") || modelName === "";
+    return isLite
+      ? GeminiRateLimiter.minIntervalMs
+      : Math.max(GeminiRateLimiter.minIntervalMs, 12500);
+  }
+
+  /**
    * Serializes callers in FIFO order and ensures required interval has elapsed since the previous call.
    */
   public static async throttle(modelName = "gemini-3.5-flash-lite"): Promise<void> {
     if (GeminiRateLimiter.minIntervalMs === 0) {
+      GeminiRateLimiter.recordRequest();
       return;
     }
 
@@ -64,6 +110,7 @@ export class GeminiRateLimiter {
         await new Promise((r) => setTimeout(r, requiredInterval - elapsed));
       }
       GeminiRateLimiter.lastRequestTime = Date.now();
+      GeminiRateLimiter.recordRequest();
     } finally {
       GeminiRateLimiter.activeQueueCount = Math.max(0, GeminiRateLimiter.activeQueueCount - 1);
       resolver!();

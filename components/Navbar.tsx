@@ -34,6 +34,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   providerName,
 }) => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [geminiMetrics, setGeminiMetrics] = useState<{
+    rpm?: { current: number; limit: number };
+    rpd?: { used: number; limit: number };
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/gemini/metrics")
+      .then((r) => r.json())
+      .then((d) => setGeminiMetrics({ rpm: d.rpm, rpd: d.rpd }))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     try {
@@ -81,6 +92,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
         <div className="flex items-center space-x-2 text-[11px]">
+          {geminiMetrics && (
+            <span
+              title={`Tốc độ gọi Google AI Studio: ${geminiMetrics.rpm?.current}/${geminiMetrics.rpm?.limit} RPM | Hạn mức ngày: ${geminiMetrics.rpd?.used}/${geminiMetrics.rpd?.limit} RPD`}
+              className="hidden sm:inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800 font-mono font-medium shadow-2xs"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              <span>RPM: {geminiMetrics.rpm?.current ?? 0}/{geminiMetrics.rpm?.limit ?? 15}</span>
+              <span className="text-slate-300 dark:text-slate-600">|</span>
+              <span>RPD: {geminiMetrics.rpd?.used ?? 0}/{geminiMetrics.rpd?.limit ?? 500}</span>
+            </span>
+          )}
           <span className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 px-2.5 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-700 font-medium shadow-2xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Engine: {providerName}
@@ -136,15 +158,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Presentation className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
             <span>Dịch PPTX</span>
-            <span
-              className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
-                activeTab === "pptx"
-                  ? "bg-rose-600 dark:bg-rose-500 text-white"
-                  : "bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300"
-              }`}
-            >
-              ISQ
-            </span>
           </button>
 
           <button

@@ -17,7 +17,11 @@ import {
   Info,
   Zap,
   ClipboardPaste,
+  Gauge,
+  Activity,
 } from "lucide-react";
+import { AiStudioTelemetry } from "@/components/AiStudioTelemetry";
+import { AiStudioMetrics } from "@/services/translation/types";
 
 interface MatchedTerm {
   entry: {
@@ -71,6 +75,36 @@ export const TranslationWorkspace: React.FC = () => {
   const [qaReport, setQaReport] = useState<QAReport | null>(null);
   const [providerUsed, setProviderUsed] = useState<string>("");
   const [selectedEngine, setSelectedEngine] = useState<string>("default");
+  const [aiStudioMetrics, setAiStudioMetrics] = useState<AiStudioMetrics | null>(null);
+  const [isFetchingMetrics, setIsFetchingMetrics] = useState<boolean>(false);
+
+  const fetchAiStudioMetrics = async () => {
+    try {
+      setIsFetchingMetrics(true);
+      const res = await fetch("/api/gemini/metrics");
+      if (res.ok) {
+        const data = await res.json();
+        setAiStudioMetrics((prev) => ({
+          model: data.model,
+          rpm: data.rpm,
+          rpd: data.rpd,
+          tokens: prev?.tokens,
+          latencyMs: prev?.latencyMs ?? 0,
+          status: "HEALTHY",
+          queueLength: data.queueLength,
+          timestamp: data.timestamp,
+        }));
+      }
+    } catch {
+      // non-blocking
+    } finally {
+      setIsFetchingMetrics(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAiStudioMetrics();
+  }, []);
 
   // Restore saved workspace draft on mount
   useEffect(() => {
@@ -89,6 +123,7 @@ export const TranslationWorkspace: React.FC = () => {
         if (parsed.mismatches) setMismatches(parsed.mismatches);
         if (parsed.qaReport !== undefined) setQaReport(parsed.qaReport);
         if (parsed.providerUsed) setProviderUsed(parsed.providerUsed);
+        if (parsed.aiStudioMetrics) setAiStudioMetrics(parsed.aiStudioMetrics);
       }
     } catch {}
   }, []);
@@ -163,6 +198,11 @@ export const TranslationWorkspace: React.FC = () => {
       setMismatches(data.validation?.mismatches || []);
       setQaReport(data.qaReport || null);
       setProviderUsed(data.provider || "Local CAT Engine");
+      if (data.aiStudioMetrics) {
+        setAiStudioMetrics(data.aiStudioMetrics);
+      } else {
+        fetchAiStudioMetrics();
+      }
     } catch (err: any) {
       alert("Translation network error: " + err.message);
     } finally {
@@ -454,8 +494,8 @@ function applySmartTerminologyFix(
               onChange={(e) => setSelectedEngine(e.target.value)}
               className="bg-transparent text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer"
             >
-              <option value="default" className="dark:bg-slate-900">Mặc định: Google AI Studio (3.5 ➔ 3.1 Fallback)</option>
-              <option value="gemini" className="dark:bg-slate-900">⚡ Google AI Studio (Gemini 3.5 ➔ 3.1 Fallback)</option>
+              <option value="default" className="dark:bg-slate-900">Mặc định: Gemini 3.5 &amp; 3.1 Flash Lite</option>
+              <option value="gemini" className="dark:bg-slate-900">⚡ Google AI Studio (Gemini 3.5 &amp; 3.1 Flash Lite)</option>
               <option value="google_translate" className="dark:bg-slate-900">🌐 Google NMT (Chuẩn thuật ngữ CAT)</option>
             </select>
           </div>
@@ -487,7 +527,7 @@ function applySmartTerminologyFix(
             {isLoading ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Đang dịch...</span>
+                <span>Đang dịch (Kiểm soát RPM)...</span>
               </>
             ) : (
               <>
@@ -552,11 +592,24 @@ function applySmartTerminologyFix(
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Kết quả dịch (Translation)</span>
             </div>
-            {providerUsed && (
-              <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 font-semibold">
-                {providerUsed}
-              </span>
-            )}
+            <div className="flex items-center space-x-2">
+              {aiStudioMetrics && (
+                <span
+                  title={`Google AI Studio: ${aiStudioMetrics.rpm.current}/${aiStudioMetrics.rpm.limit} RPM (Pacing: ≥${((aiStudioMetrics.rpm.minIntervalMs ?? 4500) / 1000).toFixed(1)}s/req, Hạn ngạch: ${aiStudioMetrics.rpd.used}/${aiStudioMetrics.rpd.limit} RPD)`}
+                  className="text-[10px] font-mono font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/70 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800 flex items-center gap-1 shadow-2xs"
+                >
+                  <Gauge className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                  <span>{aiStudioMetrics.rpm.current}/{aiStudioMetrics.rpm.limit} RPM</span>
+                  <span className="text-slate-300 dark:text-slate-600">|</span>
+                  <span>RPD: {aiStudioMetrics.rpd.used}/{aiStudioMetrics.rpd.limit}</span>
+                </span>
+              )}
+              {providerUsed && (
+                <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 font-semibold">
+                  {providerUsed}
+                </span>
+              )}
+            </div>
           </div>
 
           <textarea
@@ -591,6 +644,13 @@ function applySmartTerminologyFix(
           </div>
         </div>
       </div>
+
+      {/* Google AI Studio Telemetry & Quota Guard Card */}
+      <AiStudioTelemetry
+        metrics={aiStudioMetrics}
+        isLoading={isLoading || isFetchingMetrics}
+        onRefresh={fetchAiStudioMetrics}
+      />
 
       {/* Terminology Mismatch Alert Banner */}
       {mismatches.length > 0 && (

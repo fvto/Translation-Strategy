@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle } from "lucide-react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle, Presentation, Maximize2, Minimize2 } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
+import { SmartAuditSlideCanvas } from "./SmartAuditSlideCanvas";
 
 export type ViReferenceHandlingMode = "overwrite" | "duplicate" | "bilingual";
 
@@ -39,7 +40,7 @@ const LABELS: Record<TextUnitStatus, string> = {
 const ORIGINS: Record<string, string> = { approved: "Thuật ngữ đã duyệt", correction: "Người dùng đã sửa", presentation: "PowerPoint hiện tại", history: "Tài liệu trước" };
 
 export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslateMissingOnly, onApplySuggestions, isLoading = false }: SmartAuditModalProps) {
-  const [tab, setTab] = useState<"summary" | "slides" | "review" | "pairs">("summary");
+  const [tab, setTab] = useState<"visual" | "slides" | "summary" | "review" | "pairs">("visual");
   const [filter, setFilter] = useState("attention");
   const [slide, setSlide] = useState("all");
   const [query, setQuery] = useState("");
@@ -53,6 +54,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   const [aiAuditing, setAiAuditing] = useState(false);
   const [aiReport, setAiReport] = useState<SmartAuditReport | null>(null);
   const [aiAuditMsg, setAiAuditMsg] = useState("");
+  const [isMaximized, setIsMaximized] = useState(false);
 
   const report = aiReport || auditReport;
 
@@ -89,7 +91,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     setHarvesting(false);
     setSlide("all");
     setFilter("attention");
-    setTab("summary");
+    setTab("visual");
   }, [auditReport]);
 
   const byId = useMemo(() => new Map(report?.units.map((u) => [u.id, u])), [report]);
@@ -399,9 +401,9 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   const button = "px-4 py-2 rounded-full border border-slate-200 text-xs font-semibold hover:bg-slate-100 text-slate-700 disabled:opacity-40 cursor-pointer transition-all";
 
   return (
-    <div id="smart-audit-modal-backdrop" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div role="dialog" aria-modal="true" aria-labelledby="smart-audit-title" id="smart-audit-modal-container" className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-slate-900">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
+    <div id="smart-audit-modal-backdrop" className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? "p-0" : "p-2 sm:p-3"} bg-black/50 backdrop-blur-xs animate-in fade-in duration-200`}>
+      <div role="dialog" aria-modal="true" aria-labelledby="smart-audit-title" id="smart-audit-modal-container" className={`w-full ${isMaximized ? "max-w-full h-screen rounded-none" : "max-w-[97vw] 2xl:max-w-[1780px] h-[95vh] rounded-3xl"} flex flex-col bg-white shadow-2xl border border-slate-200 overflow-hidden text-slate-900 transition-all duration-200`}>
+        <div className="flex justify-between items-center px-6 py-3.5 border-b border-slate-100">
           <div>
             <h2 id="smart-audit-title" className="text-lg font-bold flex items-center gap-2">
               <Zap className="w-5 h-5 text-amber-500" /> Smart Audit
@@ -417,7 +419,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                 </span>
               )}
             </h2>
-            <p className="text-xs text-slate-500 mt-1">{report.fileName} · {report.totalSlides} slides · {report.totalUnits} đoạn văn</p>
+            <p className="text-xs text-slate-500 mt-0.5">{report.fileName} · {report.totalSlides} slides · {report.totalUnits} đoạn văn</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -439,7 +441,15 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                 </>
               )}
             </button>
-            <button aria-label="Đóng Smart Audit" onClick={onClose} disabled={loading} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors">
+            <button
+              type="button"
+              onClick={() => setIsMaximized((v) => !v)}
+              className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+              title={isMaximized ? "Thu nhỏ lại kích thước cửa sổ" : "Phóng to toàn màn hình (Full Screen)"}
+            >
+              {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+            <button aria-label="Đóng Smart Audit" onClick={onClose} disabled={loading} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -457,18 +467,22 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
           </div>
         )}
 
-        <div className="px-6 py-3 border-b border-slate-100 flex items-center">
-          <div className="bg-slate-100/90 p-1 rounded-full flex gap-1 text-xs">
+        <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-3 overflow-x-auto">
+          <div className="bg-slate-100/90 p-1 rounded-full flex gap-1 text-xs shrink-0">
             <button
-              onClick={() => setTab("summary")}
-              aria-pressed={tab === "summary"}
-              className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
-                tab === "summary"
+              onClick={() => setTab("visual")}
+              aria-pressed={tab === "visual"}
+              className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                tab === "visual"
                   ? "bg-slate-900 text-white shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Tổng quan
+              <Presentation className="w-3.5 h-3.5 text-rose-500" />
+              <span>Trực quan Slide PPTX</span>
+              <span className="text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded-full font-bold">
+                Tránh sót
+              </span>
             </button>
             <button
               onClick={() => setTab("slides")}
@@ -480,7 +494,18 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Chọn Slide &amp; Chỗ cần dịch ({selectedMissing.length})</span>
+              <span>Danh sách slide ({selectedMissing.length})</span>
+            </button>
+            <button
+              onClick={() => setTab("summary")}
+              aria-pressed={tab === "summary"}
+              className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
+                tab === "summary"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Tổng quan
             </button>
             <button
               onClick={() => setTab("review")}
@@ -508,9 +533,54 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className={`flex-1 min-h-0 ${tab === "visual" ? "overflow-hidden p-2 sm:p-3 flex flex-col" : "overflow-y-auto p-6 space-y-4"}`}>
           {error && <p role="alert" className="text-sm text-rose-600 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800">{error}</p>}
-          {tab === "slides" ? (
+          {tab === "visual" ? (
+            <SmartAuditSlideCanvas
+              report={report}
+              selectedUnitIds={selected}
+              onToggleUnit={toggle}
+              onSelectAllInSlide={(slideNum) => {
+                const units = slideMap.get(slideNum) || [];
+                setSelected((prev) => {
+                  const next = new Set(prev);
+                  for (const u of units) next.add(u.id);
+                  return next;
+                });
+              }}
+              onDeselectAllInSlide={(slideNum) => {
+                const units = slideMap.get(slideNum) || [];
+                setSelected((prev) => {
+                  const next = new Set(prev);
+                  for (const u of units) next.delete(u.id);
+                  return next;
+                });
+              }}
+              customEdits={customEdits}
+              onSaveCustomEdit={(unitId, text) => {
+                const trimmed = text.trim();
+                setCustomEdits((prev) => {
+                  const next = { ...prev };
+                  if (trimmed) next[unitId] = trimmed;
+                  else delete next[unitId];
+                  return next;
+                });
+              }}
+              onResetCustomEdit={(unitId) => {
+                setCustomEdits((prev) => {
+                  const next = { ...prev };
+                  delete next[unitId];
+                  return next;
+                });
+              }}
+              initialSlideNum={expandedSlideIndex ?? undefined}
+              slidePairMap={slidePairMap}
+              slideViHandling={slideViHandling}
+              onSetSlideViHandling={(sNum, mode) => {
+                setSlideViHandling((prev) => ({ ...prev, [sNum]: mode }));
+              }}
+            />
+          ) : tab === "slides" ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3 bg-sky-50/60 dark:bg-sky-950/30 p-3.5 rounded-xl border border-sky-200 dark:border-sky-800/60">
                 <div>
@@ -611,6 +681,19 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-slate-800 dark:text-slate-100">Slide {slideNum}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedSlideIndex(slideNum);
+                                  setTab("visual");
+                                }}
+                                className="text-[10px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1 cursor-pointer"
+                                title="Xem bố cục trực quan PPTX của slide này (không ảnh giày)"
+                              >
+                                <Presentation className="w-3 h-3 text-rose-500" />
+                                <span>Xem trực quan</span>
+                              </button>
                               {isViReferenceSlide ? (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="text-[10px] px-2 py-0.5 rounded font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 flex items-center gap-1">

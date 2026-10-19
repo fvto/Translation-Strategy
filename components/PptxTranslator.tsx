@@ -30,7 +30,11 @@ import {
   Clock,
   Calendar,
   Zap,
+  Gauge,
+  Activity,
 } from "lucide-react";
+import { AiStudioTelemetry } from "./AiStudioTelemetry";
+import { AiStudioMetrics } from "@/services/translation/types";
 import { TranslationMemoryDrawer } from "./TranslationMemoryDrawer";
 import { SlideReviewModal } from "./SlideReviewModal";
 import { SmartAuditModal, ViHandlingOptions } from "./SmartAuditModal";
@@ -85,6 +89,7 @@ export interface TranslationProgressState {
   translatedItems?: number;
   totalItems?: number;
   totalSlides?: number;
+  aiStudioMetrics?: AiStudioMetrics;
 }
 
 export type PptxTranslationMode = "ipqc_bilingual" | "isq_duplicate" | "replace_en";
@@ -116,6 +121,36 @@ export const PptxTranslator: React.FC = () => {
   const [langDir, setLangDir] = useState<"vi-en" | "en-vi">("vi-en");
   const [slideScope, setSlideScope] = useState<"all" | "custom">("all");
   const [slideRangeInput, setSlideRangeInput] = useState<string>("");
+  const [aiStudioMetrics, setAiStudioMetrics] = useState<AiStudioMetrics | null>(null);
+  const [isFetchingMetrics, setIsFetchingMetrics] = useState<boolean>(false);
+
+  const fetchAiStudioMetrics = async () => {
+    try {
+      setIsFetchingMetrics(true);
+      const res = await fetch("/api/gemini/metrics");
+      if (res.ok) {
+        const data = await res.json();
+        setAiStudioMetrics((prev) => ({
+          model: data.model,
+          rpm: data.rpm,
+          rpd: data.rpd,
+          tokens: prev?.tokens,
+          latencyMs: prev?.latencyMs ?? 0,
+          status: "HEALTHY",
+          queueLength: data.queueLength,
+          timestamp: data.timestamp,
+        }));
+      }
+    } catch {
+      // non-blocking
+    } finally {
+      setIsFetchingMetrics(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAiStudioMetrics();
+  }, []);
 
   const srcLang = langDir === "vi-en" ? "vi" : "en";
   const tgtLang = langDir === "vi-en" ? "en" : "vi";
@@ -449,9 +484,18 @@ export const PptxTranslator: React.FC = () => {
                     translatedItems: payload.translatedItems,
                     totalItems: payload.totalItems,
                     totalSlides: payload.totalSlides,
+                    aiStudioMetrics: payload.aiStudioMetrics,
                   });
+                  if (payload.aiStudioMetrics) {
+                    setAiStudioMetrics(payload.aiStudioMetrics);
+                  }
                   setProcessingStatus(payload.message);
                 } else if (eventType === "complete") {
+                  if (payload.aiStudioMetrics) {
+                    setAiStudioMetrics(payload.aiStudioMetrics);
+                  } else {
+                    fetchAiStudioMetrics();
+                  }
                   if (options?.translateMissingOnly) {
                     await finishMissingTranslation(payload);
                     continue;
@@ -540,6 +584,11 @@ export const PptxTranslator: React.FC = () => {
 
         if (data.unmappedTerms) {
           setUnmappedTerms(data.unmappedTerms);
+        }
+        if (data.aiStudioMetrics) {
+          setAiStudioMetrics(data.aiStudioMetrics);
+        } else {
+          fetchAiStudioMetrics();
         }
       } else {
         // Crawl only
@@ -818,11 +867,11 @@ export const PptxTranslator: React.FC = () => {
               {langDir === "vi-en" ? "VI ➔ EN" : "EN ➔ VI"}
             </span>
             <span className="bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold px-3 py-0.5 rounded-full flex items-center gap-1">
-              MS MarkItDown + Gemini 3.5 Flash Lite
+              MS MarkItDown + Gemini 3.5 &amp; 3.1 Flash Lite
             </span>
           </div>
           <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
-            Đọc cấu trúc bài thuyết trình bằng <b className="text-slate-700">Microsoft MarkItDown</b>, dịch chuẩn xác bằng <b className="text-slate-700">Google Gemini 3.5 Flash Lite</b> và xuất file PowerPoint <b className="text-slate-700">giữ nguyên 100% sơ đồ, biểu đồ &amp; bố cục gốc</b>.
+            Đọc cấu trúc bài thuyết trình bằng <b className="text-slate-700">Microsoft MarkItDown</b>, dịch chuẩn xác bằng <b className="text-slate-700">Google Gemini 3.5 &amp; 3.1 Flash Lite</b> và xuất file PowerPoint <b className="text-slate-700">giữ nguyên 100% sơ đồ, biểu đồ &amp; bố cục gốc</b>.
           </p>
         </div>
 
@@ -870,7 +919,7 @@ export const PptxTranslator: React.FC = () => {
                 className="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer"
               >
                 <option value="gemini" className="bg-white text-slate-900">
-                  Google AI Studio (Gemini 3.5 ➔ 3.1 Fallback)
+                  Google AI Studio (Gemini 3.5 &amp; 3.1 Flash Lite)
                 </option>
                 <option value="google_translate" className="bg-white text-slate-900">
                   Google NMT (Thuật ngữ chuẩn CAT)
@@ -1008,18 +1057,18 @@ export const PptxTranslator: React.FC = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-[#E60023]" />
-                      1. Quy chuẩn SOP Ching Luh (Hợp nhất IPQC &amp; ISQ)
+                      1. Quy chuẩn SOP Ching Luh
                     </span>
                     <span className="text-[10px] font-semibold bg-rose-50 text-[#E60023] px-2 py-0.5 rounded-full border border-rose-200">
-                      Chuẩn Chung • Tự động IPQC &amp; ISQ
+                      Chuẩn Chung • Tự động chuẩn hóa
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
                     <p>
-                      • <b>Slide IPQC (Bảng kiểm tra, quy trình):</b> Giữ nguyên 1 slide với <b>Song ngữ EN trên – VI dưới</b> trong từng ô/sơ đồ. Giữ nguyên cột <i>Inspection Item</i> defect codes trên 1 dòng duy nhất.
+                      • <b>Slide quy trình (Bảng kiểm tra, quy trình):</b> Giữ nguyên 1 slide với <b>Song ngữ EN trên – VI dưới</b> trong từng ô/sơ đồ. Giữ nguyên cột <i>Inspection Item</i> defect codes trên 1 dòng duy nhất.
                     </p>
                     <p>
-                      • <b>Slide ISQ (Khuôn dao, trạm CTQ/CTP hoặc file ISQ):</b> Tự động nhân đôi thành <b>1 Slide EN ở trên</b> (xóa tiếng Việt) và <b>1 Slide VI nguyên bản ở ngay dưới</b> liền kề.
+                      • <b>Slide chuyên biệt (Khuôn dao, trạm CTQ/CTP):</b> Tự động nhân đôi thành <b>1 Slide EN ở trên</b> (xóa tiếng Việt) và <b>1 Slide VI nguyên bản ở ngay dưới</b> liền kề.
                     </p>
                     <p>
                       • <b>Bảo toàn nội dung &amp; Font:</b> Đã có tiếng Anh thì giữ nguyên tiếng Anh, có tiếng Việt giữ nguyên tiếng Việt. Font chữ và font size <b>100% đồng nhất</b> với văn bản gốc.
@@ -1133,33 +1182,49 @@ export const PptxTranslator: React.FC = () => {
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons & AI Studio Telemetry Badge */}
         {file && !isProcessing && (
-          <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
-            <button
-              onClick={() => executeAction("crawl")}
-              className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
-            >
-              <Eye className="w-4 h-4 text-slate-600" />
-              <span>Chỉ cào cấu trúc slide</span>
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <div className="flex items-center space-x-2">
+              {aiStudioMetrics && (
+                <span
+                  title={`Google AI Studio: ${aiStudioMetrics.rpm.current}/${aiStudioMetrics.rpm.limit} RPM (Pacing: ≥${((aiStudioMetrics.rpm.minIntervalMs ?? 4500) / 1000).toFixed(1)}s/req, Hạn ngạch: ${aiStudioMetrics.rpd.used}/${aiStudioMetrics.rpd.limit} RPD)`}
+                  className="text-xs font-mono font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/70 px-3.5 py-2 rounded-full border border-blue-200 dark:border-blue-800 flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Gauge className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>AI Studio: {aiStudioMetrics.rpm.current}/{aiStudioMetrics.rpm.limit} RPM</span>
+                  <span className="text-slate-300 dark:text-slate-600">|</span>
+                  <span>RPD: {aiStudioMetrics.rpd.used}/{aiStudioMetrics.rpd.limit}</span>
+                </span>
+              )}
+            </div>
 
-            <button
-              onClick={() => runSmartAudit()}
-              disabled={isProcessing || isAuditing}
-              className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
-            >
-              <Zap className="w-4 h-4 text-amber-300" />
-              <span>Smart Audit (Quét phần thiếu)</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => executeAction("crawl")}
+                className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all cursor-pointer"
+              >
+                <Eye className="w-4 h-4 text-slate-600" />
+                <span>Chỉ cào cấu trúc slide</span>
+              </button>
 
-            <button
-              onClick={() => executeAction("translate")}
-              className="flex items-center space-x-2.5 px-7 py-2.5 rounded-full bg-[#E60023] hover:bg-[#CC001F] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-rose-200" />
-              <span>Dịch & Xuất File PowerPoint (.pptx)</span>
-            </button>
+              <button
+                onClick={() => runSmartAudit()}
+                disabled={isProcessing || isAuditing}
+                className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                <Zap className="w-4 h-4 text-amber-300" />
+                <span>Smart Audit (Quét phần thiếu)</span>
+              </button>
+
+              <button
+                onClick={() => executeAction("translate")}
+                className="flex items-center space-x-2.5 px-7 py-2.5 rounded-full bg-[#E60023] hover:bg-[#CC001F] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-rose-200" />
+                <span>Dịch &amp; Xuất File PowerPoint (.pptx)</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -1181,11 +1246,19 @@ export const PptxTranslator: React.FC = () => {
                       {provider === "antigravity_cli"
                         ? "Antigravity CLI (agy)"
                         : provider === "gemini"
-                        ? "Google Gemini Flash"
+                        ? "Google Gemini 3.5 & 3.1 Flash Lite"
                         : provider === "google_translate"
                         ? "Google NMT (CAT)"
                         : provider}
                     </span>
+                    {aiStudioMetrics && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs flex items-center gap-1">
+                        <Gauge className="w-3 h-3 text-blue-600" />
+                        <span>RPM: {aiStudioMetrics.rpm.current}/{aiStudioMetrics.rpm.limit}</span>
+                        <span>|</span>
+                        <span>RPD: {aiStudioMetrics.rpd.used}/{aiStudioMetrics.rpd.limit}</span>
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-slate-600 font-medium mt-0.5">
                     {progressInfo?.message || processingStatus}
@@ -1358,6 +1431,17 @@ export const PptxTranslator: React.FC = () => {
           <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
             <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Google AI Studio Telemetry & Quota Guard for PPTX */}
+        {file && (
+          <div className="pt-2">
+            <AiStudioTelemetry
+              metrics={aiStudioMetrics}
+              isLoading={isProcessing || isFetchingMetrics}
+              onRefresh={fetchAiStudioMetrics}
+            />
           </div>
         )}
       </div>

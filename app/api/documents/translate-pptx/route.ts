@@ -334,6 +334,7 @@ export async function POST(req: NextRequest) {
               harvestedCount: harvestStats.added.length,
               downloadUrl: `/api/documents/translate-pptx/download?id=${sessionId}`,
               auditReport: translationResult.auditReport,
+              aiStudioMetrics: translationResult.aiStudioMetrics,
             });
             controller.close();
           } catch (err: any) {
@@ -442,6 +443,7 @@ export async function POST(req: NextRequest) {
       harvestedCount: harvestStats.added.length,
       downloadUrl: `/api/documents/translate-pptx/download?id=${sessionId}`,
       auditReport: translationResult.auditReport,
+      aiStudioMetrics: translationResult.aiStudioMetrics,
     });
   } catch (error: any) {
     console.error("PPTX translation error:", error);

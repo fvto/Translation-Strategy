@@ -13,7 +13,7 @@ import { orderedSlidePaths, readIsqSlidePairs, duplicateIsqSlides, duplicateViRe
 import { dynamicDeckDetector } from "../documents/pptx-structure";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName, isEnglishImmunityProtected, isBilingualText, isItemPrefixOrCode } from "./smart-detector";
-import type { ScannedTextUnit, SmartAuditReport, TextUnitLocation, TranslationAuditGroup } from "./smart-detector";
+import type { BoundingBox, ScannedTextUnit, SlideVisualElement, SlideVisualLayout, SmartAuditReport, TextUnitLocation, TranslationAuditGroup } from "./smart-detector";
 import { AirGappedTranslationProvider } from "./offline";
 import { matchTerminology } from "../terminology/matcher";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
@@ -45,14 +45,347 @@ function targetEvidence(text: string, targetLang: string): boolean {
   return sourceEvidence(text, targetLang);
 }
 
-async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: number }> {
+interface GroupTransformContext {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  chX: number;
+  chY: number;
+  chW: number;
+  chH: number;
+}
+
+interface ParsedSlideShape {
+  absStart: number;
+  absEnd: number;
+  type: "text" | "image" | "table" | "cell";
+  shapeName: string;
+  isTitle: boolean;
+  box: BoundingBox;
+  fill?: string;
+  textColor?: string;
+  fontSizePt?: number;
+  isBold?: boolean;
+  align?: "left" | "center" | "right";
+  border?: string;
+  tableRow?: number;
+  tableCol?: number;
+}
+
+function parseXmlColor(chunk?: string): string | undefined {
+  if (!chunk) return undefined;
+  const srgb = chunk.match(/<a:srgbClr\b[^>]*\bval="([A-Fa-f0-9]{6})"/);
+  if (srgb) return `#${srgb[1].toUpperCase()}`;
+  const scheme = chunk.match(/<a:schemeClr\b[^>]*\bval="([^"]+)"/);
+  if (scheme) {
+    const val = scheme[1].toLowerCase();
+    if (val === "tx1" || val === "dk1") return "#000000";
+    if (val === "bg1" || val === "lt1") return "#FFFFFF";
+    if (val === "accent1") return "#4472C4";
+    if (val === "accent2") return "#ED7D31";
+    if (val === "accent3") return "#A5A5A5";
+    if (val === "accent4") return "#FFC000";
+    if (val === "accent5") return "#5B9BD5";
+    if (val === "accent6") return "#70AD47";
+  }
+  return undefined;
+}
+
+function parseXfrm(xmlChunk: string): { x: number; y: number; w: number; h: number } | null {
+  const off = xmlChunk.match(/<a:off\b[^>]*\bx="(-?\d+)"[^>]*\by="(-?\d+)"/);
+  const ext = xmlChunk.match(/<a:ext\b[^>]*\bcx="(-?\d+)"[^>]*\bcy="(-?\d+)"/);
+  if (!off || !ext) return null;
+  return {
+    x: parseInt(off[1], 10),
+    y: parseInt(off[2], 10),
+    w: parseInt(ext[1], 10),
+    h: parseInt(ext[2], 10),
+  };
+}
+
+function parseGrpXfrm(xmlChunk: string): GroupTransformContext | null {
+  const prMatch = xmlChunk.match(/<p:grpSpPr\b[\s\S]*?<\/p:grpSpPr>/);
+  if (!prMatch) return null;
+  const prXml = prMatch[0];
+  const off = prXml.match(/<a:off\b[^>]*\bx="(-?\d+)"[^>]*\by="(-?\d+)"/);
+  const ext = prXml.match(/<a:ext\b[^>]*\bcx="(-?\d+)"[^>]*\bcy="(-?\d+)"/);
+  const chOff = prXml.match(/<a:chOff\b[^>]*\bx="(-?\d+)"[^>]*\by="(-?\d+)"/);
+  const chExt = prXml.match(/<a:chExt\b[^>]*\bcx="(-?\d+)"[^>]*\bcy="(-?\d+)"/);
+  if (!off || !ext) return null;
+  return {
+    x: parseInt(off[1], 10),
+    y: parseInt(off[2], 10),
+    w: parseInt(ext[1], 10),
+    h: parseInt(ext[2], 10),
+    chX: chOff ? parseInt(chOff[1], 10) : parseInt(off[1], 10),
+    chY: chOff ? parseInt(chOff[2], 10) : parseInt(off[2], 10),
+    chW: chExt ? parseInt(chExt[1], 10) : parseInt(ext[1], 10),
+    chH: chExt ? parseInt(chExt[2], 10) : parseInt(ext[2], 10),
+  };
+}
+
+function applyGroupTransform(
+  raw: { x: number; y: number; w: number; h: number },
+  stack: GroupTransformContext[]
+): { x: number; y: number; w: number; h: number } {
+  let cur = { ...raw };
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const g = stack[i];
+    const scaleX = g.chW > 0 ? g.w / g.chW : 1;
+    const scaleY = g.chH > 0 ? g.h / g.chH : 1;
+    cur.x = g.x + (cur.x - g.chX) * scaleX;
+    cur.y = g.y + (cur.y - g.chY) * scaleY;
+    cur.w = cur.w * scaleX;
+    cur.h = cur.h * scaleY;
+  }
+  return cur;
+}
+
+function toBoundingBox(
+  t: { x: number; y: number; w: number; h: number },
+  slideW: number,
+  slideH: number
+): BoundingBox {
+  const left = Math.max(0, Math.min(100, (t.x / slideW) * 100));
+  const top = Math.max(0, Math.min(100, (t.y / slideH) * 100));
+  const width = Math.max(0.5, Math.min(100 - left, (t.w / slideW) * 100));
+  const height = Math.max(0.5, Math.min(100 - top, (t.h / slideH) * 100));
+  return {
+    left: Math.round(left * 10) / 10,
+    top: Math.round(top * 10) / 10,
+    width: Math.round(width * 10) / 10,
+    height: Math.round(height * 10) / 10,
+  };
+}
+
+function parseSlideShapes(
+  containerXml: string,
+  baseOffset: number,
+  slideW: number,
+  slideH: number,
+  stack: GroupTransformContext[] = [],
+  out: ParsedSlideShape[] = []
+): ParsedSlideShape[] {
+  let i = 0;
+  while (i < containerXml.length) {
+    const openMatch = containerXml.slice(i).match(/<p:(sp|pic|graphicFrame|grpSp)\b/);
+    if (!openMatch) break;
+    const tagType = openMatch[1];
+    const startIdx = i + openMatch.index!;
+    const openTag = `<p:${tagType}`;
+    const closeTag = `</p:${tagType}>`;
+
+    let depth = 0;
+    let pos = startIdx;
+    let endIdx = -1;
+
+    while (pos < containerXml.length) {
+      let nextOpen = -1;
+      let searchPos = pos;
+      while (searchPos < containerXml.length) {
+        const found = containerXml.indexOf(openTag, searchPos);
+        if (found === -1) break;
+        const nextChar = containerXml[found + openTag.length];
+        if (nextChar === " " || nextChar === ">" || nextChar === "/" || nextChar === "\n" || nextChar === "\r") {
+          nextOpen = found;
+          break;
+        }
+        searchPos = found + openTag.length;
+      }
+
+      const nextClose = containerXml.indexOf(closeTag, pos);
+      if (nextClose === -1) break;
+
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++;
+        pos = nextOpen + openTag.length;
+      } else {
+        depth--;
+        if (depth === 0) {
+          endIdx = nextClose + closeTag.length;
+          break;
+        }
+        pos = nextClose + closeTag.length;
+      }
+    }
+
+    if (endIdx === -1) {
+      i = startIdx + openTag.length;
+      continue;
+    }
+
+    const shapeXml = containerXml.slice(startIdx, endIdx);
+    const absStart = baseOffset + startIdx;
+    const absEnd = baseOffset + endIdx;
+
+    if (tagType === "grpSp") {
+      const grpXfrm = parseGrpXfrm(shapeXml);
+      const newStack = grpXfrm ? [...stack, grpXfrm] : stack;
+      const openTagEnd = shapeXml.indexOf(">") + 1;
+      const closeTagStart = shapeXml.lastIndexOf("</p:grpSp>");
+      if (openTagEnd > 0 && closeTagStart > openTagEnd) {
+        let innerContent = shapeXml.slice(openTagEnd, closeTagStart);
+        innerContent = innerContent.replace(/<p:grpSpPr\b[\s\S]*?<\/p:grpSpPr>/, "");
+        parseSlideShapes(innerContent, absStart + openTagEnd, slideW, slideH, newStack, out);
+      }
+    } else if (tagType === "graphicFrame") {
+      const rawXfrm = parseXfrm(shapeXml);
+      const nameMatch = shapeXml.match(/<p:cNvPr\b[^>]*\bname="([^"]*)"/);
+      const shapeName = nameMatch ? nameMatch[1] : "Bảng dữ liệu";
+
+      if (rawXfrm && /<a:tbl\b/.test(shapeXml)) {
+        // Decompose table into individual cell elements with exact bounding boxes and cell styling
+        const gridCols = Array.from(shapeXml.matchAll(/<a:gridCol\b[^>]*\bw="(\d+)"/g)).map((m) => parseInt(m[1], 10));
+        const colOffsets: number[] = [];
+        let curColX = 0;
+        for (const w of gridCols) {
+          colOffsets.push(curColX);
+          curColX += w;
+        }
+        const totalGridW = curColX || rawXfrm.w;
+
+        const rowMatches = Array.from(shapeXml.matchAll(/<a:tr\b[^>]*\bh="(\d+)"[^>]*>([\s\S]*?)<\/a:tr>/g));
+        let curRowY = 0;
+        for (let r = 0; r < rowMatches.length; r++) {
+          const rowH = parseInt(rowMatches[r][1], 10) || Math.round(rawXfrm.h / (rowMatches.length || 1));
+          const rowInner = rowMatches[r][2];
+          const cellMatches = Array.from(rowInner.matchAll(/<a:tc\b[\s\S]*?<\/a:tc>/g));
+
+          for (let c = 0; c < cellMatches.length; c++) {
+            const cellXml = cellMatches[c][0];
+            const cellRelIndex = shapeXml.indexOf(cellXml);
+            const cellAbsStart = cellRelIndex >= 0 ? absStart + cellRelIndex : absStart;
+            const cellAbsEnd = cellAbsStart + cellXml.length;
+
+            const colW = gridCols[c] || Math.round(rawXfrm.w / (cellMatches.length || 1));
+            const colX = colOffsets[c] !== undefined ? colOffsets[c] : Math.round(c * (rawXfrm.w / (cellMatches.length || 1)));
+
+            const cellRaw = {
+              x: rawXfrm.x + Math.round(colX * (rawXfrm.w / (totalGridW || 1))),
+              y: rawXfrm.y + curRowY,
+              w: Math.round(colW * (rawXfrm.w / (totalGridW || 1))),
+              h: rowH,
+            };
+            const cellTrans = applyGroupTransform(cellRaw, stack);
+            const cellBox = toBoundingBox(cellTrans, slideW, slideH);
+
+            const tcPr = cellXml.match(/<a:tcPr[\s\S]*?<\/a:tcPr>/)?.[0] || "";
+            // Strip line borders (<a:ln*...>) before checking solidFill/noFill so borders aren't mistaken for cell background
+            const tcPrNoLines = tcPr.replace(/<a:ln[A-Za-z0-9]*\b[\s\S]*?<\/a:ln[A-Za-z0-9]*>/g, "");
+            const isNoFill = /<a:noFill\/>/.test(tcPrNoLines);
+            const fill = isNoFill ? undefined : parseXmlColor(tcPrNoLines.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
+            const border = "1px solid #cbd5e1"; // Clean presentation table cell border
+
+            const algnMatch = cellXml.match(/<a:pPr\b[^>]*\balgn="([^"]+)"/);
+            const align = algnMatch ? (algnMatch[1] === "ctr" ? "center" : algnMatch[1] === "r" ? "right" : "left") : undefined;
+
+            const rPr = cellXml.match(/<a:rPr\b[\s\S]*?(?:<\/a:rPr>|\/>)/)?.[0] || "";
+            const textColor = parseXmlColor(rPr.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
+            const szMatch = rPr.match(/\bsz="(\d+)"/);
+            const fontSizePt = szMatch ? Math.round(parseInt(szMatch[1], 10) / 100) : undefined;
+            const isBold = /\bb="1"/.test(rPr) || r === 0;
+
+            out.push({
+              absStart: cellAbsStart,
+              absEnd: cellAbsEnd,
+              type: "cell",
+              shapeName: `${shapeName} [Hàng ${r + 1}, Cột ${c + 1}]`,
+              isTitle: r === 0,
+              box: cellBox,
+              fill,
+              textColor,
+              fontSizePt,
+              isBold,
+              align,
+              border,
+              tableRow: r,
+              tableCol: c,
+            });
+          }
+          curRowY += rowH;
+        }
+      } else if (rawXfrm) {
+        const trans = applyGroupTransform(rawXfrm, stack);
+        const box = toBoundingBox(trans, slideW, slideH);
+        out.push({
+          absStart,
+          absEnd,
+          type: "table",
+          shapeName,
+          isTitle: false,
+          box,
+        });
+      }
+    } else {
+      const rawXfrm = parseXfrm(shapeXml);
+      if (rawXfrm) {
+        const trans = applyGroupTransform(rawXfrm, stack);
+        const box = toBoundingBox(trans, slideW, slideH);
+        const nameMatch = shapeXml.match(/<p:cNvPr\b[^>]*\bname="([^"]*)"/);
+        const shapeName = nameMatch ? nameMatch[1] : "";
+        const isTitle = /<p:ph\b[^>]*type="(?:title|ctrTitle)"/.test(shapeXml);
+
+        const spPr = shapeXml.match(/<p:spPr[\s\S]*?<\/p:spPr>/)?.[0] || "";
+        const spPrNoLines = spPr.replace(/<a:ln\b[\s\S]*?<\/a:ln>/g, "");
+        const isShapeNoFill = /<a:noFill\/>/.test(spPrNoLines);
+        const fill = isShapeNoFill ? undefined : parseXmlColor(spPrNoLines.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
+
+        const rPr = shapeXml.match(/<a:rPr\b[\s\S]*?(?:<\/a:rPr>|\/>)/)?.[0] || "";
+        const textColor = parseXmlColor(rPr.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
+        const szMatch = rPr.match(/\bsz="(\d+)"/);
+        const fontSizePt = szMatch ? Math.round(parseInt(szMatch[1], 10) / 100) : undefined;
+        const isBold = /\bb="1"/.test(rPr) || isTitle;
+        const algnMatch = shapeXml.match(/<a:pPr\b[^>]*\balgn="([^"]+)"/);
+        const align = algnMatch ? (algnMatch[1] === "ctr" ? "center" : algnMatch[1] === "r" ? "right" : "left") : undefined;
+
+        out.push({
+          absStart,
+          absEnd,
+          type: tagType === "pic" ? "image" : "text",
+          shapeName,
+          isTitle,
+          box,
+          fill,
+          textColor,
+          fontSizePt,
+          isBold,
+          align,
+        });
+      }
+    }
+    i = endIdx;
+  }
+  return out;
+}
+
+async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: number; visualLayouts: SlideVisualLayout[] }> {
+  let slideWidthEmu = 9144000;
+  let slideHeightEmu = 6858000;
+  const presXml = await zip.file("ppt/presentation.xml")?.async("string");
+  if (presXml) {
+    const sldSzMatch = presXml.match(/<p:sldSz\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/);
+    if (sldSzMatch) {
+      slideWidthEmu = parseInt(sldSzMatch[1], 10) || 9144000;
+      slideHeightEmu = parseInt(sldSzMatch[2], 10) || 6858000;
+    }
+  }
+  const aspectRatio = Math.round((slideWidthEmu / slideHeightEmu) * 100) / 100;
+
   const paths = await orderedSlidePaths(zip);
   const units: RawUnit[] = [];
+  const visualLayouts: SlideVisualLayout[] = [];
+
   for (let s = 0; s < paths.length; s++) {
     const partPath = paths[s], slideIndex = s + 1;
     const xml = await zip.file(partPath)!.async("string");
     const containers = Array.from(xml.matchAll(/<(?:p|a):txBody(?:\s[^>]*)?>[\s\S]*?<\/(?:p|a):txBody>/g));
     const titleRanges = Array.from(xml.matchAll(/<p:sp(?:\s[^>]*)?>[\s\S]*?<\/p:sp>/g)).filter((m) => /<p:ph\b[^>]*type="(?:title|ctrTitle)"/.test(m[0]));
+    
+    // Parse shapes and bounding boxes
+    const slideShapes = parseSlideShapes(xml, 0, slideWidthEmu, slideHeightEmu);
+    const shapeUnitMap = new Map<ParsedSlideShape, string[]>();
+
     let paragraphIndex = 0;
     let containerPointer = 0;
     for (const match of xml.matchAll(new RegExp(PPTX_PARAGRAPH_PATTERN))) {
@@ -64,12 +397,23 @@ async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: num
       const current = containers[containerPointer];
       const containerIndex = current && offset >= current.index! && offset < current.index! + current[0].length ? containerPointer : -1;
       const containerId = `s${slideIndex}_c${containerIndex < 0 ? `p${index}` : containerIndex}`;
-      units.push({ id: `s${slideIndex}_p${index}`, text, xml: match[0], containerId,
+
+      const matchingShapes = slideShapes.filter((shape) => offset >= shape.absStart && offset < shape.absEnd);
+      const parentShape = matchingShapes.sort((a, b) => (a.absEnd - a.absStart) - (b.absEnd - b.absStart))[0];
+      const unitId = `s${slideIndex}_p${index}`;
+      if (parentShape) {
+        if (!shapeUnitMap.has(parentShape)) shapeUnitMap.set(parentShape, []);
+        shapeUnitMap.get(parentShape)!.push(unitId);
+      }
+
+      units.push({ id: unitId, text, xml: match[0], containerId,
         location: { partPath, containerId, slideIndex, shapeIndex: containerIndex + 1, paragraphIndex: index,
-          isTitle: titleRanges.some((m) => offset >= m.index! && offset < m.index! + m[0].length),
-          isTable: xml.lastIndexOf("<a:tc", offset) > xml.lastIndexOf("</a:tc>", offset) },
+          isTitle: titleRanges.some((m) => offset >= m.index! && offset < m.index! + m[0].length) || Boolean(parentShape?.isTitle),
+          isTable: xml.lastIndexOf("<a:tc", offset) > xml.lastIndexOf("</a:tc>", offset) || parentShape?.type === "table" || parentShape?.type === "cell",
+          box: parentShape?.box },
       });
     }
+
     // Follow relationships instead of assuming notesSlideN corresponds to slideN.
     const relsPath = partPath.replace("slides/", "slides/_rels/") + ".rels";
     const rels = await zip.file(relsPath)?.async("string") || "";
@@ -96,8 +440,43 @@ async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: num
           location: { partPath: relatedPath, slideIndex, paragraphIndex: index, containerId: id } });
       }
     }
+
+    // Detect slide background color
+    const bgMatch = xml.match(/<p:bg\b[\s\S]*?<\/p:bg>/);
+    const slideBg = parseXmlColor(bgMatch?.[0]?.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]) || "#FFFFFF";
+
+    // Construct SlideVisualLayout for this slide
+    const visualElements: SlideVisualElement[] = slideShapes.map((shape, shIdx) => {
+      const uIds = shapeUnitMap.get(shape) || [];
+      return {
+        id: `s${slideIndex}_el${shIdx}`,
+        type: shape.type,
+        box: shape.box,
+        shapeName: shape.shapeName || (shape.type === "image" ? "Hình ảnh kỹ thuật (Zero-Image)" : `Phần tử ${shIdx + 1}`),
+        isTitle: shape.isTitle,
+        unitId: uIds[0],
+        unitIds: uIds,
+        fill: shape.fill,
+        textColor: shape.textColor,
+        fontSizePt: shape.fontSizePt,
+        isBold: shape.isBold,
+        align: shape.align,
+        border: shape.border,
+        tableRow: shape.tableRow,
+        tableCol: shape.tableCol,
+      };
+    });
+
+    visualLayouts.push({
+      slideIndex,
+      widthEmu: slideWidthEmu,
+      heightEmu: slideHeightEmu,
+      aspectRatio,
+      elements: visualElements,
+      backgroundColor: slideBg,
+    });
   }
-  return { units, slides: paths.length };
+  return { units, slides: paths.length, visualLayouts };
 }
 
 function buildGroups(units: ScannedTextUnit[], pairs: AuditMemoryPair[], preservedIds = new Set<string>()): TranslationAuditGroup[] {
@@ -947,7 +1326,7 @@ export async function scanPptxTranslationIntelligence(
     suspiciousTranslationCount: count("SUSPICIOUS_TRANSLATION"), translationConflictCount: count("TRANSLATION_CONFLICT"),
     attentionCount: groups.filter((g) => !g.safeToApply).length, safeFixCount: units.filter((u) => u.safeToApply).length,
     affectedSlides: [...new Set(units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => u.location.slideIndex!))].sort((a, b) => a - b),
-    estimatedGeminiRequests: Math.ceil(uniquePending.size / 25), units, groups, slidePairs };
+    estimatedGeminiRequests: Math.ceil(uniquePending.size / 25), units, groups, slidePairs, visualLayouts: extracted.visualLayouts };
 }
 
 /** Re-scan on the server and apply only the selected suggestions. Duplicates ISQ slides into EN and VI pairs. */
