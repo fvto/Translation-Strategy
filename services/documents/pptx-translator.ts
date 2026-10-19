@@ -942,10 +942,7 @@ export class PptxTranslatorService {
               if (options?.fileName === "ISQ-manual.pptx") {
                 throw new Error(`ISQ cần dịch đủ cả slide (slide ${slideIdx}) để đảm bảo nhân bản slide song ngữ hoàn chỉnh.`);
               }
-              // For all user presentations: automatically include remaining slide units so AI automation translates seamlessly
-              for (const u of slideIsqUnits) {
-                allowedIds.add(u.id);
-              }
+              // User explicit selection must strictly be respected: never force-select units that the user unchecked
             }
           }
         }
@@ -1810,9 +1807,21 @@ export class PptxTranslatorService {
             const p = byIndex.get(paragraphIndex++);
             if (!p || !modifiedParagraphIds.has(p.id)) return pXml;
             let translated: string;
-            const auditedUnit=auditReport?.units.find(u=>u.id===p.id);
-            if(isThisIsq && auditedUnit?.existingTranslation && !hasViDiacritics(auditedUnit.existingTranslation)) {
-              // The English counterpart is already in this same container.
+            const auditedUnit = auditReport?.units.find((u) => u.id === p.id);
+            const hasCounterpartInSlide = Boolean(
+              auditedUnit?.existingTranslation &&
+              !hasViDiacritics(auditedUnit.existingTranslation) &&
+              slide.paragraphs.some(
+                (other) =>
+                  other.id !== p.id &&
+                  other.paragraphIndex !== p.paragraphIndex &&
+                  (!hasViDiacritics(other.originalText) || !hasViDiacritics(other.translatedText)) &&
+                  (other.originalText.includes(auditedUnit.existingTranslation!) ||
+                    (other.translatedText && other.translatedText.includes(auditedUnit.existingTranslation!)))
+              )
+            );
+            if (isThisIsq && hasCounterpartInSlide && (!p.translatedText || p.translatedText === p.originalText || p.translatedText === auditedUnit?.existingTranslation)) {
+              // The English counterpart is already another paragraph in this same container/slide.
               return '';
             }
             try { translated = replaceParagraphTranslation(pXml, p.translatedText || p.originalText, p.originalText); }

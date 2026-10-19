@@ -219,7 +219,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   });
 
   // Display mode for text inside layers: "bilingual" | "target" | "source"
-  const [viewMode, setViewMode] = useState<"bilingual" | "target" | "source">("target");
+  const [viewMode, setViewMode] = useState<"bilingual" | "target" | "source">("source");
 
   // Layout presentation mode: "pptx" (spatial 1:1) | "cards" (sequential list) | "split" (both) | "isq_dual" (paired ISQ side-by-side)
   const [layoutMode, setLayoutMode] = useState<"pptx" | "cards" | "split" | "isq_dual">("pptx");
@@ -929,7 +929,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 top: `${el.box.top}%`,
                 width: `${el.box.width}%`,
                 height: `${el.box.height}%`,
-                backgroundColor: bgColor,
+                backgroundColor: isChecked
+                  ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#e0f2fe")
+                  : bgColor,
                 color: textColor,
                 border: borderStyle,
                 padding: paddingStyle,
@@ -941,44 +943,21 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 textAlign: isCentered ? "center" : "left",
                 opacity: isDimmed ? 0.22 : 1.0,
                 filter: isDimmed ? "grayscale(80%)" : "none",
-                transition: "opacity 0.2s, filter 0.2s, border-color 0.15s, box-shadow 0.15s",
+                transition: "opacity 0.2s, filter 0.2s, border-color 0.15s, box-shadow 0.15s, background-color 0.15s",
+                boxSizing: "border-box",
               }}
-              className={`group cursor-pointer overflow-y-auto select-text ${
-                isSelected
-                  ? "ring-2 ring-sky-500 shadow-xl z-30"
-                  : isChecked
-                  ? "ring-2 ring-sky-400 bg-sky-50/20 z-20"
+              className={`group cursor-pointer overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-text ${
+                isChecked
+                  ? "ring-2 ring-sky-500 shadow-md z-20"
+                  : isSelected
+                  ? "ring-1 ring-sky-400 z-10"
                   : isPending && focusPendingOnly
                   ? "ring-2 ring-rose-500 shadow-md animate-pulse z-20"
-                  : "hover:ring-1 hover:ring-sky-400/80 z-10"
+                  : "hover:ring-1 hover:ring-sky-400/70 z-10"
               }`}
               title={`${el.shapeName || "Phần tử"} • Nhấp để chọn dịch • Bấm chuột phải để mở Pop-up Dịch • Nhấp đúp để sửa`}
             >
-              {/* Corner handles when selected */}
-              {isSelected && (
-                <>
-                  <div className="absolute -top-1 -left-1 w-2 h-2 bg-sky-500 border border-white rounded-2xs pointer-events-none" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-sky-500 border border-white rounded-2xs pointer-events-none" />
-                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-sky-500 border border-white rounded-2xs pointer-events-none" />
-                  <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-sky-500 border border-white rounded-2xs pointer-events-none" />
-                </>
-              )}
-
-              {/* Multi-Selection Checkmark Badge */}
-              {isChecked && (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (primaryUnit) onToggleUnit(primaryUnit.id);
-                  }}
-                  className="absolute top-1 right-1 w-4 h-4 rounded-full bg-sky-500 hover:bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold shadow-xs z-20 cursor-pointer transition-colors"
-                  title="Đã chọn dịch (Nhấp để bỏ chọn)"
-                >
-                  ✓
-                </div>
-              )}
-
-              {/* Text Body Rendering - 100% CLEAN, UNOBSTRUCTED TEXT */}
+              {/* Text Body Rendering - 100% CLEAN, ZERO OVERLAYS, ZERO OBSCURATION */}
               <div
                 className={`w-full ${
                   isTopBanner
@@ -989,7 +968,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     ? "text-[11px] sm:text-[12px] font-bold tracking-wider"
                     : isSmallMarker
                     ? "text-[9px] font-bold leading-none text-center"
-                    : "text-[10px] sm:text-[11px] lg:text-[12px] leading-snug space-y-1"
+                    : "text-[10px] sm:text-[11px] lg:text-[12px] leading-snug space-y-0.5"
                 }`}
               >
                 {elementUnits.length > 0 ? (
@@ -1046,8 +1025,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     return (
                       <div
                         key={u.id}
-                        className={`${isHeading ? "font-bold" : "font-normal"} ${uIdx > 0 ? "mt-1.5" : ""} break-words`}
+                        className={`${isHeading ? "font-bold" : "font-normal"} ${uIdx > 0 ? "mt-0.5" : ""} break-words`}
                       >
+                        {uIdx === 0 && isChecked && (
+                          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-sky-600 text-white text-[9px] font-bold mr-1.5 shrink-0 align-middle shadow-2xs pointer-events-none">
+                            ✓
+                          </span>
+                        )}
                         {displayedContent !== null ? (
                           <span>{displayedContent}</span>
                         ) : (
@@ -1063,6 +1047,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                   })
                 ) : el.text ? (
                   <div className={`${el.isBold ? "font-bold" : "font-normal"} break-words`}>
+                    {isChecked && (
+                      <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-sky-600 text-white text-[9px] font-bold mr-1.5 shrink-0 align-middle shadow-2xs pointer-events-none">
+                        ✓
+                      </span>
+                    )}
                     {el.text}
                   </div>
                 ) : null}
@@ -1234,12 +1223,24 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               <span>{imageVisibility === "hidden" ? "Đã xóa ảnh" : "Hiện khung ảnh"}</span>
             </button>
 
-            {/* EN / VI / Song ngữ Toggle */}
+            {/* VI / EN / Song ngữ Toggle */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
               <button
                 type="button"
+                onClick={() => setViewMode("source")}
+                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                  viewMode === "source"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-2xs"
+                    : "text-slate-600 dark:text-slate-400"
+                }`}
+                title="Bản gốc tiếng Việt (Xem lại slide gốc)"
+              >
+                🇻🇳 VI
+              </button>
+              <button
+                type="button"
                 onClick={() => setViewMode("target")}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
                   viewMode === "target"
                     ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-2xs"
                     : "text-slate-600 dark:text-slate-400"
@@ -1250,20 +1251,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode("source")}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
-                  viewMode === "source"
-                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400"
-                }`}
-                title="Bản gốc tiếng Việt"
-              >
-                🇻🇳 VI
-              </button>
-              <button
-                type="button"
                 onClick={() => setViewMode("bilingual")}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
+                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
                   viewMode === "bilingual"
                     ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-2xs"
                     : "text-slate-600 dark:text-slate-400"

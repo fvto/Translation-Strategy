@@ -4,14 +4,18 @@ export interface IsqSlidePair { en: string; vi: string }
 const VI_DIACRITICS_REGEX = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i;
 
 function extractSlideStep(texts: string[]): string | null {
-  for (const t of texts.slice(0, 6)) {
+  const steps: string[] = [];
+  for (const t of texts.slice(0, 8)) {
     // Matches "1.", "1.1", "1 -", "1.EN", "1.VI", "1-EN", "Step 1", "Bước 1", "CTQ 1", "SOP 1", "Trạm 1", "Item 1"
     const m = t.match(/^\s*(?:(?:step|bước|ctq|sop|item|mục|trạm)\s*[:#]?\s*(\d+(?:\.\d+)?)|#?\s*(\d+(?:\.\d+)?)\s*(?:[.:\-\/)]|\s*(?:en|vi|vn)\b))/i);
-    if (m) return m[1] || m[2];
+    if (m) steps.push(m[1] || m[2]);
     const m2 = t.match(/\b(\d+(?:\.\d+)?)\s*[._-]?\s*(?:EN|VI|VN)\b/i);
-    if (m2) return m2[1];
+    if (m2) steps.push(m2[1]);
   }
-  return null;
+  // If a slide lists multiple distinct steps (e.g. CTQ 1 AND CTQ 2), it is an overview/agenda slide!
+  const uniqueSteps = Array.from(new Set(steps));
+  if (uniqueSteps.length > 1) return null;
+  return uniqueSteps[0] || null;
 }
 
 function hasExplicitEnMarker(texts: string[]): boolean {
@@ -112,23 +116,24 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     const currIsVi = isViSlide(curr);
     const nextIsEn = isEnSlide(next);
     const explicitMarker = (curr.hasEnMarker && next.hasViMarker) || (curr.hasViMarker && next.hasEnMarker);
+    const hasTitleOrMarker = sameMainTitle || sameSubTitle || titleTopicMatch || explicitMarker;
 
-    if ((currIsEn && nextIsVi && (stepMatch || explicitMarker || titleTopicMatch)) || (stepMatch && curr.hasEnMarker && next.hasViMarker)) {
+    if (currIsEn && nextIsVi && (stepMatch || explicitMarker || titleTopicMatch) && hasTitleOrMarker) {
       rawCandidatePairs.push({ en: curr.path, vi: next.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
       i++;
-    } else if ((currIsVi && nextIsEn && (stepMatch || explicitMarker || titleTopicMatch)) || (stepMatch && curr.hasViMarker && next.hasEnMarker)) {
+    } else if (currIsVi && nextIsEn && (stepMatch || explicitMarker || titleTopicMatch) && hasTitleOrMarker) {
       rawCandidatePairs.push({ en: next.path, vi: curr.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
       i++;
-    } else if (stepMatch && (curr.viCount < next.viCount)) {
+    } else if (stepMatch && hasTitleOrMarker && (curr.viCount < next.viCount) && currIsEn && nextIsVi) {
       rawCandidatePairs.push({ en: curr.path, vi: next.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);
       i++;
-    } else if (stepMatch && (curr.viCount > next.viCount)) {
+    } else if (stepMatch && hasTitleOrMarker && (curr.viCount > next.viCount) && currIsVi && nextIsEn) {
       rawCandidatePairs.push({ en: next.path, vi: curr.path });
       pairedPaths.add(curr.path);
       pairedPaths.add(next.path);

@@ -226,7 +226,7 @@ function parseSlideShapes(
       const closeTagStart = shapeXml.lastIndexOf("</p:grpSp>");
       if (openTagEnd > 0 && closeTagStart > openTagEnd) {
         let innerContent = shapeXml.slice(openTagEnd, closeTagStart);
-        innerContent = innerContent.replace(/<p:grpSpPr\b[\s\S]*?<\/p:grpSpPr>/, "");
+        innerContent = innerContent.replace(/<p:grpSpPr\b[\s\S]*?<\/p:grpSpPr>/, (m) => " ".repeat(m.length));
         parseSlideShapes(innerContent, absStart + openTagEnd, slideW, slideH, newStack, out);
       }
     } else if (tagType === "graphicFrame") {
@@ -247,6 +247,7 @@ function parseSlideShapes(
 
         const rowMatches = Array.from(shapeXml.matchAll(/<a:tr\b[^>]*\bh="(\d+)"[^>]*>([\s\S]*?)<\/a:tr>/g));
         let curRowY = 0;
+        let cellSearchPos = 0;
         for (let r = 0; r < rowMatches.length; r++) {
           const rowH = parseInt(rowMatches[r][1], 10) || Math.round(rawXfrm.h / (rowMatches.length || 1));
           const rowInner = rowMatches[r][2];
@@ -254,9 +255,10 @@ function parseSlideShapes(
 
           for (let c = 0; c < cellMatches.length; c++) {
             const cellXml = cellMatches[c][0];
-            const cellRelIndex = shapeXml.indexOf(cellXml);
+            const cellRelIndex = shapeXml.indexOf(cellXml, cellSearchPos);
             const cellAbsStart = cellRelIndex >= 0 ? absStart + cellRelIndex : absStart;
             const cellAbsEnd = cellAbsStart + cellXml.length;
+            if (cellRelIndex >= 0) cellSearchPos = cellRelIndex + cellXml.length;
 
             const colW = gridCols[c] || Math.round(rawXfrm.w / (cellMatches.length || 1));
             const colX = colOffsets[c] !== undefined ? colOffsets[c] : Math.round(c * (rawXfrm.w / (cellMatches.length || 1)));
@@ -1432,13 +1434,6 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
       let pIdx = 0;
       enXml = enXml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (p) => (viParagraphsWithEn.has(pIdx++) ? "" : p));
     }
-    enXml = enXml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (p) => {
-      const text = paragraphText(p);
-      if (hasViDiacritics(text)) {
-        return "";
-      }
-      return p;
-    });
     zip.file(enPath, enXml);
   }
 
