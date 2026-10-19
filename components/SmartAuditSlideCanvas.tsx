@@ -896,12 +896,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             <div
               key={el.id}
               onClick={(e) => {
-                // Multi-selection with Ctrl/Cmd/Shift
-                if (e.ctrlKey || e.metaKey || e.shiftKey) {
-                  e.stopPropagation();
-                  if (primaryUnit) onToggleUnit(primaryUnit.id);
-                } else {
-                  setSelectedElementId(el.id);
+                e.stopPropagation();
+                setSelectedElementId(el.id);
+                if (primaryUnit) {
+                  onToggleUnit(primaryUnit.id);
                 }
               }}
               onDoubleClick={(e) => {
@@ -954,7 +952,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                   ? "ring-2 ring-rose-500 shadow-md animate-pulse z-20"
                   : "hover:ring-1 hover:ring-sky-400/80 z-10"
               }`}
-              title={`${el.shapeName || "Phần tử"} • Bấm chuột phải để mở Pop-up Dịch • Nhấp đúp để sửa`}
+              title={`${el.shapeName || "Phần tử"} • Nhấp để chọn dịch • Bấm chuột phải để mở Pop-up Dịch • Nhấp đúp để sửa`}
             >
               {/* Corner handles when selected */}
               {isSelected && (
@@ -974,60 +972,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     if (primaryUnit) onToggleUnit(primaryUnit.id);
                   }}
                   className="absolute top-1 right-1 w-4 h-4 rounded-full bg-sky-500 hover:bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold shadow-xs z-20 cursor-pointer transition-colors"
-                  title="Đã chọn dịch (Bấm để bỏ chọn)"
+                  title="Đã chọn dịch (Nhấp để bỏ chọn)"
                 >
                   ✓
-                </div>
-              )}
-
-              {/* Floating Quick-Action Bar Anchored Above Element */}
-              {isSelected && primaryUnit && !isSmallMarker && !contextMenu && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white border border-slate-700/80 rounded-xl px-2.5 py-1 shadow-2xl flex items-center gap-1.5 z-50 text-[11px] whitespace-nowrap pointer-events-auto backdrop-blur-md animate-in fade-in zoom-in-95 duration-150"
-                >
-                  <button
-                    type="button"
-                    onClick={() => onToggleUnit(primaryUnit.id)}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 cursor-pointer font-medium transition-colors"
-                  >
-                    {isChecked ? (
-                      <CheckSquare className="w-3 h-3 text-sky-400" />
-                    ) : (
-                      <Square className="w-3 h-3 text-slate-400" />
-                    )}
-                    <span>{isChecked ? "Bỏ chọn" : "Chọn dịch"}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => startEdit(primaryUnit, e)}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded bg-sky-600 hover:bg-sky-500 text-white cursor-pointer font-semibold transition-colors"
-                  >
-                    <Pencil className="w-3 h-3" />
-                    <span>Sửa chữ (Enter)</span>
-                  </button>
-
-                  {primaryUnit.suggestedTranslation && (
-                    <button
-                      type="button"
-                      onClick={() => onSaveCustomEdit(primaryUnit.id, primaryUnit.suggestedTranslation!)}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white cursor-pointer font-medium transition-colors"
-                      title={`Áp dụng gợi ý TM: ${primaryUnit.suggestedTranslation}`}
-                    >
-                      <Sparkles className="w-3 h-3 text-emerald-300" />
-                      <span>Áp dụng TM</span>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedElementId(null)}
-                    className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 cursor-pointer transition-colors"
-                    title="Đóng thanh công cụ"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
                 </div>
               )}
 
@@ -1743,126 +1690,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           </div>
         )}
 
-        {/* Floating Property Inspector (Docked over bottom of canvas ONLY when element is selected) */}
-        {inspectedElement && inspectedUnit && !contextMenu && (
-          <div className="absolute bottom-3 left-4 right-4 max-w-4xl mx-auto bg-slate-900/95 backdrop-blur-md border border-slate-700/90 rounded-2xl p-3 z-40 text-xs shadow-2xl text-white animate-in slide-in-from-bottom-2 duration-150">
-            <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="p-1 rounded bg-sky-950 text-sky-400 border border-sky-800">
-                  <Layers className="w-3.5 h-3.5" />
-                </span>
-                <strong className="font-bold text-xs">{inspectedElement.shapeName || "Phần tử được chọn"}</strong>
-                <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
-                  L:{inspectedElement.box.left}% • T:{inspectedElement.box.top}% • W:{inspectedElement.box.width}% • H:{inspectedElement.box.height}%
-                </span>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleSelectPrevLayer}
-                  className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
-                  title="Lớp trước (Shift+Tab)"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSelectNextLayer}
-                  className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
-                  title="Lớp tiếp theo (Tab)"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedElementId(null)}
-                  className="p-1 rounded text-slate-400 hover:text-white cursor-pointer ml-1"
-                  title="Đóng (Esc)"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-              <div className="md:col-span-6 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
-                  <span className="font-semibold text-slate-300">🇻🇳 Văn bản nguồn (VI):</span>
-                  <button
-                    type="button"
-                    onClick={(e) => handleCopyText(inspectedUnit.sourceText, inspectedUnit.id, e)}
-                    className="flex items-center gap-1 text-[10px] text-sky-400 hover:text-sky-300 cursor-pointer"
-                  >
-                    <Copy className="w-2.5 h-2.5" />
-                    <span>{copiedUnitId === inspectedUnit.id ? "Đã chép!" : "Chép"}</span>
-                  </button>
-                </div>
-                <div className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs">
-                  {inspectedUnit.sourceText}
-                </div>
-              </div>
-
-              <div className="md:col-span-6 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
-                  <span className="font-semibold text-slate-300">🇬🇧 Bản dịch dự kiến (EN):</span>
-                  <div className="flex items-center gap-1.5">
-                    {customEdits[inspectedUnit.id] !== undefined && (
-                      <button
-                        type="button"
-                        onClick={(e) => resetEdit(inspectedUnit.id, e)}
-                        className="flex items-center gap-0.5 text-[10px] text-slate-400 hover:text-white cursor-pointer"
-                      >
-                        <RotateCcw className="w-2.5 h-2.5" />
-                        <span>Hoàn tác</span>
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => startEdit(inspectedUnit, e)}
-                      className="flex items-center gap-0.5 text-[10px] text-sky-400 hover:text-sky-300 font-semibold cursor-pointer"
-                    >
-                      <Pencil className="w-2.5 h-2.5" />
-                      <span>{editingUnitId === inspectedUnit.id ? "Đang sửa" : "Sửa bản dịch"}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {editingUnitId === inspectedUnit.id ? (
-                  <div className="space-y-1">
-                    <textarea
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      rows={2}
-                      className="w-full p-1.5 bg-slate-950 border-2 border-sky-500 rounded-xl text-xs text-white focus:outline-none"
-                      autoFocus
-                    />
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        onClick={cancelEdit}
-                        className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 hover:bg-slate-700"
-                      >
-                        Hủy
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => saveEdit(inspectedUnit.id, e)}
-                        className="px-2.5 py-0.5 rounded text-[10px] bg-sky-600 hover:bg-sky-500 text-white font-semibold"
-                      >
-                        Lưu
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-sky-300 font-semibold text-xs">
-                    {getTranslationText(inspectedUnit) || "(Chưa dịch • Sẽ được dịch tự động)"}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 3. Compact Keyboard Cheatsheet Bar */}
