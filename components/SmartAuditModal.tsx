@@ -566,7 +566,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
           </div>
         </div>
 
-        <div className={`flex-1 min-h-0 ${tab === "visual" ? "overflow-hidden p-2 sm:p-3 flex flex-col" : "overflow-y-auto p-6 space-y-4"}`}>
+        <div className={`flex-1 min-h-0 ${tab === "visual" ? "overflow-hidden p-1 sm:p-2 flex flex-col" : "overflow-y-auto p-6 space-y-4"}`}>
           {error && <p role="alert" className="text-sm text-rose-600 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800">{error}</p>}
           {tab === "visual" ? (
             <SmartAuditSlideCanvas

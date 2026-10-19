@@ -419,59 +419,71 @@ export async function auditAndRepairPptxPostFlight(
         const tMatches = pXml.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g) || [];
         const fullText = tMatches.map((t) => t.replace(/<[^>]+>/g, "").trim()).join(" ");
         if (hasViDiacritics(fullText) || isVietnameseText(fullText)) {
-          if (isqEnPaths.has(filename)) {
-            // SOP Section 4 & Production Rule #1: Zero Vietnamese Leakage on ISQ top EN slide
-            xml = xml.replace(pXml, "");
-            xmlModified = true;
-            repairedCount++;
-            issues.push({
-              slide: filename,
-              type: "vi_leak",
-              message: `Auto-eliminated leaked Vietnamese paragraph on ISQ English slide: "${fullText.slice(0, 60)}..."`,
-              targetText: "",
-              autoRepaired: true,
-            });
-          } else {
-            // Regular slide in replace_en mode: Auto-translate untranslated Vietnamese content using Glossary Review
-            try {
-              const glossary = db.getGlossaryReviewTerminology("vi", "en");
-              const airgapped = new AirGappedTranslationProvider();
-              const translated = airgapped.translateVietnameseToEnglish(fullText, glossary);
-              const enforced = enforceTerminologyCompliance(fullText, translated, glossary, "vi", "en");
-              const candidate = cleanTargetTerm(enforced.text);
+          // Auto-translate untranslated Vietnamese content using Glossary Review & Airgapped Provider
+          // NEVER blindly delete paragraph XML into an empty string to avoid wiping manufacturing instructions!
+          try {
+            const glossary = db.getGlossaryReviewTerminology("vi", "en");
+            const airgapped = new AirGappedTranslationProvider();
+            const translated = airgapped.translateVietnameseToEnglish(fullText, glossary);
+            const enforced = enforceTerminologyCompliance(fullText, translated, glossary, "vi", "en");
+            const candidate = cleanTargetTerm(enforced.text);
 
-              if (candidate && !hasViDiacritics(candidate) && candidate.toLowerCase() !== fullText.toLowerCase()) {
-                const repairedPXml = replaceParagraphTranslation(pXml, candidate, fullText);
-                xml = xml.replace(pXml, repairedPXml);
+            if (candidate && !hasViDiacritics(candidate) && candidate.toLowerCase() !== fullText.toLowerCase()) {
+              const repairedPXml = replaceParagraphTranslation(pXml, candidate, fullText);
+              xml = xml.replace(pXml, repairedPXml);
+              xmlModified = true;
+              repairedCount++;
+              issues.push({
+                slide: filename,
+                type: "vi_leak",
+                message: `Auto-translated untranslated Vietnamese paragraph to English: "${fullText.slice(0, 60)}..." -> "${candidate.slice(0, 60)}..."`,
+                originalText: fullText,
+                targetText: candidate,
+                autoRepaired: true,
+              });
+            } else if (isqEnPaths.has(filename)) {
+              // On ISQ top EN slides:
+              // Only eliminate accidental leaked residual paragraphs that are NOT critical numbered steps.
+              // Critical numbered steps (1., 2., 3., etc.) must NEVER be erased to empty white boxes!
+              const isNumberedStep = /^\s*(?:\d+[.)]|#\d+|step\s*\d+|bước\s*\d+)/i.test(fullText);
+              if (!isNumberedStep) {
+                xml = xml.replace(pXml, "");
                 xmlModified = true;
                 repairedCount++;
                 issues.push({
                   slide: filename,
                   type: "vi_leak",
-                  message: `Auto-translated untranslated Vietnamese paragraph to English: "${fullText.slice(0, 60)}..." -> "${candidate.slice(0, 60)}..."`,
-                  originalText: fullText,
-                  targetText: candidate,
+                  message: `Auto-eliminated leaked Vietnamese paragraph on ISQ English slide: "${fullText.slice(0, 60)}..."`,
+                  targetText: "",
                   autoRepaired: true,
                 });
               } else if (fullText.length > 5) {
                 issues.push({
                   slide: filename,
                   type: "vi_leak",
-                  message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
+                  message: `Detected untranslated Vietnamese step instruction on ISQ English slide: "${fullText.slice(0, 60)}..."`,
                   targetText: fullText,
                   autoRepaired: false,
                 });
               }
-            } catch {
-              if (fullText.length > 5) {
-                issues.push({
-                  slide: filename,
-                  type: "vi_leak",
-                  message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
-                  targetText: fullText,
-                  autoRepaired: false,
-                });
-              }
+            } else if (fullText.length > 5) {
+              issues.push({
+                slide: filename,
+                type: "vi_leak",
+                message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
+                targetText: fullText,
+                autoRepaired: false,
+              });
+            }
+          } catch {
+            if (fullText.length > 5) {
+              issues.push({
+                slide: filename,
+                type: "vi_leak",
+                message: `Detected untranslated Vietnamese content in English slide: "${fullText.slice(0, 60)}..."`,
+                targetText: fullText,
+                autoRepaired: false,
+              });
             }
           }
         }
