@@ -1,5 +1,27 @@
 [
   {
+    "sessionId": "tm_zero_img_1792461168555",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T01:52:48.555Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792461168472",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T01:52:48.472Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
     "sessionId": "tm_zero_img_1792402788423",
     "fileName": "Image_Check_SOP.pptx",
     "mode": "ipqc_bilingual",
@@ -2175,28 +2197,6 @@
     "createdAt": "2026-10-02T08:17:28.259Z",
     "slideCount": 1,
     "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1790929048220",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-02T08:17:28.221Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "pptx_1790928193441_1cdfd022",
-    "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA IPQC manual-EN.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-02T08:03:23.361Z",
-    "slideCount": 17,
-    "totalPairs": 597,
     "harvestedCount": 0
   }
 ]

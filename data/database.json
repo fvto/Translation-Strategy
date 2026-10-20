@@ -449,8 +449,48 @@
       "approvedBy": null,
       "version": null,
       "createdAt": "2026-10-17T08:40:04.750Z",
-      "updatedAt": "2026-10-19T09:39:45.001Z",
+      "updatedAt": "2026-10-20T01:52:45.885Z",
       "editHistory": [
+        {
+          "id": "hist_3486db89",
+          "timestamp": "2026-10-20T01:52:45.885Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_64c6f9c8",
+          "timestamp": "2026-10-20T01:39:51.154Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_34732310",
+          "timestamp": "2026-10-19T10:06:46.529Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_46eb3bfa",
+          "timestamp": "2026-10-19T10:02:11.958Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_907b56ac",
+          "timestamp": "2026-10-19T09:50:35.575Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_330de59a",
           "timestamp": "2026-10-19T09:39:45.001Z",
@@ -709,8 +749,48 @@
       "approvedBy": null,
       "version": null,
       "createdAt": "2026-10-17T08:40:04.750Z",
-      "updatedAt": "2026-10-19T09:39:45.001Z",
+      "updatedAt": "2026-10-20T01:52:45.885Z",
       "editHistory": [
+        {
+          "id": "hist_8c439e54",
+          "timestamp": "2026-10-20T01:52:45.885Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_eeb86cd7",
+          "timestamp": "2026-10-20T01:39:51.154Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_34889bdb",
+          "timestamp": "2026-10-19T10:06:46.529Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_fbd704b0",
+          "timestamp": "2026-10-19T10:02:11.958Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_792595cc",
+          "timestamp": "2026-10-19T09:50:35.575Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_59747e48",
           "timestamp": "2026-10-19T09:39:45.001Z",
@@ -22701,6 +22781,76 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1792461166615_17f8b709",
+      "timestamp": "2026-10-20T01:52:46.615Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792460392043_7e0b3f67",
+      "timestamp": "2026-10-20T01:39:52.043Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792404407287_6810a263",
+      "timestamp": "2026-10-19T10:06:47.288Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792404132750_ddf558ad",
+      "timestamp": "2026-10-19T10:02:12.750Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792403436608_65171654",
+      "timestamp": "2026-10-19T09:50:36.608Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
     {
       "id": "log_1792402786091_620e879a",
       "timestamp": "2026-10-19T09:39:46.091Z",
