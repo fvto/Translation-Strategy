@@ -105,6 +105,7 @@ interface SmartAuditSlideCanvasProps {
   onSlideChange?: (slideNum: number) => void;
   onCustomFontSizesChange?: (customFontSizes: Record<string, number>) => void;
   onOpenGlossary?: (term?: string) => void;
+  initialCustomFontSizes?: Record<string, number>;
 }
 
 interface ContextMenuState {
@@ -270,6 +271,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   onSlideChange,
   onCustomFontSizesChange,
   onOpenGlossary,
+  initialCustomFontSizes,
 }) => {
   // Current active slide number
   const [currentSlide, setCurrentSlide] = useState<number>(() => {
@@ -400,13 +402,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const isPanningRef = useRef<boolean>(false);
   const panStartRef = useRef<{ startX: number; startY: number; origPanX: number; origPanY: number } | null>(null);
 
-  // UX Improvement 7: Floating Mini Quick-Action Menu on Text Selection
-  const [textSelectionMenu, setTextSelectionMenu] = useState<{
-    x: number;
-    y: number;
-    text: string;
-    unit?: ScannedTextUnit | null;
-  } | null>(null);
   const [quickActionNotice, setQuickActionNotice] = useState<string | null>(null);
   const quickActionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -504,12 +499,22 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   }, [currentSlide]);
 
   // Canva Canvas Customization State (Positions, Sizes, Styles, Added, Deleted)
-  const [canvasState, setCanvasState] = useState<SlideCanvasCustomState>({
-    positions: {},
-    sizes: {},
-    styles: {},
-    addedElements: [],
-    deletedElementIds: [],
+  const [canvasState, setCanvasState] = useState<SlideCanvasCustomState>(() => {
+    const initStyles: SlideCanvasCustomState["styles"] = {};
+    if (initialCustomFontSizes) {
+      for (const [id, sz] of Object.entries(initialCustomFontSizes)) {
+        if (typeof sz === "number") {
+          initStyles[id] = { fontSizePt: sz };
+        }
+      }
+    }
+    return {
+      positions: {},
+      sizes: {},
+      styles: initStyles,
+      addedElements: [],
+      deletedElementIds: [],
+    };
   });
 
   const customPositions = canvasState.positions;
@@ -1239,31 +1244,39 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         pushUndoSnapshot({ ...canvasState });
       }
 
-      const targets = multiSelectedElementIds.size > 1
+      const targets = multiSelectedElementIds.size > 0
         ? Array.from(multiSelectedElementIds)
-        : [elId];
+        : (selectedElementId ? [selectedElementId] : (elId ? [elId] : []));
+
+      if (targets.length === 0) return;
 
       let lastFinalSize = 11;
       const fontSizesUpdate: Record<string, number> = {};
 
+      for (const tid of targets) {
+        const baseEl = currentSlideElements.find((e) => e.id === tid);
+        const curStyle = canvasState.styles[tid] || {};
+        const curSize = curStyle.fontSizePt ?? baseEl?.fontSizePt ?? 11;
+        const nextSize = Math.max(6, Math.min(36, Number((curSize + delta).toFixed(1))));
+        lastFinalSize = nextSize;
+
+        if (baseEl) {
+          if (baseEl.unitIds && baseEl.unitIds.length > 0) {
+            for (const uid of baseEl.unitIds) fontSizesUpdate[uid] = nextSize;
+          } else if (baseEl.unitId) {
+            fontSizesUpdate[baseEl.unitId] = nextSize;
+          }
+        }
+        fontSizesUpdate[tid] = nextSize;
+      }
+
       setCanvasState((prev) => {
         const nextStyles = { ...prev.styles };
         for (const tid of targets) {
-          const baseEl = currentSlideElements.find((e) => e.id === tid);
           const curStyle = nextStyles[tid] || {};
-          const curSize = curStyle.fontSizePt ?? baseEl?.fontSizePt ?? 11;
+          const curSize = curStyle.fontSizePt ?? currentSlideElements.find((e) => e.id === tid)?.fontSizePt ?? 11;
           const nextSize = Math.max(6, Math.min(36, Number((curSize + delta).toFixed(1))));
           nextStyles[tid] = { ...curStyle, fontSizePt: nextSize };
-          lastFinalSize = nextSize;
-
-          if (baseEl) {
-            if (baseEl.unitIds && baseEl.unitIds.length > 0) {
-              for (const uid of baseEl.unitIds) fontSizesUpdate[uid] = nextSize;
-            } else if (baseEl.unitId) {
-              fontSizesUpdate[baseEl.unitId] = nextSize;
-            }
-          }
-          fontSizesUpdate[tid] = nextSize;
         }
         return {
           ...prev,
@@ -1275,13 +1288,19 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         onCustomFontSizesChange(fontSizesUpdate);
       }
 
-      setFontSizeFeedback({ elId, sizePt: lastFinalSize });
+      setFontSizeFeedback({ elId: targets[0], sizePt: lastFinalSize });
       if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
       fontSizeFeedbackTimerRef.current = setTimeout(() => {
         setFontSizeFeedback(null);
       }, 950);
+
+      if (targets.length > 1) {
+        setQuickActionNotice(`Đã đổi cỡ chữ cho ${targets.length} ô: ${lastFinalSize}pt`);
+        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+      }
     },
-    [canvasState, pushUndoSnapshot, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange]
+    [canvasState, pushUndoSnapshot, currentSlideElements, multiSelectedElementIds, selectedElementId, onCustomFontSizesChange]
   );
 
   // UX Improvement 1: Format Painter (Chổi quét định dạng)
@@ -1310,7 +1329,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       if (!copiedStyle) return;
       pushUndoSnapshot({ ...canvasState });
 
-      const targets = (multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(targetElId))
+      const targets = multiSelectedElementIds.size > 0
         ? Array.from(multiSelectedElementIds)
         : [targetElId];
 
@@ -1357,10 +1376,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   // UX Improvement 3: Reset Font Size to Original Slide Value
   const handleResetFontSize = useCallback(
     (elId: string) => {
-      const baseEl = currentSlideElements.find((e) => e.id === elId);
-      const targets = multiSelectedElementIds.size > 1
+      const targets = multiSelectedElementIds.size > 0
         ? Array.from(multiSelectedElementIds)
-        : [elId];
+        : (selectedElementId ? [selectedElementId] : (elId ? [elId] : []));
+
+      if (targets.length === 0) return;
 
       pushUndoSnapshot({ ...canvasState });
       setCanvasState((prev) => {
@@ -1391,19 +1411,22 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         onCustomFontSizesChange(fontSizesUpdate);
       }
 
-      setFontSizeFeedback({ elId, sizePt: baseEl?.fontSizePt ?? 11 });
+      const firstEl = currentSlideElements.find((e) => e.id === targets[0]);
+      setFontSizeFeedback({ elId: targets[0], sizePt: firstEl?.fontSizePt ?? 11 });
       if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
       fontSizeFeedbackTimerRef.current = setTimeout(() => {
         setFontSizeFeedback(null);
       }, 950);
 
-      if (targets.length > 1) {
-        setQuickActionNotice(`Đã đặt lại cỡ chữ gốc cho ${targets.length} ô!`);
-        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
-        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
-      }
+      setQuickActionNotice(
+        targets.length > 1
+          ? `Đã đặt lại cỡ chữ gốc cho ${targets.length} ô!`
+          : `Đã đặt lại cỡ chữ gốc: ${firstEl?.fontSizePt ?? 11}pt`
+      );
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
     },
-    [canvasState, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange, pushUndoSnapshot]
+    [canvasState, currentSlideElements, multiSelectedElementIds, selectedElementId, onCustomFontSizesChange, pushUndoSnapshot]
   );
 
   // Feature 1: Apply SOP Standard Typography Preset (1-Click)
@@ -1411,11 +1434,24 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     (elId: string, preset: TypographyPreset) => {
       pushUndoSnapshot({ ...canvasState });
 
-      const targets = multiSelectedElementIds.size > 1
+      const targets = multiSelectedElementIds.size > 0
         ? Array.from(multiSelectedElementIds)
-        : [elId];
+        : (selectedElementId ? [selectedElementId] : (elId ? [elId] : []));
+
+      if (targets.length === 0) return;
 
       const fontSizesUpdate: Record<string, number> = {};
+      for (const tid of targets) {
+        const baseEl = currentSlideElements.find((e) => e.id === tid);
+        if (baseEl) {
+          if (baseEl.unitIds && baseEl.unitIds.length > 0) {
+            for (const uid of baseEl.unitIds) fontSizesUpdate[uid] = preset.fontSizePt;
+          } else if (baseEl.unitId) {
+            fontSizesUpdate[baseEl.unitId] = preset.fontSizePt;
+          }
+        }
+        fontSizesUpdate[tid] = preset.fontSizePt;
+      }
 
       setCanvasState((prev) => {
         const nextStyles = { ...prev.styles };
@@ -1426,16 +1462,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             fontSizePt: preset.fontSizePt,
             isBold: preset.isBold,
           };
-
-          const baseEl = currentSlideElements.find((e) => e.id === tid);
-          if (baseEl) {
-            if (baseEl.unitIds && baseEl.unitIds.length > 0) {
-              for (const uid of baseEl.unitIds) fontSizesUpdate[uid] = preset.fontSizePt;
-            } else if (baseEl.unitId) {
-              fontSizesUpdate[baseEl.unitId] = preset.fontSizePt;
-            }
-          }
-          fontSizesUpdate[tid] = preset.fontSizePt;
         }
         return {
           ...prev,
@@ -1447,17 +1473,21 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         onCustomFontSizesChange(fontSizesUpdate);
       }
 
-      setFontSizeFeedback({ elId, sizePt: preset.fontSizePt });
+      setFontSizeFeedback({ elId: targets[0], sizePt: preset.fontSizePt });
       if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
       fontSizeFeedbackTimerRef.current = setTimeout(() => {
         setFontSizeFeedback(null);
       }, 950);
 
-      setQuickActionNotice(`Đã áp dụng chuẩn SOP: ${preset.label} (${preset.fontSizePt}pt${preset.isBold ? " Bold" : ""})`);
+      setQuickActionNotice(
+        targets.length > 1
+          ? `Đã áp dụng chuẩn SOP (${preset.label} ${preset.fontSizePt}pt) cho ${targets.length} ô!`
+          : `Đã áp dụng chuẩn SOP: ${preset.label} (${preset.fontSizePt}pt${preset.isBold ? " Bold" : ""})`
+      );
       if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
       quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2000);
     },
-    [canvasState, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange, pushUndoSnapshot]
+    [canvasState, currentSlideElements, multiSelectedElementIds, selectedElementId, onCustomFontSizesChange, pushUndoSnapshot]
   );
 
   // Feature 5: Helper to highlight SOP Glossary terms with visual badges
@@ -1477,7 +1507,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           return (
             <span
               key={`sop_badge_${pIdx}`}
-              className="inline-flex items-center gap-0.5 px-1 py-0.2 mx-0.5 rounded font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-600/60 shadow-2xs select-text align-baseline"
+              className="inline-flex items-center gap-0.5 px-1 py-0.2 mx-0.5 rounded font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-600/60 shadow-2xs select-none align-baseline"
               title={`Thuật ngữ Chuẩn SOP: "${part}"`}
             >
               <ShieldCheck className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0 inline" />
@@ -1495,9 +1525,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     (el: SlideVisualElement) => {
       pushUndoSnapshot({ ...canvasState });
       const targets =
-        multiSelectedElementIds.size > 1
+        multiSelectedElementIds.size > 0
           ? Array.from(multiSelectedElementIds)
-          : [el.id];
+          : (selectedElementId ? [selectedElementId] : [el.id]);
 
       const curStyle = canvasState.styles[el.id] || {};
       const newBold = !(curStyle.isBold !== undefined ? curStyle.isBold : Boolean(el.isBold));
@@ -1520,16 +1550,16 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
       }
     },
-    [canvasState, multiSelectedElementIds, pushUndoSnapshot]
+    [canvasState, multiSelectedElementIds, selectedElementId, pushUndoSnapshot]
   );
 
   const handleChangeAlign = useCallback(
     (elId: string, align: "left" | "center" | "right") => {
       pushUndoSnapshot({ ...canvasState });
       const targets =
-        multiSelectedElementIds.size > 1
+        multiSelectedElementIds.size > 0
           ? Array.from(multiSelectedElementIds)
-          : [elId];
+          : (selectedElementId ? [selectedElementId] : [elId]);
 
       setCanvasState((prev) => {
         const nextStyles = { ...prev.styles };
@@ -1551,7 +1581,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
       }
     },
-    [canvasState, multiSelectedElementIds, pushUndoSnapshot]
+    [canvasState, multiSelectedElementIds, selectedElementId, pushUndoSnapshot]
   );
 
   const handleAutoFitText = useCallback(
@@ -1633,9 +1663,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     (elId: string, type: "textColor" | "fill", color: string) => {
       pushUndoSnapshot({ ...canvasState });
       const targets =
-        multiSelectedElementIds.size > 1
+        multiSelectedElementIds.size > 0
           ? Array.from(multiSelectedElementIds)
-          : [elId];
+          : (selectedElementId ? [selectedElementId] : [elId]);
 
       setCanvasState((prev) => {
         const nextStyles = { ...prev.styles };
@@ -1660,7 +1690,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
       }
     },
-    [canvasState, multiSelectedElementIds, pushUndoSnapshot]
+    [canvasState, multiSelectedElementIds, selectedElementId, pushUndoSnapshot]
   );
 
   const handleLayerOrder = useCallback(
@@ -2039,21 +2069,25 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   }, [inspectedUnits, getTranslationText, inspectedElement]);
 
   // Active Focus Element for Ribbon Toolbar & quick shortcuts:
-  // Prioritizes element directly hovered under cursor > multi-selected elements > clicked element > last active element
+  // Prioritizes: Explicitly selected elements > Clicked element > Hovered element under cursor > Inspected element > Last active element
   const activeFocusElement = useMemo(() => {
-    if (hoveredCell?.element) return hoveredCell.element;
     if (multiSelectedElementIds.size > 0) {
       const firstId = Array.from(multiSelectedElementIds)[0];
       const found = currentSlideElements.find((el) => el.id === firstId);
       if (found) return found;
     }
+    if (selectedElementId) {
+      const found = currentSlideElements.find((el) => el.id === selectedElementId);
+      if (found) return found;
+    }
+    if (hoveredCell?.element) return hoveredCell.element;
     if (inspectedElement) return inspectedElement;
     if (lastActiveElementId) {
       const found = currentSlideElements.find((el) => el.id === lastActiveElementId);
       if (found) return found;
     }
     return null;
-  }, [hoveredCell, multiSelectedElementIds, inspectedElement, lastActiveElementId, currentSlideElements]);
+  }, [multiSelectedElementIds, selectedElementId, hoveredCell, inspectedElement, lastActiveElementId, currentSlideElements]);
 
   const activeFocusUnits = useMemo(() => {
     if (!activeFocusElement) return [];
@@ -2393,29 +2427,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     [panOffset, isAreaSelectMode, handleStartAreaSelection]
   );
 
-  // UX Improvement 7: Floating Mini Quick-Action on Text Selection
-  const handleCanvasMouseUp = useCallback(() => {
-    const selection = window.getSelection();
-    const text = selection ? selection.toString().trim() : "";
-    if (text && text.length >= 2 && selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        setTextSelectionMenu({
-          x: Math.max(10, Math.min(window.innerWidth - 220, rect.left + rect.width / 2 - 100)),
-          y: Math.max(10, rect.top - 46),
-          text,
-        });
-        return;
-      }
-    }
-    setTimeout(() => {
-      const sel = window.getSelection();
-      if (!sel || !sel.toString().trim()) {
-        setTextSelectionMenu(null);
-      }
-    }, 120);
-  }, []);
+
 
   // ==========================================================================
   // ALT + MOUSE WHEEL: INSTANT FONT SIZE ADJUSTMENT ON ACTIVE/HOVERED ELEMENT
@@ -2774,7 +2786,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
     return (
       <div
-        className="relative rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-text bg-white shrink-0"
+        className="relative rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-none bg-white shrink-0"
         onMouseDown={(e) => {
           if (isAreaSelectMode || e.shiftKey) {
             handleStartAreaSelection(e);
@@ -3309,7 +3321,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
                   return (
                     <table
-                      className="border-collapse table-fixed w-full select-text shadow-xs"
+                      className="border-collapse table-fixed w-full select-none shadow-xs"
                       style={{
                         backgroundColor: "#FFFFFF",
                         borderSpacing: 0,
@@ -3385,9 +3397,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                   ? Math.max(0.72, Math.min(1.0, (el.box.height || 12) / (cellUnitCount * 2.8)))
                                   : 1.0;
 
-                                const baseAutoFit = openXmlFontScale !== undefined
-                                  ? openXmlFontScale
-                                  : Math.min(densityScale, canvasFit.fontScale);
+                                const isManuallyStyled = style.fontSizePt !== undefined;
+                                const baseAutoFit = isManuallyStyled
+                                  ? 1.0
+                                  : (openXmlFontScale !== undefined
+                                      ? openXmlFontScale
+                                      : Math.min(densityScale, canvasFit.fontScale));
 
                                 const finalAutoFitScale = Number(baseAutoFit.toFixed(2));
                                 const displayFontSizePt = effectiveFontSizePt
@@ -3498,7 +3513,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                       boxSizing: "border-box",
                                       minHeight: cellHeightPx ? `${cellHeightPx}px` : undefined,
                                     }}
-                                    className={`transition-colors ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-text relative ${
+                                    className={`transition-colors ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-none relative ${
                                       isMultiSelected
                                         ? "ring-2 ring-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/70 shadow-md"
                                         : isChecked
@@ -3592,7 +3607,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                         zIndex: effectiveTableZ,
                         paddingBottom: "24px",
                       }}
-                      className="select-text"
+                      className="select-none"
                     >
                       {renderSingleTable(tableId, tg)}
                     </div>
@@ -3607,7 +3622,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 if (isSideBySide) {
                   return (
                     <div
-                      className="w-full flex items-start select-text"
+                      className="w-full flex items-start select-none"
                       style={{
                         position: "relative",
                         marginTop: `${Math.round((minTop / 100) * sheetHeight)}px`,
@@ -3628,7 +3643,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                               marginLeft: `${leftMarginPct}%`,
                               zIndex: effectiveTableZ,
                             }}
-                            className="select-text"
+                            className="select-none"
                           >
                             {renderSingleTable(tableId, tg)}
                           </div>
@@ -3641,7 +3656,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 // Vertically stacked tables
                 return (
                   <div
-                    className="w-full flex flex-col select-text"
+                    className="w-full flex flex-col select-none"
                     style={{
                       position: "relative",
                       marginTop: `${Math.round((minTop / 100) * sheetHeight)}px`,
@@ -3661,7 +3676,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                             marginTop: idx > 0 ? "16px" : undefined,
                             zIndex: effectiveTableZ,
                           }}
-                          className="select-text"
+                          className="select-none"
                         >
                           {renderSingleTable(tableId, tg)}
                         </div>
@@ -3802,11 +3817,14 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 const computedShapeScale = Math.min(canvasFit.fontScale, estimatedScale);
                 const isDenseMultiLine = totalUnits > 2 || estimatedLines > 3 || computedShapeScale < 1.0;
 
-                const autoFitScale = openXmlShapeScale !== undefined
-                  ? Math.min(openXmlShapeScale, computedShapeScale)
-                  : computedShapeScale < 1.0
-                  ? computedShapeScale
-                  : 1.0;
+                const isManuallyStyled = style.fontSizePt !== undefined;
+                const autoFitScale = isManuallyStyled
+                  ? 1.0
+                  : (openXmlShapeScale !== undefined
+                      ? Math.min(openXmlShapeScale, computedShapeScale)
+                      : computedShapeScale < 1.0
+                      ? computedShapeScale
+                      : 1.0);
 
                 const displayFontSizePt = baseDisplayFontSizePt
                   ? Number((baseDisplayFontSizePt * autoFitScale).toFixed(1))
@@ -3956,7 +3974,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       zIndex: isDragging ? 100 : isResizing ? 90 : isSelected ? 80 : (style.zIndex !== undefined ? style.zIndex : isTopBanner ? 20 : (10 + elIdx * 2)),
                       userSelect: isDragging || isResizing ? "none" : undefined,
                     }}
-                    className={`group select-text ${
+                    className={`group select-none ${
                       isDragging
                         ? "ring-2 ring-indigo-500 shadow-2xl scale-[1.01]"
                         : isMultiSelected
@@ -5092,7 +5110,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           }
         }}
         onMouseDown={handleCanvasContainerMouseDown}
-        onMouseUp={handleCanvasMouseUp}
         style={{
           cursor: isSpacePressed ? (isPanningRef.current ? "grabbing" : "grab") : undefined,
         }}
@@ -5715,60 +5732,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         </div>
       )}
 
-      {/* UX Improvement 7: Floating Mini Quick-Action Menu on Text Selection */}
-      {textSelectionMenu && (
-        <div
-          className="fixed z-50 flex items-center gap-1 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md text-white text-xs px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700/80 animate-in fade-in zoom-in-95 duration-100"
-          style={{
-            left: `${textSelectionMenu.x}px`,
-            top: `${textSelectionMenu.y}px`,
-          }}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              navigator.clipboard.writeText(textSelectionMenu.text);
-              setQuickActionNotice("Đã sao chép cụm từ!");
-              setTextSelectionMenu(null);
-              if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
-              quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2000);
-            }}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-800 text-slate-200 hover:text-white transition-colors cursor-pointer text-[11px]"
-            title="Sao chép văn bản đã chọn"
-          >
-            <Copy className="w-3 h-3 text-sky-400" />
-            <span>Chép</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (onOpenGlossary) {
-                onOpenGlossary(textSelectionMenu.text);
-              } else {
-                navigator.clipboard.writeText(textSelectionMenu.text);
-                setQuickActionNotice(`Đã sao chép: "${textSelectionMenu.text}" (Mở Glossary để thêm)`);
-                if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
-                quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2500);
-              }
-              setTextSelectionMenu(null);
-            }}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-800 text-emerald-300 hover:text-emerald-200 transition-colors cursor-pointer text-[11px]"
-            title="Tra hoặc thêm vào Glossary từ điển SOP"
-          >
-            <BookOpen className="w-3 h-3 text-emerald-400" />
-            <span>Glossary</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setTextSelectionMenu(null)}
-            className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-            title="Đóng menu"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+
 
       {/* Floating Quick Action Notice Toast */}
       {quickActionNotice && (

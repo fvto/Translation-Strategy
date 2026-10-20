@@ -710,6 +710,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               onCustomFontSizesChange={(newSizes) => {
                 setCustomFontSizes((prev) => ({ ...prev, ...newSizes }));
               }}
+              initialCustomFontSizes={customFontSizes}
             />
           ) : tab === "slides" ? (
             <div className="space-y-4">
