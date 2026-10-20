@@ -74,6 +74,12 @@ interface ParsedSlideShape {
   rowSpan?: number;
   colSpan?: number;
   isMerged?: boolean;
+  tableId?: string;
+  tableBox?: BoundingBox;
+  tableCols?: number[];
+  fontScale?: number;
+  lnSpcReduction?: number;
+  isSpAutoFit?: boolean;
 }
 
 function parseXmlColor(chunk?: string): string | undefined {
@@ -238,6 +244,10 @@ function parseSlideShapes(
       const shapeName = nameMatch ? nameMatch[1] : "Bảng dữ liệu";
 
       if (rawXfrm && /<a:tbl\b/.test(shapeXml)) {
+        const tableTrans = applyGroupTransform(rawXfrm, stack);
+        const tableBox = toBoundingBox(tableTrans, slideW, slideH);
+        const tableId = `tbl_${absStart}`;
+
         // Decompose table into individual cell elements with exact bounding boxes and cell styling
         const gridCols = Array.from(shapeXml.matchAll(/<a:gridCol\b[^>]*\bw="(\d+)"/g)).map((m) => parseInt(m[1], 10));
         const colOffsets: number[] = [];
@@ -247,6 +257,7 @@ function parseSlideShapes(
           curColX += w;
         }
         const totalGridW = curColX || rawXfrm.w;
+        const tableCols = gridCols.map((w) => Number(((w / (totalGridW || 1)) * 100).toFixed(2)));
 
         const rowMatches = Array.from(shapeXml.matchAll(/<a:tr\b[^>]*\bh="(\d+)"[^>]*>([\s\S]*?)<\/a:tr>/g));
         const rowHeights: number[] = rowMatches.map((m) => {
@@ -259,6 +270,9 @@ function parseSlideShapes(
           rowOffsets.push(curRowOffset);
           curRowOffset += h;
         }
+        const totalGridH = curRowOffset || rawXfrm.h;
+        const effectiveTableH = Math.max(rawXfrm.h, totalGridH);
+        const rowScale = totalGridH > 0 ? (effectiveTableH / totalGridH) : 1;
 
         let cellSearchPos = 0;
         for (let r = 0; r < rowMatches.length; r++) {
@@ -316,9 +330,9 @@ function parseSlideShapes(
 
             const cellRaw = {
               x: rawXfrm.x + Math.round(colX * (rawXfrm.w / (totalGridW || 1))),
-              y: rawXfrm.y + rowY,
+              y: rawXfrm.y + Math.round(rowY * rowScale),
               w: Math.round(spanW * (rawXfrm.w / (totalGridW || 1))),
-              h: spanH,
+              h: Math.round(spanH * rowScale),
             };
             const cellTrans = applyGroupTransform(cellRaw, stack);
             const cellBox = toBoundingBox(cellTrans, slideW, slideH);
@@ -333,15 +347,56 @@ function parseSlideShapes(
             const algnMatch = cellXml.match(/<a:pPr\b[^>]*\balgn="([^"]+)"/);
             const align = algnMatch ? (algnMatch[1] === "ctr" ? "center" : algnMatch[1] === "r" ? "right" : "left") : undefined;
 
-            const rPr = cellXml.match(/<a:rPr\b[\s\S]*?(?:<\/a:rPr>|\/>)/)?.[0] || "";
-            const textColor = parseXmlColor(rPr.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
-            const szMatch = rPr.match(/\bsz="(\d+)"/);
-            const fontSizePt = szMatch ? Math.round(parseInt(szMatch[1], 10) / 100) : undefined;
-            const isBold = /\bb="1"/.test(rPr) || r === 0;
+            // Inspect dominant substantive text runs per Production Rule 2
+            const runs = Array.from(cellXml.matchAll(/<a:r\b[\s\S]*?<\/a:r>/g));
+            const szCounts = new Map<number, number>();
+            let dominantSz: number | undefined;
+            let maxCount = 0;
+            let dominantBold = false;
+            let dominantColor: string | undefined;
+
+            for (const rMatch of runs) {
+              const rXml = rMatch[0];
+              const tMatch = rXml.match(/<a:t\b[^>]*>([\s\S]*?)<\/a:t>/);
+              const textLen = tMatch ? tMatch[1].trim().length : 0;
+              if (textLen === 0) continue;
+
+              const rPrMatch = rXml.match(/<a:rPr\b[\s\S]*?(?:<\/a:rPr>|\/>)/)?.[0] || "";
+              const szM = rPrMatch.match(/\bsz="(\d+)"/);
+              if (szM) {
+                const szVal = Math.round(parseInt(szM[1], 10) / 100);
+                const count = (szCounts.get(szVal) || 0) + textLen;
+                szCounts.set(szVal, count);
+                if (count > maxCount) {
+                  maxCount = count;
+                  dominantSz = szVal;
+                  dominantBold = /\bb="1"/.test(rPrMatch);
+                  dominantColor = parseXmlColor(rPrMatch.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
+                }
+              }
+            }
+
+            const fallbackRPr = cellXml.match(/<a:rPr\b[\s\S]*?(?:<\/a:rPr>|\/>)/)?.[0] || "";
+            const szMatch = fallbackRPr.match(/\bsz="(\d+)"/);
+            const fontSizePt = dominantSz !== undefined ? dominantSz : (szMatch ? Math.round(parseInt(szMatch[1], 10) / 100) : (r === 0 ? 10 : 9));
+            const isBold = dominantSz !== undefined ? dominantBold : (/\bb="1"/.test(fallbackRPr) || r === 0);
+            const textColor = dominantColor || parseXmlColor(fallbackRPr.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
 
             const rowDesc = rowSpan > 1 ? `Hàng ${r + 1}-${r + rowSpan}` : `Hàng ${r + 1}`;
             const colDesc = gridSpan > 1 ? `Cột ${c + 1}-${c + gridSpan}` : `Cột ${c + 1}`;
             const cellName = `${shapeName} [${rowDesc}, ${colDesc}]`;
+
+            const bodyPr = cellXml.match(/<a:bodyPr\b[\s\S]*?(?:<\/a:bodyPr>|\/>)/)?.[0] || "";
+            const normAutofitMatch = bodyPr.match(/<a:normAutofit\b[^>]*>/) || cellXml.match(/<a:normAutofit\b[^>]*>/);
+            let cellFontScale: number | undefined;
+            let cellLnSpcReduction: number | undefined;
+            if (normAutofitMatch) {
+              const fsM = normAutofitMatch[0].match(/\bfontScale="(\d+)"/);
+              if (fsM) cellFontScale = parseInt(fsM[1], 10) / 100000;
+              const lnsM = normAutofitMatch[0].match(/\blnSpcReduction="(\d+)"/);
+              if (lnsM) cellLnSpcReduction = parseInt(lnsM[1], 10) / 100000;
+            }
+            const isSpAutoFit = /<a:spAutoFit\b/.test(bodyPr) || /<a:spAutoFit\b/.test(cellXml);
 
             out.push({
               absStart: cellAbsStart,
@@ -361,6 +416,12 @@ function parseSlideShapes(
               rowSpan,
               colSpan: gridSpan,
               isMerged,
+              tableId,
+              tableBox,
+              tableCols,
+              fontScale: cellFontScale,
+              lnSpcReduction: cellLnSpcReduction,
+              isSpAutoFit,
             });
           }
         }
@@ -398,6 +459,18 @@ function parseSlideShapes(
         const algnMatch = shapeXml.match(/<a:pPr\b[^>]*\balgn="([^"]+)"/);
         const align = algnMatch ? (algnMatch[1] === "ctr" ? "center" : algnMatch[1] === "r" ? "right" : "left") : undefined;
 
+        const bodyPr = shapeXml.match(/<a:bodyPr\b[\s\S]*?(?:<\/a:bodyPr>|\/>)/)?.[0] || "";
+        const normAutofitMatch = bodyPr.match(/<a:normAutofit\b[^>]*>/) || shapeXml.match(/<a:normAutofit\b[^>]*>/);
+        let shapeFontScale: number | undefined;
+        let shapeLnSpcReduction: number | undefined;
+        if (normAutofitMatch) {
+          const fsM = normAutofitMatch[0].match(/\bfontScale="(\d+)"/);
+          if (fsM) shapeFontScale = parseInt(fsM[1], 10) / 100000;
+          const lnsM = normAutofitMatch[0].match(/\blnSpcReduction="(\d+)"/);
+          if (lnsM) shapeLnSpcReduction = parseInt(lnsM[1], 10) / 100000;
+        }
+        const isShapeSpAutoFit = /<a:spAutoFit\b/.test(bodyPr) || /<a:spAutoFit\b/.test(shapeXml);
+
         out.push({
           absStart,
           absEnd,
@@ -410,6 +483,9 @@ function parseSlideShapes(
           fontSizePt,
           isBold,
           align,
+          fontScale: shapeFontScale,
+          lnSpcReduction: shapeLnSpcReduction,
+          isSpAutoFit: isShapeSpAutoFit,
         });
       }
     }
@@ -526,6 +602,12 @@ async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: num
         rowSpan: shape.rowSpan,
         colSpan: shape.colSpan,
         isMerged: shape.isMerged,
+        tableId: shape.tableId,
+        tableBox: shape.tableBox,
+        tableCols: shape.tableCols,
+        fontScale: shape.fontScale,
+        lnSpcReduction: shape.lnSpcReduction,
+        isSpAutoFit: shape.isSpAutoFit,
       };
     });
 

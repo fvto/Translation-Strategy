@@ -55,6 +55,7 @@ import {
   Palette,
   ArrowUp,
   ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 import type {
   SmartAuditReport,
@@ -96,6 +97,7 @@ interface SmartAuditSlideCanvasProps {
   slidePairMap?: Map<number, { role: "en" | "vi"; partnerSlide: number; pairIndex: number }>;
   slideViHandling?: Record<number, ViReferenceHandlingMode>;
   onSetSlideViHandling?: (slideNum: number, mode: ViReferenceHandlingMode) => void;
+  onSlideChange?: (slideNum: number) => void;
 }
 
 interface ContextMenuState {
@@ -241,6 +243,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   slidePairMap,
   slideViHandling,
   onSetSlideViHandling,
+  onSlideChange,
 }) => {
   // Current active slide number
   const [currentSlide, setCurrentSlide] = useState<number>(() => {
@@ -253,14 +256,26 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     return 1;
   });
 
+  // Synchronize current slide when initialSlideNum changes from parent modal
+  useEffect(() => {
+    if (initialSlideNum && initialSlideNum >= 1 && initialSlideNum <= report.totalSlides) {
+      setCurrentSlide(initialSlideNum);
+    }
+  }, [initialSlideNum, report.totalSlides]);
+
+  // Notify parent component of current slide changes
+  useEffect(() => {
+    onSlideChange?.(currentSlide);
+  }, [currentSlide, onSlideChange]);
+
   // Display mode for text inside layers: "bilingual" | "target" | "source"
   const [viewMode, setViewMode] = useState<"bilingual" | "target" | "source">("source");
 
   // Layout presentation mode: "pptx" (spatial 1:1) | "cards" (sequential list) | "split" (both) | "isq_dual" (paired ISQ side-by-side)
   const [layoutMode, setLayoutMode] = useState<"pptx" | "cards" | "split" | "isq_dual">("pptx");
 
-  // Image visibility: "hidden" (strictly deletes/removes images for clean review) | "wireframe" (shows light dashed placeholder)
-  const [imageVisibility, setImageVisibility] = useState<"hidden" | "wireframe">("hidden");
+  // Image visibility: "hidden" (strictly deletes/removes images for clean review) | "wireframe" (shows light dashed placeholder with shape name)
+  const [imageVisibility, setImageVisibility] = useState<"hidden" | "wireframe">("wireframe");
 
   // Selected element on the canvas
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
@@ -279,8 +294,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const [zoomScale, setZoomScale] = useState<number>(1.0);
   const [isCanvasFullscreen, setIsCanvasFullscreen] = useState<boolean>(false);
 
-  // Fit Mode: "contain" (fits slide into viewport) | "width" (stretches slide across full width with vertical scroll for dense tables)
-  const [fitMode, setFitMode] = useState<"contain" | "width">("contain");
+  // Fit Mode: "contain" (fits slide into viewport) | "width" (stretches slide across comfortable width with vertical scroll for dense tables/shapes)
+  const [fitMode, setFitMode] = useState<"contain" | "width">("width");
+
+  // Presentation Framework Mode: "document" (Natural expanded height for tables) | "presentation" (Strict 16:9 projector fit with OpenXML normAutofit)
+  const [slideViewMode, setSlideViewMode] = useState<"document" | "presentation">("document");
 
   // Hovered Cell state for the Floating Quick Inspector Magnifier
   const [hoveredCell, setHoveredCell] = useState<{
@@ -298,6 +316,108 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [isTranslatingQuick, setIsTranslatingQuick] = useState<boolean>(false);
   const [batchTranslateProgress, setBatchTranslateProgress] = useState<{ current: number; total: number } | null>(null);
+
+  // Active slide transition feedback & throttling refs
+  const [slideSwitchNotice, setSlideSwitchNotice] = useState<number | null>(null);
+  const noticeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const navThrottleRef = useRef<number>(0);
+  const slideStripRef = useRef<HTMLDivElement>(null);
+  const activeSlideBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  // Freely draggable position for the floating toolbar
+  // null = dynamically positioned near selected element
+  // { x: left%, y: top% } = user custom position on the slide sheet
+  const [floatingToolbarPos, setFloatingToolbarPos] = useState<{ x: number; y: number } | null>(null);
+  const [isDraggingToolbar, setIsDraggingToolbar] = useState<boolean>(false);
+
+  // Real-time Font Size HUD Toast Feedback (Alt + Mouse Wheel)
+  const [fontSizeFeedback, setFontSizeFeedback] = useState<{ elId: string; sizePt: number } | null>(null);
+  const fontSizeFeedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const toolbarDragRef = useRef<{
+    startX: number;
+    startY: number;
+    origLeftPct: number;
+    origTopPct: number;
+    sheetW: number;
+    sheetH: number;
+  } | null>(null);
+
+  const handleToolbarMouseDown = useCallback(
+    (e: React.MouseEvent, sheetW: number, sheetH: number, currentLeftPct: number, currentTopPct: number) => {
+      if (e.button !== 0) return;
+      const target = e.target as HTMLElement;
+      if (target.closest("button") || target.closest("input") || target.closest("textarea")) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      setIsDraggingToolbar(true);
+      toolbarDragRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        origLeftPct: currentLeftPct,
+        origTopPct: currentTopPct,
+        sheetW: Math.max(100, sheetW),
+        sheetH: Math.max(100, sheetH),
+      };
+
+      const handleMouseMove = (moveEvt: MouseEvent) => {
+        if (!toolbarDragRef.current) return;
+        moveEvt.preventDefault();
+        const dx = moveEvt.clientX - toolbarDragRef.current.startX;
+        const dy = moveEvt.clientY - toolbarDragRef.current.startY;
+
+        const dLeftPct = (dx / toolbarDragRef.current.sheetW) * 100;
+        const dTopPct = (dy / toolbarDragRef.current.sheetH) * 100;
+
+        const newLeft = Math.max(0.2, Math.min(88, toolbarDragRef.current.origLeftPct + dLeftPct));
+        const newTop = Math.max(0.2, Math.min(96, toolbarDragRef.current.origTopPct + dTopPct));
+
+        setFloatingToolbarPos({
+          x: Number(newLeft.toFixed(1)),
+          y: Number(newTop.toFixed(1)),
+        });
+      };
+
+      const handleMouseUp = () => {
+        setIsDraggingToolbar(false);
+        toolbarDragRef.current = null;
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    },
+    []
+  );
+
+  useEffect(() => {
+    setSlideSwitchNotice(currentSlide);
+    if (onSlideChange) onSlideChange(currentSlide);
+    // Always reset viewport scroll to top so every slide starts cleanly with header banner visible
+    if (canvasContainerRef.current) {
+      canvasContainerRef.current.scrollTop = 0;
+      canvasContainerRef.current.scrollLeft = 0;
+    }
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => {
+      setSlideSwitchNotice(null);
+    }, 450);
+    return () => {
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    };
+  }, [currentSlide, onSlideChange]);
+
+  useEffect(() => {
+    if (activeSlideBtnRef.current) {
+      activeSlideBtnRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [currentSlide]);
 
   // Canva Canvas Customization State (Positions, Sizes, Styles, Added, Deleted)
   const [canvasState, setCanvasState] = useState<SlideCanvasCustomState>({
@@ -396,6 +516,18 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     }
     return map;
   }, [report.units]);
+
+  // Precomputed summary map of slide statuses for smooth, lag-free navigation
+  const slideStatusSummary = useMemo(() => {
+    const summary = new Map<number, { hasPending: boolean; total: number }>();
+    for (const [sNum, uList] of slideMap.entries()) {
+      const hasPending = uList.some(
+        (u) => u.status === "NEEDS_TRANSLATION" || u.status === "MIXED_LANGUAGE" || u.status === "REVIEW_REQUIRED"
+      );
+      summary.set(sNum, { hasPending, total: uList.length });
+    }
+    return summary;
+  }, [slideMap]);
 
   // List of all slide indices (1 to totalSlides)
   const allSlideNumbers = useMemo(() => {
@@ -894,13 +1026,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
   // Typography & Styling actions for Canva floating toolbar
   const handleChangeFontSize = useCallback(
-    (elId: string, delta: number) => {
-      pushUndoSnapshot({ ...canvasState });
+    (elId: string, delta: number, skipSnapshot = false) => {
+      if (!skipSnapshot) {
+        pushUndoSnapshot({ ...canvasState });
+      }
+      let finalSize = 11;
       setCanvasState((prev) => {
         const curStyle = prev.styles[elId] || {};
         const baseEl = currentSlideElements.find((e) => e.id === elId);
         const curSize = curStyle.fontSizePt ?? baseEl?.fontSizePt ?? 11;
-        const nextSize = Math.max(6, Math.min(36, curSize + delta));
+        const nextSize = Math.max(6, Math.min(36, Number((curSize + delta).toFixed(1))));
+        finalSize = nextSize;
         return {
           ...prev,
           styles: {
@@ -909,6 +1045,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           },
         };
       });
+      setFontSizeFeedback({ elId, sizePt: finalSize });
+      if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
+      fontSizeFeedbackTimerRef.current = setTimeout(() => {
+        setFontSizeFeedback(null);
+      }, 950);
     },
     [canvasState, pushUndoSnapshot, currentSlideElements]
   );
@@ -954,25 +1095,38 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       pushUndoSnapshot({ ...canvasState });
 
       const size = canvasState.sizes[el.id] || { width: el.box.width, height: el.box.height };
-      const cWidth = containerSize.width || 960;
-      const cHeight = containerSize.height || 540;
-      const boxWpx = (size.width / 100) * cWidth;
-      const boxHpx = (size.height / 100) * cHeight;
+      const rawAspect = currentVisualLayout?.aspectRatio || (16 / 9);
+      const containerW = containerSize.width || 1200;
+      const containerH = containerSize.height || 650;
+      let fitW = Math.max(100, containerW - (fitMode === "width" ? 16 : 24));
+      let fitH = Math.round(fitW / rawAspect);
+      if (fitMode === "contain") {
+        const availH = Math.max(100, containerH - 24);
+        if (fitH > availH) {
+          fitH = availH;
+          fitW = Math.round(availH * rawAspect);
+        }
+      }
+      const sWidth = Math.floor(fitW * zoomScale);
+      const sHeight = Math.floor(fitH * zoomScale);
+
+      const boxWpx = Math.max(30, (size.width / 100) * sWidth - 12);
+      const boxHpx = Math.max(18, (size.height / 100) * sHeight - 6);
 
       const charCount = textContent.length;
       let bestFs = 11;
 
-      for (let fs = 14; fs >= 7; fs--) {
-        const charW = fs * 0.58;
-        const lineH = fs * 1.35;
-        const charsPerLine = Math.max(1, Math.floor((boxWpx - 8) / charW));
+      for (let fs = 22; fs >= 6; fs--) {
+        const charWpx = fs * 1.333 * 0.52;
+        const lineHpx = fs * 1.333 * 1.25;
+        const charsPerLine = Math.max(1, Math.floor(boxWpx / charWpx));
         const linesNeeded = Math.ceil(charCount / charsPerLine);
-        const neededH = linesNeeded * lineH + 6;
+        const neededH = linesNeeded * lineHpx;
         if (neededH <= boxHpx) {
           bestFs = fs;
           break;
         }
-        if (fs === 7) bestFs = 7;
+        if (fs === 6) bestFs = 6;
       }
 
       setCanvasState((prev) => {
@@ -986,7 +1140,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         };
       });
     },
-    [canvasState, containerSize, pushUndoSnapshot]
+    [canvasState, containerSize, currentVisualLayout, zoomScale, fitMode, pushUndoSnapshot]
   );
 
   const handleChangeColor = useCallback(
@@ -1009,20 +1163,56 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const handleLayerOrder = useCallback(
     (elId: string, direction: "forward" | "backward") => {
       pushUndoSnapshot({ ...canvasState });
+      const targetEl = currentSlideElements.find((e) => e.id === elId);
+      const effectiveTargetId = targetEl?.type === "cell" && targetEl.tableId ? targetEl.tableId : elId;
+
       setCanvasState((prev) => {
-        const curStyle = prev.styles[elId] || {};
-        const curZ = curStyle.zIndex ?? 10;
-        const nextZ = direction === "forward" ? curZ + 5 : Math.max(1, curZ - 5);
+        // Collect effective zIndex of all elements on the current slide
+        const elementsWithZ = currentSlideElements.map((el, idx) => {
+          const effectiveId = el.type === "cell" && el.tableId ? el.tableId : el.id;
+          const customZ = prev.styles[effectiveId]?.zIndex ?? prev.styles[el.id]?.zIndex;
+          return {
+            id: effectiveId,
+            z: customZ !== undefined ? customZ : (10 + idx * 2),
+          };
+        });
+
+        const target = elementsWithZ.find((e) => e.id === effectiveTargetId);
+        const curZ = target?.z ?? (prev.styles[effectiveTargetId]?.zIndex ?? prev.styles[elId]?.zIndex ?? 10);
+
+        let nextZ: number;
+        if (direction === "forward") {
+          // Find other elements with higher zIndex
+          const aboveElements = elementsWithZ.filter((e) => e.id !== effectiveTargetId && e.z >= curZ);
+          if (aboveElements.length > 0) {
+            const minAboveZ = Math.min(...aboveElements.map((e) => e.z));
+            nextZ = minAboveZ + 2;
+          } else {
+            nextZ = curZ + 5;
+          }
+        } else {
+          // Find other elements with lower zIndex
+          const belowElements = elementsWithZ.filter((e) => e.id !== effectiveTargetId && e.z <= curZ);
+          if (belowElements.length > 0) {
+            const maxBelowZ = Math.max(...belowElements.map((e) => e.z));
+            nextZ = Math.max(1, maxBelowZ - 2);
+          } else {
+            nextZ = Math.max(1, curZ - 5);
+          }
+        }
+
+        const curStyle = prev.styles[effectiveTargetId] || prev.styles[elId] || {};
         return {
           ...prev,
           styles: {
             ...prev.styles,
-            [elId]: { ...curStyle, zIndex: nextZ },
+            [effectiveTargetId]: { ...curStyle, zIndex: nextZ },
+            ...(effectiveTargetId !== elId ? { [elId]: { ...prev.styles[elId], zIndex: nextZ } } : {}),
           },
         };
       });
     },
-    [canvasState, pushUndoSnapshot]
+    [canvasState, currentSlideElements, pushUndoSnapshot]
   );
 
   const handleDuplicateElement = useCallback(
@@ -1170,24 +1360,34 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     [customEdits]
   );
 
-  // Navigation handlers
+  // Navigation handlers (Smooth, throttled, and resilient to stale closures)
   const handlePrevSlide = useCallback(() => {
-    if (currentSlide > 1) {
-      setCurrentSlide((prev) => prev - 1);
-      setEditingUnitId(null);
-      setSelectedElementId(null);
-      setContextMenu(null);
-    }
-  }, [currentSlide]);
+    const now = Date.now();
+    if (now - navThrottleRef.current < 160) return;
+    navThrottleRef.current = now;
+
+    setCurrentSlide((prev) => {
+      if (prev <= 1) return prev;
+      return prev - 1;
+    });
+    setEditingUnitId(null);
+    setSelectedElementId(null);
+    setContextMenu(null);
+  }, []);
 
   const handleNextSlide = useCallback(() => {
-    if (currentSlide < report.totalSlides) {
-      setCurrentSlide((prev) => prev + 1);
-      setEditingUnitId(null);
-      setSelectedElementId(null);
-      setContextMenu(null);
-    }
-  }, [currentSlide, report.totalSlides]);
+    const now = Date.now();
+    if (now - navThrottleRef.current < 160) return;
+    navThrottleRef.current = now;
+
+    setCurrentSlide((prev) => {
+      if (prev >= report.totalSlides) return prev;
+      return prev + 1;
+    });
+    setEditingUnitId(null);
+    setSelectedElementId(null);
+    setContextMenu(null);
+  }, [report.totalSlides]);
 
   const handleNextPendingSlide = useCallback(() => {
     const next = pendingSlideNumbers.find((s) => s > currentSlide);
@@ -1220,6 +1420,66 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       setEditingUnitId(null);
     },
     [editText, onSaveCustomEdit]
+  );
+
+  const applyEditDirectly = useCallback(
+    (unitId: string, e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      onSaveCustomEdit(unitId, editText);
+      // If unit was selected for AI translation, uncheck it since user manually completed it
+      if (selectedUnitIds.has(unitId)) {
+        onToggleUnit(unitId);
+      }
+      setEditingUnitId(null);
+    },
+    [editText, onSaveCustomEdit, selectedUnitIds, onToggleUnit]
+  );
+
+  const selectOnlyThisUnit = useCallback(
+    (targetUnit: ScannedTextUnit, allUnitsInElement: ScannedTextUnit[], e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      for (const ou of allUnitsInElement) {
+        if (ou.id !== targetUnit.id && selectedUnitIds.has(ou.id)) {
+          onToggleUnit(ou.id);
+        }
+      }
+      if (!selectedUnitIds.has(targetUnit.id)) {
+        onToggleUnit(targetUnit.id);
+      }
+    },
+    [selectedUnitIds, onToggleUnit]
+  );
+
+  const toggleUnitSelection = useCallback(
+    (unitId: string, e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      onToggleUnit(unitId);
+    },
+    [onToggleUnit]
+  );
+
+  const selectAllUnitsInElement = useCallback(
+    (units: ScannedTextUnit[], e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      for (const u of units) {
+        if (!selectedUnitIds.has(u.id)) {
+          onToggleUnit(u.id);
+        }
+      }
+    },
+    [selectedUnitIds, onToggleUnit]
+  );
+
+  const deselectAllUnitsInElement = useCallback(
+    (units: ScannedTextUnit[], e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      for (const u of units) {
+        if (selectedUnitIds.has(u.id)) {
+          onToggleUnit(u.id);
+        }
+      }
+    },
+    [selectedUnitIds, onToggleUnit]
   );
 
   const cancelEdit = useCallback((e?: React.MouseEvent) => {
@@ -1259,6 +1519,22 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     return unitById.get(inspectedElement.unitId) || null;
   }, [inspectedElement, unitById]);
 
+  // All text units in the currently inspected/selected element
+  const inspectedUnits = useMemo(() => {
+    if (!inspectedElement) return [];
+    if (inspectedElement.unitIds && inspectedElement.unitIds.length > 0) {
+      return inspectedElement.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u));
+    }
+    if (inspectedElement.unitId && unitById.get(inspectedElement.unitId)) {
+      return [unitById.get(inspectedElement.unitId)!];
+    }
+    return [];
+  }, [inspectedElement, unitById]);
+
+  const inspectedFullText = useMemo(() => {
+    return inspectedUnits.map((u) => getTranslationText(u) || u.sourceText).join(" ") || inspectedElement?.text || "";
+  }, [inspectedUnits, getTranslationText, inspectedElement]);
+
   // Active Inspector for Floating Quick Inspector Magnifier
   const activeInspector = useMemo(() => {
     if (hoveredCell) return hoveredCell;
@@ -1291,8 +1567,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   // Keyboard Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input, textarea, or contentEditable element
       const activeTag = document.activeElement?.tagName.toLowerCase();
-      const isInputActive = activeTag === "input" || activeTag === "textarea";
+      const isInputActive =
+        activeTag === "input" ||
+        activeTag === "textarea" ||
+        (document.activeElement as HTMLElement)?.isContentEditable;
 
       if (isInputActive) {
         if (e.key === "Escape") {
@@ -1303,6 +1583,45 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             setEditingUnitId(null);
           }
         }
+        return;
+      }
+
+      // Ignore OS key hold repeat to prevent auto-scrolling past slides uncontrollably
+      if (e.repeat) return;
+
+      // Check if user is pressing D (Next Slide) or A (Prev Slide)
+      // Handles physical keys (e.code), character keys, and Vietnamese Telex IME variations ('d', 'đ', 'Đ', 'a', 'â', 'ă')
+      const isNextSlideKey =
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        (e.key === "ArrowRight" ||
+          e.code === "KeyD" ||
+          e.key.toLowerCase() === "d" ||
+          e.key === "đ" ||
+          e.key === "Đ");
+
+      const isPrevSlideKey =
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        (e.key === "ArrowLeft" ||
+          e.code === "KeyA" ||
+          e.key.toLowerCase() === "a" ||
+          e.key === "â" ||
+          e.key === "ă");
+
+      if (isPrevSlideKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        handlePrevSlide();
+        return;
+      }
+
+      if (isNextSlideKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleNextSlide();
         return;
       }
 
@@ -1321,7 +1640,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       }
 
       // Canva Action Shortcuts
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") {
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "d" || e.code === "KeyD")) {
         if (inspectedElement) {
           e.preventDefault();
           handleDuplicateElement(inspectedElement);
@@ -1333,10 +1652,22 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           handleDeleteElement(inspectedElement.id);
         }
         return;
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+      } else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "b" || e.code === "KeyB")) {
         if (inspectedElement) {
           e.preventDefault();
           handleToggleBold(inspectedElement);
+        }
+        return;
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === "[" || e.code === "BracketLeft")) {
+        if (inspectedElement) {
+          e.preventDefault();
+          handleLayerOrder(inspectedElement.id, "backward");
+        }
+        return;
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === "]" || e.code === "BracketRight")) {
+        if (inspectedElement) {
+          e.preventDefault();
+          handleLayerOrder(inspectedElement.id, "forward");
         }
         return;
       } else if (e.key === "[") {
@@ -1351,14 +1682,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           handleChangeFontSize(inspectedElement.id, 1);
         }
         return;
-      }
-
-      if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") {
-        e.preventDefault();
-        handlePrevSlide();
-      } else if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") {
-        e.preventDefault();
-        handleNextSlide();
       } else if (e.key === "Tab") {
         e.preventDefault();
         if (e.shiftKey) handleSelectPrevLayer();
@@ -1391,6 +1714,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         e.preventDefault();
         setFitMode("contain");
         setZoomScale(1.0);
+      } else if (e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        setSlideViewMode((prev) => (prev === "document" ? "presentation" : "document"));
       }
     };
 
@@ -1418,7 +1744,63 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     handleDeleteElement,
     handleToggleBold,
     handleChangeFontSize,
+    handleLayerOrder,
+    setSlideViewMode,
   ]);
+
+  // ==========================================================================
+  // ALT + MOUSE WHEEL: INSTANT FONT SIZE ADJUSTMENT ON ACTIVE/HOVERED ELEMENT
+  // ==========================================================================
+  const wheelAccumulatorRef = useRef(0);
+  const wheelGestureActiveRef = useRef(false);
+  const wheelGestureTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Only trigger when Alt key is held down
+      if (!e.altKey) return;
+
+      const targetId = selectedElementId || hoveredCell?.element.id;
+      if (!targetId) return;
+
+      // Prevent page/container vertical scroll so slide stays completely stationary
+      e.preventDefault();
+      e.stopPropagation();
+
+      // At start of wheel gesture, record a single undo snapshot
+      if (!wheelGestureActiveRef.current) {
+        wheelGestureActiveRef.current = true;
+        pushUndoSnapshot({ ...canvasState });
+      }
+
+      // Reset gesture timer
+      if (wheelGestureTimerRef.current) clearTimeout(wheelGestureTimerRef.current);
+      wheelGestureTimerRef.current = setTimeout(() => {
+        wheelGestureActiveRef.current = false;
+        wheelAccumulatorRef.current = 0;
+      }, 350);
+
+      wheelAccumulatorRef.current += e.deltaY;
+      const THRESHOLD = 35; // Responsive notch trigger
+
+      if (Math.abs(wheelAccumulatorRef.current) >= THRESHOLD) {
+        // Scrolling UP (deltaY < 0) -> Increase font size (+1pt)
+        // Scrolling DOWN (deltaY > 0) -> Decrease font size (-1pt)
+        const step = wheelAccumulatorRef.current < 0 ? 1 : -1;
+        wheelAccumulatorRef.current = 0;
+        handleChangeFontSize(targetId, step, true);
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+      if (wheelGestureTimerRef.current) clearTimeout(wheelGestureTimerRef.current);
+    };
+  }, [selectedElementId, hoveredCell, handleChangeFontSize, pushUndoSnapshot, canvasState]);
 
   // ==========================================================================
   // TRANSLATION ACTIONS (SINGLE & BATCH)
@@ -1522,18 +1904,36 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     const containerW = containerSize.width || 1200;
     const containerH = containerSize.height || 650;
 
-    // Use tighter margins to maximize drawing canvas
-    const availW = Math.max(100, containerW - 20);
-    const availH = Math.max(100, containerH - 20);
+    if (fitMode === "width") {
+      // HƯỚNG 1: BUNG RỘNG CHIỀU NGANG THOÁNG ĐÃNG CHUẨN POWERPOINT
+      const availW = Math.max(300, containerW - 24);
+      // Giới hạn max-width thoải mái 1360px để hiển thị sắc nét, thoáng đãng không bị tràn màn hình siêu rộng
+      const fitW = Math.min(availW, 1360);
+      const fitH = Math.round(fitW / rawAspect);
+
+      return {
+        width: Math.floor(fitW * zoomScale),
+        height: Math.floor(fitH * zoomScale),
+        aspectRatio: rawAspect,
+      };
+    }
+
+    // CHẾ ĐỘ VỪA KHUNG (CONTAIN): VỪA KHÍT 100% KHUNG NHÌN KHÔNG PHÁT SINH CUỘN
+    const margin = 24;
+    const availW = Math.max(100, containerW - margin);
+    const availH = Math.max(100, containerH - margin);
 
     let fitW = availW;
     let fitH = availW / rawAspect;
 
-    // In "contain" mode, clamp height so entire slide fits into screen without vertical scroll
-    // In "width" mode, stretch to full width and allow proportional height with smooth scroll
-    if (fitMode === "contain" && fitH > availH) {
+    if (fitH > availH) {
       fitH = availH;
-      fitW = availH * rawAspect;
+      fitW = Math.round(availH * rawAspect);
+    }
+
+    if (fitW > availW) {
+      fitW = availW;
+      fitH = Math.round(availW / rawAspect);
     }
 
     return {
@@ -1548,15 +1948,34 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     const containerW = containerSize.width || 1200;
     const containerH = containerSize.height || 650;
 
-    const availW = Math.max(100, (containerW - 32) / 2);
-    const availH = Math.max(100, containerH - 24);
+    if (fitMode === "width") {
+      const availW = Math.max(100, (containerW - 32) / 2);
+      const fitW = availW;
+      const fitH = Math.round(availW / rawAspect);
+
+      return {
+        width: Math.floor(fitW * zoomScale),
+        height: Math.floor(fitH * zoomScale),
+        aspectRatio: rawAspect,
+      };
+    }
+
+    const marginX = 16;
+    const marginY = 16;
+    const availW = Math.max(100, (containerW - marginX * 2 - 16) / 2);
+    const availH = Math.max(100, containerH - marginY * 2);
 
     let fitW = availW;
     let fitH = availW / rawAspect;
 
-    if (fitMode === "contain" && fitH > availH) {
+    if (fitH > availH) {
       fitH = availH;
-      fitW = availH * rawAspect;
+      fitW = Math.round(availH * rawAspect);
+    }
+
+    if (fitW > availW) {
+      fitW = availW;
+      fitH = Math.round(availW / rawAspect);
     }
 
     return {
@@ -1567,8 +1986,47 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   }, [containerSize, currentVisualLayout, zoomScale, fitMode]);
 
   // ==========================================================================
-  // MODULAR SLIDE SHEET RENDERER
+  // MODULAR SLIDE SHEET RENDERER (OPENXML NORMAUTOFIT & CANVAS TEXT METRICS)
   // ==========================================================================
+
+  // Offscreen Canvas Text Metrics Measurement Cache for Pixel-Perfect Font Scaling
+  const getOffscreenCanvasCtx = useCallback((): CanvasRenderingContext2D | null => {
+    if (typeof window === "undefined") return null;
+    if (!(window as any).__smartAuditOffscreenCtx) {
+      const c = document.createElement("canvas");
+      (window as any).__smartAuditOffscreenCtx = c.getContext("2d");
+    }
+    return (window as any).__smartAuditOffscreenCtx;
+  }, []);
+
+  const computeCanvasTextFit = useCallback((
+    text: string,
+    boxWidthPx: number,
+    boxHeightPx: number,
+    baseFontSizePt: number,
+    fontFamily: string = "Arial, sans-serif"
+  ): { fontScale: number; lineCount: number } => {
+    if (!text || boxWidthPx <= 0 || boxHeightPx <= 0) return { fontScale: 1.0, lineCount: 1 };
+    const ctx = getOffscreenCanvasCtx();
+    if (!ctx) return { fontScale: 1.0, lineCount: 1 };
+
+    const basePx = (baseFontSizePt * 96) / 72;
+    ctx.font = `${basePx}px ${fontFamily}`;
+    const textWidth = ctx.measureText(text).width;
+
+    if (textWidth <= boxWidthPx) {
+      return { fontScale: 1.0, lineCount: 1 };
+    }
+
+    const estLines = Math.max(1, Math.ceil(textWidth / boxWidthPx));
+    const totalRequiredH = estLines * basePx * 1.25;
+    if (totalRequiredH > boxHeightPx) {
+      const scale = Math.max(0.70, Math.min(1.0, Math.sqrt((boxWidthPx * boxHeightPx) / (textWidth * basePx * 1.25))));
+      return { fontScale: Number(scale.toFixed(2)), lineCount: estLines };
+    }
+
+    return { fontScale: 1.0, lineCount: estLines };
+  }, [getOffscreenCanvasCtx]);
 
   const renderSlideSheet = (
     slideNum: number,
@@ -1580,13 +2038,18 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   ) => {
     const sheetWidth = customWidth || slideDimensions.width;
     const sheetHeight = customHeight || slideDimensions.height;
+    // Scale font size proportionally so text never overlaps rows across different view widths
+    const fontRatio = Math.max(0.55, Math.min(1.2, sheetWidth / 1200));
+
+    const isPresentationMode = slideViewMode === "presentation";
 
     return (
       <div
-        className="relative rounded-lg shadow-2xl overflow-hidden border border-slate-300 dark:border-slate-700 select-text bg-white shrink-0"
+        className="relative rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-text bg-white shrink-0"
         style={{
           width: `${sheetWidth}px`,
-          height: `${sheetHeight}px`,
+          minHeight: `${sheetHeight}px`,
+          height: "auto",
           backgroundColor: layout?.backgroundColor || "#FFFFFF",
         }}
       >
@@ -1638,837 +2101,1031 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           </div>
         ))}
 
-        {/* Spatial Elements */}
+        {/* Spatial Elements & Native PPTX Table Rendering */}
         {(() => {
           const baseElements = layout?.elements || [];
           const activeBase = baseElements.filter((el) => !canvasState.deletedElementIds.includes(el.id));
           const slideAdded = canvasState.addedElements.filter(
             (el) => (el as any).slideIndex === slideNum || !(el as any).slideIndex
           );
-          return [...activeBase, ...slideAdded];
-        })().map((el) => {
-          const isSelected = selectedElementId === el.id;
-          const pos = canvasState.positions[el.id] || { left: el.box.left, top: el.box.top };
-          const size = canvasState.sizes[el.id] || { width: el.box.width, height: el.box.height };
-          const style = canvasState.styles[el.id] || {};
-          const isDragging = draggingElementId === el.id;
-          const isResizing = resizingElementId === el.id;
+          const allEffective = [...activeBase, ...slideAdded];
 
-          // 1. PICTURE SHAPES (ZERO-IMAGE DELETION)
-          if (el.type === "image") {
-            if (imageVisibility === "hidden") {
-              return null;
-            }
-            return (
-              <div
-                key={el.id}
-                onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
-                onClick={() => {
-                  if (justFinishedDraggingRef.current) return;
-                  setSelectedElementId(el.id);
-                }}
-                style={{
-                  position: "absolute",
-                  left: `${pos.left}%`,
-                  top: `${pos.top}%`,
-                  width: `${size.width}%`,
-                  height: `${size.height}%`,
-                  cursor: isDragging ? "grabbing" : "grab",
-                  zIndex: isDragging ? 50 : isSelected ? 20 : 10,
-                }}
-                className={`rounded-lg border-2 border-dashed transition-all flex flex-col items-center justify-center p-1 overflow-hidden ${
-                  isDragging
-                    ? "border-sky-500 bg-sky-950/60 ring-2 ring-sky-400 shadow-2xl scale-[1.01]"
-                    : isSelected
-                    ? "border-cyan-500 bg-cyan-950/40 ring-2 ring-cyan-400"
-                    : "border-cyan-500/40 bg-cyan-950/10 hover:border-cyan-400"
-                }`}
-                title={`${el.shapeName || "Khung ảnh"} • Giữ chuột trái để kéo di chuyển`}
-              >
-                {isDragging && (
-                  <div className="absolute -top-6 left-0 bg-slate-900/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap">
-                    <Move className="w-2.5 h-2.5 text-sky-400" />
-                    <span>X: {pos.left}% Y: {pos.top}%</span>
-                  </div>
-                )}
-                {/* 8 Handles on Selected Image */}
-                {isSelected && !isDragging && (
-                  <>
+          // Reusable Text Body Renderer for both table cells and standalone shapes
+          const renderElementTextBody = (
+            el: SlideVisualElement,
+            elementUnits: ScannedTextUnit[],
+            isChecked: boolean,
+            isBold: boolean,
+            effectiveFontSizePt?: number,
+            displayFontSizePt?: number,
+            isUltraCompact?: boolean,
+            pos?: { left: number; top: number },
+            size?: { width: number; height: number }
+          ) => {
+            if (elementUnits.length > 0) {
+              return elementUnits.map((u, uIdx) => {
+                const isEditingThis = editingUnitId === u.id;
+                const transText = getTranslationText(u);
+                const isHeading =
+                  u.sourceText.startsWith("*") ||
+                  u.location.isTitle ||
+                  el.isTitle ||
+                  isBold;
+
+                if (isEditingThis) {
+                  const isUnitSelected = selectedUnitIds.has(u.id);
+                  const isRightAnchored = pos ? pos.left > 55 : false;
+
+                  return (
                     <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "nw", el, sheetWidth, sheetHeight)}
-                      className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn góc trên-trái"
-                    />
-                    <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "ne", el, sheetWidth, sheetHeight)}
-                      className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn góc trên-phải"
-                    />
-                    <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "sw", el, sheetWidth, sheetHeight)}
-                      className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn góc dưới-trái"
-                    />
-                    <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "se", el, sheetWidth, sheetHeight)}
-                      className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn góc dưới-phải"
-                    />
-                    <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "n", el, sheetWidth, sheetHeight)}
-                      className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn cạnh trên"
-                    />
-                    <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "s", el, sheetWidth, sheetHeight)}
-                      className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn cạnh dưới"
-                    />
-                    <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "w", el, sheetWidth, sheetHeight)}
-                      className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn cạnh trái"
-                    />
-                    <div
-                      onMouseDown={(e) => handleResizeMouseDown(e, "e", el, sheetWidth, sheetHeight)}
-                      className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform"
-                      title="Co giãn cạnh phải"
-                    />
-                  </>
-                )}
-                <Camera className="w-3.5 h-3.5 text-cyan-500 mb-0.5" />
-                <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 text-center leading-tight">
-                  [ Khung ảnh gốc • Zero-Image ]
-                </span>
-              </div>
-            );
-          }
-
-          // 2. TEXT BOX OR TABLE CELL
-          const elementUnits = (el.unitIds && el.unitIds.length > 0)
-            ? el.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
-            : el.unitId && unitById.get(el.unitId)
-            ? [unitById.get(el.unitId)!]
-            : [];
-
-          const primaryUnit = elementUnits[0];
-          const isChecked = elementUnits.length > 0 && elementUnits.every((u) => selectedUnitIds.has(u.id));
-          const isPartiallyChecked = !isChecked && elementUnits.some((u) => selectedUnitIds.has(u.id));
-
-          const isSmallMarker =
-            (size.width <= 5 && size.height <= 6) ||
-            (!primaryUnit && size.width <= 6 && size.height <= 6);
-          const isOval =
-            el.shapeName?.toLowerCase().includes("oval") || el.shapeName?.toLowerCase().includes("circle");
-          const isTopBanner =
-            el.fill === "#FF8810" || el.fill === "#ED7D31" || (pos.top < 3 && size.width >= 75);
-          const isCyanHeader = el.fill === "#00B0F0" || (el.type === "cell" && el.tableRow === 0);
-          const isBadge = el.fill === "#92D050" || el.fill === "#FF0000" || el.fill === "#C00000";
-
-          const bgColor =
-            style.fill || el.fill || (isCyanHeader ? "#00B0F0" : el.type === "cell" ? "#FFFFFF" : "transparent");
-          const textColor = style.textColor || getElementTextColor(bgColor, el.textColor);
-
-          const isBold = style.isBold !== undefined ? style.isBold : Boolean(el.isBold);
-          const align = style.align || (isSmallMarker || isTopBanner || isCyanHeader || isBadge || el.align === "center" || el.isTitle ? "center" : "left");
-          const effectiveFontSizePt = style.fontSizePt ?? el.fontSizePt;
-
-          const isCentered = align === "center";
-
-          const borderStyle = isSmallMarker
-            ? isOval
-              ? "1px solid rgba(0,0,0,0.15)"
-              : undefined
-            : el.border || (el.type === "cell" ? "1px solid #cbd5e1" : isSelected ? "2px solid #0284c7" : undefined);
-
-          const isUltraCompact = size.height < 4.5;
-          const isCompact = size.height < 7.0;
-
-          const paddingStyle = isSmallMarker
-            ? "0"
-            : isTopBanner
-            ? "3px 8px"
-            : isCyanHeader
-            ? "3px 6px"
-            : el.type === "cell"
-            ? isUltraCompact
-              ? "1px 3px"
-              : isCompact
-              ? "2px 5px"
-              : "4px 8px"
-            : "2px 4px";
-
-          // Focus Mode Dimming
-          const isPending =
-            primaryUnit &&
-            (primaryUnit.status === "NEEDS_TRANSLATION" ||
-              primaryUnit.status === "MIXED_LANGUAGE" ||
-              primaryUnit.status === "REVIEW_REQUIRED");
-          const isDimmed = focusPendingOnly && !isPending && !isSelected;
-
-          return (
-            <div
-              key={el.id}
-              onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
-              onClick={(e) => {
-                if (justFinishedDraggingRef.current) {
-                  e.stopPropagation();
-                  return;
-                }
-                e.stopPropagation();
-                setSelectedElementId(el.id);
-                if (elementUnits.length > 0) {
-                  const shouldSelect = !elementUnits.every((u) => selectedUnitIds.has(u.id));
-                  for (const u of elementUnits) {
-                    if (shouldSelect) {
-                      if (!selectedUnitIds.has(u.id)) onToggleUnit(u.id);
-                    } else {
-                      if (selectedUnitIds.has(u.id)) onToggleUnit(u.id);
-                    }
-                  }
-                }
-              }}
-              onMouseEnter={() => {
-                if (elementUnits.length > 0 || el.text) {
-                  setHoveredCell({
-                    element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
-                    units: elementUnits,
-                  });
-                }
-              }}
-              onMouseLeave={() => {
-                setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
-              }}
-              onDoubleClick={(e) => {
-                if (justFinishedDraggingRef.current) return;
-                e.stopPropagation();
-                if (primaryUnit) startEdit(primaryUnit, e);
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const sel = window.getSelection()?.toString().trim();
-                const x = Math.min(e.clientX, window.innerWidth - 350);
-                const y = Math.min(e.clientY, window.innerHeight - 440);
-
-                setSelectedElementId(el.id);
-                setContextMenu({
-                  x: Math.max(10, x),
-                  y: Math.max(10, y),
-                  element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
-                  unit: primaryUnit || null,
-                  selectedPhrase: sel && sel.length > 0 ? sel : undefined,
-                });
-              }}
-              style={{
-                position: "absolute",
-                left: `${pos.left}%`,
-                top: `${pos.top}%`,
-                width: `${size.width}%`,
-                height: `${size.height}%`,
-                backgroundColor: isChecked
-                  ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#e0f2fe")
-                  : isPartiallyChecked
-                  ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#f0f9ff")
-                  : bgColor,
-                color: textColor,
-                border: borderStyle,
-                padding: paddingStyle,
-                borderRadius: isOval ? "9999px" : isBadge ? "4px" : isTopBanner ? "0px" : undefined,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: isCentered ? "center" : "flex-start",
-                alignItems: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start",
-                textAlign: align,
-                fontSize: effectiveFontSizePt ? `${effectiveFontSizePt}pt` : undefined,
-                opacity: isDimmed ? 0.22 : 1.0,
-                filter: isDimmed ? "grayscale(80%)" : "none",
-                transition: isDragging || isResizing
-                  ? "none"
-                  : "opacity 0.2s, filter 0.2s, border-color 0.15s, box-shadow 0.15s, background-color 0.15s",
-                boxSizing: "border-box",
-                cursor: isDragging ? "grabbing" : isResizing ? "default" : "grab",
-                zIndex: isDragging ? 60 : isResizing ? 55 : isSelected ? 40 : (style.zIndex ?? (isChecked ? 20 : isPartiallyChecked ? 15 : 1)),
-                userSelect: isDragging || isResizing ? "none" : undefined,
-              }}
-              className={`group overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-text ${
-                isDragging
-                  ? "ring-2 ring-indigo-500 shadow-2xl scale-[1.01]"
-                  : isChecked
-                  ? "ring-2 ring-sky-500 shadow-md"
-                  : isPartiallyChecked
-                  ? "ring-2 ring-sky-400/70 shadow-sm"
-                  : isSelected
-                  ? "ring-2 ring-sky-500 shadow-lg"
-                  : isPending && focusPendingOnly
-                  ? "ring-2 ring-rose-500 shadow-md animate-pulse"
-                  : "hover:ring-1 hover:ring-sky-400/70"
-              }`}
-              title={`${el.shapeName || "Phần tử"} • Kéo để di chuyển • 8 neo để co giãn • Nhấp đúp để sửa`}
-            >
-              {/* Drag Coordinate Floating Chip */}
-              {isDragging && (
-                <div className="absolute -top-6 left-0 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
-                  <Move className="w-2.5 h-2.5 text-sky-400" />
-                  <span>X: {pos.left}% Y: {pos.top}%</span>
-                </div>
-              )}
-
-              {/* 8 CANVA-STYLE RESIZE HANDLES (When Selected & Not Dragging) */}
-              {isSelected && !isDragging && (
-                <>
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "nw", el, sheetWidth, sheetHeight)}
-                    className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn góc trên-trái"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "ne", el, sheetWidth, sheetHeight)}
-                    className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn góc trên-phải"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "sw", el, sheetWidth, sheetHeight)}
-                    className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn góc dưới-trái"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "se", el, sheetWidth, sheetHeight)}
-                    className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn góc dưới-phải"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "n", el, sheetWidth, sheetHeight)}
-                    className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn cạnh trên"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "s", el, sheetWidth, sheetHeight)}
-                    className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn cạnh dưới"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "w", el, sheetWidth, sheetHeight)}
-                    className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn cạnh trái"
-                  />
-                  <div
-                    onMouseDown={(e) => handleResizeMouseDown(e, "e", el, sheetWidth, sheetHeight)}
-                    className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform"
-                    title="Co giãn cạnh phải"
-                  />
-                </>
-              )}
-
-              {/* Resize Dimension Floating Chip */}
-              {resizeInfo && resizeInfo.elId === el.id && (
-                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
-                  <span>W: {resizeInfo.width}% • H: {resizeInfo.height}%</span>
-                </div>
-              )}
-
-              {/* Text Body Rendering */}
-              <div
-                style={{
-                  fontSize: effectiveFontSizePt ? `${effectiveFontSizePt}pt` : undefined,
-                  lineHeight: effectiveFontSizePt ? `${Math.max(12, Math.round(effectiveFontSizePt * 1.3))}pt` : undefined,
-                }}
-                className={`w-full ${
-                  effectiveFontSizePt
-                    ? "space-y-0.5"
-                    : isTopBanner
-                    ? "text-xs sm:text-sm font-bold tracking-wide"
-                    : isCyanHeader
-                    ? "text-[11px] sm:text-[12px] font-bold uppercase tracking-wider"
-                    : isBadge
-                    ? "text-[11px] sm:text-[12px] font-bold tracking-wider"
-                    : isSmallMarker
-                    ? "text-[9px] font-bold leading-none text-center"
-                    : isUltraCompact
-                    ? "text-[8.5px] sm:text-[9.5px] leading-tight"
-                    : isCompact
-                    ? "text-[9.5px] sm:text-[10.5px] leading-snug"
-                    : "text-[10px] sm:text-[11px] lg:text-[12px] leading-snug space-y-0.5"
-                }`}
-              >
-                {elementUnits.length > 0 ? (
-                  elementUnits.map((u, uIdx) => {
-                    const isEditingThis = editingUnitId === u.id;
-                    const transText = getTranslationText(u);
-                    const isHeading =
-                      u.sourceText.startsWith("*") ||
-                      u.location.isTitle ||
-                      el.isTitle ||
-                      isBold;
-
-                    if (isEditingThis) {
-                      return (
-                        <div
-                          key={u.id}
-                          onClick={(e) => e.stopPropagation()}
-                          className="space-y-1 bg-white dark:bg-slate-900 p-1.5 rounded-lg border-2 border-sky-500 text-slate-900 dark:text-white shadow-lg text-left my-1"
-                        >
-                          <div className="flex items-center justify-between text-[10px] text-sky-600 dark:text-sky-400 font-semibold mb-0.5 select-none">
-                            <span>Sửa dòng {uIdx + 1}/{elementUnits.length}</span>
-                            <span className="text-[9px] text-slate-400 font-mono">Enter: Lưu • Esc: Hủy</span>
-                          </div>
-                          <textarea
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                saveEdit(u.id, e as any);
-                              } else if (e.key === "Escape") {
-                                e.preventDefault();
-                                cancelEdit(e as any);
-                              }
-                            }}
-                            rows={Math.max(2, Math.min(6, editText.split("\n").length))}
-                            style={{
-                              fontSize: effectiveFontSizePt ? `${Math.min(16, Math.max(10, effectiveFontSizePt))}pt` : undefined,
-                            }}
-                            className="w-full p-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded text-[11px] text-slate-900 dark:text-white focus:outline-none focus:border-sky-400 font-sans"
-                            autoFocus
-                          />
-                          <div className="flex items-center justify-end gap-1">
+                      key={u.id}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        minWidth: "290px",
+                        maxWidth: "400px",
+                        [isRightAnchored ? "right" : "left"]: 0,
+                      }}
+                      className="absolute top-0 z-[70] bg-white dark:bg-slate-900 p-2 rounded-xl border-2 border-sky-500 text-slate-900 dark:text-white shadow-2xl text-left animate-in fade-in zoom-in-95 duration-100"
+                    >
+                      <div className="flex items-center justify-between text-[10px] text-sky-600 dark:text-sky-400 font-semibold mb-1 select-none gap-2">
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="font-bold whitespace-nowrap">Sửa dòng {uIdx + 1}/{elementUnits.length}</span>
+                          {elementUnits.length > 1 && (
                             <button
                               type="button"
-                              onClick={cancelEdit}
-                              className="px-2 py-0.5 rounded text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 cursor-pointer"
+                              onClick={(e) => {
+                                if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
+                                else toggleUnitSelection(u.id, e);
+                              }}
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-colors flex items-center gap-0.5 cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                                isUnitSelected
+                                  ? "bg-amber-500 text-white border-amber-600 shadow-2xs"
+                                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+                              }`}
+                              title={`Chọn/bỏ chọn dòng D${uIdx + 1} để dịch AI`}
                             >
-                              Hủy (Esc)
+                              <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                              <span>{isUnitSelected ? `✓ Dịch D${uIdx + 1}` : `+ Chọn dịch D${uIdx + 1}`}</span>
                             </button>
-                            <button
-                              type="button"
-                              onClick={(e) => saveEdit(u.id, e)}
-                              className="px-2 py-0.5 rounded text-[10px] bg-sky-600 text-white font-semibold hover:bg-sky-500 cursor-pointer"
-                            >
-                              Lưu (Enter)
-                            </button>
-                          </div>
+                          )}
                         </div>
-                      );
-                    }
-
-                    const displayedContent =
-                      activeViewMode === "target"
-                        ? transText || u.sourceText
-                        : activeViewMode === "source"
-                        ? u.sourceText
-                        : null;
-
-                    return (
-                      <div
-                        key={u.id}
-                        onDoubleClick={(e) => {
-                          e.stopPropagation();
-                          startEdit(u, e);
+                        <span className="text-[9px] text-slate-400 font-mono whitespace-nowrap shrink-0">Enter: Lưu • Esc: Hủy</span>
+                      </div>
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            saveEdit(u.id, e as any);
+                          } else if (e.key === "Escape") {
+                            e.preventDefault();
+                            cancelEdit(e as any);
+                          }
                         }}
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const sel = window.getSelection()?.toString().trim();
-                          const x = Math.min(e.clientX, window.innerWidth - 350);
-                          const y = Math.min(e.clientY, window.innerHeight - 440);
-                          setSelectedElementId(el.id);
-                          setContextMenu({
-                            x: Math.max(10, x),
-                            y: Math.max(10, y),
-                            element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
-                            unit: u,
-                            selectedPhrase: sel && sel.length > 0 ? sel : undefined,
-                          });
-                        }}
+                        rows={Math.max(2, Math.min(6, editText.split("\n").length))}
                         style={{
-                          fontSize: effectiveFontSizePt ? `${effectiveFontSizePt}pt` : undefined,
+                          fontSize: effectiveFontSizePt ? `${Math.min(14, Math.max(10, effectiveFontSizePt))}pt` : undefined,
                         }}
-                        className={`group/line relative rounded px-1 -mx-1 py-0.5 transition-colors cursor-text hover:bg-sky-500/10 dark:hover:bg-sky-400/10 ${
-                          isHeading ? "font-bold" : "font-normal"
-                        } ${uIdx > 0 ? "mt-0.5" : ""} break-words`}
-                        title={`Dòng ${uIdx + 1} • Nhấp đúp để sửa dòng này`}
-                      >
-                        {uIdx === 0 && isChecked && (
-                          <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-sky-600 text-white text-[8px] font-bold mr-1 shrink-0 align-middle shadow-2xs pointer-events-none">
-                            ✓
-                          </span>
-                        )}
-                        {displayedContent !== null ? (
-                          <span className={isUltraCompact ? "line-clamp-2" : ""}>{displayedContent}</span>
-                        ) : isUltraCompact ? (
-                          <div className="truncate leading-tight" title={`${u.sourceText} ➔ ${transText || "(Chờ dịch)"}`}>
-                            <span className="opacity-75">{u.sourceText}</span>
-                            <span className="font-semibold text-sky-600 dark:text-sky-400 ml-1">
-                              ➔ {transText || "(Chờ dịch)"}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="space-y-0.5">
-                            <div className="opacity-70 text-[0.88em] leading-tight line-clamp-2">{u.sourceText}</div>
-                            <div className="font-semibold text-sky-600 dark:text-sky-400 leading-tight line-clamp-2">
-                              ➔ {transText || "(Chờ dịch)"}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Hover Quick Edit Icon for this line when multiple lines exist */}
-                        {elementUnits.length > 1 && (
+                        className="w-full p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-400 font-sans shadow-inner resize-y"
+                        autoFocus
+                      />
+                      <div className="flex items-center justify-between gap-1.5 pt-1 mt-0.5">
+                        <div className="flex items-center gap-1 shrink-0">
+                          {elementUnits.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
+                                else toggleUnitSelection(u.id, e);
+                              }}
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer shadow-xs flex items-center gap-1 transition-colors whitespace-nowrap shrink-0 ${
+                                isUnitSelected
+                                  ? "bg-amber-600 hover:bg-amber-700 text-white"
+                                  : "bg-amber-500 hover:bg-amber-600 text-white"
+                              }`}
+                              title={`Bấm để chọn/bỏ chọn dòng D${uIdx + 1}`}
+                            >
+                              <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                              <span>{isUnitSelected ? `✓ D${uIdx + 1}` : `+ D${uIdx + 1}`}</span>
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 ml-auto shrink-0">
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startEdit(u, e);
-                            }}
-                            className="opacity-0 group-hover/line:opacity-100 transition-opacity ml-1.5 px-1 py-0.2 rounded text-[9px] font-medium bg-sky-500/20 hover:bg-sky-500 text-sky-700 hover:text-white dark:text-sky-300 dark:hover:text-white inline-flex items-center gap-0.5 align-middle shadow-2xs select-none cursor-pointer"
-                            title={`Sửa riêng dòng ${uIdx + 1}`}
+                            onClick={cancelEdit}
+                            className="px-2 py-0.5 rounded text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
                           >
-                            <Pencil className="w-2.5 h-2.5" />
-                            <span className="text-[8px] font-bold">D{uIdx + 1}</span>
+                            Hủy (Esc)
                           </button>
-                        )}
+                          <button
+                            type="button"
+                            onClick={(e) => saveEdit(u.id, e)}
+                            className="px-2 py-0.5 rounded text-[10px] bg-sky-600 text-white font-semibold hover:bg-sky-500 cursor-pointer shadow-xs whitespace-nowrap shrink-0 transition-colors"
+                            title="Lưu sửa đổi tạm thời"
+                          >
+                            Lưu (Enter)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => applyEditDirectly(u.id, e)}
+                            className="px-2.5 py-0.5 rounded text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer shadow-xs flex items-center gap-1 whitespace-nowrap shrink-0 transition-colors"
+                            title="Thêm trực tiếp vào bản dịch ngay, hoàn tất dòng này"
+                          >
+                            <CheckCircle2 className="w-3 h-3 shrink-0" />
+                            <span>Thêm vào luôn</span>
+                          </button>
+                        </div>
                       </div>
-                    );
-                  })
-                ) : el.text ? (
+                    </div>
+                  );
+                }
+
+                const displayedContent =
+                  activeViewMode === "target"
+                    ? transText || u.sourceText
+                    : activeViewMode === "source"
+                    ? u.sourceText
+                    : null;
+
+                return (
                   <div
-                    style={{
-                      fontSize: effectiveFontSizePt ? `${effectiveFontSizePt}pt` : undefined,
+                    key={u.id}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      startEdit(u, e);
                     }}
-                    className={`${isBold ? "font-bold" : "font-normal"} break-words`}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const sel = window.getSelection()?.toString().trim();
+                      const x = Math.min(e.clientX, window.innerWidth - 350);
+                      const y = Math.min(e.clientY, window.innerHeight - 440);
+                      setSelectedElementId(el.id);
+                      setContextMenu({
+                        x: Math.max(10, x),
+                        y: Math.max(10, y),
+                        element: { ...el, box: { ...el.box, left: pos?.left ?? el.box.left, top: pos?.top ?? el.box.top, width: size?.width ?? el.box.width, height: size?.height ?? el.box.height } },
+                        unit: u,
+                        selectedPhrase: sel && sel.length > 0 ? sel : undefined,
+                      });
+                    }}
+                    style={{
+                      fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined,
+                    }}
+                    className={`group/line relative rounded px-1 -mx-1 ${
+                      elementUnits.length > 2 ? "py-0 leading-snug" : "py-0.5"
+                    } transition-colors cursor-text hover:bg-sky-500/10 dark:hover:bg-sky-400/10 ${
+                      isHeading ? "font-bold" : "font-normal"
+                    } ${uIdx > 0 ? (elementUnits.length > 2 ? "mt-0" : "mt-0.5") : ""} break-words`}
+                    title={`Dòng ${uIdx + 1} • Nhấp đúp để sửa dòng này`}
                   >
-                    {isChecked && (
+                    {uIdx === 0 && isChecked && (
                       <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-sky-600 text-white text-[8px] font-bold mr-1 shrink-0 align-middle shadow-2xs pointer-events-none">
                         ✓
                       </span>
                     )}
-                    {el.text}
+
+                    {/* Prominent Badge for Multi-Line Translation Selection */}
+                    {elementUnits.length > 1 && selectedUnitIds.has(u.id) && !isChecked && (
+                      <span
+                        className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-amber-500/25 text-amber-800 dark:text-amber-200 border border-amber-500/40 mr-1.5 align-middle shadow-2xs shrink-0 select-none"
+                        title={`Đã chọn dịch dòng D${uIdx + 1}`}
+                      >
+                        <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                        <span>Dịch D{uIdx + 1}</span>
+                      </span>
+                    )}
+
+                    {displayedContent !== null ? (
+                      <span className="break-words">{displayedContent}</span>
+                    ) : (
+                      <div className="space-y-0.5">
+                        <div className="opacity-70 text-[0.88em] leading-tight break-words">{u.sourceText}</div>
+                        <div className="font-semibold text-sky-600 dark:text-sky-400 leading-tight break-words">
+                          ➔ {transText || "(Chờ dịch)"}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Hover Quick Edit & Quick Multi-Select Line Icons */}
+                    {elementUnits.length > 1 && (
+                      <div className="opacity-0 group-hover/line:opacity-100 transition-opacity ml-1.5 inline-flex items-center gap-1 align-middle select-none">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEdit(u, e);
+                          }}
+                          className="px-1 py-0.2 rounded text-[9px] font-medium bg-sky-500/20 hover:bg-sky-500 text-sky-700 hover:text-white dark:text-sky-300 dark:hover:text-white inline-flex items-center gap-0.5 shadow-2xs cursor-pointer"
+                          title={`Sửa riêng dòng ${uIdx + 1}`}
+                        >
+                          <Pencil className="w-2.5 h-2.5" />
+                          <span className="text-[8px] font-bold">Sửa D{uIdx + 1}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
+                            else toggleUnitSelection(u.id, e);
+                          }}
+                          className={`px-1 py-0.2 rounded text-[8.5px] font-bold border inline-flex items-center gap-0.5 shadow-2xs cursor-pointer transition-colors ${
+                            selectedUnitIds.has(u.id)
+                              ? "bg-amber-500 text-white border-amber-600 shadow-2xs"
+                              : "bg-amber-500/20 hover:bg-amber-500 text-amber-700 hover:text-white dark:text-amber-300 dark:hover:text-white border-amber-500/40"
+                          }`}
+                          title={`Bấm để chọn/bỏ chọn dòng D${uIdx + 1} (Giữ Alt để chỉ chọn riêng dòng này)`}
+                        >
+                          <Sparkles className="w-2 h-2 text-amber-500 group-hover/line:text-white" />
+                          <span>{selectedUnitIds.has(u.id) ? `✓ D${uIdx + 1}` : `D${uIdx + 1}`}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
+                );
+              });
+            }
 
-        {/* Canva-style Floating Action Bar for Selected Element */}
-        {(() => {
-          if (!selectedElementId || draggingElementId || resizingElementId) return null;
-          const allEffective = (() => {
-            const baseElements = layout?.elements || [];
-            const activeBase = baseElements.filter((el) => !canvasState.deletedElementIds.includes(el.id));
-            const slideAdded = canvasState.addedElements.filter(
-              (el) => (el as any).slideIndex === slideNum || !(el as any).slideIndex
-            );
-            return [...activeBase, ...slideAdded];
-          })();
-          const selectedEl = allEffective.find((e) => e.id === selectedElementId);
-          if (!selectedEl) return null;
+            if (el.text) {
+              return (
+                <div
+                  style={{
+                    fontSize: effectiveFontSizePt ? `${effectiveFontSizePt}pt` : undefined,
+                  }}
+                  className={`${isBold ? "font-bold" : "font-normal"} break-words`}
+                >
+                  {isChecked && (
+                    <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-sky-600 text-white text-[8px] font-bold mr-1 shrink-0 align-middle shadow-2xs pointer-events-none">
+                      ✓
+                    </span>
+                  )}
+                  {el.text}
+                </div>
+              );
+            }
 
-          const sPos = canvasState.positions[selectedEl.id] || { left: selectedEl.box.left, top: selectedEl.box.top };
-          const sSize = canvasState.sizes[selectedEl.id] || { width: selectedEl.box.width, height: selectedEl.box.height };
-          const sStyle = canvasState.styles[selectedEl.id] || {};
+            return null;
+          };
 
-          const barTop = sPos.top > 9 ? Math.max(0.5, sPos.top - 6.5) : Math.min(94, sPos.top + sSize.height + 1.2);
-          const barLeft = Math.max(1, Math.min(65, sPos.left));
+          // Group table cells by tableId to render as true HTML <table> with dynamic row heights and zero cut-off
+          const tableGroups = new Map<
+            string,
+            {
+              tableBox: { left: number; top: number; width: number; height: number };
+              tableCols?: number[];
+              rows: Map<number, SlideVisualElement[]>;
+            }
+          >();
+          const standaloneElements: SlideVisualElement[] = [];
 
-          const effectiveFs = sStyle.fontSizePt ?? selectedEl.fontSizePt ?? 11;
-          const isBoldVal = sStyle.isBold !== undefined ? sStyle.isBold : Boolean(selectedEl.isBold);
-          const currentAlign = sStyle.align || (selectedEl.align || "left");
+          // Universal Cell Classification & Fallback Synthesizer:
+          // Ensure EVERY cell across all slides (even if scanned before tableId/tableBox was added)
+          // is grouped into a native HTML table instead of falling back to clipped absolute boxes.
+          const rawCells = allEffective.filter((el) => el.type === "cell");
+          const nonCells = allEffective.filter((el) => el.type !== "cell");
+          standaloneElements.push(...nonCells);
 
-          const elUnits = (selectedEl.unitIds && selectedEl.unitIds.length > 0)
-            ? selectedEl.unitIds.map((id) => unitsMap.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
-            : selectedEl.unitId && unitsMap.get(selectedEl.unitId)
-            ? [unitsMap.get(selectedEl.unitId)!]
-            : [];
-          const primaryU = elUnits[0];
-          const fullText = elUnits.map((u) => getTranslationText(u) || u.sourceText).join(" ") || selectedEl.text || "";
+          // If cells exist without tableId, synthesize tableId and bounding box
+          for (const cell of rawCells) {
+            const effectiveTableId = cell.tableId || `tbl_auto_s${slideNum}`;
+            if (!tableGroups.has(effectiveTableId)) {
+              tableGroups.set(effectiveTableId, {
+                tableBox: cell.tableBox || { left: 0, top: 0, width: 100, height: 100 },
+                tableCols: cell.tableCols,
+                rows: new Map(),
+              });
+            }
+            const tg = tableGroups.get(effectiveTableId)!;
+            const r = cell.tableRow ?? 0;
+            if (!tg.rows.has(r)) tg.rows.set(r, []);
+            tg.rows.get(r)!.push(cell);
+          }
+
+          // Calculate bounding box and column percentages if synthesized or missing
+          for (const [tid, tg] of tableGroups.entries()) {
+            const allCells = Array.from(tg.rows.values()).flat();
+            if (allCells.length > 0) {
+              const needsBox = !tg.tableBox || (tg.tableBox.left === 0 && tg.tableBox.top === 0 && tg.tableBox.width === 100 && tg.tableBox.height === 100);
+              if (needsBox) {
+                const minLeft = Math.min(...allCells.map((c) => c.box.left));
+                const minTop = Math.min(...allCells.map((c) => c.box.top));
+                const maxRight = Math.max(...allCells.map((c) => c.box.left + c.box.width));
+                const maxBottom = Math.max(...allCells.map((c) => c.box.top + c.box.height));
+                tg.tableBox = {
+                  left: Number(minLeft.toFixed(1)),
+                  top: Number(minTop.toFixed(1)),
+                  width: Number(Math.max(10, maxRight - minLeft).toFixed(1)),
+                  height: Number(Math.max(10, maxBottom - minTop).toFixed(1)),
+                };
+              }
+              // If tableCols is missing, derive from unique column X offsets
+              if (!tg.tableCols || tg.tableCols.length === 0) {
+                const colMap = new Map<number, number>();
+                for (const c of allCells) {
+                  const colIdx = c.tableCol ?? 0;
+                  if (!colMap.has(colIdx) || (c.colSpan === 1 && c.box.width > (colMap.get(colIdx) || 0))) {
+                    if (!c.colSpan || c.colSpan === 1) colMap.set(colIdx, c.box.width);
+                  }
+                }
+                const sortedColKeys = Array.from(colMap.keys()).sort((a, b) => a - b);
+                const totalColW = sortedColKeys.reduce((sum, k) => sum + (colMap.get(k) || 1), 0);
+                if (totalColW > 0) {
+                  tg.tableCols = sortedColKeys.map((k) => Number((((colMap.get(k) || 1) / totalColW) * 100).toFixed(2)));
+                }
+              }
+            }
+          }
 
           return (
-            <div
-              style={{
-                position: "absolute",
-                top: `${barTop}%`,
-                left: `${barLeft}%`,
-                zIndex: 90,
-              }}
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/95 dark:bg-slate-900/98 backdrop-blur-md text-white rounded-xl shadow-2xl border border-slate-700/80 text-xs animate-in fade-in zoom-in-95 duration-100 whitespace-nowrap select-none"
-            >
-              {/* Typography Group */}
-              <div className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => handleChangeFontSize(selectedEl.id, -1)}
-                  className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
-                  title="Giảm cỡ chữ (Phím [)"
-                >
-                  <Minus className="w-3 h-3" />
-                </button>
-                <span className="font-mono font-bold text-[10.5px] px-1 text-sky-300">
-                  {effectiveFs}pt
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleChangeFontSize(selectedEl.id, 1)}
-                  className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
-                  title="Tăng cỡ chữ (Phím ])"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
+            <>
+              {/* 1. PPTX TABLES (Rendered as native HTML <table> with in-flow natural expansion, zero cut-off) */}
+              {(() => {
+                const tablesList = Array.from(tableGroups.entries());
+                if (tablesList.length === 0) return null;
 
-              <button
-                type="button"
-                onClick={() => handleToggleBold(selectedEl)}
-                className={`p-1 rounded cursor-pointer transition-colors ${
-                  isBoldVal ? "bg-sky-600 text-white font-bold" : "text-slate-300 hover:text-white hover:bg-slate-800"
-                }`}
-                title="In đậm (Ctrl + B)"
-              >
-                <Bold className="w-3 h-3" />
-              </button>
+                const renderSingleTable = (tableId: string, tg: typeof tablesList[0][1]) => {
+                  const sortedRowKeys = Array.from(tg.rows.keys()).sort((a, b) => a - b);
 
-              <div className="flex items-center bg-slate-800/80 rounded p-0.5">
-                <button
-                  type="button"
-                  onClick={() => handleChangeAlign(selectedEl.id, "left")}
-                  className={`p-1 rounded cursor-pointer ${
-                    currentAlign === "left" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"
-                  }`}
-                  title="Căn trái"
-                >
-                  <AlignLeft className="w-3 h-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleChangeAlign(selectedEl.id, "center")}
-                  className={`p-1 rounded cursor-pointer ${
-                    currentAlign === "center" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"
-                  }`}
-                  title="Căn giữa"
-                >
-                  <AlignCenter className="w-3 h-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleChangeAlign(selectedEl.id, "right")}
-                  className={`p-1 rounded cursor-pointer ${
-                    currentAlign === "right" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"
-                  }`}
-                  title="Căn phải"
-                >
-                  <AlignRight className="w-3 h-3" />
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleAutoFitText(selectedEl, fullText)}
-                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-semibold text-[10px] cursor-pointer transition-colors border border-amber-500/30"
-                title="Tự động co chữ vừa khung (Auto-Fit) chống tràn chữ"
-              >
-                <Sparkles className="w-3 h-3 text-amber-300" />
-                <span>Auto-Fit</span>
-              </button>
-
-              <div className="w-px h-3.5 bg-slate-700/80" />
-
-              {/* Colors Group */}
-              <div className="relative flex items-center gap-0.5">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setColorPopover((prev) =>
-                        prev?.type === "textColor" && prev.elId === selectedEl.id
-                          ? null
-                          : { type: "textColor", elId: selectedEl.id }
-                      )
-                    }
-                    className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white flex flex-col items-center cursor-pointer"
-                    title="Màu chữ"
-                  >
-                    <Type className="w-3 h-3" />
-                    <div
-                      className="w-3 h-0.5 rounded-full mt-0.5"
-                      style={{ backgroundColor: sStyle.textColor || "#FFFFFF" }}
-                    />
-                  </button>
-                  {colorPopover?.type === "textColor" && colorPopover.elId === selectedEl.id && (
-                    <div
-                      className="absolute -top-10 left-0 bg-slate-950 border border-slate-700 rounded-lg p-1.5 shadow-2xl flex items-center gap-1.5 z-50 animate-in fade-in zoom-in-95"
-                      onClick={(e) => e.stopPropagation()}
+                  return (
+                    <table
+                      className="border-collapse table-fixed w-full select-text shadow-xs"
+                      style={{
+                        backgroundColor: "#FFFFFF",
+                        borderSpacing: 0,
+                      }}
                     >
-                      {[
-                        { label: "Đen", hex: "#0f172a" },
-                        { label: "Trắng", hex: "#ffffff" },
-                        { label: "Đỏ", hex: "#dc2626" },
-                        { label: "Xanh", hex: "#2563eb" },
-                        { label: "Cam", hex: "#d97706" },
-                        { label: "Lục", hex: "#16a34a" },
-                      ].map((c) => (
-                        <button
-                          key={c.hex}
-                          type="button"
-                          onClick={() => {
-                            handleChangeColor(selectedEl.id, "textColor", c.hex);
-                            setColorPopover(null);
-                          }}
-                          className="w-4 h-4 rounded-full border border-slate-600 hover:scale-125 transition-transform cursor-pointer shadow-xs"
-                          style={{ backgroundColor: c.hex }}
-                          title={c.label}
-                        />
-                      ))}
+                      {tg.tableCols && tg.tableCols.length > 0 && (
+                        <colgroup>
+                          {tg.tableCols.map((colW, idx) => (
+                            <col key={`col_${idx}`} style={{ width: `${colW}%` }} />
+                          ))}
+                        </colgroup>
+                      )}
+                      <tbody>
+                        {sortedRowKeys.map((rIdx) => {
+                          const rowCells = tg.rows.get(rIdx) || [];
+                          rowCells.sort((a, b) => (a.tableCol ?? 0) - (b.tableCol ?? 0));
+
+                          // Exclude multi-row spanned cells (rowSpan > 1, such as [OQC]) from inflating the height of a single row
+                          const singleRowCells = rowCells.filter((c) => !c.rowSpan || c.rowSpan === 1);
+                          const heightSourceCells = singleRowCells.length > 0 ? singleRowCells : rowCells;
+                          const rowHeights = heightSourceCells
+                            .map((c) => (c.rowSpan && c.rowSpan > 1 ? (c.box.height || 0) / c.rowSpan : (c.box.height || 0)))
+                            .filter((h) => h > 0);
+                          const maxRowHeightPct = rowHeights.length > 0 ? Math.max(...rowHeights) : 0;
+                          const nominalRowHeightPx = maxRowHeightPct > 0 ? Math.round((maxRowHeightPct / 100) * sheetHeight) : undefined;
+                          const effectiveRowHeightPx = nominalRowHeightPx;
+
+                          return (
+                            <tr
+                              key={`tr_${tableId}_${rIdx}`}
+                              style={{
+                                height: effectiveRowHeightPx ? `${effectiveRowHeightPx}px` : undefined,
+                              }}
+                            >
+                              {rowCells.map((el) => {
+                                const isSelected = selectedElementId === el.id;
+                                const style = canvasState.styles[el.id] || {};
+                                const elementUnits = (el.unitIds && el.unitIds.length > 0)
+                                  ? el.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+                                  : el.unitId && unitById.get(el.unitId)
+                                  ? [unitById.get(el.unitId)!]
+                                  : [];
+                                const primaryUnit = elementUnits[0];
+                                const isChecked = elementUnits.length > 0 && elementUnits.every((u) => selectedUnitIds.has(u.id));
+                                const isPartiallyChecked = !isChecked && elementUnits.some((u) => selectedUnitIds.has(u.id));
+
+                                const bgColor =
+                                  style.fill || el.fill || (el.tableRow === 0 ? "#FFFFFF" : "#FFFFFF");
+                                const textColor = style.textColor || getElementTextColor(bgColor, el.textColor);
+                                const isBold = style.isBold !== undefined ? style.isBold : Boolean(el.isBold);
+                                const align = style.align || (el.tableRow === 0 || el.align === "center" || el.isTitle ? "center" : "left");
+                                const effectiveFontSizePt = style.fontSizePt ?? el.fontSizePt;
+
+                                // 1. OpenXML normAutofit fontScale (e.g. 0.85 = 85%)
+                                const openXmlFontScale = el.fontScale;
+
+                                // 2. Canvas Text Metrics Measurement for multi-line or overflowing text
+                                const cellTextContent = elementUnits.map((u) => getTranslationText(u) || u.sourceText).join(" ");
+                                const cellColW = ((el.box.width || 10) / 100) * sheetWidth - 8;
+                                const cellNominalH = Math.max(20, ((el.box.height || 10) / 100) * sheetHeight - 6);
+                                const canvasFit = computeCanvasTextFit(
+                                  cellTextContent,
+                                  cellColW,
+                                  cellNominalH,
+                                  effectiveFontSizePt || 10
+                                );
+
+                                // 3. Density-based scaling
+                                const cellUnitCount = elementUnits.length;
+                                const isDenseTableCell = cellUnitCount > 3 || (openXmlFontScale !== undefined && openXmlFontScale < 1.0);
+                                const densityScale = isDenseTableCell
+                                  ? Math.max(0.72, Math.min(1.0, (el.box.height || 12) / (cellUnitCount * 2.8)))
+                                  : 1.0;
+
+                                const baseAutoFit = openXmlFontScale !== undefined
+                                  ? openXmlFontScale
+                                  : Math.min(densityScale, canvasFit.fontScale);
+
+                                const finalAutoFitScale = Number(baseAutoFit.toFixed(2));
+                                const displayFontSizePt = effectiveFontSizePt
+                                  ? Number((effectiveFontSizePt * fontRatio * finalAutoFitScale).toFixed(1))
+                                  : undefined;
+
+                                const borderStyle = el.border || "1px solid #cbd5e1";
+                                const paddingStyle = el.tableRow === 0 ? "3px 6px" : "2px 5px";
+
+                                const isPending =
+                                  primaryUnit &&
+                                  (primaryUnit.status === "NEEDS_TRANSLATION" ||
+                                    primaryUnit.status === "MIXED_LANGUAGE" ||
+                                    primaryUnit.status === "REVIEW_REQUIRED");
+                                const isDimmed = focusPendingOnly && !isPending && !isSelected && !isChecked;
+
+                                const isMultiRowSpan = Boolean(el.rowSpan && el.rowSpan > 1);
+                                const cellHeightPx = !isMultiRowSpan && el.box.height && el.box.height > 0
+                                  ? Math.round((el.box.height / 100) * sheetHeight)
+                                  : undefined;
+
+                                return (
+                                  <td
+                                    key={el.id}
+                                    rowSpan={el.rowSpan && el.rowSpan > 1 ? el.rowSpan : undefined}
+                                    colSpan={el.colSpan && el.colSpan > 1 ? el.colSpan : undefined}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedElementId(el.id);
+                                      if (elementUnits.length > 0) {
+                                        const shouldSelect = !elementUnits.every((u) => selectedUnitIds.has(u.id));
+                                        for (const u of elementUnits) {
+                                          if (shouldSelect) {
+                                            if (!selectedUnitIds.has(u.id)) onToggleUnit(u.id);
+                                          } else {
+                                            if (selectedUnitIds.has(u.id)) onToggleUnit(u.id);
+                                          }
+                                        }
+                                      }
+                                    }}
+                                    onMouseEnter={() => {
+                                      if (elementUnits.length > 0 || el.text) {
+                                        setHoveredCell({
+                                          element: el,
+                                          units: elementUnits,
+                                        });
+                                      }
+                                    }}
+                                    onMouseLeave={() => {
+                                      setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
+                                    }}
+                                    onDoubleClick={(e) => {
+                                      e.stopPropagation();
+                                      if (primaryUnit) startEdit(primaryUnit, e);
+                                    }}
+                                    onContextMenu={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const sel = window.getSelection()?.toString().trim();
+                                      const x = Math.min(e.clientX, window.innerWidth - 350);
+                                      const y = Math.min(e.clientY, window.innerHeight - 440);
+                                      setSelectedElementId(el.id);
+                                      setContextMenu({
+                                        x: Math.max(10, x),
+                                        y: Math.max(10, y),
+                                        element: el,
+                                        unit: primaryUnit || null,
+                                        selectedPhrase: sel && sel.length > 0 ? sel : undefined,
+                                      });
+                                    }}
+                                    style={{
+                                      backgroundColor: isChecked
+                                        ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#e0f2fe")
+                                        : isPartiallyChecked
+                                        ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#f0f9ff")
+                                        : bgColor,
+                                      color: textColor,
+                                      border: borderStyle,
+                                      padding: paddingStyle,
+                                      textAlign: align,
+                                      verticalAlign: el.tableRow === 0 ? "middle" : "top",
+                                      fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined,
+                                      opacity: isDimmed ? 0.22 : 1.0,
+                                      filter: isDimmed ? "grayscale(80%)" : "none",
+                                      boxSizing: "border-box",
+                                      minHeight: cellHeightPx ? `${cellHeightPx}px` : undefined,
+                                    }}
+                                    className={`transition-colors cursor-pointer select-text relative ${
+                                      isChecked
+                                        ? "ring-2 ring-sky-500 bg-sky-50 dark:bg-sky-950/60 shadow-xs"
+                                        : isPartiallyChecked
+                                        ? "ring-1 ring-sky-400/60 bg-sky-50/40"
+                                        : isSelected
+                                        ? "ring-2 ring-sky-500 shadow-sm"
+                                        : isPending && focusPendingOnly
+                                        ? "ring-2 ring-rose-500 shadow-xs animate-pulse"
+                                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                                    }`}
+                                    title={`${el.shapeName || "Ô dữ liệu"} • Nhấp để chọn dịch • Nhấp đúp để sửa`}
+                                  >
+                                    {isPartiallyChecked && (
+                                      <div className="absolute top-0.5 right-1 pointer-events-none z-10 flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 text-[8px] font-bold shadow-2xs backdrop-blur-xs select-none">
+                                        <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                                        <span>
+                                          Chỉ dịch {elementUnits.map((u, i) => selectedUnitIds.has(u.id) ? `D${i + 1}` : null).filter(Boolean).join(", ")}/{elementUnits.length}
+                                        </span>
+                                      </div>
+                                    )}
+                                    <div
+                                      style={{
+                                        fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined,
+                                        lineHeight: displayFontSizePt
+                                          ? `${Math.max(8.5, Math.round(displayFontSizePt * (isDenseTableCell || isPresentationMode ? 1.14 : 1.25)))}pt`
+                                          : undefined,
+                                        overflowWrap: "break-word",
+                                        wordBreak: "break-word",
+                                      }}
+                                      className={`w-full ${isDenseTableCell || isPresentationMode ? "space-y-0" : "space-y-0.5"}`}
+                                    >
+                                      {renderElementTextBody(
+                                        el,
+                                        elementUnits,
+                                        isChecked,
+                                        isBold,
+                                        effectiveFontSizePt,
+                                        displayFontSizePt,
+                                        false,
+                                        { left: el.box.left, top: el.box.top },
+                                        { width: el.box.width, height: el.box.height }
+                                      )}
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                };
+
+                if (tablesList.length === 1) {
+                  const [tableId, tg] = tablesList[0];
+                  const tableCellZ = tg.rows ? Array.from(tg.rows.values()).flat().map((c) => canvasState.styles[c.id]?.zIndex).find((z) => z !== undefined) : undefined;
+                  const effectiveTableZ = canvasState.styles[tableId]?.zIndex ?? tableCellZ ?? 5;
+                  return (
+                    <div
+                      key={`table_wrapper_${tableId}`}
+                      style={{
+                        position: "relative",
+                        marginLeft: `${tg.tableBox.left}%`,
+                        marginTop: `${Math.round((tg.tableBox.top / 100) * sheetHeight)}px`,
+                        width: `${tg.tableBox.width}%`,
+                        zIndex: effectiveTableZ,
+                        paddingBottom: "24px",
+                      }}
+                      className="select-text"
+                    >
+                      {renderSingleTable(tableId, tg)}
                     </div>
-                  )}
-                </div>
+                  );
+                }
 
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setColorPopover((prev) =>
-                        prev?.type === "fill" && prev.elId === selectedEl.id
-                          ? null
-                          : { type: "fill", elId: selectedEl.id }
-                      )
-                    }
-                    className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white flex flex-col items-center cursor-pointer"
-                    title="Màu nền ô"
-                  >
-                    <Palette className="w-3 h-3" />
+                // Multiple tables: Check if side-by-side (like Slide 2)
+                const sortedByLeft = [...tablesList].sort((a, b) => a[1].tableBox.left - b[1].tableBox.left);
+                const isSideBySide = sortedByLeft[0][1].tableBox.left + sortedByLeft[0][1].tableBox.width <= sortedByLeft[1][1].tableBox.left + 5;
+                const minTop = Math.min(...sortedByLeft.map(([, tg]) => tg.tableBox.top));
+
+                if (isSideBySide) {
+                  return (
                     <div
-                      className="w-3 h-0.5 rounded-full mt-0.5"
-                      style={{ backgroundColor: sStyle.fill || selectedEl.fill || "transparent" }}
-                    />
-                  </button>
-                  {colorPopover?.type === "fill" && colorPopover.elId === selectedEl.id && (
-                    <div
-                      className="absolute -top-10 left-0 bg-slate-950 border border-slate-700 rounded-lg p-1.5 shadow-2xl flex items-center gap-1.5 z-50 animate-in fade-in zoom-in-95"
-                      onClick={(e) => e.stopPropagation()}
+                      className="w-full flex items-start select-text"
+                      style={{
+                        position: "relative",
+                        marginTop: `${Math.round((minTop / 100) * sheetHeight)}px`,
+                        paddingBottom: "24px",
+                        zIndex: 5,
+                      }}
                     >
-                      {[
-                        { label: "Trong suốt", hex: "transparent" },
-                        { label: "Trắng", hex: "#ffffff" },
-                        { label: "Cam SOP", hex: "#ED7D31" },
-                        { label: "Cyan", hex: "#00B0F0" },
-                        { label: "Lục", hex: "#70AD47" },
-                        { label: "Xám tối", hex: "#1e293b" },
-                      ].map((c) => (
-                        <button
-                          key={c.hex}
-                          type="button"
-                          onClick={() => {
-                            handleChangeColor(selectedEl.id, "fill", c.hex);
-                            setColorPopover(null);
-                          }}
-                          className="w-4 h-4 rounded-full border border-slate-600 hover:scale-125 transition-transform cursor-pointer shadow-xs"
+                      {sortedByLeft.map(([tableId, tg], idx) => {
+                        const prevRight = idx === 0 ? 0 : (sortedByLeft[idx - 1][1].tableBox.left + sortedByLeft[idx - 1][1].tableBox.width);
+                        const leftMarginPct = Math.max(0, tg.tableBox.left - prevRight);
+                        const tableCellZ = tg.rows ? Array.from(tg.rows.values()).flat().map((c) => canvasState.styles[c.id]?.zIndex).find((z) => z !== undefined) : undefined;
+                        const effectiveTableZ = canvasState.styles[tableId]?.zIndex ?? tableCellZ ?? 5;
+                        return (
+                          <div
+                            key={`table_wrapper_${tableId}`}
+                            style={{
+                              width: `${tg.tableBox.width}%`,
+                              marginLeft: `${leftMarginPct}%`,
+                              zIndex: effectiveTableZ,
+                            }}
+                            className="select-text"
+                          >
+                            {renderSingleTable(tableId, tg)}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                // Vertically stacked tables
+                return (
+                  <div
+                    className="w-full flex flex-col select-text"
+                    style={{
+                      position: "relative",
+                      marginTop: `${Math.round((minTop / 100) * sheetHeight)}px`,
+                      paddingBottom: "24px",
+                      zIndex: 5,
+                    }}
+                  >
+                    {tablesList.map(([tableId, tg], idx) => {
+                      const tableCellZ = tg.rows ? Array.from(tg.rows.values()).flat().map((c) => canvasState.styles[c.id]?.zIndex).find((z) => z !== undefined) : undefined;
+                      const effectiveTableZ = canvasState.styles[tableId]?.zIndex ?? tableCellZ ?? 5;
+                      return (
+                        <div
+                          key={`table_wrapper_${tableId}`}
                           style={{
-                            backgroundColor: c.hex === "transparent" ? "#334155" : c.hex,
-                            backgroundImage:
-                              c.hex === "transparent"
-                                ? "linear-gradient(45deg, #1e293b 25%, transparent 25%, transparent 75%, #1e293b 75%, #1e293b), linear-gradient(45deg, #1e293b 25%, transparent 25%, transparent 75%, #1e293b 75%, #1e293b)"
-                                : undefined,
+                            width: `${tg.tableBox.width}%`,
+                            marginLeft: `${tg.tableBox.left}%`,
+                            marginTop: idx > 0 ? "16px" : undefined,
+                            zIndex: effectiveTableZ,
                           }}
-                          title={c.label}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="w-px h-3.5 bg-slate-700/80" />
-
-              {/* Layer Ordering Group */}
-              <div className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => handleLayerOrder(selectedEl.id, "forward")}
-                  className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
-                  title="Đưa lên trên (Bring Forward)"
-                >
-                  <ArrowUp className="w-3 h-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLayerOrder(selectedEl.id, "backward")}
-                  className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
-                  title="Đưa xuống dưới (Send Backward)"
-                >
-                  <ArrowDown className="w-3 h-3" />
-                </button>
-              </div>
-
-              <div className="w-px h-3.5 bg-slate-700/80" />
-
-              {/* Actions Group: Multi-line Edit Selector & Tools */}
-              <div className="flex items-center gap-1">
-                {elUnits.length > 1 ? (
-                  <div className="flex items-center gap-1 bg-slate-800/90 rounded-lg px-1.5 py-0.5 border border-sky-500/30">
-                    <Pencil className="w-3 h-3 text-sky-400 shrink-0" />
-                    <span className="text-[10px] text-slate-300 font-medium">Sửa:</span>
-                    <div className="flex items-center gap-0.5">
-                      {elUnits.map((u, idx) => (
-                        <button
-                          key={u.id}
-                          type="button"
-                          onClick={(e) => startEdit(u, e)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all ${
-                            editingUnitId === u.id
-                              ? "bg-sky-500 text-white shadow-xs scale-105"
-                              : "bg-slate-700/80 hover:bg-sky-600 text-slate-200 hover:text-white"
-                          }`}
-                          title={`Sửa dòng ${idx + 1}: "${u.sourceText.slice(0, 35)}..."`}
+                          className="select-text"
                         >
-                          D{idx + 1}
-                        </button>
-                      ))}
+                          {renderSingleTable(tableId, tg)}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {/* 2. STANDALONE ELEMENTS (Pictures, Banners, Free-floating Shapes) */}
+              {standaloneElements.map((el, elIdx) => {
+                const isSelected = selectedElementId === el.id;
+                const pos = canvasState.positions[el.id] || { left: el.box.left, top: el.box.top };
+                const size = canvasState.sizes[el.id] || { width: el.box.width, height: el.box.height };
+                const style = canvasState.styles[el.id] || {};
+                const isDragging = draggingElementId === el.id;
+                const isResizing = resizingElementId === el.id;
+
+                // Picture Shapes
+                if (el.type === "image") {
+                  if (imageVisibility === "hidden") return null;
+                  return (
+                    <div
+                      key={el.id}
+                      onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
+                      onClick={() => {
+                        if (justFinishedDraggingRef.current) return;
+                        setSelectedElementId(el.id);
+                      }}
+                      style={{
+                        position: "absolute",
+                        left: `${pos.left}%`,
+                        top: `${Math.round((pos.top / 100) * sheetHeight)}px`,
+                        width: `${size.width}%`,
+                        height: `${Math.round((size.height / 100) * sheetHeight)}px`,
+                        cursor: isDragging ? "grabbing" : "grab",
+                        zIndex: isDragging ? 100 : (style.zIndex !== undefined ? style.zIndex : (10 + elIdx * 2)),
+                      }}
+                      className={`rounded-lg border-2 border-dashed transition-all flex flex-col items-center justify-center p-1 overflow-hidden select-none ${
+                        isDragging
+                          ? "border-sky-500 bg-sky-950/60 ring-2 ring-sky-400 shadow-2xl scale-[1.01]"
+                          : isSelected
+                          ? "border-sky-500 bg-sky-500/10 ring-2 ring-sky-400"
+                          : "border-slate-300 dark:border-slate-700 bg-slate-100/80 dark:bg-slate-800/50 hover:border-sky-400 text-slate-500"
+                      }`}
+                      title={`${el.shapeName || "Khung ảnh"} • Giữ chuột trái để kéo di chuyển`}
+                    >
+                      {isDragging && (
+                        <div className="absolute -top-6 left-0 bg-slate-900/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap">
+                          <Move className="w-2.5 h-2.5 text-sky-400" />
+                          <span>X: {pos.left}% Y: {pos.top}%</span>
+                        </div>
+                      )}
+                      {isSelected && !isDragging && (
+                        <>
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "nw", el, sheetWidth, sheetHeight)} className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform" />
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "ne", el, sheetWidth, sheetHeight)} className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform" />
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "sw", el, sheetWidth, sheetHeight)} className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform" />
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "se", el, sheetWidth, sheetHeight)} className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform" />
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "n", el, sheetWidth, sheetHeight)} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform" />
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "s", el, sheetWidth, sheetHeight)} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform" />
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "w", el, sheetWidth, sheetHeight)} className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform" />
+                          <div onMouseDown={(e) => handleResizeMouseDown(e, "e", el, sheetWidth, sheetHeight)} className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform" />
+                        </>
+                      )}
+                      <Camera className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 mb-0.5" />
+                      <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-400 text-center leading-tight line-clamp-1 px-1">
+                        {el.shapeName || "Khung ảnh kỹ thuật"}
+                      </span>
+                    </div>
+                  );
+                }
+
+                // Text Box or Free-floating Shape
+                const elementUnits = (el.unitIds && el.unitIds.length > 0)
+                  ? el.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+                  : el.unitId && unitById.get(el.unitId)
+                  ? [unitById.get(el.unitId)!]
+                  : [];
+
+                const primaryUnit = elementUnits[0];
+                const isChecked = elementUnits.length > 0 && elementUnits.every((u) => selectedUnitIds.has(u.id));
+                const isPartiallyChecked = !isChecked && elementUnits.some((u) => selectedUnitIds.has(u.id));
+
+                const isSmallMarker =
+                  (size.width <= 5 && size.height <= 6) ||
+                  (!primaryUnit && size.width <= 6 && size.height <= 6);
+                const isOval =
+                  el.shapeName?.toLowerCase().includes("oval") || el.shapeName?.toLowerCase().includes("circle");
+                const isTopBanner =
+                  el.fill === "#FF8810" || el.fill === "#ED7D31" || (pos.top < 3 && size.width >= 75);
+                const isCyanHeader = el.fill === "#00B0F0";
+                const isBadge = el.fill === "#92D050" || el.fill === "#FF0000" || el.fill === "#C00000";
+
+                const bgColor =
+                  style.fill || el.fill || (el.type === "cell" ? "#FFFFFF" : "transparent");
+                const textColor = style.textColor || getElementTextColor(bgColor, el.textColor);
+
+                const isBold = style.isBold !== undefined ? style.isBold : Boolean(el.isBold);
+                const align = style.align || (isSmallMarker || isTopBanner || isCyanHeader || isBadge || el.align === "center" || el.isTitle ? "center" : "left");
+                const effectiveFontSizePt = style.fontSizePt ?? el.fontSizePt;
+                const baseDisplayFontSizePt = effectiveFontSizePt
+                  ? Number((effectiveFontSizePt * fontRatio).toFixed(1))
+                  : undefined;
+
+                // 2.A PowerPoint AutoFit: shrink text proportionally when character/line count exceeds nominal box height
+                const totalUnits = elementUnits.length;
+                const openXmlShapeScale = el.fontScale;
+                const shapeFullText = elementUnits.map((u) => getTranslationText(u) || u.sourceText).join(" ");
+                const boxWpx = Math.max(40, ((size.width || 20) / 100) * sheetWidth);
+                const boxHpx = Math.max(20, ((size.height || 10) / 100) * sheetHeight);
+
+                // Canvas measurement for shapes
+                const canvasFit = computeCanvasTextFit(
+                  shapeFullText,
+                  boxWpx,
+                  boxHpx,
+                  baseDisplayFontSizePt || 10
+                );
+
+                // Estimate wrapped line count per paragraph
+                const charWidthPx = (baseDisplayFontSizePt || 10) * 0.58;
+                const charsPerLine = Math.max(10, Math.floor(boxWpx / charWidthPx));
+                const estimatedLines = elementUnits.reduce((acc, u) => {
+                  const t = getTranslationText(u) || u.sourceText || "";
+                  return acc + Math.max(1, Math.ceil(t.length / charsPerLine));
+                }, 0);
+                const singleLineHeightPx = (baseDisplayFontSizePt || 10) * 1.25 * 1.33;
+                const totalRequiredHeightPx = estimatedLines * singleLineHeightPx;
+
+                let estimatedScale = 1.0;
+                if (totalRequiredHeightPx > boxHpx) {
+                  // Co font tương ứng để vừa vặn hơn trong hộp
+                  estimatedScale = Math.max(0.68, Math.min(1.0, (boxHpx / totalRequiredHeightPx) * 0.95));
+                }
+
+                const computedShapeScale = Math.min(canvasFit.fontScale, estimatedScale);
+                const isDenseMultiLine = totalUnits > 2 || estimatedLines > 3 || computedShapeScale < 1.0;
+
+                const autoFitScale = openXmlShapeScale !== undefined
+                  ? Math.min(openXmlShapeScale, computedShapeScale)
+                  : computedShapeScale < 1.0
+                  ? computedShapeScale
+                  : 1.0;
+
+                const displayFontSizePt = baseDisplayFontSizePt
+                  ? Number((baseDisplayFontSizePt * autoFitScale).toFixed(1))
+                  : undefined;
+
+                const isCentered = align === "center";
+
+                // 1.A Title Width Expansion & Visibility:
+                const isTransparentBox = !bgColor || bgColor === "transparent" || bgColor === "#FFFFFF";
+                const isSingleLineHeader = (size.height <= 6.5 || el.isTitle) && elementUnits.length <= 1;
+
+                const borderStyle = isSmallMarker
+                  ? isOval
+                    ? "1px solid rgba(0,0,0,0.15)"
+                    : undefined
+                  : el.border || (el.type === "cell" ? "1px solid #cbd5e1" : isSelected ? "2px solid #0284c7" : undefined);
+
+                const isUltraCompact = size.height < 4.5;
+                const isCompact = size.height < 7.0;
+
+                const paddingStyle = isSmallMarker
+                  ? "0"
+                  : isTopBanner
+                  ? "3px 8px"
+                  : isCyanHeader
+                  ? "3px 6px"
+                  : el.type === "cell"
+                  ? isUltraCompact
+                    ? "1px 3px"
+                    : isCompact
+                    ? "2px 5px"
+                    : "4px 8px"
+                  : elementUnits.length > 3
+                  ? "1px 3px"
+                  : "2px 4px";
+
+                const isPending =
+                  primaryUnit &&
+                  (primaryUnit.status === "NEEDS_TRANSLATION" ||
+                    primaryUnit.status === "MIXED_LANGUAGE" ||
+                    primaryUnit.status === "REVIEW_REQUIRED");
+                const isDimmed = focusPendingOnly && !isPending && !isSelected && !isChecked;
+
+                return (
+                  <div
+                    key={el.id}
+                    onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
+                    onClick={(e) => {
+                      if (justFinishedDraggingRef.current) {
+                        e.stopPropagation();
+                        return;
+                      }
+                      e.stopPropagation();
+                      setSelectedElementId(el.id);
+                      if (elementUnits.length > 0) {
+                        const shouldSelect = !elementUnits.every((u) => selectedUnitIds.has(u.id));
+                        for (const u of elementUnits) {
+                          if (shouldSelect) {
+                            if (!selectedUnitIds.has(u.id)) onToggleUnit(u.id);
+                          } else {
+                            if (selectedUnitIds.has(u.id)) onToggleUnit(u.id);
+                          }
+                        }
+                      }
+                    }}
+                    onMouseEnter={() => {
+                      if (elementUnits.length > 0 || el.text) {
+                        setHoveredCell({
+                          element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
+                          units: elementUnits,
+                        });
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
+                    }}
+                    onDoubleClick={(e) => {
+                      if (justFinishedDraggingRef.current) return;
+                      e.stopPropagation();
+                      if (primaryUnit) startEdit(primaryUnit, e);
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const sel = window.getSelection()?.toString().trim();
+                      const x = Math.min(e.clientX, window.innerWidth - 350);
+                      const y = Math.min(e.clientY, window.innerHeight - 440);
+                      setSelectedElementId(el.id);
+                      setContextMenu({
+                        x: Math.max(10, x),
+                        y: Math.max(10, y),
+                        element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
+                        unit: primaryUnit || null,
+                        selectedPhrase: sel && sel.length > 0 ? sel : undefined,
+                      });
+                    }}
+                    style={{
+                      position: "absolute",
+                      left: `${pos.left}%`,
+                      top: `${Math.round((pos.top / 100) * sheetHeight)}px`,
+                      width: isSingleLineHeader && isTransparentBox ? "auto" : `${size.width}%`,
+                      minWidth: `${size.width}%`,
+                      maxWidth: isSingleLineHeader && isTransparentBox ? `${Math.min(50, Math.max(size.width, 36))}%` : `${size.width}%`,
+                      minHeight: `${Math.round((size.height / 100) * sheetHeight)}px`,
+                      height: isResizing || isDragging ? `${Math.round((size.height / 100) * sheetHeight)}px` : undefined,
+                      maxHeight: isResizing || isDragging ? `${Math.round((size.height / 100) * sheetHeight)}px` : undefined,
+                      overflow: isResizing || isDragging ? "hidden" : "visible",
+                      backgroundColor: isChecked
+                        ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#e0f2fe")
+                        : isPartiallyChecked
+                        ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#f0f9ff")
+                        : bgColor,
+                      color: textColor,
+                      border: borderStyle,
+                      padding: paddingStyle,
+                      borderRadius: isOval ? "9999px" : isBadge ? "4px" : isTopBanner ? "0px" : undefined,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: isCentered ? "center" : "flex-start",
+                      alignItems: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start",
+                      textAlign: align,
+                      fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined,
+                      opacity: isDimmed ? 0.22 : 1.0,
+                      filter: isDimmed ? "grayscale(80%)" : "none",
+                      transition: isDragging || isResizing
+                        ? "none"
+                        : "opacity 0.2s, filter 0.2s, border-color 0.15s, box-shadow 0.15s, background-color 0.15s",
+                      boxSizing: "border-box",
+                      cursor: isDragging ? "grabbing" : isResizing ? "default" : "grab",
+                      zIndex: isDragging ? 100 : isResizing ? 90 : isSelected ? 80 : (style.zIndex !== undefined ? style.zIndex : isTopBanner ? 20 : (10 + elIdx * 2)),
+                      userSelect: isDragging || isResizing ? "none" : undefined,
+                    }}
+                    className={`group select-text ${
+                      isDragging
+                        ? "ring-2 ring-indigo-500 shadow-2xl scale-[1.01]"
+                        : isChecked
+                        ? "ring-2 ring-sky-500 shadow-md"
+                        : isPartiallyChecked
+                        ? "ring-2 ring-sky-400/70 shadow-sm"
+                        : isSelected
+                        ? "ring-2 ring-sky-500 shadow-lg"
+                        : isPending && focusPendingOnly
+                        ? "ring-2 ring-rose-500 shadow-md animate-pulse"
+                        : "hover:ring-1 hover:ring-sky-400/70"
+                    }`}
+                    title={`${el.shapeName || "Phần tử"} • Kéo để di chuyển • 8 neo để co giãn • Nhấp đúp để sửa`}
+                  >
+                    {isDragging && (
+                      <div className="absolute -top-6 left-0 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
+                        <Move className="w-2.5 h-2.5 text-sky-400" />
+                        <span>X: {pos.left}% Y: {pos.top}%</span>
+                      </div>
+                    )}
+
+                    {isSelected && !isDragging && (
+                      <>
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "nw", el, sheetWidth, sheetHeight)} className="absolute -top-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform" />
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "ne", el, sheetWidth, sheetHeight)} className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform" />
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "sw", el, sheetWidth, sheetHeight)} className="absolute -bottom-1.5 -left-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nesw-resize z-40 hover:scale-125 transition-transform" />
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "se", el, sheetWidth, sheetHeight)} className="absolute -bottom-1.5 -right-1.5 w-2.5 h-2.5 bg-white border-2 border-sky-500 rounded-2xs shadow-md cursor-nwse-resize z-40 hover:scale-125 transition-transform" />
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "n", el, sheetWidth, sheetHeight)} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform" />
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "s", el, sheetWidth, sheetHeight)} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-2 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ns-resize z-40 hover:scale-125 transition-transform" />
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "w", el, sheetWidth, sheetHeight)} className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform" />
+                        <div onMouseDown={(e) => handleResizeMouseDown(e, "e", el, sheetWidth, sheetHeight)} className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-2 h-3.5 bg-white border-2 border-sky-500 rounded-full shadow-md cursor-ew-resize z-40 hover:scale-125 transition-transform" />
+                      </>
+                    )}
+
+                    {resizeInfo && resizeInfo.elId === el.id && (
+                      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
+                        <span>W: {resizeInfo.width}% • H: {resizeInfo.height}%</span>
+                      </div>
+                    )}
+
+                    {isPartiallyChecked && (
+                      <div className="absolute top-0.5 right-1 pointer-events-none z-10 flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 text-[8px] font-bold shadow-2xs backdrop-blur-xs select-none">
+                        <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                        <span>
+                          Chỉ dịch {elementUnits.map((u, i) => selectedUnitIds.has(u.id) ? `D${i + 1}` : null).filter(Boolean).join(", ")}/{elementUnits.length}
+                        </span>
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined,
+                        lineHeight: displayFontSizePt ? `${Math.max(8.5, Math.round(displayFontSizePt * (isDenseMultiLine ? 1.12 : 1.18)))}pt` : (isDenseMultiLine ? "1.12" : "1.2"),
+                        overflowWrap: "break-word",
+                        wordBreak: "break-word",
+                        whiteSpace: isSingleLineHeader ? "normal" : undefined,
+                      }}
+                      className={`w-full ${
+                        displayFontSizePt
+                          ? (elementUnits.length > 2 ? "space-y-0" : "space-y-0.5")
+                          : isTopBanner
+                          ? "text-xs sm:text-sm font-bold tracking-wide"
+                          : isCyanHeader
+                          ? "text-[11px] sm:text-[12px] font-bold uppercase tracking-wider"
+                          : isBadge
+                          ? "text-[11px] sm:text-[12px] font-bold tracking-wider"
+                          : isSmallMarker
+                          ? "text-[9px] font-bold leading-none text-center"
+                          : isUltraCompact
+                          ? "text-[8.5px] sm:text-[9.5px] leading-tight"
+                          : isCompact
+                          ? "text-[9.5px] sm:text-[10.5px] leading-snug"
+                          : "text-[10px] sm:text-[11px] lg:text-[12px] leading-snug space-y-0.5"
+                      }`}
+                    >
+                      {renderElementTextBody(
+                        el,
+                        elementUnits,
+                        isChecked,
+                        isBold,
+                        effectiveFontSizePt,
+                        displayFontSizePt,
+                        isUltraCompact,
+                        pos,
+                        size
+                      )}
                     </div>
                   </div>
-                ) : primaryU ? (
-                  <button
-                    type="button"
-                    onClick={(e) => startEdit(primaryU, e)}
-                    className="p-1 rounded hover:bg-slate-800 text-sky-400 hover:text-sky-300 cursor-pointer"
-                    title="Sửa chữ trực tiếp (Enter / Nhấp đúp)"
-                  >
-                    <Pencil className="w-3 h-3" />
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => handleDuplicateElement(selectedEl)}
-                  className="p-1 rounded hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 cursor-pointer"
-                  title="Nhân bản ô (Ctrl + D)"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteElement(selectedEl.id)}
-                  className="p-1 rounded hover:bg-slate-800 text-rose-400 hover:text-rose-300 cursor-pointer"
-                  title="Xóa ô này (Delete / Backspace)"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-
-              <div className="w-px h-3.5 bg-slate-700/80" />
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedElementId(null)}
-                className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
-                title="Bỏ chọn (Esc)"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
+                );
+              })}
+            </>
           );
         })()}
+
+        {/* Floating Action Bar moved to Top Office 365 Ribbon Toolbar */}
       </div>
     );
   };
@@ -2480,115 +3137,374 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       }`}
     >
       {/* 1. Sleek & Compact Header Bar */}
-      <div className="bg-slate-50 dark:bg-[#121622] px-3 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800 shrink-0 space-y-1.5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* Left: Slide Pager */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={handlePrevSlide}
-              disabled={currentSlide <= 1}
-              className="px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs"
-              title="Slide trước (Phím A hoặc ←)"
-            >
-              <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300">
-                A
-              </kbd>
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-
-            <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xs">
-              <Presentation className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                Slide {currentSlide} / {report.totalSlides}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleNextSlide}
-              disabled={currentSlide >= report.totalSlides}
-              className="px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs"
-              title="Slide tiếp theo (Phím D hoặc →)"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-              <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300">
-                D
-              </kbd>
-            </button>
-
-            {pendingSlideNumbers.length > 0 && (
-              <button
-                type="button"
-                onClick={handleNextPendingSlide}
-                className="flex items-center gap-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
-                title="Chuyển tới slide có đoạn chưa dịch tiếp theo"
-              >
-                <Sparkles className="w-3 h-3 text-rose-500" />
-                <span>Đến slide thiếu ({pendingSlideNumbers.length})</span>
-              </button>
-            )}
-          </div>
-
-          {/* Center: Presentation Mode */}
-          <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-full border border-slate-200 dark:border-slate-800 text-xs shadow-2xs">
-            <button
-              type="button"
-              onClick={() => setLayoutMode("pptx")}
-              className={`px-2.5 py-0.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                layoutMode === "pptx"
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-2xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-              title="Xem trước Slide PPTX thực tế 1:1"
-            >
-              <Presentation className="w-3 h-3 text-orange-400" />
-              <span>Xem trước PPTX (1:1)</span>
-            </button>
-
+      <div className="bg-slate-50 dark:bg-[#121622] px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shrink-0 space-y-1.5">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          {/* Office 365 Ribbon Toolbar & Presentation Mode */}
+          <div className="flex-1 min-w-0 flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-xs transition-all overflow-x-auto no-scrollbar">
+            {/* ISQ Dual View Mode Toggle (Shown only when partner slide exists) */}
             {partnerSlideNum && (
               <button
                 type="button"
-                onClick={() => setLayoutMode("isq_dual")}
-                className={`px-2.5 py-0.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                onClick={() => setLayoutMode((m) => (m === "isq_dual" ? "pptx" : "isq_dual"))}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
                   layoutMode === "isq_dual"
-                    ? "bg-sky-600 text-white shadow-2xs"
-                    : "text-sky-700 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                    ? "bg-sky-600 text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-sky-700 dark:text-sky-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                 }`}
                 title={`So sánh đối chiếu song song: Slide ${dualSlideInfo?.viNum} (VI) ⟷ Slide ${dualSlideInfo?.enNum} (EN)`}
               >
-                <Columns className="w-3 h-3 text-sky-400" />
-                <span>So sánh ISQ (VI ⟷ EN)</span>
+                <Columns className="w-3.5 h-3.5 text-sky-500" />
+                <span>So sánh ISQ</span>
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={() => setLayoutMode("cards")}
-              className={`px-2.5 py-0.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                layoutMode === "cards"
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-2xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-              title="Xem danh sách thẻ tuần tự"
-            >
-              <FileText className="w-3 h-3 text-blue-400" />
-              <span>Danh sách thẻ</span>
-            </button>
+            {/* Microsoft Office 365 Formatting Ribbon */}
+            {inspectedElement ? (
+              <div className="flex items-center gap-1.5 shrink-0 pl-1.5 border-l border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-1 duration-150">
+                {/* Office 365 Ribbon Indicator Badge */}
+                <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800 px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline">
+                  Định dạng ô
+                </span>
 
-            <button
-              type="button"
-              onClick={() => setLayoutMode("split")}
-              className={`px-2.5 py-0.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1 hidden md:flex ${
-                layoutMode === "split"
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-2xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-              title="Chế độ chia đôi"
-            >
-              <Split className="w-3 h-3 text-purple-400" />
-              <span>Chia đôi</span>
-            </button>
+                {/* Typography: Font Size Group */}
+                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleChangeFontSize(inspectedElement.id, -1)}
+                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors"
+                    title="Giảm cỡ chữ (Phím [ hoặc Alt + Cuộn chuột xuống)"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="font-mono font-bold text-[11px] px-1 text-slate-800 dark:text-slate-100 min-w-[28px] text-center" title="Cỡ chữ hiện tại • Alt + Cuộn chuột để tăng/giảm nhanh">
+                    {canvasState.styles[inspectedElement.id]?.fontSizePt ?? inspectedElement.fontSizePt ?? 11}pt
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeFontSize(inspectedElement.id, 1)}
+                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors"
+                    title="Tăng cỡ chữ (Phím ] hoặc Alt + Cuộn chuột lên)"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* In đậm Bold */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleBold(inspectedElement)}
+                  className={`p-1.5 rounded-lg border transition-all cursor-pointer shrink-0 ${
+                    (canvasState.styles[inspectedElement.id]?.isBold !== undefined
+                      ? canvasState.styles[inspectedElement.id]?.isBold
+                      : Boolean(inspectedElement.isBold))
+                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white font-bold shadow-2xs"
+                      : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  }`}
+                  title="In đậm (Ctrl + B)"
+                >
+                  <Bold className="w-3 h-3" />
+                </button>
+
+                {/* Căn lề Alignment */}
+                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleChangeAlign(inspectedElement.id, "left")}
+                    className={`p-1 rounded cursor-pointer transition-colors ${
+                      (canvasState.styles[inspectedElement.id]?.align || inspectedElement.align || "left") === "left"
+                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
+                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                    title="Căn trái"
+                  >
+                    <AlignLeft className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeAlign(inspectedElement.id, "center")}
+                    className={`p-1 rounded cursor-pointer transition-colors ${
+                      (canvasState.styles[inspectedElement.id]?.align || inspectedElement.align) === "center"
+                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
+                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                    title="Căn giữa"
+                  >
+                    <AlignCenter className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeAlign(inspectedElement.id, "right")}
+                    className={`p-1 rounded cursor-pointer transition-colors ${
+                      (canvasState.styles[inspectedElement.id]?.align || inspectedElement.align) === "right"
+                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
+                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                    title="Căn phải"
+                  >
+                    <AlignRight className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* Auto-Fit */}
+                <button
+                  type="button"
+                  onClick={() => handleAutoFitText(inspectedElement, inspectedFullText)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-200 font-bold text-[10px] cursor-pointer transition-colors border border-amber-400/40 shadow-2xs shrink-0"
+                  title="Tự động co chữ vừa khung (Auto-Fit) chống tràn chữ"
+                >
+                  <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                  <span>Auto-Fit</span>
+                </button>
+
+                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
+
+                {/* Màu sắc Colors (Popover mở xuống dưới) */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setColorPopover((prev) =>
+                          prev?.type === "textColor" && prev.elId === inspectedElement.id
+                            ? null
+                            : { type: "textColor", elId: inspectedElement.id }
+                        )
+                      }
+                      className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center cursor-pointer transition-colors"
+                      title="Màu chữ"
+                    >
+                      <Type className="w-3 h-3" />
+                      <div
+                        className="w-3.5 h-0.5 rounded-full mt-0.5"
+                        style={{ backgroundColor: canvasState.styles[inspectedElement.id]?.textColor || "#0f172a" }}
+                      />
+                    </button>
+                    {colorPopover?.type === "textColor" && colorPopover.elId === inspectedElement.id && (
+                      <div
+                        className="absolute top-full mt-1.5 left-0 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 shadow-2xl flex items-center gap-1.5 z-50 animate-in fade-in zoom-in-95"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {[
+                          { label: "Đen", hex: "#0f172a" },
+                          { label: "Trắng", hex: "#ffffff" },
+                          { label: "Đỏ", hex: "#dc2626" },
+                          { label: "Xanh", hex: "#2563eb" },
+                          { label: "Cam", hex: "#d97706" },
+                          { label: "Lục", hex: "#16a34a" },
+                        ].map((c) => (
+                          <button
+                            key={c.hex}
+                            type="button"
+                            onClick={() => {
+                              handleChangeColor(inspectedElement.id, "textColor", c.hex);
+                              setColorPopover(null);
+                            }}
+                            className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 hover:scale-125 transition-transform cursor-pointer shadow-xs"
+                            style={{ backgroundColor: c.hex }}
+                            title={c.label}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setColorPopover((prev) =>
+                          prev?.type === "fill" && prev.elId === inspectedElement.id
+                            ? null
+                            : { type: "fill", elId: inspectedElement.id }
+                        )
+                      }
+                      className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center cursor-pointer transition-colors"
+                      title="Màu nền ô"
+                    >
+                      <Palette className="w-3 h-3" />
+                      <div
+                        className="w-3.5 h-0.5 rounded-full mt-0.5"
+                        style={{ backgroundColor: canvasState.styles[inspectedElement.id]?.fill || inspectedElement.fill || "transparent" }}
+                      />
+                    </button>
+                    {colorPopover?.type === "fill" && colorPopover.elId === inspectedElement.id && (
+                      <div
+                        className="absolute top-full mt-1.5 left-0 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 shadow-2xl flex items-center gap-1.5 z-50 animate-in fade-in zoom-in-95"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {[
+                          { label: "Trong suốt", hex: "transparent" },
+                          { label: "Trắng", hex: "#ffffff" },
+                          { label: "Cam SOP", hex: "#ED7D31" },
+                          { label: "Cyan", hex: "#00B0F0" },
+                          { label: "Lục", hex: "#70AD47" },
+                          { label: "Xám tối", hex: "#1e293b" },
+                        ].map((c) => (
+                          <button
+                            key={c.hex}
+                            type="button"
+                            onClick={() => {
+                              handleChangeColor(inspectedElement.id, "fill", c.hex);
+                              setColorPopover(null);
+                            }}
+                            className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 hover:scale-125 transition-transform cursor-pointer shadow-xs"
+                            style={{
+                              backgroundColor: c.hex === "transparent" ? "#cbd5e1" : c.hex,
+                            }}
+                            title={c.label}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
+
+                {/* Sắp xếp lớp Layer Ordering */}
+                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleLayerOrder(inspectedElement.id, "forward")}
+                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                    title={`Đưa lên trên một lớp (Bring Forward) • Lớp hiện tại: ${canvasState.styles[inspectedElement.id]?.zIndex ?? "mặc định"}`}
+                  >
+                    <ArrowUp className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLayerOrder(inspectedElement.id, "backward")}
+                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
+                    title={`Đưa xuống dưới một lớp (Send Backward) • Lớp hiện tại: ${canvasState.styles[inspectedElement.id]?.zIndex ?? "mặc định"}`}
+                  >
+                    <ArrowDown className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
+
+                {/* Sửa & Chọn dịch khi ô có nhiều dòng */}
+                {inspectedUnits.length > 1 ? (
+                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 rounded-lg px-2 py-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Pencil className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium shrink-0">Sửa:</span>
+                      <div className="flex items-center gap-0.5 max-w-[150px] sm:max-w-[200px] 2xl:max-w-[300px] overflow-x-auto no-scrollbar py-0.5">
+                        {inspectedUnits.map((u, idx) => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={(e) => startEdit(u, e)}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all shrink-0 whitespace-nowrap ${
+                              editingUnitId === u.id
+                                ? "bg-sky-600 text-white shadow-xs scale-105"
+                                : "bg-white dark:bg-slate-700 hover:bg-sky-500 hover:text-white text-slate-700 dark:text-slate-200 shadow-2xs"
+                            }`}
+                            title={`Sửa dòng ${idx + 1}: "${u.sourceText.slice(0, 35)}..."`}
+                          >
+                            D{idx + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="w-px h-3 bg-slate-300 dark:bg-slate-700 shrink-0" />
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span
+                        className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-0.5 whitespace-nowrap shrink-0"
+                        title="Bấm để chọn/bỏ chọn từng dòng dịch (có thể chọn nhiều dòng cùng lúc như D7, D8, D9). Giữ Alt để chỉ chọn riêng 1 dòng."
+                      >
+                        <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                        <span>Chọn dịch ({inspectedUnits.filter((u) => selectedUnitIds.has(u.id)).length}/{inspectedUnits.length}):</span>
+                      </span>
+
+                      {/* Nút Chọn tất cả / Bỏ hết */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const allSelected = inspectedUnits.every((u) => selectedUnitIds.has(u.id));
+                          if (allSelected) {
+                            deselectAllUnitsInElement(inspectedUnits, e);
+                          } else {
+                            selectAllUnitsInElement(inspectedUnits, e);
+                          }
+                        }}
+                        className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-white dark:bg-slate-700 hover:bg-amber-500 hover:text-white text-slate-600 dark:text-slate-300 shadow-2xs cursor-pointer transition-all shrink-0 whitespace-nowrap"
+                        title={inspectedUnits.every((u) => selectedUnitIds.has(u.id)) ? "Bỏ chọn tất cả các dòng" : "Chọn tất cả các dòng trong ô"}
+                      >
+                        {inspectedUnits.every((u) => selectedUnitIds.has(u.id)) ? "Bỏ hết" : "Tất cả"}
+                      </button>
+
+                      <div className="flex items-center gap-0.5 max-w-[180px] sm:max-w-[240px] 2xl:max-w-[340px] overflow-x-auto no-scrollbar py-0.5">
+                        {inspectedUnits.map((u, idx) => {
+                          const isSelected = selectedUnitIds.has(u.id);
+                          return (
+                            <button
+                              key={`sel_multi_${u.id}`}
+                              type="button"
+                              onClick={(e) => {
+                                if (e.altKey) {
+                                  selectOnlyThisUnit(u, inspectedUnits, e);
+                                } else {
+                                  toggleUnitSelection(u.id, e);
+                                }
+                              }}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all flex items-center gap-0.5 shrink-0 whitespace-nowrap ${
+                                isSelected
+                                  ? "bg-amber-500 text-white shadow-xs scale-105 ring-1 ring-amber-600"
+                                  : "bg-white dark:bg-slate-700 hover:bg-amber-100 dark:hover:bg-amber-950/60 hover:text-amber-800 text-slate-700 dark:text-slate-200 shadow-2xs"
+                              }`}
+                              title={`Dòng ${idx + 1}: ${isSelected ? "Đang chọn dịch (Bấm để bỏ chọn)" : "Chưa chọn (Bấm để chọn)"} • "${u.sourceText.slice(0, 40)}..." (Giữ Alt để chỉ chọn duy nhất dòng này)`}
+                            >
+                              {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                              <span>D{idx + 1}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : inspectedUnits.length === 1 ? (
+                  <button
+                    type="button"
+                    onClick={(e) => startEdit(inspectedUnits[0], e)}
+                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors shrink-0 flex items-center gap-1"
+                    title="Sửa chữ trực tiếp (Enter / Nhấp đúp)"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    <span className="text-[10px] font-semibold">Sửa chữ</span>
+                  </button>
+                ) : null}
+
+                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
+
+                {/* Thao tác Duplicate & Delete */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleDuplicateElement(inspectedElement)}
+                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                    title="Nhân bản ô (Ctrl + D)"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteElement(inspectedElement.id)}
+                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                    title="Xóa ô này (Delete / Backspace)"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 italic hidden 2xl:inline-flex items-center gap-1 pl-1 font-normal select-none">
+                <MousePointerClick className="w-3 h-3 text-slate-400" />
+                <span>Nhấp chọn ô để định dạng Office 365</span>
+              </span>
+            )}
           </div>
 
           {/* Right: Clean Grouped Control Blocks */}
@@ -2649,6 +3565,38 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               </button>
             </div>
 
+            {/* Framework View Mode Pill: Presentation 16:9 vs Document View */}
+            <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setSlideViewMode("document")}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                  slideViewMode === "document"
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+                title="Chế độ Mở rộng cuộn xem (Phím M): Slide tự giãn dọc theo bảng, cuộn chuột xem trọn vẹn mọi hàng"
+              >
+                <FileText className="w-3 h-3 text-sky-400" />
+                <span className="hidden sm:inline">Mở rộng cuộn</span>
+                <span className="sm:hidden">Cuộn</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSlideViewMode("presentation")}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                  slideViewMode === "presentation"
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+                title="Chế độ Chuẩn khung 16:9 PowerPoint (Phím M): Giữ nguyên tỷ lệ 16:9 chuẩn chiếu slide, tự động co tỷ lệ vừa khít khung"
+              >
+                <Presentation className="w-3 h-3 text-orange-500" />
+                <span className="hidden sm:inline">Chuẩn 16:9</span>
+                <span className="sm:hidden">16:9</span>
+              </button>
+            </div>
+
             {/* Canvas View Tools Group (Focus, Inspector, Zero-Image, Fit) */}
             <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
               <button
@@ -2695,7 +3643,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     ? "bg-sky-600 text-white shadow-2xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
-                title={fitMode === "width" ? "Chế độ Rộng rõ (W) - Nhấp để Vừa khung" : "Chế độ Vừa khung - Nhấp để Rộng rõ (W)"}
+                title={fitMode === "width" ? "Chế độ Rộng rõ tối đa (W) - Nhấp để Vừa khung tiêu chuẩn" : "Chế độ Vừa khung tiêu chuẩn - Nhấp để Rộng rõ tối đa (W)"}
               >
                 {fitMode === "width" ? <ArrowLeftRight className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
               </button>
@@ -2777,11 +3725,64 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           </div>
         </div>
 
-        {/* Compact Slide Strip */}
-        <div className="flex items-center gap-1.5 pt-1 border-t border-slate-200/60 dark:border-slate-800">
+        {/* Compact Slide Strip Bar with Unified Pager Navigation */}
+        <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800 shrink-0">
+          {/* Pager controls moved from top header bar */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={handlePrevSlide}
+              disabled={currentSlide <= 1}
+              className="px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs"
+              title="Slide trước (Phím A hoặc ←)"
+            >
+              <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300">
+                A
+              </kbd>
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xs transition-all shrink-0">
+              <Presentation className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+              <span
+                key={`slide_badge_${currentSlide}`}
+                className="text-xs font-bold text-slate-800 dark:text-slate-100 animate-in fade-in duration-100 whitespace-nowrap"
+              >
+                Slide {currentSlide} / {report.totalSlides}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleNextSlide}
+              disabled={currentSlide >= report.totalSlides}
+              className="px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs"
+              title="Slide tiếp theo (Phím D hoặc →)"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+              <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300">
+                D
+              </kbd>
+            </button>
+
+            {pendingSlideNumbers.length > 0 && (
+              <button
+                type="button"
+                onClick={handleNextPendingSlide}
+                className="flex items-center gap-1 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded-full transition-colors cursor-pointer shrink-0"
+                title="Chuyển tới slide có đoạn chưa dịch tiếp theo"
+              >
+                <Sparkles className="w-3 h-3 text-rose-500" />
+                <span className="whitespace-nowrap">Đến slide thiếu ({pendingSlideNumbers.length})</span>
+              </button>
+            )}
+          </div>
+
+          <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 shrink-0" />
+
           <div className="flex items-center gap-1 text-[11px] text-slate-500 shrink-0">
             <span>Slide:</span>
-            <label className="flex items-center gap-1 cursor-pointer text-slate-600 dark:text-slate-400">
+            <label className="flex items-center gap-1 cursor-pointer text-slate-600 dark:text-slate-400 whitespace-nowrap">
               <input
                 type="checkbox"
                 checked={filterPendingOnly}
@@ -2792,18 +3793,21 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             </label>
           </div>
 
-          <div className="flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-thin">
+          <div
+            ref={slideStripRef}
+            className="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto py-0.5 scrollbar-thin scroll-smooth"
+          >
             {displayedSlideStrip.map((sNum) => {
               const uList = slideMap.get(sNum) || [];
-              const hasPending = uList.some(
-                (u) => u.status === "NEEDS_TRANSLATION" || u.status === "MIXED_LANGUAGE"
-              );
+              const summary = slideStatusSummary.get(sNum);
+              const hasPending = summary ? summary.hasPending : false;
               const isSelected = sNum === currentSlide;
               const selectedCount = uList.filter((u) => selectedUnitIds.has(u.id)).length;
 
               return (
                 <button
                   key={sNum}
+                  ref={isSelected ? activeSlideBtnRef : undefined}
                   type="button"
                   onClick={() => {
                     setCurrentSlide(sNum);
@@ -2813,7 +3817,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                   }}
                   className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold shrink-0 transition-all flex items-center gap-1 cursor-pointer border ${
                     isSelected
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white shadow-2xs"
+                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white shadow-2xs scale-105"
                       : hasPending
                       ? "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
                       : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800"
@@ -2847,91 +3851,56 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             e.preventDefault();
           }
         }}
-        className={`flex-1 min-h-0 relative flex ${
-          fitMode === "width" || zoomScale > 1.0 ? "items-start overflow-auto" : "items-center overflow-hidden"
-        } justify-center w-full bg-slate-100 dark:bg-slate-950 rounded-xl p-2 select-none shadow-inner border border-slate-200 dark:border-slate-800`}
+        className="flex-1 min-h-0 relative overflow-y-auto overflow-x-hidden w-full bg-slate-100 dark:bg-slate-950 rounded-xl select-none shadow-inner border border-slate-200 dark:border-slate-800 scroll-smooth"
       >
+        {/* Real-time Font Size HUD Toast Feedback (Alt + Mouse Wheel) */}
+        {fontSizeFeedback !== null && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/98 backdrop-blur-md text-white font-mono text-xs px-4 py-1.5 rounded-full shadow-2xl pointer-events-none z-[100] flex items-center gap-2.5 border border-sky-400/80 animate-in fade-in zoom-in-95 duration-100">
+            <Type className="w-4 h-4 text-sky-400 shrink-0" />
+            <span className="font-bold text-sky-300">Cỡ chữ: {fontSizeFeedback.sizePt}pt</span>
+            <span className="text-slate-400 text-[10px] border-l border-slate-700 pl-2">Alt + Cuộn chuột</span>
+          </div>
+        )}
+
+        {/* Slide Switching Notification Toast */}
+        {slideSwitchNotice !== null && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 dark:bg-slate-950/95 backdrop-blur-md text-white font-mono text-xs px-3.5 py-1 rounded-full shadow-2xl pointer-events-none z-50 flex items-center gap-2 border border-sky-500/50 animate-in fade-in zoom-in-95 duration-100">
+            <Presentation className="w-3.5 h-3.5 text-sky-400" />
+            <span className="font-bold text-sky-300">Slide {slideSwitchNotice}</span>
+            <span className="text-slate-400 text-[10px]">/ {report.totalSlides}</span>
+          </div>
+        )}
         {layoutMode === "isq_dual" && dualSlideInfo ? (
           // DUAL SLIDE ISQ SIDE-BY-SIDE
-          <div className={`w-full ${fitMode === "width" || zoomScale > 1.0 ? "min-h-full py-3" : "h-full"} flex items-center justify-center gap-3`}>
-            {renderSlideSheet(
-              dualSlideInfo.viNum,
-              dualSlideInfo.viLayout,
-              dualSlideInfo.viUnitsMap,
-              "source",
-              dualSlideDimensions.width,
-              dualSlideDimensions.height
-            )}
-            {renderSlideSheet(
-              dualSlideInfo.enNum,
-              dualSlideInfo.enLayout,
-              dualSlideInfo.enUnitsMap,
-              "target",
-              dualSlideDimensions.width,
-              dualSlideDimensions.height
-            )}
-          </div>
-        ) : layoutMode === "cards" ? (
-          // SEQUENTIAL CARDS LIST VIEW
-          <div className="w-full h-full max-w-4xl overflow-y-auto pr-2 space-y-2.5">
-            {bodyUnits.map((unit, idx) => {
-              const isSelected = selectedUnitIds.has(unit.id);
-              const isEditing = editingUnitId === unit.id;
-              const statusCfg = STATUS_CONFIG[unit.status] || STATUS_CONFIG.NEEDS_TRANSLATION;
-              const transText = getTranslationText(unit);
-              const hasCustom = customEdits[unit.id] !== undefined;
-
-              return (
-                <div
-                  key={unit.id}
-                  onClick={() => onToggleUnit(unit.id)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-white dark:bg-[#181d2c] border-sky-500 shadow-md ring-1 ring-sky-500/30"
-                      : "bg-white/80 dark:bg-[#141824] border-slate-200 dark:border-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2">
-                      {isSelected ? (
-                        <CheckSquare className="w-4 h-4 text-sky-600" />
-                      ) : (
-                        <Square className="w-4 h-4 text-slate-400" />
-                      )}
-                      <span className="text-[10px] font-bold font-mono px-1 rounded bg-slate-200 dark:bg-slate-800">
-                        #{idx + 1}
-                      </span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}>
-                        {statusCfg.label}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => startEdit(unit, e)}
-                      className="text-xs text-sky-600 hover:underline flex items-center gap-0.5"
-                    >
-                      <Pencil className="w-3 h-3" />
-                      <span>{hasCustom ? "Đã sửa" : "Sửa"}</span>
-                    </button>
-                  </div>
-
-                  <div className="text-xs space-y-1 pl-6">
-                    <div className="text-slate-800 dark:text-slate-200 font-medium">{unit.sourceText}</div>
-                    {transText && (
-                      <div className="text-sky-700 dark:text-sky-300 font-semibold">
-                        ➔ {transText}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="w-full min-h-full flex items-start justify-center pt-3 pb-8 px-2">
+            <div className="flex items-start justify-center gap-3 shrink-0">
+              {renderSlideSheet(
+                dualSlideInfo.viNum,
+                dualSlideInfo.viLayout,
+                dualSlideInfo.viUnitsMap,
+                "source",
+                dualSlideDimensions.width,
+                dualSlideDimensions.height
+              )}
+              {renderSlideSheet(
+                dualSlideInfo.enNum,
+                dualSlideInfo.enLayout,
+                dualSlideInfo.enUnitsMap,
+                "target",
+                dualSlideDimensions.width,
+                dualSlideDimensions.height
+              )}
+            </div>
           </div>
         ) : (
           // STANDARD PPTX VISUAL REVIEW (1:1 SPATIAL)
-          <div className={`w-full ${fitMode === "width" || zoomScale > 1.0 ? "min-h-full py-3" : "h-full"} flex items-center justify-center`}>
-            {renderSlideSheet(currentSlide, currentVisualLayout, unitById, viewMode)}
+          <div className="w-full min-h-full flex items-start justify-center pt-3 pb-8 px-2">
+            <div
+              key={`slide_canvas_${currentSlide}`}
+              className="animate-in fade-in zoom-in-[0.99] duration-150 transition-all flex flex-col items-center shrink-0 shadow-2xl rounded-lg"
+            >
+              {renderSlideSheet(currentSlide, currentVisualLayout, unitById, viewMode)}
+            </div>
           </div>
         )}
 
@@ -3354,6 +4323,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             [ / ] : Cỡ chữ
           </span>
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-700 text-sky-700 dark:text-sky-300 font-bold flex items-center gap-1 shadow-2xs">
+            <Type className="w-2.5 h-2.5 text-sky-500" />
+            Alt + Cuộn chuột : Tăng/Giảm cỡ chữ
+          </span>
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-semibold">
+            Ctrl+[ / Ctrl+] : Đổi lớp (Layer)
+          </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium">
             A / D : Đổi Slide
           </span>
@@ -3367,7 +4343,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             Space : Chọn dịch
           </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            W : Rộng rõ
+            W : Rộng rõ tối đa
           </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             I : Kính lúp

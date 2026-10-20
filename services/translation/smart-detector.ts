@@ -61,6 +61,12 @@ export interface SlideVisualElement {
   rowSpan?: number;
   colSpan?: number;
   isMerged?: boolean;
+  tableId?: string;
+  tableBox?: BoundingBox;
+  tableCols?: number[];
+  fontScale?: number;
+  lnSpcReduction?: number;
+  isSpAutoFit?: boolean;
 }
 
 export interface SlideVisualLayout {

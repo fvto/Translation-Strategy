@@ -396,6 +396,10 @@ export const TranslationMemoryDrawer: React.FC<TranslationMemoryDrawerProps> = (
                         <div className="flex items-center space-x-2 shrink-0">
                           <button
                             type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectSession(s.sessionId);
+                            }}
                             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
                               isSelected
                                 ? "bg-amber-500 text-slate-950 font-bold"

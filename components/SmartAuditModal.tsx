@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle, Presentation, Maximize2, Minimize2, Loader2 } from "lucide-react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle, Presentation, Maximize2, Minimize2, Loader2, CheckCircle2 } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
 import { SmartAuditSlideCanvas } from "./SmartAuditSlideCanvas";
 
@@ -378,6 +378,24 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
       const next = { ...prev };
       if (trimmed) next[unit.id] = trimmed;
       else delete next[unit.id];
+      return next;
+    });
+    setEditingUnitId(null);
+    setEditText("");
+  };
+
+  const applyUnitEditDirectly = (unit: ScannedTextUnit) => {
+    const trimmed = editText.trim();
+    setCustomEdits((prev) => {
+      const next = { ...prev };
+      if (trimmed) next[unit.id] = trimmed;
+      else delete next[unit.id];
+      return next;
+    });
+    // Uncheck from AI queue so it doesn't wait for AI
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(unit.id);
       return next;
     });
     setEditingUnitId(null);
@@ -1059,7 +1077,15 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                                         <div className="flex items-center gap-1">
                                           <button
                                             type="button"
-                                            className={button + " text-emerald-600 p-1"}
+                                            className={button + " text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 p-1"}
+                                            onClick={() => applyUnitEditDirectly(u)}
+                                            title="Thêm vào luôn (lưu & áp dụng ngay, không chờ AI)"
+                                          >
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={button + " text-sky-600 p-1"}
                                             onClick={() => saveUnitEdit(u)}
                                             title="Lưu sửa đổi"
                                           >
@@ -1668,6 +1694,19 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               >
                 Đóng
               </button>
+              {customEditsCount > 0 && (
+                <button
+                  type="button"
+                  id="btn-apply-manual-edits-only"
+                  className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                  disabled={loading}
+                  onClick={() => onTranslateMissingOnly([], customEdits, { viHandlingMode, slideViHandling })}
+                  title="Chỉ áp dụng các câu bạn đã sửa thủ công vào file PPTX (0 token AI, không dịch các câu khác)"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Áp dụng câu đã sửa ({customEditsCount})</span>
+                </button>
+              )}
               <button
                 id="btn-translate-missing-only"
                 className="px-5 py-2 rounded-full bg-[#E60023] hover:bg-[#CC001F] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 cursor-pointer"
