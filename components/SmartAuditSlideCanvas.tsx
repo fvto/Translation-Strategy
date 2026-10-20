@@ -1693,6 +1693,34 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     [canvasState, multiSelectedElementIds, selectedElementId, pushUndoSnapshot]
   );
 
+  const handleToggleBatchTranslate = useCallback(() => {
+    const selectedElements = currentSlideElements.filter((el) => multiSelectedElementIds.has(el.id));
+    const allTargetUnitIds: string[] = [];
+    for (const el of selectedElements) {
+      const uids = (el.unitIds && el.unitIds.length > 0)
+        ? el.unitIds
+        : el.unitId ? [el.unitId] : [];
+      allTargetUnitIds.push(...uids);
+    }
+    if (allTargetUnitIds.length > 0) {
+      const allSelected = allTargetUnitIds.every((uid) => selectedUnitIds.has(uid));
+      for (const uid of allTargetUnitIds) {
+        if (allSelected) {
+          if (selectedUnitIds.has(uid)) onToggleUnit(uid);
+        } else {
+          if (!selectedUnitIds.has(uid)) onToggleUnit(uid);
+        }
+      }
+      setQuickActionNotice(
+        allSelected
+          ? `Đã bỏ chọn dịch ${allTargetUnitIds.length} dòng!`
+          : `Đã chọn dịch ${allTargetUnitIds.length} dòng trong ${multiSelectedElementIds.size} ô!`
+      );
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+    }
+  }, [currentSlideElements, multiSelectedElementIds, selectedUnitIds, onToggleUnit]);
+
   const handleLayerOrder = useCallback(
     (elId: string, direction: "forward" | "backward") => {
       pushUndoSnapshot({ ...canvasState });
@@ -3358,7 +3386,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                             >
                               {rowCells.map((el) => {
                                 const isSelected = selectedElementId === el.id || multiSelectedElementIds.has(el.id);
-                                const isMultiSelected = multiSelectedElementIds.has(el.id) && multiSelectedElementIds.size > 1;
+                                const isMultiSelected = multiSelectedElementIds.has(el.id);
                                 const style = canvasState.styles[el.id] || {};
                                 const elementUnits = (el.unitIds && el.unitIds.length > 0)
                                   ? el.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
@@ -3513,9 +3541,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                       boxSizing: "border-box",
                                       minHeight: cellHeightPx ? `${cellHeightPx}px` : undefined,
                                     }}
-                                    className={`transition-colors ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-none relative ${
+                                    className={`transition-all duration-150 ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-none relative ${
                                       isMultiSelected
-                                        ? "ring-2 ring-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/70 shadow-md"
+                                        ? "ring-[2.5px] ring-indigo-600 dark:ring-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/85 shadow-[0_0_14px_rgba(99,102,241,0.45),inset_0_0_10px_rgba(99,102,241,0.15)] z-20"
                                         : isChecked
                                         ? "ring-2 ring-sky-500 bg-sky-50 dark:bg-sky-950/60 shadow-xs"
                                         : isPartiallyChecked
@@ -3528,6 +3556,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     }`}
                                     title={`${el.shapeName || "Ô dữ liệu"} • Nhấp để chọn dịch • Nhấp đúp để sửa`}
                                   >
+                                    {/* Visual Multi-Selection Corner Badge */}
+                                    {isMultiSelected && (
+                                      <div className="absolute -top-1.5 -right-1.5 z-30 flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-md ring-2 ring-white dark:ring-slate-900 animate-in zoom-in-75 duration-150 pointer-events-none">
+                                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                      </div>
+                                    )}
                                     {/* Real-time Hover Font Size Badge */}
                                     {hoveredCell?.element.id === el.id && (
                                       <div className="absolute top-0.5 right-0.5 pointer-events-none z-20 flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md animate-in fade-in zoom-in-95 duration-100">
@@ -3689,7 +3723,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               {/* 2. STANDALONE ELEMENTS (Pictures, Banners, Free-floating Shapes) */}
               {standaloneElements.map((el, elIdx) => {
                 const isSelected = selectedElementId === el.id || multiSelectedElementIds.has(el.id);
-                const isMultiSelected = multiSelectedElementIds.has(el.id) && multiSelectedElementIds.size > 1;
+                const isMultiSelected = multiSelectedElementIds.has(el.id);
                 const pos = canvasState.positions[el.id] || { left: el.box.left, top: el.box.top };
                 const size = canvasState.sizes[el.id] || { width: el.box.width, height: el.box.height };
                 const style = canvasState.styles[el.id] || {};
@@ -3978,7 +4012,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       isDragging
                         ? "ring-2 ring-indigo-500 shadow-2xl scale-[1.01]"
                         : isMultiSelected
-                        ? "ring-2 ring-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/70 shadow-md"
+                        ? "ring-[2.5px] ring-indigo-600 dark:ring-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/85 shadow-[0_0_14px_rgba(99,102,241,0.45),inset_0_0_10px_rgba(99,102,241,0.15)] z-20"
                         : isChecked
                         ? "ring-2 ring-sky-500 shadow-md"
                         : isPartiallyChecked
@@ -3991,6 +4025,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     }`}
                     title={`${el.shapeName || "Phần tử"} • Kéo để di chuyển • 8 neo để co giãn • Nhấp đúp để sửa`}
                   >
+                    {/* Visual Multi-Selection Corner Badge */}
+                    {isMultiSelected && !isDragging && (
+                      <div className="absolute -top-2 -right-2 z-30 flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-md ring-2 ring-white dark:ring-slate-900 animate-in zoom-in-75 duration-150 pointer-events-none">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    )}
                     {isDragging && (
                       <div className="absolute -top-6 left-0 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
                         <Move className="w-2.5 h-2.5 text-sky-400" />
@@ -4147,15 +4187,16 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             {/* Microsoft Office 365 Formatting Ribbon - ALWAYS DISPLAYED */}
             <div className="flex items-center gap-1.5 shrink-0 pl-1.5 border-l border-slate-200 dark:border-slate-800 transition-all">
               {/* UX Improvement 2: Multi-Select Batch Indicator */}
-              {multiSelectedElementIds.size > 1 ? (
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs shrink-0 select-none flex items-center gap-1.5 animate-in fade-in">
+              {multiSelectedElementIds.size > 0 ? (
+                <div className="flex items-center gap-1.5 shrink-0 animate-in fade-in zoom-in-95 duration-150">
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-2xs shrink-0 select-none flex items-center gap-1.5 border border-indigo-400/40">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>Đã chọn {multiSelectedElementIds.size} ô</span>
                     <button
                       type="button"
                       onClick={() => setMultiSelectedElementIds(new Set())}
-                      className="text-white/80 hover:text-white cursor-pointer"
-                      title="Bỏ chọn hàng loạt"
+                      className="ml-0.5 text-white/80 hover:text-white cursor-pointer hover:bg-white/20 rounded-full w-3.5 h-3.5 flex items-center justify-center transition-colors"
+                      title="Bỏ chọn hàng loạt (Esc)"
                     >
                       ✕
                     </button>
@@ -4163,33 +4204,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => {
-                      const selectedElements = currentSlideElements.filter((el) => multiSelectedElementIds.has(el.id));
-                      const allTargetUnitIds: string[] = [];
-                      for (const el of selectedElements) {
-                        const uids = (el.unitIds && el.unitIds.length > 0)
-                          ? el.unitIds
-                          : el.unitId ? [el.unitId] : [];
-                        allTargetUnitIds.push(...uids);
-                      }
-                      if (allTargetUnitIds.length > 0) {
-                        const allSelected = allTargetUnitIds.every((uid) => selectedUnitIds.has(uid));
-                        for (const uid of allTargetUnitIds) {
-                          if (allSelected) {
-                            if (selectedUnitIds.has(uid)) onToggleUnit(uid);
-                          } else {
-                            if (!selectedUnitIds.has(uid)) onToggleUnit(uid);
-                          }
-                        }
-                        setQuickActionNotice(
-                          allSelected
-                            ? `Đã bỏ chọn dịch ${allTargetUnitIds.length} dòng!`
-                            : `Đã chọn dịch ${allTargetUnitIds.length} dòng trong ${multiSelectedElementIds.size} ô!`
-                        );
-                        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
-                        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
-                      }
-                    }}
+                    onClick={handleToggleBatchTranslate}
                     className="px-2 py-0.5 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold shadow-xs flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                     title="Bấm để chọn dịch (hoặc bỏ chọn dịch) tất cả các dòng trong các ô đang quét chọn"
                   >
@@ -5718,7 +5733,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       {/* Visual Marquee Rubberband Selection Overlay */}
       {selectionBox && (
         <div
-          className="fixed pointer-events-none z-[9999] border-2 border-dashed border-indigo-500 bg-indigo-500/20 rounded shadow-lg backdrop-blur-[0.5px]"
+          className="fixed pointer-events-none z-[9999] border-2 border-indigo-500 bg-indigo-500/15 rounded-lg shadow-[0_0_20px_rgba(99,102,241,0.35)] backdrop-blur-[1px]"
           style={{
             left: `${Math.min(selectionBox.startX, selectionBox.currentX)}px`,
             top: `${Math.min(selectionBox.startY, selectionBox.currentY)}px`,
@@ -5726,8 +5741,118 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             height: `${Math.abs(selectionBox.currentY - selectionBox.startY)}px`,
           }}
         >
-          <div className="absolute -top-6 left-0 px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[9px] font-bold shadow-md whitespace-nowrap">
-            Quét chọn vùng
+          {/* Live Status Badge */}
+          <div className="absolute -top-7 left-0 px-2.5 py-1 rounded-md bg-indigo-600 text-white font-sans text-[11px] font-bold shadow-lg flex items-center gap-1.5 whitespace-nowrap">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span>Đang quét: {multiSelectedElementIds.size} ô</span>
+          </div>
+
+          {/* Corner Guides */}
+          <div className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
+          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
+          <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
+          <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
+        </div>
+      )}
+
+      {/* Floating Multi-Selection HUD Toolbar */}
+      {multiSelectedElementIds.size > 0 && !selectionBox && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-2xl border border-indigo-500/60 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 duration-200"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {/* Badge Count */}
+          <div className="flex items-center gap-2 pr-2.5 border-r border-slate-700/80">
+            <span className="flex h-2.5 w-2.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+            </span>
+            <span className="text-xs font-bold text-indigo-300 whitespace-nowrap">
+              Đã chọn {multiSelectedElementIds.size} ô
+            </span>
+          </div>
+
+          {/* Quick Font Size Adjusters */}
+          {activeFocusElement && (
+            <div className="flex items-center gap-1 bg-slate-800/80 px-1.5 py-1 rounded-xl border border-slate-700/60">
+              <button
+                type="button"
+                onClick={() => handleChangeFontSize(activeFocusElement.id, -1)}
+                className="w-6 h-6 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Giảm 1pt cho toàn bộ vùng chọn"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-xs font-mono font-bold text-sky-400 min-w-[32px] text-center">
+                {`${canvasState.styles[activeFocusElement.id]?.fontSizePt ?? activeFocusElement.fontSizePt ?? 11}pt`}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleChangeFontSize(activeFocusElement.id, 1)}
+                className="w-6 h-6 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Tăng 1pt cho toàn bộ vùng chọn"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+              {canvasState.styles[activeFocusElement.id]?.fontSizePt !== undefined && (
+                <button
+                  type="button"
+                  onClick={() => handleResetFontSize(activeFocusElement.id)}
+                  className="p-1 rounded-lg hover:bg-slate-700 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer border-l border-slate-700 ml-0.5"
+                  title="Khôi phục cỡ chữ gốc ban đầu"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* SOP Typography Presets */}
+          {activeFocusElement && (
+            <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-slate-700/80">
+              {SOP_TYPOGRAPHY_PRESETS.map((preset) => {
+                const currentSize = canvasState.styles[activeFocusElement.id]?.fontSizePt ?? activeFocusElement.fontSizePt ?? 11;
+                const isPresetActive = currentSize === preset.fontSizePt;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleApplyTypographyPreset(activeFocusElement.id, preset)}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      isPresetActive
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white"
+                    }`}
+                    title={preset.description}
+                  >
+                    <span>{preset.label}</span>
+                    <span className="text-[9px] opacity-70 ml-0.5 font-mono">({preset.fontSizePt})</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Batch Translate & Deselect */}
+          <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700/80">
+            <button
+              type="button"
+              onClick={handleToggleBatchTranslate}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+              title="Chọn dịch tất cả các dòng trong các ô đang quét chọn"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Dịch cả vùng</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMultiSelectedElementIds(new Set())}
+              className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              title="Bỏ chọn vùng (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
