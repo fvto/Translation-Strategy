@@ -59,6 +59,7 @@ import {
   Paintbrush,
   AlertTriangle,
   BookOpen,
+  Magnet,
 } from "lucide-react";
 import type {
   SmartAuditReport,
@@ -235,6 +236,23 @@ function getElementTextColor(fill?: string, explicitColor?: string): string {
   return "#0f172a";
 }
 
+export interface TypographyPreset {
+  id: "title" | "process" | "body" | "note";
+  label: string;
+  fontSizePt: number;
+  isBold: boolean;
+  description: string;
+}
+
+export const SOP_TYPOGRAPHY_PRESETS: TypographyPreset[] = [
+  { id: "title", label: "Tiêu đề", fontSizePt: 16, isBold: true, description: "Tiêu đề chính slide (16pt Bold)" },
+  { id: "process", label: "Công đoạn", fontSizePt: 12, isBold: true, description: "Đầu mục công đoạn kỹ thuật (12pt Bold)" },
+  { id: "body", label: "Nội dung", fontSizePt: 10, isBold: false, description: "Nội dung bảng & mô tả chuẩn (10pt)" },
+  { id: "note", label: "Ghi chú", fontSizePt: 8, isBold: false, description: "Ghi chú nhỏ & thông số phụ (8pt)" },
+];
+
+export const SOP_TERM_REGEX = /(SPI\s+\d+(?:-\d+)?\s+stitches\/inch|No-sew|no-sew|Tip-quarter|tip-quarter|\*(?:Hot\/cool shaping|Buffing|Cementing|Stitching|Cutting|Assembly|Skiving|Embroidery|Pressing|Priming):?|Tip shape|Toe shape|Collar shape|Heel shape|Tongue shape|Eyestay shape|Backtab shape|Bonding gap|Overflow|Dirty mark|Delamination|Wrinkle|Crooked|Asymmetry|Stitch run-off|Broken stitch|Loose stitch|High\/low|Excess cement)/gi;
+
 export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   report,
   selectedUnitIds,
@@ -381,6 +399,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   } | null>(null);
   const [quickActionNotice, setQuickActionNotice] = useState<string | null>(null);
   const quickActionTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Feature 3: Magnetic Snap Guides Toggle & Feedback
+  const [isMagneticSnapEnabled, setIsMagneticSnapEnabled] = useState<boolean>(true);
+  const [snapFeedback, setSnapFeedback] = useState<{ label: string; x?: number; y?: number } | null>(null);
+
+  // Feature 5: Tô sáng Thuật ngữ Chuẩn Glossary & Quy tắc SOP
+  const [isHighlightSopTerms, setIsHighlightSopTerms] = useState<boolean>(true);
 
   const toolbarDragRef = useRef<{
     startX: number;
@@ -789,56 +814,70 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           const rawLeft = Math.round((dragStartRef.current.origLeft + deltaLeft) * 10) / 10;
           const rawTop = Math.round((dragStartRef.current.origTop + deltaTop) * 10) / 10;
 
-          const SNAP_THRESHOLD_X = 0.8;
-          const SNAP_THRESHOLD_Y = 0.8;
+          const SNAP_THRESHOLD_X = isMagneticSnapEnabled ? 1.6 : 0.0;
+          const SNAP_THRESHOLD_Y = isMagneticSnapEnabled ? 1.6 : 0.0;
 
           let snappedLeft = rawLeft;
           let verticalGuide: number | null = null;
           let bestDiffX = SNAP_THRESHOLD_X;
+          let snapLabelX = "";
 
-          for (const tx of targetXs) {
-            const dL = Math.abs(rawLeft - tx);
-            if (dL < bestDiffX) {
-              bestDiffX = dL;
-              snappedLeft = tx;
-              verticalGuide = tx;
-            }
-            const dC = Math.abs(rawLeft + el.box.width / 2 - tx);
-            if (dC < bestDiffX) {
-              bestDiffX = dC;
-              snappedLeft = tx - el.box.width / 2;
-              verticalGuide = tx;
-            }
-            const dR = Math.abs(rawLeft + el.box.width - tx);
-            if (dR < bestDiffX) {
-              bestDiffX = dR;
-              snappedLeft = tx - el.box.width;
-              verticalGuide = tx;
+          if (isMagneticSnapEnabled) {
+            for (const tx of targetXs) {
+              const isCenter50 = Math.abs(tx - 50) < 0.01;
+              const dL = Math.abs(rawLeft - tx);
+              if (dL < bestDiffX) {
+                bestDiffX = dL;
+                snappedLeft = tx;
+                verticalGuide = tx;
+                snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp mép trái";
+              }
+              const dC = Math.abs(rawLeft + el.box.width / 2 - tx);
+              if (dC < bestDiffX) {
+                bestDiffX = dC;
+                snappedLeft = tx - el.box.width / 2;
+                verticalGuide = tx;
+                snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp tâm đối tượng";
+              }
+              const dR = Math.abs(rawLeft + el.box.width - tx);
+              if (dR < bestDiffX) {
+                bestDiffX = dR;
+                snappedLeft = tx - el.box.width;
+                verticalGuide = tx;
+                snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp mép phải";
+              }
             }
           }
 
           let snappedTop = rawTop;
           let horizontalGuide: number | null = null;
           let bestDiffY = SNAP_THRESHOLD_Y;
+          let snapLabelY = "";
 
-          for (const ty of targetYs) {
-            const dT = Math.abs(rawTop - ty);
-            if (dT < bestDiffY) {
-              bestDiffY = dT;
-              snappedTop = ty;
-              horizontalGuide = ty;
-            }
-            const dC = Math.abs(rawTop + el.box.height / 2 - ty);
-            if (dC < bestDiffY) {
-              bestDiffY = dC;
-              snappedTop = ty - el.box.height / 2;
-              horizontalGuide = ty;
-            }
-            const dB = Math.abs(rawTop + el.box.height - ty);
-            if (dB < bestDiffY) {
-              bestDiffY = dB;
-              snappedTop = ty - el.box.height;
-              horizontalGuide = ty;
+          if (isMagneticSnapEnabled) {
+            for (const ty of targetYs) {
+              const isCenter50 = Math.abs(ty - 50) < 0.01;
+              const dT = Math.abs(rawTop - ty);
+              if (dT < bestDiffY) {
+                bestDiffY = dT;
+                snappedTop = ty;
+                horizontalGuide = ty;
+                snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp mép trên";
+              }
+              const dC = Math.abs(rawTop + el.box.height / 2 - ty);
+              if (dC < bestDiffY) {
+                bestDiffY = dC;
+                snappedTop = ty - el.box.height / 2;
+                horizontalGuide = ty;
+                snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp tâm ngang";
+              }
+              const dB = Math.abs(rawTop + el.box.height - ty);
+              if (dB < bestDiffY) {
+                bestDiffY = dB;
+                snappedTop = ty - el.box.height;
+                horizontalGuide = ty;
+                snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp mép dưới";
+              }
             }
           }
 
@@ -852,6 +891,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             horizontal: horizontalGuide !== null ? [horizontalGuide] : [],
           });
 
+          if (isMagneticSnapEnabled && (verticalGuide !== null || horizontalGuide !== null)) {
+            const label = snapLabelX && snapLabelY ? `${snapLabelX} & ${snapLabelY}` : (snapLabelX || snapLabelY);
+            setSnapFeedback({
+              label,
+              x: verticalGuide !== null ? verticalGuide : snappedLeft + el.box.width / 2,
+              y: horizontalGuide !== null ? horizontalGuide : snappedTop,
+            });
+          } else {
+            setSnapFeedback(null);
+          }
+
           setCanvasState((prev) => ({
             ...prev,
             positions: {
@@ -864,6 +914,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
       const handleMouseUp = () => {
         setActiveGuides({ vertical: [], horizontal: [] });
+        setSnapFeedback(null);
         if (dragStartRef.current?.hasMoved) {
           justFinishedDraggingRef.current = true;
           setTimeout(() => {
@@ -883,7 +934,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     },
-    [canvasState, currentSlideElements, pushUndoSnapshot]
+    [canvasState, currentSlideElements, isMagneticSnapEnabled, pushUndoSnapshot]
   );
 
   // Mouse handler to resize slide elements using 8 Canva-style handles with snapping
@@ -979,48 +1030,50 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             newHeight = ref.origHeight - actualDeltaH;
           }
 
-          const SNAP_THRESHOLD = 0.8;
+          const SNAP_THRESHOLD = isMagneticSnapEnabled ? 1.5 : 0.0;
           let vGuide: number | null = null;
           let hGuide: number | null = null;
 
-          if (handle.includes("e")) {
-            const rightEdge = newLeft + newWidth;
-            for (const tx of targetXs) {
-              if (Math.abs(rightEdge - tx) < SNAP_THRESHOLD) {
-                newWidth = Math.max(MIN_W, tx - newLeft);
-                vGuide = tx;
-                break;
+          if (isMagneticSnapEnabled) {
+            if (handle.includes("e")) {
+              const rightEdge = newLeft + newWidth;
+              for (const tx of targetXs) {
+                if (Math.abs(rightEdge - tx) < SNAP_THRESHOLD) {
+                  newWidth = Math.max(MIN_W, tx - newLeft);
+                  vGuide = tx;
+                  break;
+                }
+              }
+            } else if (handle.includes("w")) {
+              for (const tx of targetXs) {
+                if (Math.abs(newLeft - tx) < SNAP_THRESHOLD) {
+                  const diff = tx - newLeft;
+                  newLeft = tx;
+                  newWidth = Math.max(MIN_W, newWidth - diff);
+                  vGuide = tx;
+                  break;
+                }
               }
             }
-          } else if (handle.includes("w")) {
-            for (const tx of targetXs) {
-              if (Math.abs(newLeft - tx) < SNAP_THRESHOLD) {
-                const diff = tx - newLeft;
-                newLeft = tx;
-                newWidth = Math.max(MIN_W, newWidth - diff);
-                vGuide = tx;
-                break;
-              }
-            }
-          }
 
-          if (handle.includes("s")) {
-            const bottomEdge = newTop + newHeight;
-            for (const ty of targetYs) {
-              if (Math.abs(bottomEdge - ty) < SNAP_THRESHOLD) {
-                newHeight = Math.max(MIN_H, ty - newTop);
-                hGuide = ty;
-                break;
+            if (handle.includes("s")) {
+              const bottomEdge = newTop + newHeight;
+              for (const ty of targetYs) {
+                if (Math.abs(bottomEdge - ty) < SNAP_THRESHOLD) {
+                  newHeight = Math.max(MIN_H, ty - newTop);
+                  hGuide = ty;
+                  break;
+                }
               }
-            }
-          } else if (handle.includes("n")) {
-            for (const ty of targetYs) {
-              if (Math.abs(newTop - ty) < SNAP_THRESHOLD) {
-                const diff = ty - newTop;
-                newTop = ty;
-                newHeight = Math.max(MIN_H, newHeight - diff);
-                hGuide = ty;
-                break;
+            } else if (handle.includes("n")) {
+              for (const ty of targetYs) {
+                if (Math.abs(newTop - ty) < SNAP_THRESHOLD) {
+                  const diff = ty - newTop;
+                  newTop = ty;
+                  newHeight = Math.max(MIN_H, newHeight - diff);
+                  hGuide = ty;
+                  break;
+                }
               }
             }
           }
@@ -1034,6 +1087,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             vertical: vGuide !== null ? [vGuide] : [],
             horizontal: hGuide !== null ? [hGuide] : [],
           });
+
+          if (isMagneticSnapEnabled && (vGuide !== null || hGuide !== null)) {
+            const isCenter = (vGuide !== null && Math.abs(vGuide - 50) < 0.01) || (hGuide !== null && Math.abs(hGuide - 50) < 0.01);
+            setSnapFeedback({
+              label: isCenter ? "Khớp tâm 50%" : "Khớp mép đối tượng",
+              x: vGuide !== null ? vGuide : newLeft + newWidth,
+              y: hGuide !== null ? hGuide : newTop + newHeight,
+            });
+          } else {
+            setSnapFeedback(null);
+          }
 
           setResizeInfo({ elId: el.id, width: newWidth, height: newHeight });
 
@@ -1053,6 +1117,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
       const handleMouseUp = () => {
         setActiveGuides({ vertical: [], horizontal: [] });
+        setSnapFeedback(null);
         setResizeInfo(null);
         setResizingElementId(null);
         if (resizeStartRef.current?.hasMoved) {
@@ -1070,7 +1135,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     },
-    [canvasState, currentSlideElements, pushUndoSnapshot]
+    [canvasState, currentSlideElements, isMagneticSnapEnabled, pushUndoSnapshot]
   );
 
   // Typography & Styling actions for Canva floating toolbar
@@ -1239,6 +1304,92 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       }, 950);
     },
     [canvasState, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange, pushUndoSnapshot]
+  );
+
+  // Feature 1: Apply SOP Standard Typography Preset (1-Click)
+  const handleApplyTypographyPreset = useCallback(
+    (elId: string, preset: TypographyPreset) => {
+      pushUndoSnapshot({ ...canvasState });
+
+      const targets =
+        multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(elId)
+          ? Array.from(multiSelectedElementIds)
+          : [elId];
+
+      const fontSizesUpdate: Record<string, number> = {};
+
+      setCanvasState((prev) => {
+        const nextStyles = { ...prev.styles };
+        for (const tid of targets) {
+          const curStyle = nextStyles[tid] || {};
+          nextStyles[tid] = {
+            ...curStyle,
+            fontSizePt: preset.fontSizePt,
+            isBold: preset.isBold,
+          };
+
+          const baseEl = currentSlideElements.find((e) => e.id === tid);
+          if (baseEl) {
+            if (baseEl.unitIds && baseEl.unitIds.length > 0) {
+              for (const uid of baseEl.unitIds) fontSizesUpdate[uid] = preset.fontSizePt;
+            } else if (baseEl.unitId) {
+              fontSizesUpdate[baseEl.unitId] = preset.fontSizePt;
+            }
+          }
+          fontSizesUpdate[tid] = preset.fontSizePt;
+        }
+        return {
+          ...prev,
+          styles: nextStyles,
+        };
+      });
+
+      if (onCustomFontSizesChange && Object.keys(fontSizesUpdate).length > 0) {
+        onCustomFontSizesChange(fontSizesUpdate);
+      }
+
+      setFontSizeFeedback({ elId, sizePt: preset.fontSizePt });
+      if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
+      fontSizeFeedbackTimerRef.current = setTimeout(() => {
+        setFontSizeFeedback(null);
+      }, 950);
+
+      setQuickActionNotice(`Đã áp dụng chuẩn SOP: ${preset.label} (${preset.fontSizePt}pt${preset.isBold ? " Bold" : ""})`);
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2000);
+    },
+    [canvasState, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange, pushUndoSnapshot]
+  );
+
+  // Feature 5: Helper to highlight SOP Glossary terms with visual badges
+  const renderHighlightedSopText = useCallback(
+    (text: string, isEnglishOrTarget: boolean) => {
+      if (!isHighlightSopTerms || !text || !isEnglishOrTarget) {
+        return text;
+      }
+      SOP_TERM_REGEX.lastIndex = 0;
+      const parts = text.split(SOP_TERM_REGEX);
+      if (parts.length <= 1) return text;
+
+      return parts.map((part, pIdx) => {
+        if (!part) return null;
+        // In text.split with capturing group, odd indices are the matched terms
+        if (pIdx % 2 === 1) {
+          return (
+            <span
+              key={`sop_badge_${pIdx}`}
+              className="inline-flex items-center gap-0.5 px-1 py-0.2 mx-0.5 rounded font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-600/60 shadow-2xs select-text align-baseline"
+              title={`Thuật ngữ Chuẩn SOP: "${part}"`}
+            >
+              <ShieldCheck className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0 inline" />
+              <span>{part}</span>
+            </span>
+          );
+        }
+        return <React.Fragment key={`sop_txt_${pIdx}`}>{part}</React.Fragment>;
+      });
+    },
+    [isHighlightSopTerms]
   );
 
   const handleToggleBold = useCallback(
@@ -2507,6 +2658,20 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           </div>
         ))}
 
+        {/* Feature 3: Magnetic Snap Feedback Floating Badge */}
+        {isMagneticSnapEnabled && snapFeedback && (
+          <div
+            className="absolute z-50 pointer-events-none transform -translate-x-1/2 -translate-y-full px-2.5 py-1 rounded-full bg-pink-600 text-white text-[10px] font-semibold tracking-wide shadow-lg flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-100"
+            style={{
+              left: `${snapFeedback.x !== undefined ? Math.max(5, Math.min(95, snapFeedback.x)) : 50}%`,
+              top: `${snapFeedback.y !== undefined ? Math.max(2, snapFeedback.y - 1.2) : 6}%`,
+            }}
+          >
+            <Magnet className="w-3 h-3 text-pink-200" />
+            <span>{snapFeedback.label}</span>
+          </div>
+        )}
+
         {/* Spatial Elements & Native PPTX Table Rendering */}
         {(() => {
           const baseElements = layout?.elements || [];
@@ -2686,7 +2851,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                               </span>
                             )}
                             <span className="font-semibold text-slate-900 dark:text-white break-words">
-                              {transText || u.sourceText}
+                              {renderHighlightedSopText(transText || u.sourceText, true)}
                             </span>
                             <div className="opacity-0 group-hover/line:opacity-100 transition-opacity ml-1.5 inline-flex items-center gap-1 align-middle select-none">
                               <button
@@ -2812,11 +2977,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     )}
 
                     {displayedContent !== null ? (
-                      <span className="break-words">{displayedContent}</span>
+                      <span className="break-words">
+                        {renderHighlightedSopText(displayedContent, activeViewMode === "target")}
+                      </span>
                     ) : (
                       <div className="space-y-0.5">
                         <div className="font-semibold text-slate-900 dark:text-white leading-tight break-words">
-                          {transText || u.sourceText}
+                          {renderHighlightedSopText(transText || u.sourceText, true)}
                         </div>
                         <div className="opacity-70 text-[0.88em] leading-tight break-words text-slate-600 dark:text-slate-400">
                           {u.sourceText}
@@ -2875,7 +3042,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       ✓
                     </span>
                   )}
-                  {el.text}
+                  {renderHighlightedSopText(el.text, activeViewMode === "target")}
                 </div>
               );
             }
@@ -3841,6 +4008,34 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 )}
               </div>
 
+              {/* Feature 1: Bộ Cỡ chữ Chuẩn SOP 1-Click (Typography Presets) */}
+              <div className="flex items-center gap-0.5 rounded-lg p-0.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0">
+                {SOP_TYPOGRAPHY_PRESETS.map((preset) => {
+                  const currentSize = activeFocusElement
+                    ? (canvasState.styles[activeFocusElement.id]?.fontSizePt ?? activeFocusElement.fontSizePt ?? 11)
+                    : null;
+                  const isPresetActive = currentSize === preset.fontSizePt;
+
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      disabled={!activeFocusElement}
+                      onClick={() => activeFocusElement && handleApplyTypographyPreset(activeFocusElement.id, preset)}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 ${
+                        isPresetActive
+                          ? "bg-sky-600 text-white shadow-2xs font-bold"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+                      }`}
+                      title={`${preset.description} • Bấm để áp dụng ngay`}
+                    >
+                      <span>{preset.label}</span>
+                      <span className="text-[8.5px] opacity-70 ml-0.5 font-mono">({preset.fontSizePt})</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               {/* In đậm Bold */}
               <button
                 type="button"
@@ -4367,6 +4562,59 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               >
                 <Camera className="w-3.5 h-3.5" />
               </button>
+
+              {/* Feature 3: Magnetic Snap Guides Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMagneticSnapEnabled((prev) => {
+                    const next = !prev;
+                    setQuickActionNotice(next ? "Đã BẬT nam châm gióng hàng (Snap Guides)" : "Đã TẮT nam châm gióng hàng");
+                    if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                    quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                    return next;
+                  });
+                }}
+                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                  isMagneticSnapEnabled
+                    ? "bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-300 ring-1 ring-pink-500/40 shadow-2xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title={
+                  isMagneticSnapEnabled
+                    ? "Nam châm gióng hàng: Đang BẬT (Tự động hút trục 50% & mép ô khi kéo/resize)"
+                    : "Nam châm gióng hàng: Đang TẮT (Bấm để bật)"
+                }
+              >
+                <Magnet className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Feature 5: SOP Term Highlighter Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsHighlightSopTerms((prev) => {
+                    const next = !prev;
+                    setQuickActionNotice(next ? "Đã BẬT tô sáng thuật ngữ chuẩn SOP & Glossary" : "Đã TẮT tô sáng thuật ngữ SOP");
+                    if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                    quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                    return next;
+                  });
+                }}
+                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                  isHighlightSopTerms
+                    ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/40 shadow-2xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title={
+                  isHighlightSopTerms
+                    ? "Tô sáng Thuật ngữ SOP & Glossary: Đang BẬT (Hiện huy hiệu xanh ngọc cho SPI, No-sew, Tip-quarter,...)"
+                    : "Tô sáng Thuật ngữ SOP & Glossary: Đang TẮT (Bấm để bật)"
+                }
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </button>
+
               <button
                 type="button"
                 onClick={() => setFitMode((prev) => (prev === "contain" ? "width" : "contain"))}
@@ -5143,8 +5391,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             Delete : Xóa ô
           </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-pink-700 dark:text-pink-300 font-semibold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-            Canva Align : Căn gióng
+            <Magnet className="w-2.5 h-2.5 text-pink-500" />
+            Nam châm Snap : {isMagneticSnapEnabled ? "Bật" : "Tắt"}
+          </span>
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
+            <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
+            Chuẩn SOP : 1-Click
           </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
             Ctrl+Z / Ctrl+Y : Hoàn tác / Làm lại
