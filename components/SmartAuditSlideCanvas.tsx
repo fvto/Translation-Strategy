@@ -60,6 +60,7 @@ import {
   AlertTriangle,
   BookOpen,
   Magnet,
+  BoxSelect,
 } from "lucide-react";
 import type {
   SmartAuditReport,
@@ -375,13 +376,22 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   } | null>(null);
   const [isFormatPainterActive, setIsFormatPainterActive] = useState<boolean>(false);
 
-  // UX Improvement 2: Multi-Select Batch Resize (Shift + Click nhiều ô)
+  // UX Improvement 2: Multi-Select Batch Resize & Area Selection (Select Area)
   const [multiSelectedElementIds, setMultiSelectedElementIds] = useState<Set<string>>(new Set());
+  const [isAreaSelectMode, setIsAreaSelectMode] = useState<boolean>(false);
+  const [selectionBox, setSelectionBox] = useState<{
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
+  } | null>(null);
+  const isAreaSelectingRef = useRef<boolean>(false);
 
   // UX Improvement 5: Visual Before-After Split Comparison Slider (So sánh Trước / Sau)
   const [isSplitCompareActive, setIsSplitCompareActive] = useState<boolean>(false);
   const [splitSliderPercent, setSplitSliderPercent] = useState<number>(50);
   const [isDraggingSplitter, setIsDraggingSplitter] = useState<boolean>(false);
+  const splitContainerRef = useRef<HTMLDivElement>(null);
 
   // UX Improvement 6: Smooth Pan & Zoom (Ctrl + Wheel & Space + Drag)
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -747,6 +757,85 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     return [...activeBase, ...slideAdded];
   }, [currentVisualLayout, canvasState.deletedElementIds, canvasState.addedElements, currentSlide]);
 
+  // Marquee Area Selection (Select Area / Rubberband Drag)
+  const handleStartAreaSelection = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.button !== 0) return;
+      const target = e.target as HTMLElement;
+      if (
+        target.closest("input") ||
+        target.closest("textarea") ||
+        target.closest("button") ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      e.preventDefault();
+      isAreaSelectingRef.current = true;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      setSelectionBox({ startX, startY, currentX: startX, currentY: startY });
+
+      const handleAreaMouseMove = (moveEvt: MouseEvent) => {
+        if (!isAreaSelectingRef.current) return;
+        moveEvt.preventDefault();
+        window.getSelection()?.removeAllRanges();
+
+        const curX = moveEvt.clientX;
+        const curY = moveEvt.clientY;
+
+        setSelectionBox({
+          startX,
+          startY,
+          currentX: curX,
+          currentY: curY,
+        });
+
+        const selLeft = Math.min(startX, curX);
+        const selTop = Math.min(startY, curY);
+        const selRight = Math.max(startX, curX);
+        const selBottom = Math.max(startY, curY);
+
+        if (Math.hypot(selRight - selLeft, selBottom - selTop) > 6) {
+          justFinishedDraggingRef.current = true;
+          const cellDomElements = document.querySelectorAll<HTMLElement>("[data-element-id]");
+          const selected = new Set<string>();
+          cellDomElements.forEach((elNode) => {
+            const id = elNode.getAttribute("data-element-id");
+            if (!id) return;
+            const rect = elNode.getBoundingClientRect();
+            const overlaps = !(
+              rect.right < selLeft ||
+              rect.left > selRight ||
+              rect.bottom < selTop ||
+              rect.top > selBottom
+            );
+            if (overlaps) {
+              selected.add(id);
+            }
+          });
+          setMultiSelectedElementIds(selected);
+        }
+      };
+
+      const handleAreaMouseUp = () => {
+        isAreaSelectingRef.current = false;
+        setSelectionBox(null);
+        setTimeout(() => {
+          justFinishedDraggingRef.current = false;
+        }, 150);
+
+        window.removeEventListener("mousemove", handleAreaMouseMove);
+        window.removeEventListener("mouseup", handleAreaMouseUp);
+      };
+
+      window.addEventListener("mousemove", handleAreaMouseMove);
+      window.addEventListener("mouseup", handleAreaMouseUp);
+    },
+    []
+  );
+
   // Mouse handler to drag & move slide elements with Canva-style alignment guides & snapping
   const handleElementMouseDown = useCallback(
     (e: React.MouseEvent, el: SlideVisualElement, sheetW: number, sheetH: number) => {
@@ -759,6 +848,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         target.closest("button") ||
         target.isContentEditable
       ) {
+        return;
+      }
+
+      if (isAreaSelectMode || e.shiftKey) {
+        handleStartAreaSelection(e);
         return;
       }
 
@@ -934,7 +1028,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     },
-    [canvasState, currentSlideElements, isMagneticSnapEnabled, pushUndoSnapshot]
+    [canvasState, currentSlideElements, isMagneticSnapEnabled, isAreaSelectMode, handleStartAreaSelection, pushUndoSnapshot]
   );
 
   // Mouse handler to resize slide elements using 8 Canva-style handles with snapping
@@ -1145,7 +1239,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         pushUndoSnapshot({ ...canvasState });
       }
 
-      const targets = (multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(elId))
+      const targets = multiSelectedElementIds.size > 1
         ? Array.from(multiSelectedElementIds)
         : [elId];
 
@@ -1264,7 +1358,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const handleResetFontSize = useCallback(
     (elId: string) => {
       const baseEl = currentSlideElements.find((e) => e.id === elId);
-      const targets = (multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(elId))
+      const targets = multiSelectedElementIds.size > 1
         ? Array.from(multiSelectedElementIds)
         : [elId];
 
@@ -1302,6 +1396,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       fontSizeFeedbackTimerRef.current = setTimeout(() => {
         setFontSizeFeedback(null);
       }, 950);
+
+      if (targets.length > 1) {
+        setQuickActionNotice(`Đã đặt lại cỡ chữ gốc cho ${targets.length} ô!`);
+        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+      }
     },
     [canvasState, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange, pushUndoSnapshot]
   );
@@ -1311,10 +1411,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     (elId: string, preset: TypographyPreset) => {
       pushUndoSnapshot({ ...canvasState });
 
-      const targets =
-        multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(elId)
-          ? Array.from(multiSelectedElementIds)
-          : [elId];
+      const targets = multiSelectedElementIds.size > 1
+        ? Array.from(multiSelectedElementIds)
+        : [elId];
 
       const fontSizesUpdate: Record<string, number> = {};
 
@@ -1395,36 +1494,64 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const handleToggleBold = useCallback(
     (el: SlideVisualElement) => {
       pushUndoSnapshot({ ...canvasState });
+      const targets =
+        multiSelectedElementIds.size > 1
+          ? Array.from(multiSelectedElementIds)
+          : [el.id];
+
+      const curStyle = canvasState.styles[el.id] || {};
+      const newBold = !(curStyle.isBold !== undefined ? curStyle.isBold : Boolean(el.isBold));
+
       setCanvasState((prev) => {
-        const curStyle = prev.styles[el.id] || {};
-        const curBold = curStyle.isBold !== undefined ? curStyle.isBold : Boolean(el.isBold);
+        const nextStyles = { ...prev.styles };
+        for (const tid of targets) {
+          const cStyle = nextStyles[tid] || {};
+          nextStyles[tid] = { ...cStyle, isBold: newBold };
+        }
         return {
           ...prev,
-          styles: {
-            ...prev.styles,
-            [el.id]: { ...curStyle, isBold: !curBold },
-          },
+          styles: nextStyles,
         };
       });
+
+      if (targets.length > 1) {
+        setQuickActionNotice(`Đã ${newBold ? "in đậm" : "bỏ in đậm"} cho ${targets.length} ô!`);
+        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+      }
     },
-    [canvasState, pushUndoSnapshot]
+    [canvasState, multiSelectedElementIds, pushUndoSnapshot]
   );
 
   const handleChangeAlign = useCallback(
     (elId: string, align: "left" | "center" | "right") => {
       pushUndoSnapshot({ ...canvasState });
+      const targets =
+        multiSelectedElementIds.size > 1
+          ? Array.from(multiSelectedElementIds)
+          : [elId];
+
       setCanvasState((prev) => {
-        const curStyle = prev.styles[elId] || {};
+        const nextStyles = { ...prev.styles };
+        for (const tid of targets) {
+          const curStyle = nextStyles[tid] || {};
+          nextStyles[tid] = { ...curStyle, align };
+        }
         return {
           ...prev,
-          styles: {
-            ...prev.styles,
-            [elId]: { ...curStyle, align },
-          },
+          styles: nextStyles,
         };
       });
+
+      if (targets.length > 1) {
+        setQuickActionNotice(
+          `Đã căn lề ${align === "center" ? "giữa" : align === "right" ? "phải" : "trái"} cho ${targets.length} ô!`
+        );
+        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+      }
     },
-    [canvasState, pushUndoSnapshot]
+    [canvasState, multiSelectedElementIds, pushUndoSnapshot]
   );
 
   const handleAutoFitText = useCallback(
@@ -1505,18 +1632,35 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const handleChangeColor = useCallback(
     (elId: string, type: "textColor" | "fill", color: string) => {
       pushUndoSnapshot({ ...canvasState });
+      const targets =
+        multiSelectedElementIds.size > 1
+          ? Array.from(multiSelectedElementIds)
+          : [elId];
+
       setCanvasState((prev) => {
-        const curStyle = prev.styles[elId] || {};
+        const nextStyles = { ...prev.styles };
+        for (const tid of targets) {
+          const curStyle = nextStyles[tid] || {};
+          nextStyles[tid] = {
+            ...curStyle,
+            [type]: color,
+          };
+        }
         return {
           ...prev,
-          styles: {
-            ...prev.styles,
-            [elId]: { ...curStyle, [type]: color },
-          },
+          styles: nextStyles,
         };
       });
+
+      if (targets.length > 1) {
+        setQuickActionNotice(
+          `Đã đổi ${type === "textColor" ? "màu chữ" : "màu nền"} cho ${targets.length} ô!`
+        );
+        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+      }
     },
-    [canvasState, pushUndoSnapshot]
+    [canvasState, multiSelectedElementIds, pushUndoSnapshot]
   );
 
   const handleLayerOrder = useCallback(
@@ -1895,16 +2039,21 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   }, [inspectedUnits, getTranslationText, inspectedElement]);
 
   // Active Focus Element for Ribbon Toolbar & quick shortcuts:
-  // Prioritizes element directly hovered under cursor > clicked element > last active element
+  // Prioritizes element directly hovered under cursor > multi-selected elements > clicked element > last active element
   const activeFocusElement = useMemo(() => {
     if (hoveredCell?.element) return hoveredCell.element;
+    if (multiSelectedElementIds.size > 0) {
+      const firstId = Array.from(multiSelectedElementIds)[0];
+      const found = currentSlideElements.find((el) => el.id === firstId);
+      if (found) return found;
+    }
     if (inspectedElement) return inspectedElement;
     if (lastActiveElementId) {
       const found = currentSlideElements.find((el) => el.id === lastActiveElementId);
       if (found) return found;
     }
     return null;
-  }, [hoveredCell, inspectedElement, lastActiveElementId, currentSlideElements]);
+  }, [hoveredCell, multiSelectedElementIds, inspectedElement, lastActiveElementId, currentSlideElements]);
 
   const activeFocusUnits = useMemo(() => {
     if (!activeFocusElement) return [];
@@ -2099,6 +2248,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         if (inspectedUnit) startEdit(inspectedUnit);
       } else if (e.key === "Escape") {
         e.preventDefault();
+        setIsAreaSelectMode(false);
+        setMultiSelectedElementIds(new Set());
         if (colorPopover) setColorPopover(null);
         else if (contextMenu) setContextMenu(null);
         else if (editingUnitId) cancelEdit();
@@ -2114,6 +2265,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         } else if (inspectedUnit) {
           e.preventDefault();
           onToggleUnit(inspectedUnit.id);
+        }
+      } else if (e.key.toLowerCase() === "s" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+        const isInputActive = activeTag === "input" || activeTag === "textarea" || (document.activeElement as HTMLElement)?.isContentEditable;
+        if (!isInputActive && !editingUnitId) {
+          e.preventDefault();
+          setIsAreaSelectMode((prev) => !prev);
         }
       } else if (e.key.toLowerCase() === "f") {
         setFocusPendingOnly((prev) => !prev);
@@ -2182,43 +2340,57 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     isFormatPainterActive,
   ]);
 
-  // UX Improvement 6: Smooth Pan & Zoom Mouse Handlers
+  // UX Improvement 6: Smooth Pan & Zoom Mouse Handlers & Marquee Area Selection
   const handleCanvasContainerMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (e.target && (e.target as HTMLElement).closest("button, input, textarea, a, select")) return;
-      if (!isSpacePressedRef.current && e.button !== 1) return;
+      const target = e.target as HTMLElement;
+      if (target && target.closest("button, input, textarea, a, select")) return;
 
-      e.preventDefault();
-      isPanningRef.current = true;
-      panStartRef.current = {
-        startX: e.clientX,
-        startY: e.clientY,
-        origPanX: panOffset.x,
-        origPanY: panOffset.y,
-      };
+      // 1. Pan mode (Space pressed or middle click)
+      if (isSpacePressedRef.current || e.button === 1) {
+        e.preventDefault();
+        isPanningRef.current = true;
+        panStartRef.current = {
+          startX: e.clientX,
+          startY: e.clientY,
+          origPanX: panOffset.x,
+          origPanY: panOffset.y,
+        };
 
-      const handleMouseMove = (moveEvt: MouseEvent) => {
-        if (!isPanningRef.current || !panStartRef.current) return;
-        moveEvt.preventDefault();
-        const dx = moveEvt.clientX - panStartRef.current.startX;
-        const dy = moveEvt.clientY - panStartRef.current.startY;
-        setPanOffset({
-          x: panStartRef.current.origPanX + dx,
-          y: panStartRef.current.origPanY + dy,
-        });
-      };
+        const handleMouseMove = (moveEvt: MouseEvent) => {
+          if (!isPanningRef.current || !panStartRef.current) return;
+          moveEvt.preventDefault();
+          const dx = moveEvt.clientX - panStartRef.current.startX;
+          const dy = moveEvt.clientY - panStartRef.current.startY;
+          setPanOffset({
+            x: panStartRef.current.origPanX + dx,
+            y: panStartRef.current.origPanY + dy,
+          });
+        };
 
-      const handleMouseUp = () => {
-        isPanningRef.current = false;
-        panStartRef.current = null;
-        window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mouseup", handleMouseUp);
-      };
+        const handleMouseUp = () => {
+          isPanningRef.current = false;
+          panStartRef.current = null;
+          window.removeEventListener("mousemove", handleMouseMove);
+          window.removeEventListener("mouseup", handleMouseUp);
+        };
 
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+        return;
+      }
+
+      // 2. Area Selection Mode
+      if (isAreaSelectMode || e.shiftKey || (!target.closest("[data-element-id]") && e.button === 0)) {
+        if (!e.shiftKey && !isAreaSelectMode && !target.closest("[data-element-id]")) {
+          setMultiSelectedElementIds(new Set());
+          setSelectedElementId(null);
+        }
+        handleStartAreaSelection(e);
+        return;
+      }
     },
-    [panOffset]
+    [panOffset, isAreaSelectMode, handleStartAreaSelection]
   );
 
   // UX Improvement 7: Floating Mini Quick-Action on Text Selection
@@ -2603,11 +2775,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     return (
       <div
         className="relative rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-text bg-white shrink-0"
+        onMouseDown={(e) => {
+          if (isAreaSelectMode || e.shiftKey) {
+            handleStartAreaSelection(e);
+          }
+        }}
         style={{
           width: `${sheetWidth}px`,
           minHeight: `${sheetHeight}px`,
           height: "auto",
           backgroundColor: layout?.backgroundColor || "#FFFFFF",
+          cursor: isAreaSelectMode ? "crosshair" : undefined,
         }}
       >
         {/* Slide Header Indicator Badge */}
@@ -3237,8 +3415,14 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     data-element-id={el.id}
                                     rowSpan={el.rowSpan && el.rowSpan > 1 ? el.rowSpan : undefined}
                                     colSpan={el.colSpan && el.colSpan > 1 ? el.colSpan : undefined}
+                                    onMouseDown={(e) => {
+                                      if (isAreaSelectMode || e.shiftKey) {
+                                        handleStartAreaSelection(e);
+                                      }
+                                    }}
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (justFinishedDraggingRef.current || isAreaSelectMode) return;
                                       if (isFormatPainterActive) {
                                         handlePasteStyle(el.id);
                                         return;
@@ -3314,7 +3498,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                       boxSizing: "border-box",
                                       minHeight: cellHeightPx ? `${cellHeightPx}px` : undefined,
                                     }}
-                                    className={`transition-colors cursor-pointer select-text relative ${
+                                    className={`transition-colors ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-text relative ${
                                       isMultiSelected
                                         ? "ring-2 ring-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/70 shadow-md"
                                         : isChecked
@@ -3672,7 +3856,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     data-element-id={el.id}
                     onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
                     onClick={(e) => {
-                      if (justFinishedDraggingRef.current) {
+                      if (justFinishedDraggingRef.current || isAreaSelectMode) {
                         e.stopPropagation();
                         return;
                       }
@@ -3768,7 +3952,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                         ? "none"
                         : "opacity 0.2s, filter 0.2s, border-color 0.15s, box-shadow 0.15s, background-color 0.15s",
                       boxSizing: "border-box",
-                      cursor: isDragging ? "grabbing" : isResizing ? "default" : "grab",
+                      cursor: isDragging ? "grabbing" : isResizing ? "default" : isAreaSelectMode ? "crosshair" : "grab",
                       zIndex: isDragging ? 100 : isResizing ? 90 : isSelected ? 80 : (style.zIndex !== undefined ? style.zIndex : isTopBanner ? 20 : (10 + elIdx * 2)),
                       userSelect: isDragging || isResizing ? "none" : undefined,
                     }}
@@ -3925,21 +4109,76 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               </button>
             )}
 
+            {/* Area Selection Mode Toggle Button (Quét chọn vùng) */}
+            <button
+              type="button"
+              onClick={() => setIsAreaSelectMode((prev) => !prev)}
+              className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 shrink-0 select-none ${
+                isAreaSelectMode
+                  ? "bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-400"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+              }`}
+              title="Chế độ Quét chọn vùng (Phím S hoặc giữ Shift + kéo chuột trên canvas để quét chọn nhiều ô cùng lúc)"
+            >
+              <BoxSelect className={`w-3.5 h-3.5 ${isAreaSelectMode ? "text-white" : "text-indigo-500"}`} />
+              <span className="text-[11px] font-bold">
+                {isAreaSelectMode ? "Đang Quét" : "Quét vùng"}
+              </span>
+            </button>
+
             {/* Microsoft Office 365 Formatting Ribbon - ALWAYS DISPLAYED */}
             <div className="flex items-center gap-1.5 shrink-0 pl-1.5 border-l border-slate-200 dark:border-slate-800 transition-all">
               {/* UX Improvement 2: Multi-Select Batch Indicator */}
               {multiSelectedElementIds.size > 1 ? (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs shrink-0 select-none flex items-center gap-1.5 animate-in fade-in">
-                  <span>Đã chọn {multiSelectedElementIds.size} ô</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs shrink-0 select-none flex items-center gap-1.5 animate-in fade-in">
+                    <span>Đã chọn {multiSelectedElementIds.size} ô</span>
+                    <button
+                      type="button"
+                      onClick={() => setMultiSelectedElementIds(new Set())}
+                      className="text-white/80 hover:text-white cursor-pointer"
+                      title="Bỏ chọn hàng loạt"
+                    >
+                      ✕
+                    </button>
+                  </span>
+
                   <button
                     type="button"
-                    onClick={() => setMultiSelectedElementIds(new Set())}
-                    className="text-white/80 hover:text-white cursor-pointer"
-                    title="Bỏ chọn hàng loạt"
+                    onClick={() => {
+                      const selectedElements = currentSlideElements.filter((el) => multiSelectedElementIds.has(el.id));
+                      const allTargetUnitIds: string[] = [];
+                      for (const el of selectedElements) {
+                        const uids = (el.unitIds && el.unitIds.length > 0)
+                          ? el.unitIds
+                          : el.unitId ? [el.unitId] : [];
+                        allTargetUnitIds.push(...uids);
+                      }
+                      if (allTargetUnitIds.length > 0) {
+                        const allSelected = allTargetUnitIds.every((uid) => selectedUnitIds.has(uid));
+                        for (const uid of allTargetUnitIds) {
+                          if (allSelected) {
+                            if (selectedUnitIds.has(uid)) onToggleUnit(uid);
+                          } else {
+                            if (!selectedUnitIds.has(uid)) onToggleUnit(uid);
+                          }
+                        }
+                        setQuickActionNotice(
+                          allSelected
+                            ? `Đã bỏ chọn dịch ${allTargetUnitIds.length} dòng!`
+                            : `Đã chọn dịch ${allTargetUnitIds.length} dòng trong ${multiSelectedElementIds.size} ô!`
+                        );
+                        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                      }
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold shadow-xs flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                    title="Bấm để chọn dịch (hoặc bỏ chọn dịch) tất cả các dòng trong các ô đang quét chọn"
                   >
-                    ✕
+                    <Sparkles className="w-2.5 h-2.5" />
+                    <span>Dịch cả vùng</span>
                   </button>
-                </span>
+                </div>
               ) : activeFocusElement ? (
                 <span
                   className={`text-[10px] font-bold px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline-flex items-center gap-1 ${
@@ -4918,21 +5157,28 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               {/* UX Improvement 5: Visual Before-After Split Comparison Slider */}
               {isSplitCompareActive ? (
                 <div
+                  ref={splitContainerRef}
                   className="relative overflow-hidden rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-none bg-white shrink-0"
                   style={{
                     width: `${slideDimensions.width}px`,
                     minHeight: `${slideDimensions.height}px`,
                   }}
                 >
-                  {/* Layer 1: Source (Vietnamese Original) */}
-                  <div className="absolute inset-0 pointer-events-auto">
+                  {/* Layer 1: Source (Vietnamese Original) - Stacking context 1 */}
+                  <div
+                    className="relative w-full pointer-events-auto"
+                    style={{ zIndex: 1, isolation: "isolate" }}
+                  >
                     {renderSlideSheet(currentSlide, currentVisualLayout, unitById, "source")}
                   </div>
-                  {/* Layer 2: Target (English Translated), clipped by split slider */}
+                  {/* Layer 2: Target (English Translated), clipped by split slider - Stacking context 10 */}
                   <div
                     className="absolute inset-0 pointer-events-auto overflow-hidden"
                     style={{
+                      zIndex: 10,
+                      isolation: "isolate",
                       clipPath: `polygon(${splitSliderPercent}% 0, 100% 0, 100% 100%, ${splitSliderPercent}% 100%)`,
+                      WebkitClipPath: `polygon(${splitSliderPercent}% 0, 100% 0, 100% 100%, ${splitSliderPercent}% 100%)`,
                     }}
                   >
                     {renderSlideSheet(currentSlide, currentVisualLayout, unitById, "target")}
@@ -4943,18 +5189,18 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     style={{
                       left: `${splitSliderPercent}%`,
                       transform: "translateX(-50%)",
-                      width: "32px",
+                      width: "36px",
                     }}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       setIsDraggingSplitter(true);
-                      const startX = e.clientX;
-                      const startPct = splitSliderPercent;
-                      const sheetW = slideDimensions.width || 1000;
                       const handleMouseMove = (moveEvt: MouseEvent) => {
-                        const dx = moveEvt.clientX - startX;
-                        const newPct = Math.max(5, Math.min(95, startPct + (dx / sheetW) * 100));
+                        const containerRect = splitContainerRef.current?.getBoundingClientRect();
+                        if (!containerRect || containerRect.width <= 0) return;
+                        const clientX = moveEvt.clientX;
+                        const rawPct = ((clientX - containerRect.left) / containerRect.width) * 100;
+                        const newPct = Math.max(5, Math.min(95, rawPct));
                         setSplitSliderPercent(Number(newPct.toFixed(1)));
                       };
                       const handleMouseUp = () => {
@@ -4967,10 +5213,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     }}
                   >
                     <div className="w-[3px] h-full bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.9)]" />
-                    <div className="absolute top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/95 text-white font-mono text-[10px] font-bold shadow-2xl border border-sky-400 group-hover:scale-110 transition-transform">
-                      <span className="text-amber-400">VI</span>
-                      <span className="text-slate-500">|</span>
-                      <span className="text-sky-400">EN</span>
+                    <div className="absolute top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/95 text-white font-mono text-[10px] font-bold shadow-2xl border border-sky-400 group-hover:scale-110 transition-transform whitespace-nowrap select-none">
+                      <span className="text-amber-400">VI (Gốc)</span>
+                      <span className="text-slate-500">◀ ❚ ▶</span>
+                      <span className="text-sky-400">EN (Dịch)</span>
                     </div>
                   </div>
                 </div>
@@ -5429,6 +5675,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             W : Rộng rõ tối đa
           </span>
+          <span className="px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-medium flex items-center gap-1">
+            <BoxSelect className="w-2.5 h-2.5 text-indigo-500" />
+            Phím S / Shift + Kéo : Quét vùng
+          </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold flex items-center gap-1 shadow-2xs">
             <Paintbrush className="w-2.5 h-2.5 text-amber-500" />
             Ctrl+Shift+C / V : Sao chép Style
@@ -5447,6 +5697,23 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Visual Marquee Rubberband Selection Overlay */}
+      {selectionBox && (
+        <div
+          className="fixed pointer-events-none z-[9999] border-2 border-dashed border-indigo-500 bg-indigo-500/20 rounded shadow-lg backdrop-blur-[0.5px]"
+          style={{
+            left: `${Math.min(selectionBox.startX, selectionBox.currentX)}px`,
+            top: `${Math.min(selectionBox.startY, selectionBox.currentY)}px`,
+            width: `${Math.abs(selectionBox.currentX - selectionBox.startX)}px`,
+            height: `${Math.abs(selectionBox.currentY - selectionBox.startY)}px`,
+          }}
+        >
+          <div className="absolute -top-6 left-0 px-2 py-0.5 rounded bg-indigo-600 text-white font-mono text-[9px] font-bold shadow-md whitespace-nowrap">
+            Quét chọn vùng
+          </div>
+        </div>
+      )}
 
       {/* UX Improvement 7: Floating Mini Quick-Action Menu on Text Selection */}
       {textSelectionMenu && (
