@@ -71,6 +71,9 @@ interface ParsedSlideShape {
   border?: string;
   tableRow?: number;
   tableCol?: number;
+  rowSpan?: number;
+  colSpan?: number;
+  isMerged?: boolean;
 }
 
 function parseXmlColor(chunk?: string): string | undefined {
@@ -246,10 +249,19 @@ function parseSlideShapes(
         const totalGridW = curColX || rawXfrm.w;
 
         const rowMatches = Array.from(shapeXml.matchAll(/<a:tr\b[^>]*\bh="(\d+)"[^>]*>([\s\S]*?)<\/a:tr>/g));
-        let curRowY = 0;
+        const rowHeights: number[] = rowMatches.map((m) => {
+          const parsed = parseInt(m[1], 10);
+          return isNaN(parsed) || parsed < 0 ? 0 : parsed;
+        });
+        const rowOffsets: number[] = [];
+        let curRowOffset = 0;
+        for (const h of rowHeights) {
+          rowOffsets.push(curRowOffset);
+          curRowOffset += h;
+        }
+
         let cellSearchPos = 0;
         for (let r = 0; r < rowMatches.length; r++) {
-          const rowH = parseInt(rowMatches[r][1], 10) || Math.round(rawXfrm.h / (rowMatches.length || 1));
           const rowInner = rowMatches[r][2];
           const cellMatches = Array.from(rowInner.matchAll(/<a:tc\b[\s\S]*?<\/a:tc>/g));
 
@@ -260,14 +272,53 @@ function parseSlideShapes(
             const cellAbsEnd = cellAbsStart + cellXml.length;
             if (cellRelIndex >= 0) cellSearchPos = cellRelIndex + cellXml.length;
 
-            const colW = gridCols[c] || Math.round(rawXfrm.w / (cellMatches.length || 1));
+            // Detect merge attributes
+            const isVMerge = /\bvMerge="(?:1|true)"/.test(cellXml);
+            const isHMerge = /\bhMerge="(?:1|true)"/.test(cellXml);
+
+            // Skip subordinate merged cells (placeholder cells with no independent content)
+            if (isVMerge || isHMerge) {
+              continue;
+            }
+
+            const rowSpanMatch = cellXml.match(/\browSpan="(\d+)"/);
+            const rowSpan = rowSpanMatch ? Math.max(1, parseInt(rowSpanMatch[1], 10)) : 1;
+
+            const gridSpanMatch = cellXml.match(/\bgridSpan="(\d+)"/);
+            const gridSpan = gridSpanMatch ? Math.max(1, parseInt(gridSpanMatch[1], 10)) : 1;
+
+            const isMerged = rowSpan > 1 || gridSpan > 1;
+
+            // Compute span height
+            let spanH = 0;
+            if (rowHeights.length > 0) {
+              for (let spanR = 0; spanR < rowSpan && (r + spanR) < rowHeights.length; spanR++) {
+                spanH += rowHeights[r + spanR] || 0;
+              }
+            }
+            if (!spanH) {
+              spanH = Math.round(rowSpan * (rawXfrm.h / (rowMatches.length || 1)));
+            }
+
+            // Compute span width
+            let spanW = 0;
+            if (gridCols.length > 0) {
+              for (let spanC = 0; spanC < gridSpan && (c + spanC) < gridCols.length; spanC++) {
+                spanW += gridCols[c + spanC] || 0;
+              }
+            }
+            if (!spanW) {
+              spanW = Math.round(gridSpan * (rawXfrm.w / (cellMatches.length || 1)));
+            }
+
             const colX = colOffsets[c] !== undefined ? colOffsets[c] : Math.round(c * (rawXfrm.w / (cellMatches.length || 1)));
+            const rowY = rowOffsets[r] !== undefined ? rowOffsets[r] : Math.round(r * (rawXfrm.h / (rowMatches.length || 1)));
 
             const cellRaw = {
               x: rawXfrm.x + Math.round(colX * (rawXfrm.w / (totalGridW || 1))),
-              y: rawXfrm.y + curRowY,
-              w: Math.round(colW * (rawXfrm.w / (totalGridW || 1))),
-              h: rowH,
+              y: rawXfrm.y + rowY,
+              w: Math.round(spanW * (rawXfrm.w / (totalGridW || 1))),
+              h: spanH,
             };
             const cellTrans = applyGroupTransform(cellRaw, stack);
             const cellBox = toBoundingBox(cellTrans, slideW, slideH);
@@ -288,11 +339,15 @@ function parseSlideShapes(
             const fontSizePt = szMatch ? Math.round(parseInt(szMatch[1], 10) / 100) : undefined;
             const isBold = /\bb="1"/.test(rPr) || r === 0;
 
+            const rowDesc = rowSpan > 1 ? `Hàng ${r + 1}-${r + rowSpan}` : `Hàng ${r + 1}`;
+            const colDesc = gridSpan > 1 ? `Cột ${c + 1}-${c + gridSpan}` : `Cột ${c + 1}`;
+            const cellName = `${shapeName} [${rowDesc}, ${colDesc}]`;
+
             out.push({
               absStart: cellAbsStart,
               absEnd: cellAbsEnd,
               type: "cell",
-              shapeName: `${shapeName} [Hàng ${r + 1}, Cột ${c + 1}]`,
+              shapeName: cellName,
               isTitle: r === 0,
               box: cellBox,
               fill,
@@ -303,9 +358,11 @@ function parseSlideShapes(
               border,
               tableRow: r,
               tableCol: c,
+              rowSpan,
+              colSpan: gridSpan,
+              isMerged,
             });
           }
-          curRowY += rowH;
         }
       } else if (rawXfrm) {
         const trans = applyGroupTransform(rawXfrm, stack);
@@ -466,6 +523,9 @@ async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: num
         border: shape.border,
         tableRow: shape.tableRow,
         tableCol: shape.tableCol,
+        rowSpan: shape.rowSpan,
+        colSpan: shape.colSpan,
+        isMerged: shape.isMerged,
       };
     });
 

@@ -40,6 +40,8 @@ import {
   Zap,
   ArrowLeftRight,
   Maximize,
+  Move,
+  GripVertical,
 } from "lucide-react";
 import type {
   SmartAuditReport,
@@ -266,6 +268,104 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const [isTranslatingQuick, setIsTranslatingQuick] = useState<boolean>(false);
   const [batchTranslateProgress, setBatchTranslateProgress] = useState<{ current: number; total: number } | null>(null);
 
+  // Drag-to-move custom positions: { [elId]: { left: number, top: number } }
+  const [customPositions, setCustomPositions] = useState<Record<string, { left: number; top: number }>>({});
+  const [draggingElementId, setDraggingElementId] = useState<string | null>(null);
+  const justFinishedDraggingRef = useRef(false);
+  const dragStartRef = useRef<{
+    elId: string;
+    startX: number;
+    startY: number;
+    origLeft: number;
+    origTop: number;
+    sheetW: number;
+    sheetH: number;
+    hasMoved: boolean;
+  } | null>(null);
+
+  // Mouse handler to drag & move slide elements
+  const handleElementMouseDown = useCallback(
+    (e: React.MouseEvent, el: SlideVisualElement, sheetW: number, sheetH: number) => {
+      // Only primary left mouse button triggers drag
+      if (e.button !== 0) return;
+
+      // Do not drag if clicking inside an interactive form control or editable element
+      const target = e.target as HTMLElement;
+      if (
+        target.closest("input") ||
+        target.closest("textarea") ||
+        target.closest("button") ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      const currentPos = customPositions[el.id] || { left: el.box.left, top: el.box.top };
+
+      dragStartRef.current = {
+        elId: el.id,
+        startX: e.clientX,
+        startY: e.clientY,
+        origLeft: currentPos.left,
+        origTop: currentPos.top,
+        sheetW: sheetW || 1,
+        sheetH: sheetH || 1,
+        hasMoved: false,
+      };
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        if (!dragStartRef.current) return;
+        const dx = moveEvent.clientX - dragStartRef.current.startX;
+        const dy = moveEvent.clientY - dragStartRef.current.startY;
+
+        // 4px movement threshold to distinguish drag from simple click
+        if (!dragStartRef.current.hasMoved && Math.hypot(dx, dy) > 4) {
+          dragStartRef.current.hasMoved = true;
+          setDraggingElementId(el.id);
+        }
+
+        if (dragStartRef.current.hasMoved) {
+          moveEvent.preventDefault();
+          window.getSelection()?.removeAllRanges();
+
+          const deltaLeft = (dx / (dragStartRef.current.sheetW || 1)) * 100;
+          const deltaTop = (dy / (dragStartRef.current.sheetH || 1)) * 100;
+
+          let newLeft = Math.round((dragStartRef.current.origLeft + deltaLeft) * 10) / 10;
+          let newTop = Math.round((dragStartRef.current.origTop + deltaTop) * 10) / 10;
+
+          // Clamp to keep sensibly within slide viewport (-5% to 98%)
+          const maxLeft = Math.max(0, 100 - Math.min(el.box.width, 10));
+          const maxTop = Math.max(0, 100 - Math.min(el.box.height, 5));
+          newLeft = Math.max(-5, Math.min(maxLeft, newLeft));
+          newTop = Math.max(-5, Math.min(maxTop, newTop));
+
+          setCustomPositions((prev) => ({
+            ...prev,
+            [el.id]: { left: newLeft, top: newTop },
+          }));
+        }
+      };
+
+      const handleMouseUp = () => {
+        if (dragStartRef.current?.hasMoved) {
+          justFinishedDraggingRef.current = true;
+          setTimeout(() => {
+            justFinishedDraggingRef.current = false;
+          }, 120);
+        }
+        dragStartRef.current = null;
+        setDraggingElementId(null);
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    },
+    [customPositions]
+  );
+
   // Container dimensions for 100% Visual Fit without scroll
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -381,6 +481,24 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       elements,
     } as SlideVisualLayout;
   }, [report.visualLayouts, currentSlide, currentUnits]);
+
+  // Check if any element on the current slide was repositioned
+  const hasCustomPositionsOnCurrentSlide = useMemo(() => {
+    if (!currentVisualLayout || !currentVisualLayout.elements) return false;
+    return currentVisualLayout.elements.some((el) => customPositions[el.id] !== undefined);
+  }, [currentVisualLayout, customPositions]);
+
+  // Reset custom positions on the current slide back to PPTX original layout
+  const handleResetPositions = useCallback(() => {
+    if (!currentVisualLayout) return;
+    setCustomPositions((prev) => {
+      const next = { ...prev };
+      for (const el of currentVisualLayout.elements) {
+        delete next[el.id];
+      }
+      return next;
+    });
+  }, [currentVisualLayout]);
 
   // Separate title, table, and body units
   const { titleUnit, tableUnits, bodyUnits } = useMemo(() => {
@@ -603,10 +721,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         return;
       }
 
-      if (e.key === "ArrowLeft") {
+      if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") {
         e.preventDefault();
         handlePrevSlide();
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") {
         e.preventDefault();
         handleNextSlide();
       } else if (e.key === "Tab") {
@@ -849,6 +967,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         {/* Spatial Elements */}
         {layout?.elements.map((el) => {
           const isSelected = selectedElementId === el.id;
+          const pos = customPositions[el.id] || { left: el.box.left, top: el.box.top };
+          const isDragging = draggingElementId === el.id;
 
           // 1. PICTURE SHAPES (ZERO-IMAGE DELETION)
           if (el.type === "image") {
@@ -858,21 +978,35 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             return (
               <div
                 key={el.id}
-                onClick={() => setSelectedElementId(el.id)}
+                onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
+                onClick={() => {
+                  if (justFinishedDraggingRef.current) return;
+                  setSelectedElementId(el.id);
+                }}
                 style={{
                   position: "absolute",
-                  left: `${el.box.left}%`,
-                  top: `${el.box.top}%`,
+                  left: `${pos.left}%`,
+                  top: `${pos.top}%`,
                   width: `${el.box.width}%`,
                   height: `${el.box.height}%`,
+                  cursor: isDragging ? "grabbing" : "grab",
+                  zIndex: isDragging ? 50 : isSelected ? 20 : 10,
                 }}
-                className={`rounded-lg border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center p-1 overflow-hidden z-10 ${
-                  isSelected
+                className={`rounded-lg border-2 border-dashed transition-all flex flex-col items-center justify-center p-1 overflow-hidden ${
+                  isDragging
+                    ? "border-sky-500 bg-sky-950/60 ring-2 ring-sky-400 shadow-2xl scale-[1.01]"
+                    : isSelected
                     ? "border-cyan-500 bg-cyan-950/40 ring-2 ring-cyan-400"
                     : "border-cyan-500/40 bg-cyan-950/10 hover:border-cyan-400"
                 }`}
-                title={`${el.shapeName || "Khung ảnh"} (L:${el.box.left}% T:${el.box.top}% W:${el.box.width}% H:${el.box.height}%)`}
+                title={`${el.shapeName || "Khung ảnh"} • Giữ chuột trái để kéo di chuyển`}
               >
+                {isDragging && (
+                  <div className="absolute -top-6 left-0 bg-slate-900/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap">
+                    <Move className="w-2.5 h-2.5 text-sky-400" />
+                    <span>X: {pos.left}% Y: {pos.top}%</span>
+                  </div>
+                )}
                 <Camera className="w-3.5 h-3.5 text-cyan-500 mb-0.5" />
                 <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 text-center leading-tight">
                   [ Khung ảnh gốc • Zero-Image ]
@@ -948,7 +1082,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           return (
             <div
               key={el.id}
+              onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
               onClick={(e) => {
+                if (justFinishedDraggingRef.current) {
+                  e.stopPropagation();
+                  return;
+                }
                 e.stopPropagation();
                 setSelectedElementId(el.id);
                 if (elementUnits.length > 0) {
@@ -964,13 +1103,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               }}
               onMouseEnter={() => {
                 if (elementUnits.length > 0 || el.text) {
-                  setHoveredCell({ element: el, units: elementUnits });
+                  setHoveredCell({
+                    element: { ...el, box: { ...el.box, left: pos.left, top: pos.top } },
+                    units: elementUnits,
+                  });
                 }
               }}
               onMouseLeave={() => {
                 setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
               }}
               onDoubleClick={(e) => {
+                if (justFinishedDraggingRef.current) return;
                 e.stopPropagation();
                 if (primaryUnit) startEdit(primaryUnit, e);
               }}
@@ -986,15 +1129,15 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 setContextMenu({
                   x: Math.max(10, x),
                   y: Math.max(10, y),
-                  element: el,
+                  element: { ...el, box: { ...el.box, left: pos.left, top: pos.top } },
                   unit: primaryUnit || null,
                   selectedPhrase: sel && sel.length > 0 ? sel : undefined,
                 });
               }}
               style={{
                 position: "absolute",
-                left: `${el.box.left}%`,
-                top: `${el.box.top}%`,
+                left: `${pos.left}%`,
+                top: `${pos.top}%`,
                 width: `${el.box.width}%`,
                 height: `${el.box.height}%`,
                 backgroundColor: isChecked
@@ -1013,22 +1156,36 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 textAlign: isCentered ? "center" : "left",
                 opacity: isDimmed ? 0.22 : 1.0,
                 filter: isDimmed ? "grayscale(80%)" : "none",
-                transition: "opacity 0.2s, filter 0.2s, border-color 0.15s, box-shadow 0.15s, background-color 0.15s",
+                transition: isDragging
+                  ? "none"
+                  : "opacity 0.2s, filter 0.2s, border-color 0.15s, box-shadow 0.15s, background-color 0.15s",
                 boxSizing: "border-box",
+                cursor: isDragging ? "grabbing" : "grab",
+                zIndex: isDragging ? 60 : isChecked ? 20 : isPartiallyChecked ? 15 : isSelected ? 10 : 1,
+                userSelect: isDragging ? "none" : undefined,
               }}
-              className={`group cursor-pointer overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-text ${
-                isChecked
-                  ? "ring-2 ring-sky-500 shadow-md z-20"
+              className={`group overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-text ${
+                isDragging
+                  ? "ring-2 ring-indigo-500 shadow-2xl scale-[1.01]"
+                  : isChecked
+                  ? "ring-2 ring-sky-500 shadow-md"
                   : isPartiallyChecked
-                  ? "ring-2 ring-sky-400/70 shadow-sm z-15"
+                  ? "ring-2 ring-sky-400/70 shadow-sm"
                   : isSelected
-                  ? "ring-1 ring-sky-400 z-10"
+                  ? "ring-1 ring-sky-400"
                   : isPending && focusPendingOnly
-                  ? "ring-2 ring-rose-500 shadow-md animate-pulse z-20"
-                  : "hover:ring-1 hover:ring-sky-400/70 z-10"
+                  ? "ring-2 ring-rose-500 shadow-md animate-pulse"
+                  : "hover:ring-1 hover:ring-sky-400/70"
               }`}
-              title={`${el.shapeName || "Phần tử"} • Nhấp để chọn dịch • Bấm chuột phải để mở Pop-up Dịch • Nhấp đúp để sửa`}
+              title={`${el.shapeName || "Phần tử"} • Giữ chuột trái để kéo di chuyển • Nhấp để chọn dịch • Nhấp đúp để sửa`}
             >
+              {/* Drag Coordinate Floating Chip */}
+              {isDragging && (
+                <div className="absolute -top-6 left-0 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
+                  <Move className="w-2.5 h-2.5 text-sky-400" />
+                  <span>X: {pos.left}% Y: {pos.top}%</span>
+                </div>
+              )}
               {/* Text Body Rendering - 100% CLEAN, ZERO OVERLAYS, ZERO OBSCURATION */}
               <div
                 className={`w-full ${
@@ -1161,10 +1318,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               type="button"
               onClick={handlePrevSlide}
               disabled={currentSlide <= 1}
-              className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer"
-              title="Slide trước (←)"
+              className="px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs"
+              title="Slide trước (Phím A hoặc ←)"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300">
+                A
+              </kbd>
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
 
             <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xs">
@@ -1178,10 +1338,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               type="button"
               onClick={handleNextSlide}
               disabled={currentSlide >= report.totalSlides}
-              className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer"
-              title="Slide tiếp theo (→)"
+              className="px-2 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 disabled:opacity-30 transition-colors cursor-pointer flex items-center gap-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs"
+              title="Slide tiếp theo (Phím D hoặc →)"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
+              <kbd className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300">
+                D
+              </kbd>
             </button>
 
             {pendingSlideNumbers.length > 0 && (
@@ -1390,6 +1553,19 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               <Eye className="w-3 h-3 text-sky-500" />
               <span>Kính lúp</span>
             </button>
+
+            {/* Reset custom moved positions if any element moved on this slide */}
+            {hasCustomPositionsOnCurrentSlide && (
+              <button
+                type="button"
+                onClick={handleResetPositions}
+                className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer border bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800 shadow-2xs hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                title="Khôi phục lại vị trí gốc của các ô trên slide này"
+              >
+                <RotateCcw className="w-3 h-3 text-amber-500" />
+                <span>Đặt lại vị trí ({currentVisualLayout?.elements.filter((el) => customPositions[el.id] !== undefined).length})</span>
+              </button>
+            )}
 
             {/* Zoom Controls */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
@@ -1985,14 +2161,18 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           <span className="font-semibold text-slate-700 dark:text-slate-300">Phím tắt:</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 font-mono text-[9px]">
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-semibold flex items-center gap-1">
+            <Move className="w-2.5 h-2.5" />
+            Giữ chuột trái : Kéo di chuyển ô
+          </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             Chuột phải : Pop-up Dịch
           </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             Ctrl+Click : Chọn nhiều ô
           </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            ←/→ : Đổi Slide
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium">
+            A / D : Đổi Slide
           </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             Nhấp đúp / Enter : Sửa chữ

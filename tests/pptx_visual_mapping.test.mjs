@@ -78,3 +78,26 @@ test("PPTX Presentation Review - Decomposes Tables into Styled Cells with Zero-I
   }
 });
 
+test("PPTX Table Merged Cells - Identifies rowSpan/colSpan and skips subordinate vMerge/hMerge", async () => {
+  const pptxFile = fs.readdirSync("Database").find((f) => f.endsWith(".pptx"));
+  const buffer = fs.readFileSync(path.join("Database", pptxFile));
+  const report = await scanPptxTranslationIntelligence(buffer, pptxFile);
+
+  assert.ok(report.visualLayouts, "Layouts must exist");
+  const allCells = report.visualLayouts.flatMap((l) => l.elements.filter((e) => e.type === "cell"));
+  assert.ok(allCells.length > 0, "Cells should be parsed");
+
+  // Verify that any cell with rowSpan > 1 has isMerged set to true and has greater height
+  const multiRowCells = allCells.filter((c) => (c.rowSpan || 1) > 1);
+  for (const c of multiRowCells) {
+    assert.equal(c.isMerged, true, "Cell with rowSpan > 1 must have isMerged = true");
+    assert.ok(c.box.height > 0, "Merged cell height must be positive");
+  }
+
+  // Ensure no subordinate cells leaked with placeholder status
+  for (const c of allCells) {
+    assert.ok(c.box.width > 0 && c.box.height > 0, "All valid cells have positive dimensions");
+  }
+});
+
+

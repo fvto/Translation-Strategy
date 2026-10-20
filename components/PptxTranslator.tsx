@@ -32,6 +32,7 @@ import {
   Zap,
   Gauge,
   Activity,
+  Loader2,
 } from "lucide-react";
 import { AiStudioTelemetry } from "./AiStudioTelemetry";
 import { AiStudioMetrics } from "@/services/translation/types";
@@ -248,13 +249,15 @@ export const PptxTranslator: React.FC = () => {
     setBatchAddSuccessMessage(null);
   };
 
-  const runSmartAudit = async (selectedFile?: File) => {
+  const runSmartAudit = async (selectedFile?: File, openModal: boolean = true) => {
     const targetFile = selectedFile || file;
     if (!targetFile) return;
 
     setIsAuditing(true);
     setAuditReport(null);
-    setIsAuditModalOpen(false);
+    if (openModal) {
+      setIsAuditModalOpen(true);
+    }
     setProcessingStatus("Đang quét toàn diện cấu trúc tài liệu để phát hiện khoảng trống dịch thuật...");
     const formData = new FormData();
     formData.append("file", targetFile);
@@ -272,11 +275,16 @@ export const PptxTranslator: React.FC = () => {
       if (!res.ok || !data.success) throw new Error(data.error || "Không thể quét PowerPoint.");
       if (data.success && data.auditReport) {
         setAuditReport(data.auditReport);
-        setIsAuditModalOpen(true);
+        if (openModal) {
+          setIsAuditModalOpen(true);
+        }
       }
     } catch (e: any) {
       console.error("Smart audit error:", e);
       setErrorMessage(e.message || "Không thể quét PowerPoint.");
+      if (openModal) {
+        setIsAuditModalOpen(false);
+      }
     } finally {
       setIsAuditing(false);
     }
@@ -354,8 +362,8 @@ export const PptxTranslator: React.FC = () => {
     setAddedTermIds(new Set());
     setSelectedOptionsMap({});
     setBatchAddSuccessMessage(null);
-    // Proactively scan document gaps on import
-    runSmartAudit(selectedFile);
+    // Proactively scan document gaps on import in the background
+    runSmartAudit(selectedFile, false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -1209,12 +1217,27 @@ export const PptxTranslator: React.FC = () => {
               </button>
 
               <button
-                onClick={() => runSmartAudit()}
-                disabled={isProcessing || isAuditing}
-                className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+                onClick={() => {
+                  if (auditReport) {
+                    setIsAuditModalOpen(true);
+                  } else {
+                    runSmartAudit(file, true);
+                  }
+                }}
+                disabled={isProcessing}
+                className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
               >
-                <Zap className="w-4 h-4 text-amber-300" />
-                <span>Smart Audit (Quét phần thiếu)</span>
+                {isAuditing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
+                    <span>Đang quét Smart Audit...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 text-amber-300" />
+                    <span>Smart Audit (Quét phần thiếu)</span>
+                  </>
+                )}
               </button>
 
               <button

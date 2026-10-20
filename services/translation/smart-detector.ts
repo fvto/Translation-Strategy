@@ -58,6 +58,9 @@ export interface SlideVisualElement {
   border?: string;
   tableRow?: number;
   tableCol?: number;
+  rowSpan?: number;
+  colSpan?: number;
+  isMerged?: boolean;
 }
 
 export interface SlideVisualLayout {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle, Presentation, Maximize2, Minimize2 } from "lucide-react";
+import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle, Presentation, Maximize2, Minimize2, Loader2 } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
 import { SmartAuditSlideCanvas } from "./SmartAuditSlideCanvas";
 
@@ -251,7 +251,64 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     );
   }, [selectedMissing, slidePairMap]);
 
-  if (!isOpen || !report) return null;
+  if (!isOpen) return null;
+
+  // Simple, elegant loading UI for Smart Audit
+  if (isLoading || !report) {
+    return (
+      <div
+        id="smart-audit-loading-backdrop"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-7 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4 animate-in zoom-in-95 duration-150"
+        >
+          {/* Animated Glowing Icon Badge */}
+          <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-2xl bg-amber-500/20 dark:bg-amber-500/30 animate-ping opacity-75" />
+            <div className="relative w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center shadow-sm">
+              <Zap className="w-7 h-7 text-amber-500 animate-pulse fill-amber-500/20" />
+            </div>
+          </div>
+
+          {/* Title & Target File Name */}
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
+              <span>Đang quét Smart Audit...</span>
+            </h3>
+            {file && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate max-w-xs mx-auto">
+                {file.name}
+              </p>
+            )}
+          </div>
+
+          {/* Simple Progress Bar & Indicator */}
+          <div className="space-y-2 pt-1">
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-gradient-to-r from-amber-500 via-rose-500 to-sky-500 h-full rounded-full animate-pulse w-full" />
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Đang phân tích cấu trúc slide, đối chiếu thuật ngữ và phát hiện các đoạn cần dịch...
+            </p>
+          </div>
+
+          {/* Close button */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-1.5 rounded-full text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              Hủy / Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const loading = isLoading || busy;
   const safeIds = report.units.filter((u) => u.safeToApply && u.canApply && !(report.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
@@ -434,8 +491,25 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
         aria-modal="true"
         aria-labelledby="smart-audit-title"
         id="smart-audit-modal-container"
-        className={`w-full ${isMaximized ? "max-w-full h-screen rounded-none" : "max-w-[97vw] 2xl:max-w-[1780px] h-[95vh] rounded-3xl"} flex flex-col bg-white shadow-2xl border border-slate-200 overflow-hidden text-slate-900 transition-all duration-200 overscroll-contain`}
+        className={`w-full ${isMaximized ? "max-w-full h-screen rounded-none" : "max-w-[97vw] 2xl:max-w-[1780px] h-[95vh] rounded-3xl"} flex flex-col bg-white shadow-2xl border border-slate-200 overflow-hidden text-slate-900 transition-all duration-200 overscroll-contain relative`}
       >
+        {/* Simple Action Loading Overlay */}
+        {busy && (
+          <div className="absolute inset-0 z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xs flex flex-col items-center justify-center gap-3 animate-in fade-in duration-150">
+            <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              Đang áp dụng thay đổi và đóng gói PPTX...
+            </p>
+          </div>
+        )}
+        {harvesting && (
+          <div className="absolute inset-0 z-50 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xs flex flex-col items-center justify-center gap-3 animate-in fade-in duration-150">
+            <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              Đang thu hoạch cặp thuật ngữ song ngữ...
+            </p>
+          </div>
+        )}
         <div className="flex justify-between items-center px-6 py-3.5 border-b border-slate-100">
           <div>
             <h2 id="smart-audit-title" className="text-lg font-bold flex items-center gap-2">
