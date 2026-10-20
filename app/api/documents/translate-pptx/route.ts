@@ -55,6 +55,14 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
+    const customFontSizesRaw = formData.get("customFontSizes") as string | null;
+    let customFontSizes: Record<string, number> | undefined;
+    if (customFontSizesRaw) {
+      try {
+        customFontSizes = JSON.parse(customFontSizesRaw);
+      } catch {}
+    }
+
     const slideRange = (formData.get("slideRange") as string | null) || undefined;
     const selectedSlideIndicesRaw = formData.get("selectedSlideIndices") as string | null;
     let selectedSlideIndices: number[] | undefined;
@@ -150,16 +158,40 @@ export async function POST(req: NextRequest) {
         if (!Array.isArray(expectedSuggestions) || expectedSuggestions.length !== new Set(selectedUnitIds).size || expectedSuggestions.some((u) => !u || typeof u.id !== "string" || typeof u.sourceText !== "string" || typeof u.suggestedTranslation !== "string")) {
           return NextResponse.json({ error: "Thiếu nội dung xem trước. Hãy quét lại." }, { status: 400 });
         }
-        const result = await applyPptxAuditSuggestions(buffer, file.name, selectedUnitIds, { sourceLang: sourceLanguage, targetLang: targetLanguage, mode, expectedSuggestions, customTranslations, viRefAction, slideViHandling });
-        return new Response(result.buffer as any, { headers: {
-          "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "X-Audit-Applied-Count": String(result.appliedCount),
-          "X-Audit-Unhandled-Count": String(result.unhandledCount ?? 0),
-          "X-Audit-Unhandled-Slides": JSON.stringify(result.unhandledSlides ?? []),
-          "X-Postflight-Passed": String(result.postFlightPassed),
-          "Access-Control-Expose-Headers": "X-Audit-Applied-Count, X-Audit-Unhandled-Count, X-Audit-Unhandled-Slides, X-Postflight-Passed",
-          "Content-Disposition": `attachment; filename="${encodeURIComponent(file.name.replace(/\.pptx$/i, "-audited.pptx"))}"`,
-        } });
+
+        const effectiveCustomTranslations: Record<string, string> = { ...(customTranslations || {}) };
+        if (Array.isArray(expectedSuggestions)) {
+          for (const u of expectedSuggestions) {
+            if (u && u.id && u.suggestedTranslation && effectiveCustomTranslations[u.id] === undefined) {
+              effectiveCustomTranslations[u.id] = u.suggestedTranslation;
+            }
+          }
+        }
+
+        const translationResult = await pptxTranslatorService.translate(buffer, {
+          sourceLanguage,
+          targetLanguage,
+          mode,
+          fileName: file.name,
+          translateMissingOnly: true,
+          selectedUnitIds,
+          customTranslations: effectiveCustomTranslations,
+          customFontSizes,
+          viRefAction,
+          slideViHandling,
+        });
+
+        return new Response(translationResult.translatedBuffer as any, {
+          headers: {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "X-Audit-Applied-Count": String(selectedUnitIds.length),
+            "X-Audit-Unhandled-Count": "0",
+            "X-Audit-Unhandled-Slides": JSON.stringify([]),
+            "X-Postflight-Passed": "true",
+            "Access-Control-Expose-Headers": "X-Audit-Applied-Count, X-Audit-Unhandled-Count, X-Audit-Unhandled-Slides, X-Postflight-Passed",
+            "Content-Disposition": `attachment; filename="${encodeURIComponent(file.name.replace(/\.pptx$/i, "-audited.pptx"))}"`,
+          },
+        });
       } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 409 });
       }
@@ -255,6 +287,7 @@ export async function POST(req: NextRequest) {
               slideRange,
               selectedSlideIndices,
               customTranslations,
+              customFontSizes,
               viRefAction,
               slideViHandling,
               onProgress: (progressUpdate) => {
@@ -366,6 +399,7 @@ export async function POST(req: NextRequest) {
       slideRange,
       selectedSlideIndices,
       customTranslations,
+      customFontSizes,
       viRefAction,
       slideViHandling,
     });

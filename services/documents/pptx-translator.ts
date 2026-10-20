@@ -563,6 +563,7 @@ export class PptxTranslatorService {
       selectedSlideIndices?: number[];
       slideRange?: string;
       customTranslations?: Record<string, string>;
+      customFontSizes?: Record<string, number>;
       viRefAction?: "duplicate" | "overwrite" | "bilingual";
       slideViHandling?: Record<number, "duplicate" | "overwrite" | "bilingual">;
     }
@@ -912,6 +913,12 @@ export class PptxTranslatorService {
           translationMap.set(customId, customText.trim());
           modifiedParagraphIds.add(customId);
         }
+      }
+    }
+
+    if (options?.customFontSizes) {
+      for (const fontId of Object.keys(options.customFontSizes)) {
+        modifiedParagraphIds.add(fontId);
       }
     }
 
@@ -1824,7 +1831,8 @@ export class PptxTranslatorService {
               // The English counterpart is already another paragraph in this same container/slide.
               return '';
             }
-            try { translated = replaceParagraphTranslation(pXml, p.translatedText || p.originalText, p.originalText); }
+            const overrideFontSizePt = options?.customFontSizes?.[p.id];
+            try { translated = replaceParagraphTranslation(pXml, p.translatedText || p.originalText, p.originalText, overrideFontSizePt); }
             catch (error) { throw new Error(`Không thể giữ định dạng tại ${p.id}: ${error instanceof Error ? error.message : error}`); }
             if (targetMode === "replace_en" || targetSlideFileName !== slide.slideFileName) return translated;
             return targetLanguage === "en" ? translated + pXml : pXml + translated;
@@ -1833,7 +1841,8 @@ export class PptxTranslatorService {
           originalXml,
           slide.paragraphs,
           targetMode,
-          options?.translateMissingOnly ? modifiedParagraphIds : undefined
+          options?.translateMissingOnly ? modifiedParagraphIds : undefined,
+          options?.customFontSizes
         );
         zip.file(targetSlideFileName, updatedXml);
       }
@@ -1978,7 +1987,8 @@ export class PptxTranslatorService {
     slides: PptxSlideData[],
     mode: PptxTranslationMode = "ipqc_bilingual",
     fileName?: string,
-    targetLanguage: string = "en"
+    targetLanguage: string = "en",
+    customFontSizes?: Record<string, number>
   ): Promise<Buffer> {
     const zip = await JSZip.loadAsync(originalBuffer);
 
@@ -2012,7 +2022,7 @@ export class PptxTranslatorService {
 
       const originalXml = await zip.file(slide.slideFileName)?.async("string");
       if (originalXml) {
-        const updatedXml = this.replaceParagraphsInXml(originalXml, slide.paragraphs, targetMode);
+        const updatedXml = this.replaceParagraphsInXml(originalXml, slide.paragraphs, targetMode, undefined, customFontSizes);
         zip.file(slide.slideFileName, updatedXml);
       }
 
@@ -2430,7 +2440,8 @@ export class PptxTranslatorService {
     xml: string,
     paragraphs: PptxParagraph[],
     mode: PptxTranslationMode = "ipqc_bilingual",
-    modifiedParagraphIds?: Set<string>
+    modifiedParagraphIds?: Set<string>,
+    customFontSizes?: Record<string, number>
   ): string {
     // 1. Process shapes: Protect Title shape bodyPr from any arbitrary changes;
     // ensure text wrap without arbitrarily scaling down fonts.
@@ -2697,18 +2708,33 @@ export class PptxTranslatorService {
         );
       };
 
+      const getItemFontSizePt = (pData?: PptxParagraph): number | undefined => {
+        if (!pData || !customFontSizes) return undefined;
+        return customFontSizes[pData.id];
+      };
+
       // Helper to generate <a:p> elements for text lines, splitting by \n to prevent PowerPoint run-squashing
       const buildParagraphs = (
         text: string,
         pPr: string,
         rAttrs: string,
-        fontChildren: string
+        fontChildren: string,
+        overrideFontSizePt?: number
       ): string[] => {
+        let effectiveRAttrs = rAttrs;
+        if (overrideFontSizePt != null && !isNaN(overrideFontSizePt)) {
+          const szVal = Math.round(overrideFontSizePt * 100);
+          if (/\bsz=["']\d+["']/.test(effectiveRAttrs)) {
+            effectiveRAttrs = effectiveRAttrs.replace(/\bsz=["']\d+["']/g, `sz="${szVal}"`);
+          } else {
+            effectiveRAttrs = ` sz="${szVal}"` + effectiveRAttrs;
+          }
+        }
         const normalized = normalizeSpiTerminology(text.trim());
         const lines = normalized.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         if (lines.length === 0) return [];
         return lines.map((line) => {
-          return `<a:p>${pPr}<a:r><a:rPr${rAttrs}>${fontChildren}</a:rPr><a:t>${escapeXml(line)}</a:t></a:r></a:p>`;
+          return `<a:p>${pPr}<a:r><a:rPr${effectiveRAttrs}>${fontChildren}</a:rPr><a:t>${escapeXml(line)}</a:t></a:r></a:p>`;
         });
       };
 
@@ -2718,7 +2744,14 @@ export class PptxTranslatorService {
 
         // KEEP INSPECTION ITEM AS-IS: Exactly as requested ("phần inspection item này phải giữ yên như vậy")
         if (it.pData?.isInspectionItem && mode === "ipqc_bilingual") {
-          const keptRun = `<a:r><a:rPr${it.rawAttrs}>${it.fontChildren}</a:rPr><a:t>${escapeXml(normalizeSpiTerminology(it.pData.originalText.trim()))}</a:t></a:r>`;
+          let inspAttrs = it.rawAttrs;
+          const sz = getItemFontSizePt(it.pData);
+          if (sz != null && !isNaN(sz)) {
+            const szVal = Math.round(sz * 100);
+            if (/\bsz=["']\d+["']/.test(inspAttrs)) inspAttrs = inspAttrs.replace(/\bsz=["']\d+["']/g, `sz="${szVal}"`);
+            else inspAttrs = ` sz="${szVal}"` + inspAttrs;
+          }
+          const keptRun = `<a:r><a:rPr${inspAttrs}>${it.fontChildren}</a:rPr><a:t>${escapeXml(normalizeSpiTerminology(it.pData.originalText.trim()))}</a:t></a:r>`;
           const singleP = `<a:p>${it.pPr}${keptRun}</a:p>`;
           return `${tagOpen}${containerHeader}${singleP}${containerTrailer}${tagClose}`;
         }
@@ -2754,26 +2787,18 @@ export class PptxTranslatorService {
 
           if (isInterleavedLines && linePairs.length >= 2) {
             if (mode === "replace_en") {
-              const enPs = linePairs.flatMap((lp) => buildParagraphs(lp.en, enPPr, enAttrs, it.fontChildren));
+              const enPs = linePairs.flatMap((lp) => buildParagraphs(lp.en, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
               return `${tagOpen}${containerHeader}${enPs.join("")}${containerTrailer}${tagClose}`;
             } else {
-              // ipqc_bilingual: emit interleaved preserving exact author order (1.EN 1.VI or 1.VI 1.EN)
+              // ipqc_bilingual: emit block bilingual format (1.EN 2.EN 3.EN ... 1.VI 2.VI 3.VI ...)
               let viAttrs = it.rawAttrs;
               if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
               else viAttrs += ' lang="vi-VN"';
               const viPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
 
-              const interleavedPs: string[] = [];
-              for (const lp of linePairs) {
-                if (lp.firstIsEn) {
-                  interleavedPs.push(...buildParagraphs(lp.first, enPPr, enAttrs, it.fontChildren));
-                  interleavedPs.push(...buildParagraphs(lp.second, viPPr, viAttrs, it.fontChildren));
-                } else {
-                  interleavedPs.push(...buildParagraphs(lp.first, viPPr, viAttrs, it.fontChildren));
-                  interleavedPs.push(...buildParagraphs(lp.second, enPPr, enAttrs, it.fontChildren));
-                }
-              }
-              return `${tagOpen}${containerHeader}${interleavedPs.join("")}${containerTrailer}${tagClose}`;
+              const enPs = linePairs.flatMap((lp) => buildParagraphs(lp.en, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
+              const viPs = linePairs.flatMap((lp) => buildParagraphs(lp.vi, viPPr, viAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
+              return `${tagOpen}${containerHeader}${enPs.join("")}${viPs.join("")}${containerTrailer}${tagClose}`;
             }
           }
         }
@@ -2791,7 +2816,7 @@ export class PptxTranslatorService {
             const enBlock = firstIsVi ? b2 : b1;
 
             if (mode === "replace_en") {
-              const enPs = enBlock.flatMap((l) => buildParagraphs(l, enPPr, enAttrs, it.fontChildren));
+              const enPs = enBlock.flatMap((l) => buildParagraphs(l, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
               return `${tagOpen}${containerHeader}${enPs.join("")}${containerTrailer}${tagClose}`;
             } else {
               let viAttrs = it.rawAttrs;
@@ -2799,14 +2824,15 @@ export class PptxTranslatorService {
               else viAttrs += ' lang="vi-VN"';
               const viPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
 
-              const block1Ps = b1.flatMap((l) => buildParagraphs(l, firstIsVi ? viPPr : enPPr, firstIsVi ? viAttrs : enAttrs, it.fontChildren));
-              const block2Ps = b2.flatMap((l) => buildParagraphs(l, firstIsVi ? enPPr : viPPr, firstIsVi ? enAttrs : viAttrs, it.fontChildren));
-              return `${tagOpen}${containerHeader}${block1Ps.join("")}${block2Ps.join("")}${containerTrailer}${tagClose}`;
+              const viBlock = firstIsVi ? b1 : b2;
+              const enPs = enBlock.flatMap((l) => buildParagraphs(l, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
+              const viPs = viBlock.flatMap((l) => buildParagraphs(l, viPPr, viAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
+              return `${tagOpen}${containerHeader}${enPs.join("")}${viPs.join("")}${containerTrailer}${tagClose}`;
             }
           }
         }
 
-        const enParagraphs = buildParagraphs(it.enText, enPPr, enAttrs, it.fontChildren);
+        const enParagraphs = buildParagraphs(it.enText, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData));
 
         if (mode === "replace_en" || !shouldIncludeVi(it.enText, it.viText)) {
           return `${tagOpen}${containerHeader}${enParagraphs.join("")}${containerTrailer}${tagClose}`;
@@ -2817,7 +2843,7 @@ export class PptxTranslatorService {
         else viAttrs += ' lang="vi-VN"';
 
         const viPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-        const viParagraphs = buildParagraphs(it.viText, viPPr, viAttrs, it.fontChildren);
+        const viParagraphs = buildParagraphs(it.viText, viPPr, viAttrs, it.fontChildren, getItemFontSizePt(it.pData));
 
         // Clean separate <a:p> elements: EN on top, VI below. Never fuse with <a:br>!
         return `${tagOpen}${containerHeader}${enParagraphs.join("")}${viParagraphs.join("")}${containerTrailer}${tagClose}`;
@@ -2826,7 +2852,14 @@ export class PptxTranslatorService {
       // MULTIPLE INSPECTION ITEMS IN CONTAINER: keep each item intact on its own line
       if (activeItems.every((it) => it.pData?.isInspectionItem) && mode === "ipqc_bilingual") {
         const keptPList = activeItems.map((it) => {
-          return `<a:p>${it.pPr}<a:r><a:rPr${it.rawAttrs}>${it.fontChildren}</a:rPr><a:t>${escapeXml(normalizeSpiTerminology(it.pData!.originalText.trim()))}</a:t></a:r></a:p>`;
+          let inspAttrs = it.rawAttrs;
+          const sz = getItemFontSizePt(it.pData);
+          if (sz != null && !isNaN(sz)) {
+            const szVal = Math.round(sz * 100);
+            if (/\bsz=["']\d+["']/.test(inspAttrs)) inspAttrs = inspAttrs.replace(/\bsz=["']\d+["']/g, `sz="${szVal}"`);
+            else inspAttrs = ` sz="${szVal}"` + inspAttrs;
+          }
+          return `<a:p>${it.pPr}<a:r><a:rPr${inspAttrs}>${it.fontChildren}</a:rPr><a:t>${escapeXml(normalizeSpiTerminology(it.pData!.originalText.trim()))}</a:t></a:r></a:p>`;
         });
         return `${tagOpen}${containerHeader}${keptPList.join("")}${containerTrailer}${tagClose}`;
       }
@@ -2849,7 +2882,7 @@ export class PptxTranslatorService {
       if (coreActiveItems.length === 0) {
         const neutralPList = activeItems.flatMap((it) => {
           const pPrToUse = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-          return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren);
+          return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren, getItemFontSizePt(it.pData));
         });
         return `${tagOpen}${containerHeader}${neutralPList.join("")}${containerTrailer}${tagClose}`;
       }
@@ -2918,7 +2951,7 @@ export class PptxTranslatorService {
       if (isInterleavedBilingualBlock) {
         const neutralPList = trailingNeutralItems.flatMap((it) => {
           const pPrToUse = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-          return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren);
+          return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren, getItemFontSizePt(it.pData));
         });
 
         if (mode === "replace_en") {
@@ -2936,7 +2969,7 @@ export class PptxTranslatorService {
               if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
               else enAttrs += ' lang="en-US"';
               const enPPr = this.enhancePPr(enIt.pPr, { isTitle: enIt.pData?.isTitle });
-              const enPs = buildParagraphs(enIt.enText || enIt.pData?.originalText || "", enPPr, enAttrs, enIt.fontChildren);
+              const enPs = buildParagraphs(enIt.enText || enIt.pData?.originalText || "", enPPr, enAttrs, enIt.fontChildren, getItemFontSizePt(enIt.pData));
               enOnlyPList.push(...enPs);
               processedIndices.add(pair.enIdx);
               processedIndices.add(pair.viIdx);
@@ -2946,7 +2979,7 @@ export class PptxTranslatorService {
               if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
               else enAttrs += ' lang="en-US"';
               const enPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-              const enPs = buildParagraphs(it.enText || it.pData?.originalText || "", enPPr, enAttrs, it.fontChildren);
+              const enPs = buildParagraphs(it.enText || it.pData?.originalText || "", enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData));
               enOnlyPList.push(...enPs);
               processedIndices.add(i);
             }
@@ -2955,32 +2988,34 @@ export class PptxTranslatorService {
         }
 
         // Bilingual mode (ipqc_bilingual):
-        // PRESERVE the in-slide interleaved structure: dòng 1.EN 1.VI (hoặc 1.VI 1.EN)!
-        const interleavedPList: string[] = [];
+        // Standard block bilingual: ALL EN on top (1.EN 2.EN 3.EN...), ALL VI below (1.VI 2.VI 3.VI...)!
+        const enPList: string[] = [];
+        const viPList: string[] = [];
         const processedIndices = new Set<number>();
 
         for (let i = 0; i < coreActiveItems.length; i++) {
           if (processedIndices.has(i)) continue;
           const pair = interleavedPairs.find((p) => p.enIdx === i || p.viIdx === i);
           if (pair) {
-            const firstIt = coreActiveItems[pair.firstIdx];
-            const secondIt = coreActiveItems[pair.secondIdx];
+            const enIt = coreActiveItems[pair.enIdx];
+            const viIt = coreActiveItems[pair.viIdx];
 
-            const formatParagraph = (it: typeof firstIt, isEn: boolean) => {
-              let attrs = it.rawAttrs;
-              const langTag = isEn ? 'lang="en-US"' : 'lang="vi-VN"';
-              if (/lang="[^"]*"/.test(attrs)) attrs = attrs.replace(/lang="[^"]*"/, langTag);
-              else attrs += ` ${langTag}`;
-              const pPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-              const text = isEn ? (it.enText || it.pData?.originalText || "") : (it.viText || it.pData?.originalText || "");
-              return buildParagraphs(text, pPr, attrs, it.fontChildren);
-            };
+            let enAttrs = enIt.rawAttrs;
+            if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
+            else enAttrs += ' lang="en-US"';
+            const enPPr = this.enhancePPr(enIt.pPr, { isTitle: enIt.pData?.isTitle });
+            const enText = enIt.enText || enIt.pData?.originalText || "";
+            enPList.push(...buildParagraphs(enText, enPPr, enAttrs, enIt.fontChildren, getItemFontSizePt(enIt.pData)));
 
-            const firstPs = formatParagraph(firstIt, pair.firstIdx === pair.enIdx);
-            const secondPs = formatParagraph(secondIt, pair.secondIdx === pair.enIdx);
-            interleavedPList.push(...firstPs, ...secondPs);
-            processedIndices.add(pair.firstIdx);
-            processedIndices.add(pair.secondIdx);
+            let viAttrs = viIt.rawAttrs;
+            if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
+            else viAttrs += ' lang="vi-VN"';
+            const viPPr = this.enhancePPr(viIt.pPr, { isTitle: viIt.pData?.isTitle });
+            const viText = viIt.viText || viIt.pData?.originalText || "";
+            viPList.push(...buildParagraphs(viText, viPPr, viAttrs, viIt.fontChildren, getItemFontSizePt(viIt.pData)));
+
+            processedIndices.add(pair.enIdx);
+            processedIndices.add(pair.viIdx);
           } else {
             const it = coreActiveItems[i];
             const hasVi = hasViDiacritics(it.pData?.originalText || "");
@@ -2989,26 +3024,24 @@ export class PptxTranslatorService {
               if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
               else enAttrs += ' lang="en-US"';
               const enPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-              const enPs = buildParagraphs(it.enText, enPPr, enAttrs, it.fontChildren);
+              enPList.push(...buildParagraphs(it.enText, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
 
               let viAttrs = it.rawAttrs;
               if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
               else viAttrs += ' lang="vi-VN"';
               const viPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-              const viPs = buildParagraphs(it.viText, viPPr, viAttrs, it.fontChildren);
-
-              interleavedPList.push(...enPs, ...viPs);
+              viPList.push(...buildParagraphs(it.viText, viPPr, viAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
             } else {
               let enAttrs = it.rawAttrs;
               if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
               else enAttrs += ' lang="en-US"';
               const enPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-              interleavedPList.push(...buildParagraphs(it.enText || it.pData?.originalText || "", enPPr, enAttrs, it.fontChildren));
+              enPList.push(...buildParagraphs(it.enText || it.pData?.originalText || "", enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData)));
             }
             processedIndices.add(i);
           }
         }
-        return `${tagOpen}${containerHeader}${interleavedPList.join("")}${neutralPList.join("")}${containerTrailer}${tagClose}`;
+        return `${tagOpen}${containerHeader}${enPList.join("")}${viPList.join("")}${neutralPList.join("")}${containerTrailer}${tagClose}`;
       }
 
       // Check if container ALREADY contains a genuine parallel bilingual block
@@ -3118,7 +3151,7 @@ export class PptxTranslatorService {
           if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
           else enAttrs += ' lang="en-US"';
           const enPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-          return buildParagraphs(it.pData!.originalText, enPPr, enAttrs, it.fontChildren);
+          return buildParagraphs(it.pData!.originalText, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData));
         });
 
         // VI items (or mixed items that needed translation): emit translated enText so nothing is lost
@@ -3132,13 +3165,13 @@ export class PptxTranslatorService {
             if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
             else enAttrs += ' lang="en-US"';
             const enPPr = this.enhancePPr(extraIt.pPr, { isTitle: extraIt.pData?.isTitle });
-            enPList.push(...buildParagraphs(extraIt.enText, enPPr, enAttrs, extraIt.fontChildren));
+            enPList.push(...buildParagraphs(extraIt.enText, enPPr, enAttrs, extraIt.fontChildren, getItemFontSizePt(extraIt.pData)));
           }
         }
 
         const neutralPList = trailingNeutralItems.flatMap((it) => {
           const pPrToUse = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-          return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren);
+          return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren, getItemFontSizePt(it.pData));
         });
 
         if (mode === "replace_en") {
@@ -3150,12 +3183,10 @@ export class PptxTranslatorService {
           if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
           else viAttrs += ' lang="vi-VN"';
           const viPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-          return buildParagraphs(it.pData!.originalText, viPPr, viAttrs, it.fontChildren);
+          return buildParagraphs(it.pData!.originalText, viPPr, viAttrs, it.fontChildren, getItemFontSizePt(it.pData));
         });
 
-        const firstBlockPs = firstIsVi ? viPList : enPList;
-        const secondBlockPs = firstIsVi ? enPList : viPList;
-        return `${tagOpen}${containerHeader}${firstBlockPs.join("")}${secondBlockPs.join("")}${neutralPList.join("")}${containerTrailer}${tagClose}`;
+        return `${tagOpen}${containerHeader}${enPList.join("")}${viPList.join("")}${neutralPList.join("")}${containerTrailer}${tagClose}`;
       }
 
       // If in replace_en mode (ISQ slides): preserve all items translated to English
@@ -3220,7 +3251,7 @@ export class PptxTranslatorService {
             else enAttrs += ' lang="en-US"';
             const fontChildren = active ? active.fontChildren : '<a:latin typeface="Calibri"/><a:cs typeface="Calibri"/>';
             const enPPr = this.enhancePPr(pPrToUse, { isTitle: item.pData.isTitle });
-            const ps = buildParagraphs(textToUse, enPPr, enAttrs, fontChildren);
+            const ps = buildParagraphs(textToUse, enPPr, enAttrs, fontChildren, getItemFontSizePt(item.pData));
             enPList.push(...ps);
           } else {
             // Keep at most 1 empty spacer paragraph between sections
@@ -3260,12 +3291,12 @@ export class PptxTranslatorService {
         if (/lang="[^"]*"/.test(enAttrs)) enAttrs = enAttrs.replace(/lang="[^"]*"/, 'lang="en-US"');
         else enAttrs += ' lang="en-US"';
         const enPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-        return buildParagraphs(it.enText, enPPr, enAttrs, it.fontChildren);
+        return buildParagraphs(it.enText, enPPr, enAttrs, it.fontChildren, getItemFontSizePt(it.pData));
       });
 
       const neutralPList = trailingNeutralItems.flatMap((it) => {
         const pPrToUse = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-        return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren);
+        return buildParagraphs(it.pData!.originalText, pPrToUse, it.rawAttrs, it.fontChildren, getItemFontSizePt(it.pData));
       });
 
       // Filter to items that actually have distinct Vietnamese content
@@ -3279,7 +3310,7 @@ export class PptxTranslatorService {
         if (/lang="[^"]*"/.test(viAttrs)) viAttrs = viAttrs.replace(/lang="[^"]*"/, 'lang="vi-VN"');
         else viAttrs += ' lang="vi-VN"';
         const viPPr = this.enhancePPr(it.pPr, { isTitle: it.pData?.isTitle });
-        return buildParagraphs(it.viText, viPPr, viAttrs, it.fontChildren);
+        return buildParagraphs(it.viText, viPPr, viAttrs, it.fontChildren, getItemFontSizePt(it.pData));
       });
 
       return `${tagOpen}${containerHeader}${enPList.join("")}${viPList.join("")}${neutralPList.join("")}${containerTrailer}${tagClose}`;

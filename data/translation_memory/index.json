@@ -1,5 +1,115 @@
 [
   {
+    "sessionId": "tm_zero_img_1792487608379",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T09:13:28.380Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792487608286",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T09:13:28.286Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
+    "sessionId": "tm_zero_img_1792486237981",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:50:37.981Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792486237899",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:50:37.900Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
+    "sessionId": "tm_zero_img_1792486134201",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:48:54.201Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792486134097",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:48:54.098Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
+    "sessionId": "tm_zero_img_1792485294032",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:34:54.033Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792485293946",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:34:53.947Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
+    "sessionId": "tm_zero_img_1792485136895",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:32:16.896Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792485136790",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-20T08:32:16.791Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
     "sessionId": "tm_zero_img_1792482172525",
     "fileName": "Image_Check_SOP.pptx",
     "mode": "ipqc_bilingual",
@@ -2088,115 +2198,5 @@
     "slideCount": 1,
     "totalPairs": 2,
     "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1790992494732",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-03T01:54:54.732Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1790992494696",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-03T01:54:54.697Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1790992064954",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-03T01:47:44.955Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1790992064922",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-03T01:47:44.922Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1790992011603",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-03T01:46:51.603Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1790992011540",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-03T01:46:51.541Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1790934729340",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-02T09:52:09.340Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1790934729307",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-02T09:52:09.308Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "pptx_1790934562427_4f9a889f",
-    "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual-EN.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-02T09:49:42.479Z",
-    "slideCount": 17,
-    "totalPairs": 214,
-    "harvestedCount": 1
-  },
-  {
-    "sessionId": "pptx_1790934306535_2efb6be6",
-    "fileName": "FA25 NIKE SB ZOOM NYJAH 4 QA ISQ manual-EN.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-02T09:45:21.074Z",
-    "slideCount": 17,
-    "totalPairs": 214,
-    "harvestedCount": 1
   }
 ]

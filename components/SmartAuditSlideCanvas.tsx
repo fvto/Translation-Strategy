@@ -56,6 +56,9 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Paintbrush,
+  AlertTriangle,
+  BookOpen,
 } from "lucide-react";
 import type {
   SmartAuditReport,
@@ -98,6 +101,8 @@ interface SmartAuditSlideCanvasProps {
   slideViHandling?: Record<number, ViReferenceHandlingMode>;
   onSetSlideViHandling?: (slideNum: number, mode: ViReferenceHandlingMode) => void;
   onSlideChange?: (slideNum: number) => void;
+  onCustomFontSizesChange?: (customFontSizes: Record<string, number>) => void;
+  onOpenGlossary?: (term?: string) => void;
 }
 
 interface ContextMenuState {
@@ -244,6 +249,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   slideViHandling,
   onSetSlideViHandling,
   onSlideChange,
+  onCustomFontSizesChange,
+  onOpenGlossary,
 }) => {
   // Current active slide number
   const [currentSlide, setCurrentSlide] = useState<number>(() => {
@@ -263,9 +270,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     }
   }, [initialSlideNum, report.totalSlides]);
 
-  // Notify parent component of current slide changes
+  // Notify parent component of current slide changes & reset active target selection on slide switch
   useEffect(() => {
     onSlideChange?.(currentSlide);
+    setSelectedElementId(null);
+    setHoveredCell(null);
+    setLastActiveElementId(null);
   }, [currentSlide, onSlideChange]);
 
   // Display mode for text inside layers: "bilingual" | "target" | "source"
@@ -306,6 +316,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     units: ScannedTextUnit[];
   } | null>(null);
 
+  // Last active or hovered element ID (keeps toolbar alive & responsive when cursor moves between canvas and toolbar)
+  const [lastActiveElementId, setLastActiveElementId] = useState<string | null>(null);
+
   // Toggle for Floating Quick Inspector
   const [showHoverInspector, setShowHoverInspector] = useState<boolean>(true);
 
@@ -333,6 +346,42 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   // Real-time Font Size HUD Toast Feedback (Alt + Mouse Wheel)
   const [fontSizeFeedback, setFontSizeFeedback] = useState<{ elId: string; sizePt: number } | null>(null);
   const fontSizeFeedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // UX Improvement 1: Format Painter (Chổi quét định dạng)
+  const [copiedStyle, setCopiedStyle] = useState<{
+    fontSizePt?: number;
+    isBold?: boolean;
+    align?: "left" | "center" | "right";
+    textColor?: string;
+    fill?: string;
+  } | null>(null);
+  const [isFormatPainterActive, setIsFormatPainterActive] = useState<boolean>(false);
+
+  // UX Improvement 2: Multi-Select Batch Resize (Shift + Click nhiều ô)
+  const [multiSelectedElementIds, setMultiSelectedElementIds] = useState<Set<string>>(new Set());
+
+  // UX Improvement 5: Visual Before-After Split Comparison Slider (So sánh Trước / Sau)
+  const [isSplitCompareActive, setIsSplitCompareActive] = useState<boolean>(false);
+  const [splitSliderPercent, setSplitSliderPercent] = useState<number>(50);
+  const [isDraggingSplitter, setIsDraggingSplitter] = useState<boolean>(false);
+
+  // UX Improvement 6: Smooth Pan & Zoom (Ctrl + Wheel & Space + Drag)
+  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isSpacePressed, setIsSpacePressed] = useState<boolean>(false);
+  const isSpacePressedRef = useRef<boolean>(false);
+  const isPanningRef = useRef<boolean>(false);
+  const panStartRef = useRef<{ startX: number; startY: number; origPanX: number; origPanY: number } | null>(null);
+
+  // UX Improvement 7: Floating Mini Quick-Action Menu on Text Selection
+  const [textSelectionMenu, setTextSelectionMenu] = useState<{
+    x: number;
+    y: number;
+    text: string;
+    unit?: ScannedTextUnit | null;
+  } | null>(null);
+  const [quickActionNotice, setQuickActionNotice] = useState<string | null>(null);
+  const quickActionTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const toolbarDragRef = useRef<{
     startX: number;
     startY: number;
@@ -1030,28 +1079,166 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       if (!skipSnapshot) {
         pushUndoSnapshot({ ...canvasState });
       }
-      let finalSize = 11;
+
+      const targets = (multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(elId))
+        ? Array.from(multiSelectedElementIds)
+        : [elId];
+
+      let lastFinalSize = 11;
+      const fontSizesUpdate: Record<string, number> = {};
+
       setCanvasState((prev) => {
-        const curStyle = prev.styles[elId] || {};
-        const baseEl = currentSlideElements.find((e) => e.id === elId);
-        const curSize = curStyle.fontSizePt ?? baseEl?.fontSizePt ?? 11;
-        const nextSize = Math.max(6, Math.min(36, Number((curSize + delta).toFixed(1))));
-        finalSize = nextSize;
+        const nextStyles = { ...prev.styles };
+        for (const tid of targets) {
+          const baseEl = currentSlideElements.find((e) => e.id === tid);
+          const curStyle = nextStyles[tid] || {};
+          const curSize = curStyle.fontSizePt ?? baseEl?.fontSizePt ?? 11;
+          const nextSize = Math.max(6, Math.min(36, Number((curSize + delta).toFixed(1))));
+          nextStyles[tid] = { ...curStyle, fontSizePt: nextSize };
+          lastFinalSize = nextSize;
+
+          if (baseEl) {
+            if (baseEl.unitIds && baseEl.unitIds.length > 0) {
+              for (const uid of baseEl.unitIds) fontSizesUpdate[uid] = nextSize;
+            } else if (baseEl.unitId) {
+              fontSizesUpdate[baseEl.unitId] = nextSize;
+            }
+          }
+          fontSizesUpdate[tid] = nextSize;
+        }
         return {
           ...prev,
-          styles: {
-            ...prev.styles,
-            [elId]: { ...curStyle, fontSizePt: nextSize },
-          },
+          styles: nextStyles,
         };
       });
-      setFontSizeFeedback({ elId, sizePt: finalSize });
+
+      if (onCustomFontSizesChange && Object.keys(fontSizesUpdate).length > 0) {
+        onCustomFontSizesChange(fontSizesUpdate);
+      }
+
+      setFontSizeFeedback({ elId, sizePt: lastFinalSize });
       if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
       fontSizeFeedbackTimerRef.current = setTimeout(() => {
         setFontSizeFeedback(null);
       }, 950);
     },
-    [canvasState, pushUndoSnapshot, currentSlideElements]
+    [canvasState, pushUndoSnapshot, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange]
+  );
+
+  // UX Improvement 1: Format Painter (Chổi quét định dạng)
+  const handleCopyStyle = useCallback(
+    (elId: string) => {
+      const baseEl = currentSlideElements.find((e) => e.id === elId);
+      const curStyle = canvasState.styles[elId] || {};
+      const styleToCopy = {
+        fontSizePt: curStyle.fontSizePt ?? baseEl?.fontSizePt,
+        isBold: curStyle.isBold !== undefined ? curStyle.isBold : Boolean(baseEl?.isBold),
+        align: (curStyle.align || (baseEl?.tableRow === 0 || baseEl?.align === "center" || baseEl?.isTitle ? "center" : "left")) as "left" | "center" | "right",
+        textColor: curStyle.textColor || baseEl?.textColor,
+        fill: curStyle.fill || baseEl?.fill,
+      };
+      setCopiedStyle(styleToCopy);
+      setIsFormatPainterActive(true);
+      setQuickActionNotice("Đã sao chép định dạng! Nhấp vào ô bất kỳ để dán style.");
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2500);
+    },
+    [canvasState.styles, currentSlideElements]
+  );
+
+  const handlePasteStyle = useCallback(
+    (targetElId: string) => {
+      if (!copiedStyle) return;
+      pushUndoSnapshot({ ...canvasState });
+
+      const targets = (multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(targetElId))
+        ? Array.from(multiSelectedElementIds)
+        : [targetElId];
+
+      setCanvasState((prev) => {
+        const nextStyles = { ...prev.styles };
+        for (const tid of targets) {
+          const cur = nextStyles[tid] || {};
+          nextStyles[tid] = {
+            ...cur,
+            ...(copiedStyle.fontSizePt !== undefined ? { fontSizePt: copiedStyle.fontSizePt } : {}),
+            ...(copiedStyle.isBold !== undefined ? { isBold: copiedStyle.isBold } : {}),
+            ...(copiedStyle.align ? { align: copiedStyle.align } : {}),
+            ...(copiedStyle.textColor ? { textColor: copiedStyle.textColor } : {}),
+            ...(copiedStyle.fill ? { fill: copiedStyle.fill } : {}),
+          };
+        }
+        return { ...prev, styles: nextStyles };
+      });
+
+      if (copiedStyle.fontSizePt !== undefined && onCustomFontSizesChange) {
+        const fontSizesUpdate: Record<string, number> = {};
+        for (const tid of targets) {
+          const baseEl = currentSlideElements.find((e) => e.id === tid);
+          if (baseEl) {
+            if (baseEl.unitIds && baseEl.unitIds.length > 0) {
+              for (const uid of baseEl.unitIds) fontSizesUpdate[uid] = copiedStyle.fontSizePt;
+            } else if (baseEl.unitId) {
+              fontSizesUpdate[baseEl.unitId] = copiedStyle.fontSizePt;
+            }
+          }
+          fontSizesUpdate[tid] = copiedStyle.fontSizePt;
+        }
+        onCustomFontSizesChange(fontSizesUpdate);
+      }
+
+      setIsFormatPainterActive(false);
+      setQuickActionNotice(`Đã dán định dạng cho ${targets.length} ô!`);
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2000);
+    },
+    [copiedStyle, canvasState, multiSelectedElementIds, pushUndoSnapshot, onCustomFontSizesChange, currentSlideElements]
+  );
+
+  // UX Improvement 3: Reset Font Size to Original Slide Value
+  const handleResetFontSize = useCallback(
+    (elId: string) => {
+      const baseEl = currentSlideElements.find((e) => e.id === elId);
+      const targets = (multiSelectedElementIds.size > 1 && multiSelectedElementIds.has(elId))
+        ? Array.from(multiSelectedElementIds)
+        : [elId];
+
+      pushUndoSnapshot({ ...canvasState });
+      setCanvasState((prev) => {
+        const nextStyles = { ...prev.styles };
+        for (const tid of targets) {
+          if (nextStyles[tid]) {
+            const { fontSizePt, ...rest } = nextStyles[tid];
+            nextStyles[tid] = rest;
+          }
+        }
+        return { ...prev, styles: nextStyles };
+      });
+
+      if (onCustomFontSizesChange) {
+        const fontSizesUpdate: Record<string, number> = {};
+        for (const tid of targets) {
+          const el = currentSlideElements.find((e) => e.id === tid);
+          const origSize = el?.fontSizePt ?? 11;
+          if (el) {
+            if (el.unitIds && el.unitIds.length > 0) {
+              for (const uid of el.unitIds) fontSizesUpdate[uid] = origSize;
+            } else if (el.unitId) {
+              fontSizesUpdate[el.unitId] = origSize;
+            }
+          }
+          fontSizesUpdate[tid] = origSize;
+        }
+        onCustomFontSizesChange(fontSizesUpdate);
+      }
+
+      setFontSizeFeedback({ elId, sizePt: baseEl?.fontSizePt ?? 11 });
+      if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
+      fontSizeFeedbackTimerRef.current = setTimeout(() => {
+        setFontSizeFeedback(null);
+      }, 950);
+    },
+    [canvasState, currentSlideElements, multiSelectedElementIds, onCustomFontSizesChange, pushUndoSnapshot]
   );
 
   const handleToggleBold = useCallback(
@@ -1139,8 +1326,29 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           },
         };
       });
+
+      if (onCustomFontSizesChange) {
+        const targetIds: string[] = [];
+        if (el.unitIds && el.unitIds.length > 0) {
+          targetIds.push(...el.unitIds);
+        } else if (el.unitId) {
+          targetIds.push(el.unitId);
+        }
+        targetIds.push(el.id);
+        const fontSizesUpdate: Record<string, number> = {};
+        for (const tid of targetIds) {
+          fontSizesUpdate[tid] = bestFs;
+        }
+        onCustomFontSizesChange(fontSizesUpdate);
+      }
+
+      setFontSizeFeedback({ elId: el.id, sizePt: bestFs });
+      if (fontSizeFeedbackTimerRef.current) clearTimeout(fontSizeFeedbackTimerRef.current);
+      fontSizeFeedbackTimerRef.current = setTimeout(() => {
+        setFontSizeFeedback(null);
+      }, 950);
     },
-    [canvasState, containerSize, currentVisualLayout, zoomScale, fitMode, pushUndoSnapshot]
+    [canvasState, containerSize, currentVisualLayout, zoomScale, fitMode, pushUndoSnapshot, onCustomFontSizesChange]
   );
 
   const handleChangeColor = useCallback(
@@ -1535,6 +1743,33 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     return inspectedUnits.map((u) => getTranslationText(u) || u.sourceText).join(" ") || inspectedElement?.text || "";
   }, [inspectedUnits, getTranslationText, inspectedElement]);
 
+  // Active Focus Element for Ribbon Toolbar & quick shortcuts:
+  // Prioritizes element directly hovered under cursor > clicked element > last active element
+  const activeFocusElement = useMemo(() => {
+    if (hoveredCell?.element) return hoveredCell.element;
+    if (inspectedElement) return inspectedElement;
+    if (lastActiveElementId) {
+      const found = currentSlideElements.find((el) => el.id === lastActiveElementId);
+      if (found) return found;
+    }
+    return null;
+  }, [hoveredCell, inspectedElement, lastActiveElementId, currentSlideElements]);
+
+  const activeFocusUnits = useMemo(() => {
+    if (!activeFocusElement) return [];
+    if (activeFocusElement.unitIds && activeFocusElement.unitIds.length > 0) {
+      return activeFocusElement.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u));
+    }
+    if (activeFocusElement.unitId && unitById.get(activeFocusElement.unitId)) {
+      return [unitById.get(activeFocusElement.unitId)!];
+    }
+    return [];
+  }, [activeFocusElement, unitById]);
+
+  const activeFocusFullText = useMemo(() => {
+    return activeFocusUnits.map((u) => getTranslationText(u) || u.sourceText).join(" ") || activeFocusElement?.text || "";
+  }, [activeFocusUnits, getTranslationText, activeFocusElement]);
+
   // Active Inspector for Floating Quick Inspector Magnifier
   const activeInspector = useMemo(() => {
     if (hoveredCell) return hoveredCell;
@@ -1625,6 +1860,23 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         return;
       }
 
+      // UX Improvement 1: Format Painter Shortcuts (Ctrl+Shift+C to copy, Ctrl+Shift+V to paste)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === "c" || e.code === "KeyC")) {
+        const target = activeFocusElement || inspectedElement;
+        if (target) {
+          e.preventDefault();
+          handleCopyStyle(target.id);
+        }
+        return;
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === "v" || e.code === "KeyV")) {
+        const target = activeFocusElement || inspectedElement;
+        if (target && copiedStyle) {
+          e.preventDefault();
+          handlePasteStyle(target.id);
+        }
+        return;
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
         if (e.shiftKey) {
@@ -1653,33 +1905,38 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         }
         return;
       } else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "b" || e.code === "KeyB")) {
-        if (inspectedElement) {
+        const target = activeFocusElement || inspectedElement;
+        if (target) {
           e.preventDefault();
-          handleToggleBold(inspectedElement);
+          handleToggleBold(target);
         }
         return;
       } else if ((e.ctrlKey || e.metaKey) && (e.key === "[" || e.code === "BracketLeft")) {
-        if (inspectedElement) {
+        const target = activeFocusElement || inspectedElement;
+        if (target) {
           e.preventDefault();
-          handleLayerOrder(inspectedElement.id, "backward");
+          handleLayerOrder(target.id, "backward");
         }
         return;
       } else if ((e.ctrlKey || e.metaKey) && (e.key === "]" || e.code === "BracketRight")) {
-        if (inspectedElement) {
+        const target = activeFocusElement || inspectedElement;
+        if (target) {
           e.preventDefault();
-          handleLayerOrder(inspectedElement.id, "forward");
+          handleLayerOrder(target.id, "forward");
         }
         return;
       } else if (e.key === "[") {
-        if (inspectedElement) {
+        const target = activeFocusElement || inspectedElement;
+        if (target) {
           e.preventDefault();
-          handleChangeFontSize(inspectedElement.id, -1);
+          handleChangeFontSize(target.id, -1);
         }
         return;
       } else if (e.key === "]") {
-        if (inspectedElement) {
+        const target = activeFocusElement || inspectedElement;
+        if (target) {
           e.preventDefault();
-          handleChangeFontSize(inspectedElement.id, 1);
+          handleChangeFontSize(target.id, 1);
         }
         return;
       } else if (e.key === "Tab") {
@@ -1695,9 +1952,18 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         else if (contextMenu) setContextMenu(null);
         else if (editingUnitId) cancelEdit();
         else if (selectedElementId) setSelectedElementId(null);
-      } else if (e.key === " ") {
-        e.preventDefault();
-        if (inspectedUnit) onToggleUnit(inspectedUnit.id);
+        else if (isFormatPainterActive) setIsFormatPainterActive(false);
+      } else if (e.key === " " && !e.repeat) {
+        const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+        const isInputActive = activeTag === "input" || activeTag === "textarea" || (document.activeElement as HTMLElement)?.isContentEditable;
+        if (!isInputActive && !editingUnitId) {
+          e.preventDefault();
+          isSpacePressedRef.current = true;
+          setIsSpacePressed(true);
+        } else if (inspectedUnit) {
+          e.preventDefault();
+          onToggleUnit(inspectedUnit.id);
+        }
       } else if (e.key.toLowerCase() === "f") {
         setFocusPendingOnly((prev) => !prev);
       } else if (e.key.toLowerCase() === "w") {
@@ -1714,14 +1980,26 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         e.preventDefault();
         setFitMode("contain");
         setZoomScale(1.0);
+        setPanOffset({ x: 0, y: 0 });
       } else if (e.key.toLowerCase() === "m") {
         e.preventDefault();
         setSlideViewMode((prev) => (prev === "document" ? "presentation" : "document"));
       }
     };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === " ") {
+        isSpacePressedRef.current = false;
+        setIsSpacePressed(false);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
   }, [
     handlePrevSlide,
     handleNextSlide,
@@ -1746,7 +2024,75 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     handleChangeFontSize,
     handleLayerOrder,
     setSlideViewMode,
+    activeFocusElement,
+    handleCopyStyle,
+    handlePasteStyle,
+    copiedStyle,
+    isFormatPainterActive,
   ]);
+
+  // UX Improvement 6: Smooth Pan & Zoom Mouse Handlers
+  const handleCanvasContainerMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target && (e.target as HTMLElement).closest("button, input, textarea, a, select")) return;
+      if (!isSpacePressedRef.current && e.button !== 1) return;
+
+      e.preventDefault();
+      isPanningRef.current = true;
+      panStartRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        origPanX: panOffset.x,
+        origPanY: panOffset.y,
+      };
+
+      const handleMouseMove = (moveEvt: MouseEvent) => {
+        if (!isPanningRef.current || !panStartRef.current) return;
+        moveEvt.preventDefault();
+        const dx = moveEvt.clientX - panStartRef.current.startX;
+        const dy = moveEvt.clientY - panStartRef.current.startY;
+        setPanOffset({
+          x: panStartRef.current.origPanX + dx,
+          y: panStartRef.current.origPanY + dy,
+        });
+      };
+
+      const handleMouseUp = () => {
+        isPanningRef.current = false;
+        panStartRef.current = null;
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    },
+    [panOffset]
+  );
+
+  // UX Improvement 7: Floating Mini Quick-Action on Text Selection
+  const handleCanvasMouseUp = useCallback(() => {
+    const selection = window.getSelection();
+    const text = selection ? selection.toString().trim() : "";
+    if (text && text.length >= 2 && selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setTextSelectionMenu({
+          x: Math.max(10, Math.min(window.innerWidth - 220, rect.left + rect.width / 2 - 100)),
+          y: Math.max(10, rect.top - 46),
+          text,
+        });
+        return;
+      }
+    }
+    setTimeout(() => {
+      const sel = window.getSelection();
+      if (!sel || !sel.toString().trim()) {
+        setTextSelectionMenu(null);
+      }
+    }, 120);
+  }, []);
 
   // ==========================================================================
   // ALT + MOUSE WHEEL: INSTANT FONT SIZE ADJUSTMENT ON ACTIVE/HOVERED ELEMENT
@@ -1760,10 +2106,47 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
+      // 0. UX Improvement 6: Smooth Zoom with Ctrl + Wheel
+      if (e.ctrlKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        const factor = e.deltaY < 0 ? 1.08 : 0.92;
+        setZoomScale((prev) => Math.max(0.4, Math.min(3.0, Number((prev * factor).toFixed(2)))));
+        return;
+      }
+
       // Only trigger when Alt key is held down
       if (!e.altKey) return;
 
-      const targetId = selectedElementId || hoveredCell?.element.id;
+      // 1. Direct hit-test from cursor position at the exact moment of wheel event!
+      let targetId: string | null = null;
+      let targetEl: SlideVisualElement | null = null;
+
+      const elUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
+      const hitDom = elUnderCursor?.closest("[data-element-id]");
+      if (hitDom) {
+        targetId = hitDom.getAttribute("data-element-id");
+      }
+
+      if (targetId) {
+        targetEl = currentSlideElements.find((x) => x.id === targetId) || null;
+      }
+
+      // 2. Fallback to hoveredCell
+      if (!targetId && hoveredCell?.element) {
+        targetId = hoveredCell.element.id;
+        targetEl = hoveredCell.element;
+      }
+
+      // 3. Fallback to activeFocusElement / lastActiveElement / selectedElementId
+      if (!targetId && activeFocusElement) {
+        targetId = activeFocusElement.id;
+        targetEl = activeFocusElement;
+      } else if (!targetId && selectedElementId) {
+        targetId = selectedElementId;
+        targetEl = inspectedElement;
+      }
+
       if (!targetId) return;
 
       // Prevent page/container vertical scroll so slide stays completely stationary
@@ -1792,6 +2175,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         const step = wheelAccumulatorRef.current < 0 ? 1 : -1;
         wheelAccumulatorRef.current = 0;
         handleChangeFontSize(targetId, step, true);
+
+        // Keep hoveredCell and lastActiveElementId in sync with the element being adjusted
+        if (targetEl) {
+          setLastActiveElementId(targetId);
+          const uList = (targetEl.unitIds && targetEl.unitIds.length > 0)
+            ? targetEl.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+            : targetEl.unitId && unitById.get(targetEl.unitId)
+            ? [unitById.get(targetEl.unitId)!]
+            : [];
+          setHoveredCell({ element: targetEl, units: uList });
+        }
       }
     };
 
@@ -1800,7 +2194,18 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       container.removeEventListener("wheel", handleWheel);
       if (wheelGestureTimerRef.current) clearTimeout(wheelGestureTimerRef.current);
     };
-  }, [selectedElementId, hoveredCell, handleChangeFontSize, pushUndoSnapshot, canvasState]);
+  }, [
+    selectedElementId,
+    hoveredCell,
+    lastActiveElementId,
+    activeFocusElement,
+    currentSlideElements,
+    unitById,
+    handleChangeFontSize,
+    pushUndoSnapshot,
+    canvasState,
+    inspectedElement,
+  ]);
 
   // ==========================================================================
   // TRANSLATION ACTIONS (SINGLE & BATCH)
@@ -2005,27 +2410,28 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     boxHeightPx: number,
     baseFontSizePt: number,
     fontFamily: string = "Arial, sans-serif"
-  ): { fontScale: number; lineCount: number } => {
-    if (!text || boxWidthPx <= 0 || boxHeightPx <= 0) return { fontScale: 1.0, lineCount: 1 };
+  ): { fontScale: number; lineCount: number; isOverflowing: boolean } => {
+    if (!text || boxWidthPx <= 0 || boxHeightPx <= 0) return { fontScale: 1.0, lineCount: 1, isOverflowing: false };
     const ctx = getOffscreenCanvasCtx();
-    if (!ctx) return { fontScale: 1.0, lineCount: 1 };
+    if (!ctx) return { fontScale: 1.0, lineCount: 1, isOverflowing: false };
 
     const basePx = (baseFontSizePt * 96) / 72;
     ctx.font = `${basePx}px ${fontFamily}`;
     const textWidth = ctx.measureText(text).width;
 
     if (textWidth <= boxWidthPx) {
-      return { fontScale: 1.0, lineCount: 1 };
+      return { fontScale: 1.0, lineCount: 1, isOverflowing: false };
     }
 
     const estLines = Math.max(1, Math.ceil(textWidth / boxWidthPx));
     const totalRequiredH = estLines * basePx * 1.25;
-    if (totalRequiredH > boxHeightPx) {
+    const isOverflowing = totalRequiredH > boxHeightPx;
+    if (isOverflowing) {
       const scale = Math.max(0.70, Math.min(1.0, Math.sqrt((boxWidthPx * boxHeightPx) / (textWidth * basePx * 1.25))));
-      return { fontScale: Number(scale.toFixed(2)), lineCount: estLines };
+      return { fontScale: Number(scale.toFixed(2)), lineCount: estLines, isOverflowing: true };
     }
 
-    return { fontScale: 1.0, lineCount: estLines };
+    return { fontScale: 1.0, lineCount: estLines, isOverflowing: false };
   }, [getOffscreenCanvasCtx]);
 
   const renderSlideSheet = (
@@ -2123,124 +2529,231 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             size?: { width: number; height: number }
           ) => {
             if (elementUnits.length > 0) {
+              const renderUnitEditor = (u: ScannedTextUnit, uIdx: number) => {
+                const isUnitSelected = selectedUnitIds.has(u.id);
+                const isRightAnchored = pos ? pos.left > 55 : false;
+
+                return (
+                  <div
+                    key={u.id}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      minWidth: "290px",
+                      maxWidth: "400px",
+                      [isRightAnchored ? "right" : "left"]: 0,
+                    }}
+                    className="absolute top-0 z-[70] bg-white dark:bg-slate-900 p-2 rounded-xl border-2 border-sky-500 text-slate-900 dark:text-white shadow-2xl text-left animate-in fade-in zoom-in-95 duration-100"
+                  >
+                    <div className="flex items-center justify-between text-[10px] text-sky-600 dark:text-sky-400 font-semibold mb-1 select-none gap-2">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="font-bold whitespace-nowrap">Sửa dòng {uIdx + 1}/{elementUnits.length}</span>
+                        {elementUnits.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
+                              else toggleUnitSelection(u.id, e);
+                            }}
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-colors flex items-center gap-0.5 cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                              isUnitSelected
+                                ? "bg-amber-500 text-white border-amber-600 shadow-2xs"
+                                : "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60"
+                            }`}
+                            title={`Chọn/bỏ chọn dòng D${uIdx + 1} để dịch AI`}
+                          >
+                            <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                            <span>{isUnitSelected ? `✓ Dịch D${uIdx + 1}` : `+ Chọn dịch D${uIdx + 1}`}</span>
+                          </button>
+                        )}
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-mono whitespace-nowrap shrink-0">Enter: Lưu • Esc: Hủy</span>
+                    </div>
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          saveEdit(u.id, e as any);
+                        } else if (e.key === "Escape") {
+                          e.preventDefault();
+                          cancelEdit(e as any);
+                        }
+                      }}
+                      rows={Math.max(2, Math.min(6, editText.split("\n").length))}
+                      style={{
+                        fontSize: effectiveFontSizePt ? `${Math.min(14, Math.max(10, effectiveFontSizePt))}pt` : undefined,
+                      }}
+                      className="w-full p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-400 font-sans shadow-inner resize-y"
+                      autoFocus
+                    />
+                    <div className="flex items-center justify-between gap-1.5 pt-1 mt-0.5">
+                      <div className="flex items-center gap-1 shrink-0">
+                        {elementUnits.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
+                              else toggleUnitSelection(u.id, e);
+                            }}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer shadow-xs flex items-center gap-1 transition-colors whitespace-nowrap shrink-0 ${
+                              isUnitSelected
+                                ? "bg-amber-600 hover:bg-amber-700 text-white"
+                                : "bg-amber-500 hover:bg-amber-600 text-white"
+                            }`}
+                            title={`Bấm để chọn/bỏ chọn dòng D${uIdx + 1}`}
+                          >
+                            <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                            <span>{isUnitSelected ? `✓ D${uIdx + 1}` : `+ D${uIdx + 1}`}</span>
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          className="px-2 py-0.5 rounded text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
+                        >
+                          Hủy (Esc)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => saveEdit(u.id, e)}
+                          className="px-2 py-0.5 rounded text-[10px] bg-sky-600 text-white font-semibold hover:bg-sky-500 cursor-pointer shadow-xs whitespace-nowrap shrink-0 transition-colors"
+                          title="Lưu sửa đổi tạm thời"
+                        >
+                          Lưu (Enter)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => applyEditDirectly(u.id, e)}
+                          className="px-2.5 py-0.5 rounded text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer shadow-xs flex items-center gap-1 whitespace-nowrap shrink-0 transition-colors"
+                          title="Thêm trực tiếp vào bản dịch ngay, hoàn tất dòng này"
+                        >
+                          <CheckCircle2 className="w-3 h-3 shrink-0" />
+                          <span>Thêm vào luôn</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              };
+
+              // Mode Bilingual + Multi-line: Block Bilingual (1.EN 2.EN 3.EN ... 1.VI 2.VI 3.VI ...)
+              if (activeViewMode === "bilingual" && elementUnits.length > 1) {
+                return (
+                  <div className="w-full space-y-1">
+                    {/* EN Block: 1.EN, 2.EN, 3.EN... */}
+                    <div className="space-y-0.5">
+                      {elementUnits.map((u, uIdx) => {
+                        if (editingUnitId === u.id) return renderUnitEditor(u, uIdx);
+                        const transText = getTranslationText(u);
+                        const isHeading = u.sourceText.startsWith("*") || u.location.isTitle || el.isTitle || isBold;
+                        return (
+                          <div
+                            key={`en_${u.id}`}
+                            onDoubleClick={(e) => { e.stopPropagation(); startEdit(u, e); }}
+                            onContextMenu={(e) => {
+                              e.preventDefault(); e.stopPropagation();
+                              const sel = window.getSelection()?.toString().trim();
+                              const x = Math.min(e.clientX, window.innerWidth - 350);
+                              const y = Math.min(e.clientY, window.innerHeight - 440);
+                              setSelectedElementId(el.id);
+                              setContextMenu({
+                                x: Math.max(10, x), y: Math.max(10, y),
+                                element: { ...el, box: { ...el.box, left: pos?.left ?? el.box.left, top: pos?.top ?? el.box.top, width: size?.width ?? el.box.width, height: size?.height ?? el.box.height } },
+                                unit: u, selectedPhrase: sel && sel.length > 0 ? sel : undefined,
+                              });
+                            }}
+                            style={{ fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined }}
+                            className={`group/line relative rounded px-1 -mx-1 py-0.5 transition-colors cursor-text hover:bg-sky-500/10 dark:hover:bg-sky-400/10 ${
+                              isHeading ? "font-bold" : "font-normal"
+                            } break-words`}
+                            title={`Dòng ${uIdx + 1} (EN) • Nhấp đúp để sửa`}
+                          >
+                            {uIdx === 0 && isChecked && (
+                              <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-sky-600 text-white text-[8px] font-bold mr-1 shrink-0 align-middle shadow-2xs pointer-events-none">
+                                ✓
+                              </span>
+                            )}
+                            {selectedUnitIds.has(u.id) && !isChecked && (
+                              <span
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-amber-500/25 text-amber-800 dark:text-amber-200 border border-amber-500/40 mr-1.5 align-middle shadow-2xs shrink-0 select-none"
+                                title={`Đã chọn dịch dòng D${uIdx + 1}`}
+                              >
+                                <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                                <span>Dịch D{uIdx + 1}</span>
+                              </span>
+                            )}
+                            <span className="font-semibold text-slate-900 dark:text-white break-words">
+                              {transText || u.sourceText}
+                            </span>
+                            <div className="opacity-0 group-hover/line:opacity-100 transition-opacity ml-1.5 inline-flex items-center gap-1 align-middle select-none">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); startEdit(u, e); }}
+                                className="px-1 py-0.2 rounded text-[9px] font-medium bg-sky-500/20 hover:bg-sky-500 text-sky-700 hover:text-white dark:text-sky-300 dark:hover:text-white inline-flex items-center gap-0.5 shadow-2xs cursor-pointer"
+                                title={`Sửa riêng dòng ${uIdx + 1}`}
+                              >
+                                <Pencil className="w-2.5 h-2.5" />
+                                <span className="text-[8px] font-bold">Sửa D{uIdx + 1}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
+                                  else toggleUnitSelection(u.id, e);
+                                }}
+                                className={`px-1 py-0.2 rounded text-[8.5px] font-bold border inline-flex items-center gap-0.5 shadow-2xs cursor-pointer transition-colors ${
+                                  selectedUnitIds.has(u.id)
+                                    ? "bg-amber-500 text-white border-amber-600 shadow-2xs"
+                                    : "bg-amber-500/20 hover:bg-amber-500 text-amber-700 hover:text-white dark:text-amber-300 dark:hover:text-white border-amber-500/40"
+                                }`}
+                                title={`Bấm để chọn/bỏ chọn dòng D${uIdx + 1}`}
+                              >
+                                <Sparkles className="w-2 h-2 text-amber-500 group-hover/line:text-white" />
+                                <span>{selectedUnitIds.has(u.id) ? `✓ D${uIdx + 1}` : `D${uIdx + 1}`}</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Subtle separator between EN block and VI block */}
+                    <div className="border-t border-dashed border-sky-400/30 dark:border-sky-500/30 my-0.5" />
+
+                    {/* VI Block: 1.VI, 2.VI, 3.VI... */}
+                    <div className="space-y-0.5 opacity-75">
+                      {elementUnits.map((u, uIdx) => {
+                        const isHeading = u.sourceText.startsWith("*") || u.location.isTitle || el.isTitle || isBold;
+                        return (
+                          <div
+                            key={`vi_${u.id}`}
+                            onDoubleClick={(e) => { e.stopPropagation(); startEdit(u, e); }}
+                            style={{ fontSize: displayFontSizePt ? `${Math.max(7.5, displayFontSizePt * 0.92)}pt` : undefined }}
+                            className={`group/line-vi relative rounded px-1 -mx-1 py-0.5 transition-colors cursor-text hover:bg-slate-500/10 ${
+                              isHeading ? "font-semibold" : "font-normal"
+                            } break-words text-slate-600 dark:text-slate-300`}
+                            title={`Dòng ${uIdx + 1} (VI gốc) • Nhấp đúp để sửa`}
+                          >
+                            <span className="break-words">{u.sourceText}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+
               return elementUnits.map((u, uIdx) => {
-                const isEditingThis = editingUnitId === u.id;
+                if (editingUnitId === u.id) return renderUnitEditor(u, uIdx);
                 const transText = getTranslationText(u);
                 const isHeading =
                   u.sourceText.startsWith("*") ||
                   u.location.isTitle ||
                   el.isTitle ||
                   isBold;
-
-                if (isEditingThis) {
-                  const isUnitSelected = selectedUnitIds.has(u.id);
-                  const isRightAnchored = pos ? pos.left > 55 : false;
-
-                  return (
-                    <div
-                      key={u.id}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        minWidth: "290px",
-                        maxWidth: "400px",
-                        [isRightAnchored ? "right" : "left"]: 0,
-                      }}
-                      className="absolute top-0 z-[70] bg-white dark:bg-slate-900 p-2 rounded-xl border-2 border-sky-500 text-slate-900 dark:text-white shadow-2xl text-left animate-in fade-in zoom-in-95 duration-100"
-                    >
-                      <div className="flex items-center justify-between text-[10px] text-sky-600 dark:text-sky-400 font-semibold mb-1 select-none gap-2">
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="font-bold whitespace-nowrap">Sửa dòng {uIdx + 1}/{elementUnits.length}</span>
-                          {elementUnits.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
-                                else toggleUnitSelection(u.id, e);
-                              }}
-                              className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-colors flex items-center gap-0.5 cursor-pointer select-none whitespace-nowrap shrink-0 ${
-                                isUnitSelected
-                                  ? "bg-amber-500 text-white border-amber-600 shadow-2xs"
-                                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60"
-                              }`}
-                              title={`Chọn/bỏ chọn dòng D${uIdx + 1} để dịch AI`}
-                            >
-                              <Sparkles className="w-2.5 h-2.5 shrink-0" />
-                              <span>{isUnitSelected ? `✓ Dịch D${uIdx + 1}` : `+ Chọn dịch D${uIdx + 1}`}</span>
-                            </button>
-                          )}
-                        </div>
-                        <span className="text-[9px] text-slate-400 font-mono whitespace-nowrap shrink-0">Enter: Lưu • Esc: Hủy</span>
-                      </div>
-                      <textarea
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            saveEdit(u.id, e as any);
-                          } else if (e.key === "Escape") {
-                            e.preventDefault();
-                            cancelEdit(e as any);
-                          }
-                        }}
-                        rows={Math.max(2, Math.min(6, editText.split("\n").length))}
-                        style={{
-                          fontSize: effectiveFontSizePt ? `${Math.min(14, Math.max(10, effectiveFontSizePt))}pt` : undefined,
-                        }}
-                        className="w-full p-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-400 font-sans shadow-inner resize-y"
-                        autoFocus
-                      />
-                      <div className="flex items-center justify-between gap-1.5 pt-1 mt-0.5">
-                        <div className="flex items-center gap-1 shrink-0">
-                          {elementUnits.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                if (e.altKey) selectOnlyThisUnit(u, elementUnits, e);
-                                else toggleUnitSelection(u.id, e);
-                              }}
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer shadow-xs flex items-center gap-1 transition-colors whitespace-nowrap shrink-0 ${
-                                isUnitSelected
-                                  ? "bg-amber-600 hover:bg-amber-700 text-white"
-                                  : "bg-amber-500 hover:bg-amber-600 text-white"
-                              }`}
-                              title={`Bấm để chọn/bỏ chọn dòng D${uIdx + 1}`}
-                            >
-                              <Sparkles className="w-2.5 h-2.5 shrink-0" />
-                              <span>{isUnitSelected ? `✓ D${uIdx + 1}` : `+ D${uIdx + 1}`}</span>
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 ml-auto shrink-0">
-                          <button
-                            type="button"
-                            onClick={cancelEdit}
-                            className="px-2 py-0.5 rounded text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
-                          >
-                            Hủy (Esc)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => saveEdit(u.id, e)}
-                            className="px-2 py-0.5 rounded text-[10px] bg-sky-600 text-white font-semibold hover:bg-sky-500 cursor-pointer shadow-xs whitespace-nowrap shrink-0 transition-colors"
-                            title="Lưu sửa đổi tạm thời"
-                          >
-                            Lưu (Enter)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => applyEditDirectly(u.id, e)}
-                            className="px-2.5 py-0.5 rounded text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer shadow-xs flex items-center gap-1 whitespace-nowrap shrink-0 transition-colors"
-                            title="Thêm trực tiếp vào bản dịch ngay, hoàn tất dòng này"
-                          >
-                            <CheckCircle2 className="w-3 h-3 shrink-0" />
-                            <span>Thêm vào luôn</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
 
                 const displayedContent =
                   activeViewMode === "target"
@@ -2302,9 +2815,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       <span className="break-words">{displayedContent}</span>
                     ) : (
                       <div className="space-y-0.5">
-                        <div className="opacity-70 text-[0.88em] leading-tight break-words">{u.sourceText}</div>
-                        <div className="font-semibold text-sky-600 dark:text-sky-400 leading-tight break-words">
-                          ➔ {transText || "(Chờ dịch)"}
+                        <div className="font-semibold text-slate-900 dark:text-white leading-tight break-words">
+                          {transText || u.sourceText}
+                        </div>
+                        <div className="opacity-70 text-[0.88em] leading-tight break-words text-slate-600 dark:text-slate-400">
+                          {u.sourceText}
                         </div>
                       </div>
                     )}
@@ -2485,7 +3000,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                               }}
                             >
                               {rowCells.map((el) => {
-                                const isSelected = selectedElementId === el.id;
+                                const isSelected = selectedElementId === el.id || multiSelectedElementIds.has(el.id);
+                                const isMultiSelected = multiSelectedElementIds.has(el.id) && multiSelectedElementIds.size > 1;
                                 const style = canvasState.styles[el.id] || {};
                                 const elementUnits = (el.unitIds && el.unitIds.length > 0)
                                   ? el.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
@@ -2551,11 +3067,29 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                 return (
                                   <td
                                     key={el.id}
+                                    data-element-id={el.id}
                                     rowSpan={el.rowSpan && el.rowSpan > 1 ? el.rowSpan : undefined}
                                     colSpan={el.colSpan && el.colSpan > 1 ? el.colSpan : undefined}
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (isFormatPainterActive) {
+                                        handlePasteStyle(el.id);
+                                        return;
+                                      }
+                                      if (e.shiftKey) {
+                                        setMultiSelectedElementIds((prev) => {
+                                          const next = new Set(prev);
+                                          if (next.has(el.id)) next.delete(el.id);
+                                          else next.add(el.id);
+                                          return next;
+                                        });
+                                      } else {
+                                        if (!multiSelectedElementIds.has(el.id)) {
+                                          setMultiSelectedElementIds(new Set([el.id]));
+                                        }
+                                      }
                                       setSelectedElementId(el.id);
+                                      setLastActiveElementId(el.id);
                                       if (elementUnits.length > 0) {
                                         const shouldSelect = !elementUnits.every((u) => selectedUnitIds.has(u.id));
                                         for (const u of elementUnits) {
@@ -2568,12 +3102,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                       }
                                     }}
                                     onMouseEnter={() => {
-                                      if (elementUnits.length > 0 || el.text) {
-                                        setHoveredCell({
-                                          element: el,
-                                          units: elementUnits,
-                                        });
-                                      }
+                                      setLastActiveElementId(el.id);
+                                      setHoveredCell({
+                                        element: el,
+                                        units: elementUnits,
+                                      });
                                     }}
                                     onMouseLeave={() => {
                                       setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
@@ -2615,7 +3148,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                       minHeight: cellHeightPx ? `${cellHeightPx}px` : undefined,
                                     }}
                                     className={`transition-colors cursor-pointer select-text relative ${
-                                      isChecked
+                                      isMultiSelected
+                                        ? "ring-2 ring-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/70 shadow-md"
+                                        : isChecked
                                         ? "ring-2 ring-sky-500 bg-sky-50 dark:bg-sky-950/60 shadow-xs"
                                         : isPartiallyChecked
                                         ? "ring-1 ring-sky-400/60 bg-sky-50/40"
@@ -2627,6 +3162,28 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     }`}
                                     title={`${el.shapeName || "Ô dữ liệu"} • Nhấp để chọn dịch • Nhấp đúp để sửa`}
                                   >
+                                    {/* Real-time Hover Font Size Badge */}
+                                    {hoveredCell?.element.id === el.id && (
+                                      <div className="absolute top-0.5 right-0.5 pointer-events-none z-20 flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md animate-in fade-in zoom-in-95 duration-100">
+                                        <span className="text-sky-300">{effectiveFontSizePt ?? 11}pt</span>
+                                        <span className="text-[8px] text-slate-400 font-sans font-normal border-l border-slate-700 pl-1 hidden sm:inline">Alt+Cuộn</span>
+                                      </div>
+                                    )}
+                                    {/* UX Improvement 4: Auto Overflow Warning Indicator */}
+                                    {canvasFit.isOverflowing && hoveredCell?.element.id !== el.id && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleAutoFitText(el, cellTextContent);
+                                        }}
+                                        className="absolute top-0.5 right-0.5 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/95 hover:bg-amber-600 text-white text-[8px] font-bold shadow-md cursor-pointer transition-transform hover:scale-105 select-none"
+                                        title="Chữ có dấu hiệu tràn ô • Bấm để tự động co chữ (Auto-Fit)"
+                                      >
+                                        <AlertTriangle className="w-2.5 h-2.5" />
+                                        <span>Tràn</span>
+                                      </button>
+                                    )}
                                     {isPartiallyChecked && (
                                       <div className="absolute top-0.5 right-1 pointer-events-none z-10 flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 text-[8px] font-bold shadow-2xs backdrop-blur-xs select-none">
                                         <Sparkles className="w-2.5 h-2.5 text-amber-500" />
@@ -2765,7 +3322,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
               {/* 2. STANDALONE ELEMENTS (Pictures, Banners, Free-floating Shapes) */}
               {standaloneElements.map((el, elIdx) => {
-                const isSelected = selectedElementId === el.id;
+                const isSelected = selectedElementId === el.id || multiSelectedElementIds.has(el.id);
+                const isMultiSelected = multiSelectedElementIds.has(el.id) && multiSelectedElementIds.size > 1;
                 const pos = canvasState.positions[el.id] || { left: el.box.left, top: el.box.top };
                 const size = canvasState.sizes[el.id] || { width: el.box.width, height: el.box.height };
                 const style = canvasState.styles[el.id] || {};
@@ -2944,6 +3502,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 return (
                   <div
                     key={el.id}
+                    data-element-id={el.id}
                     onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
                     onClick={(e) => {
                       if (justFinishedDraggingRef.current) {
@@ -2951,7 +3510,24 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                         return;
                       }
                       e.stopPropagation();
+                      if (isFormatPainterActive) {
+                        handlePasteStyle(el.id);
+                        return;
+                      }
+                      if (e.shiftKey) {
+                        setMultiSelectedElementIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(el.id)) next.delete(el.id);
+                          else next.add(el.id);
+                          return next;
+                        });
+                      } else {
+                        if (!multiSelectedElementIds.has(el.id)) {
+                          setMultiSelectedElementIds(new Set([el.id]));
+                        }
+                      }
                       setSelectedElementId(el.id);
+                      setLastActiveElementId(el.id);
                       if (elementUnits.length > 0) {
                         const shouldSelect = !elementUnits.every((u) => selectedUnitIds.has(u.id));
                         for (const u of elementUnits) {
@@ -2964,12 +3540,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       }
                     }}
                     onMouseEnter={() => {
-                      if (elementUnits.length > 0 || el.text) {
-                        setHoveredCell({
-                          element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
-                          units: elementUnits,
-                        });
-                      }
+                      setLastActiveElementId(el.id);
+                      setHoveredCell({
+                        element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
+                        units: elementUnits,
+                      });
                     }}
                     onMouseLeave={() => {
                       setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
@@ -3033,6 +3608,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     className={`group select-text ${
                       isDragging
                         ? "ring-2 ring-indigo-500 shadow-2xl scale-[1.01]"
+                        : isMultiSelected
+                        ? "ring-2 ring-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/70 shadow-md"
                         : isChecked
                         ? "ring-2 ring-sky-500 shadow-md"
                         : isPartiallyChecked
@@ -3071,6 +3648,29 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       </div>
                     )}
 
+                    {/* Real-time Hover Font Size Badge */}
+                    {hoveredCell?.element.id === el.id && !isDragging && (
+                      <div className="absolute top-0.5 right-0.5 pointer-events-none z-20 flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md animate-in fade-in zoom-in-95 duration-100">
+                        <span className="text-sky-300">{effectiveFontSizePt ?? 11}pt</span>
+                        <span className="text-[8px] text-slate-400 font-sans font-normal border-l border-slate-700 pl-1 hidden sm:inline">Alt+Cuộn</span>
+                      </div>
+                    )}
+
+                    {/* UX Improvement 4: Auto Overflow Warning Indicator */}
+                    {canvasFit.isOverflowing && hoveredCell?.element.id !== el.id && !isDragging && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAutoFitText(el, shapeFullText);
+                        }}
+                        className="absolute top-0.5 right-0.5 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/95 hover:bg-amber-600 text-white text-[8px] font-bold shadow-md cursor-pointer transition-transform hover:scale-105 select-none"
+                        title="Chữ có dấu hiệu tràn khung • Bấm để tự động co chữ (Auto-Fit)"
+                      >
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        <span>Tràn</span>
+                      </button>
+                    )}
                     {isPartiallyChecked && (
                       <div className="absolute top-0.5 right-1 pointer-events-none z-10 flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 text-[8px] font-bold shadow-2xs backdrop-blur-xs select-none">
                         <Sparkles className="w-2.5 h-2.5 text-amber-500" />
@@ -3158,116 +3758,216 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               </button>
             )}
 
-            {/* Microsoft Office 365 Formatting Ribbon */}
-            {inspectedElement ? (
-              <div className="flex items-center gap-1.5 shrink-0 pl-1.5 border-l border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-1 duration-150">
-                {/* Office 365 Ribbon Indicator Badge */}
-                <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800 px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline">
-                  Định dạng ô
+            {/* Microsoft Office 365 Formatting Ribbon - ALWAYS DISPLAYED */}
+            <div className="flex items-center gap-1.5 shrink-0 pl-1.5 border-l border-slate-200 dark:border-slate-800 transition-all">
+              {/* UX Improvement 2: Multi-Select Batch Indicator */}
+              {multiSelectedElementIds.size > 1 ? (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white shadow-2xs shrink-0 select-none flex items-center gap-1.5 animate-in fade-in">
+                  <span>Đã chọn {multiSelectedElementIds.size} ô</span>
+                  <button
+                    type="button"
+                    onClick={() => setMultiSelectedElementIds(new Set())}
+                    className="text-white/80 hover:text-white cursor-pointer"
+                    title="Bỏ chọn hàng loạt"
+                  >
+                    ✕
+                  </button>
                 </span>
-
-                {/* Typography: Font Size Group */}
-                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleChangeFontSize(inspectedElement.id, -1)}
-                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors"
-                    title="Giảm cỡ chữ (Phím [ hoặc Alt + Cuộn chuột xuống)"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <span className="font-mono font-bold text-[11px] px-1 text-slate-800 dark:text-slate-100 min-w-[28px] text-center" title="Cỡ chữ hiện tại • Alt + Cuộn chuột để tăng/giảm nhanh">
-                    {canvasState.styles[inspectedElement.id]?.fontSizePt ?? inspectedElement.fontSizePt ?? 11}pt
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleChangeFontSize(inspectedElement.id, 1)}
-                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors"
-                    title="Tăng cỡ chữ (Phím ] hoặc Alt + Cuộn chuột lên)"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {/* In đậm Bold */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleBold(inspectedElement)}
-                  className={`p-1.5 rounded-lg border transition-all cursor-pointer shrink-0 ${
-                    (canvasState.styles[inspectedElement.id]?.isBold !== undefined
-                      ? canvasState.styles[inspectedElement.id]?.isBold
-                      : Boolean(inspectedElement.isBold))
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white font-bold shadow-2xs"
-                      : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700"
+              ) : activeFocusElement ? (
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline-flex items-center gap-1 ${
+                    hoveredCell?.element.id === activeFocusElement.id
+                      ? "text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800"
+                      : "text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-300 dark:border-indigo-800"
                   }`}
-                  title="In đậm (Ctrl + B)"
+                  title={hoveredCell?.element.id === activeFocusElement.id ? "Đang trỏ chuột vào ô này" : "Đã chọn ô này"}
                 >
-                  <Bold className="w-3 h-3" />
-                </button>
+                  <span className={`w-1.5 h-1.5 rounded-full ${hoveredCell?.element.id === activeFocusElement.id ? "bg-sky-500 animate-pulse" : "bg-indigo-500"}`} />
+                  <span>{hoveredCell?.element.id === activeFocusElement.id ? "Đang trỏ ô" : "Đã chọn ô"}</span>
+                </span>
+              ) : (
+                <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span>Sẵn sàng</span>
+                </span>
+              )}
 
-                {/* Căn lề Alignment */}
-                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleChangeAlign(inspectedElement.id, "left")}
-                    className={`p-1 rounded cursor-pointer transition-colors ${
-                      (canvasState.styles[inspectedElement.id]?.align || inspectedElement.align || "left") === "left"
-                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
-                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                    }`}
-                    title="Căn trái"
-                  >
-                    <AlignLeft className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleChangeAlign(inspectedElement.id, "center")}
-                    className={`p-1 rounded cursor-pointer transition-colors ${
-                      (canvasState.styles[inspectedElement.id]?.align || inspectedElement.align) === "center"
-                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
-                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                    }`}
-                    title="Căn giữa"
-                  >
-                    <AlignCenter className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleChangeAlign(inspectedElement.id, "right")}
-                    className={`p-1 rounded cursor-pointer transition-colors ${
-                      (canvasState.styles[inspectedElement.id]?.align || inspectedElement.align) === "right"
-                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs"
-                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                    }`}
-                    title="Căn phải"
-                  >
-                    <AlignRight className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {/* Auto-Fit */}
+              {/* Typography: Font Size Group */}
+              <div
+                className={`flex items-center rounded-lg p-0.5 border shrink-0 transition-all ${
+                  activeFocusElement
+                    ? "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 shadow-2xs ring-1 ring-sky-400/30"
+                    : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-60"
+                }`}
+              >
                 <button
                   type="button"
-                  onClick={() => handleAutoFitText(inspectedElement, inspectedFullText)}
+                  disabled={!activeFocusElement}
+                  onClick={() => activeFocusElement && handleChangeFontSize(activeFocusElement.id, -1)}
+                  className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                  title={activeFocusElement ? "Giảm cỡ chữ (Phím [ hoặc Alt + Cuộn chuột xuống)" : "Rê chuột vào ô văn bản để chỉnh cỡ chữ"}
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <span
+                  className={`font-mono font-bold text-[11px] px-1 text-center min-w-[34px] select-none ${
+                    activeFocusElement ? "text-sky-700 dark:text-sky-300 font-extrabold" : "text-slate-400"
+                  }`}
+                  title="Cỡ chữ hiện tại • Giữ Alt + Lăn chuột lên/xuống để chỉnh ngay lập tức"
+                >
+                  {activeFocusElement
+                    ? `${canvasState.styles[activeFocusElement.id]?.fontSizePt ?? activeFocusElement.fontSizePt ?? 11}pt`
+                    : "-- pt"}
+                </span>
+                <button
+                  type="button"
+                  disabled={!activeFocusElement}
+                  onClick={() => activeFocusElement && handleChangeFontSize(activeFocusElement.id, 1)}
+                  className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                  title={activeFocusElement ? "Tăng cỡ chữ (Phím ] hoặc Alt + Cuộn chuột lên)" : "Rê chuột vào ô văn bản để chỉnh cỡ chữ"}
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+                {/* UX Improvement 3: Reset Font Size Button */}
+                {activeFocusElement && canvasState.styles[activeFocusElement.id]?.fontSizePt !== undefined && (
+                  <button
+                    type="button"
+                    onClick={() => handleResetFontSize(activeFocusElement.id)}
+                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-amber-600 hover:text-amber-700 cursor-pointer transition-colors border-l border-slate-300 dark:border-slate-700 ml-0.5 pl-1"
+                    title="Đặt lại cỡ chữ gốc ban đầu"
+                  >
+                    <RotateCcw className="w-2.5 h-2.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* In đậm Bold */}
+              <button
+                type="button"
+                disabled={!activeFocusElement}
+                onClick={() => activeFocusElement && handleToggleBold(activeFocusElement)}
+                className={`p-1.5 rounded-lg border transition-all shrink-0 ${
+                  !activeFocusElement
+                    ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 opacity-50 cursor-not-allowed"
+                    : (canvasState.styles[activeFocusElement.id]?.isBold !== undefined
+                        ? canvasState.styles[activeFocusElement.id]?.isBold
+                        : Boolean(activeFocusElement.isBold))
+                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white font-bold shadow-2xs cursor-pointer"
+                    : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                }`}
+                title={activeFocusElement ? "In đậm (Ctrl + B)" : "Rê chuột vào ô để đổi kiểu chữ"}
+              >
+                <Bold className="w-3 h-3" />
+              </button>
+
+              {/* UX Improvement 1: Format Painter (Chổi quét định dạng) */}
+              <button
+                type="button"
+                disabled={!activeFocusElement && !copiedStyle}
+                onClick={() => {
+                  if (isFormatPainterActive) {
+                    setIsFormatPainterActive(false);
+                  } else if (activeFocusElement) {
+                    handleCopyStyle(activeFocusElement.id);
+                  }
+                }}
+                className={`p-1.5 rounded-lg border transition-all shrink-0 ${
+                  isFormatPainterActive
+                    ? "bg-amber-500 text-white border-amber-600 shadow-2xs animate-pulse cursor-pointer"
+                    : copiedStyle
+                    ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-100 cursor-pointer"
+                    : activeFocusElement
+                    ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 cursor-pointer"
+                    : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 opacity-50 cursor-not-allowed"
+                }`}
+                title={
+                  isFormatPainterActive
+                    ? "Đang bật chổi quét - Bấm vào ô bất kỳ để dán định dạng (hoặc bấm để tắt)"
+                    : "Chổi sao chép định dạng (Ctrl + Shift + C / V)"
+                }
+              >
+                <Paintbrush className="w-3 h-3" />
+              </button>
+
+              {/* Căn lề Alignment */}
+              <div
+                className={`flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0 ${
+                  !activeFocusElement ? "opacity-50" : ""
+                }`}
+              >
+                <button
+                  type="button"
+                  disabled={!activeFocusElement}
+                  onClick={() => activeFocusElement && handleChangeAlign(activeFocusElement.id, "left")}
+                  className={`p-1 rounded transition-colors ${
+                    !activeFocusElement
+                      ? "text-slate-400 cursor-not-allowed"
+                      : (canvasState.styles[activeFocusElement.id]?.align || activeFocusElement.align || "left") === "left"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs cursor-pointer"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer"
+                  }`}
+                  title="Căn trái"
+                >
+                  <AlignLeft className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  disabled={!activeFocusElement}
+                  onClick={() => activeFocusElement && handleChangeAlign(activeFocusElement.id, "center")}
+                  className={`p-1 rounded transition-colors ${
+                    !activeFocusElement
+                      ? "text-slate-400 cursor-not-allowed"
+                      : (canvasState.styles[activeFocusElement.id]?.align || activeFocusElement.align) === "center"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs cursor-pointer"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer"
+                  }`}
+                  title="Căn giữa"
+                >
+                  <AlignCenter className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  disabled={!activeFocusElement}
+                  onClick={() => activeFocusElement && handleChangeAlign(activeFocusElement.id, "right")}
+                  className={`p-1 rounded transition-colors ${
+                    !activeFocusElement
+                      ? "text-slate-400 cursor-not-allowed"
+                      : (canvasState.styles[activeFocusElement.id]?.align || activeFocusElement.align) === "right"
+                      ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs cursor-pointer"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer"
+                  }`}
+                  title="Căn phải"
+                >
+                  <AlignRight className="w-3 h-3" />
+                </button>
+              </div>
+
+              {/* Auto-Fit */}
+              {activeFocusElement ? (
+                <button
+                  type="button"
+                  onClick={() => handleAutoFitText(activeFocusElement, activeFocusFullText)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-200 font-bold text-[10px] cursor-pointer transition-colors border border-amber-400/40 shadow-2xs shrink-0"
                   title="Tự động co chữ vừa khung (Auto-Fit) chống tràn chữ"
                 >
                   <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                   <span>Auto-Fit</span>
                 </button>
+              ) : null}
 
-                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
+              <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
 
-                {/* Màu sắc Colors (Popover mở xuống dưới) */}
+              {/* Màu sắc Colors */}
+              {activeFocusElement ? (
                 <div className="flex items-center gap-1 shrink-0">
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() =>
                         setColorPopover((prev) =>
-                          prev?.type === "textColor" && prev.elId === inspectedElement.id
+                          prev?.type === "textColor" && prev.elId === activeFocusElement.id
                             ? null
-                            : { type: "textColor", elId: inspectedElement.id }
+                            : { type: "textColor", elId: activeFocusElement.id }
                         )
                       }
                       className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center cursor-pointer transition-colors"
@@ -3276,10 +3976,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       <Type className="w-3 h-3" />
                       <div
                         className="w-3.5 h-0.5 rounded-full mt-0.5"
-                        style={{ backgroundColor: canvasState.styles[inspectedElement.id]?.textColor || "#0f172a" }}
+                        style={{ backgroundColor: canvasState.styles[activeFocusElement.id]?.textColor || "#0f172a" }}
                       />
                     </button>
-                    {colorPopover?.type === "textColor" && colorPopover.elId === inspectedElement.id && (
+                    {colorPopover?.type === "textColor" && colorPopover.elId === activeFocusElement.id && (
                       <div
                         className="absolute top-full mt-1.5 left-0 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 shadow-2xl flex items-center gap-1.5 z-50 animate-in fade-in zoom-in-95"
                         onClick={(e) => e.stopPropagation()}
@@ -3296,7 +3996,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                             key={c.hex}
                             type="button"
                             onClick={() => {
-                              handleChangeColor(inspectedElement.id, "textColor", c.hex);
+                              handleChangeColor(activeFocusElement.id, "textColor", c.hex);
                               setColorPopover(null);
                             }}
                             className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 hover:scale-125 transition-transform cursor-pointer shadow-xs"
@@ -3313,9 +4013,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       type="button"
                       onClick={() =>
                         setColorPopover((prev) =>
-                          prev?.type === "fill" && prev.elId === inspectedElement.id
+                          prev?.type === "fill" && prev.elId === activeFocusElement.id
                             ? null
-                            : { type: "fill", elId: inspectedElement.id }
+                            : { type: "fill", elId: activeFocusElement.id }
                         )
                       }
                       className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex flex-col items-center cursor-pointer transition-colors"
@@ -3324,10 +4024,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       <Palette className="w-3 h-3" />
                       <div
                         className="w-3.5 h-0.5 rounded-full mt-0.5"
-                        style={{ backgroundColor: canvasState.styles[inspectedElement.id]?.fill || inspectedElement.fill || "transparent" }}
+                        style={{ backgroundColor: canvasState.styles[activeFocusElement.id]?.fill || activeFocusElement.fill || "transparent" }}
                       />
                     </button>
-                    {colorPopover?.type === "fill" && colorPopover.elId === inspectedElement.id && (
+                    {colorPopover?.type === "fill" && colorPopover.elId === activeFocusElement.id && (
                       <div
                         className="absolute top-full mt-1.5 left-0 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-1.5 shadow-2xl flex items-center gap-1.5 z-50 animate-in fade-in zoom-in-95"
                         onClick={(e) => e.stopPropagation()}
@@ -3344,7 +4044,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                             key={c.hex}
                             type="button"
                             onClick={() => {
-                              handleChangeColor(inspectedElement.id, "fill", c.hex);
+                              handleChangeColor(activeFocusElement.id, "fill", c.hex);
                               setColorPopover(null);
                             }}
                             className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 hover:scale-125 transition-transform cursor-pointer shadow-xs"
@@ -3358,39 +4058,51 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     )}
                   </div>
                 </div>
-
-                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
-
-                {/* Sắp xếp lớp Layer Ordering */}
-                <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleLayerOrder(inspectedElement.id, "forward")}
-                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
-                    title={`Đưa lên trên một lớp (Bring Forward) • Lớp hiện tại: ${canvasState.styles[inspectedElement.id]?.zIndex ?? "mặc định"}`}
-                  >
-                    <ArrowUp className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLayerOrder(inspectedElement.id, "backward")}
-                    className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
-                    title={`Đưa xuống dưới một lớp (Send Backward) • Lớp hiện tại: ${canvasState.styles[inspectedElement.id]?.zIndex ?? "mặc định"}`}
-                  >
-                    <ArrowDown className="w-3 h-3" />
-                  </button>
+              ) : (
+                <div className="flex items-center gap-1 shrink-0 opacity-40">
+                  <div className="p-1 text-slate-400 cursor-not-allowed" title="Rê chuột vào ô để chọn màu">
+                    <Type className="w-3 h-3" />
+                  </div>
+                  <div className="p-1 text-slate-400 cursor-not-allowed" title="Rê chuột vào ô để chọn màu nền">
+                    <Palette className="w-3 h-3" />
+                  </div>
                 </div>
+              )}
 
-                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
+              <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
 
-                {/* Sửa & Chọn dịch khi ô có nhiều dòng */}
-                {inspectedUnits.length > 1 ? (
+              {/* Sắp xếp lớp Layer Ordering */}
+              <div className={`flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0 ${!activeFocusElement ? "opacity-50" : ""}`}>
+                <button
+                  type="button"
+                  disabled={!activeFocusElement}
+                  onClick={() => activeFocusElement && handleLayerOrder(activeFocusElement.id, "forward")}
+                  className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                  title={activeFocusElement ? `Đưa lên trên một lớp (Bring Forward) • Lớp hiện tại: ${canvasState.styles[activeFocusElement.id]?.zIndex ?? "mặc định"}` : "Rê chuột vào ô để chỉnh lớp"}
+                >
+                  <ArrowUp className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  disabled={!activeFocusElement}
+                  onClick={() => activeFocusElement && handleLayerOrder(activeFocusElement.id, "backward")}
+                  className="p-1 rounded hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                  title={activeFocusElement ? `Đưa xuống dưới một lớp (Send Backward) • Lớp hiện tại: ${canvasState.styles[activeFocusElement.id]?.zIndex ?? "mặc định"}` : "Rê chuột vào ô để chỉnh lớp"}
+                >
+                  <ArrowDown className="w-3 h-3" />
+                </button>
+              </div>
+
+              {/* Sửa & Chọn dịch khi ô có nhiều dòng */}
+              {activeFocusElement && activeFocusUnits.length > 1 ? (
+                <>
+                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
                   <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 rounded-lg px-2 py-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
                     <div className="flex items-center gap-1 shrink-0">
                       <Pencil className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
                       <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium shrink-0">Sửa:</span>
                       <div className="flex items-center gap-0.5 max-w-[150px] sm:max-w-[200px] 2xl:max-w-[300px] overflow-x-auto no-scrollbar py-0.5">
-                        {inspectedUnits.map((u, idx) => (
+                        {activeFocusUnits.map((u, idx) => (
                           <button
                             key={u.id}
                             type="button"
@@ -3413,31 +4125,31 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     <div className="flex items-center gap-1 shrink-0">
                       <span
                         className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-0.5 whitespace-nowrap shrink-0"
-                        title="Bấm để chọn/bỏ chọn từng dòng dịch (có thể chọn nhiều dòng cùng lúc như D7, D8, D9). Giữ Alt để chỉ chọn riêng 1 dòng."
+                        title="Bấm để chọn/bỏ chọn từng dòng dịch. Giữ Alt để chỉ chọn riêng 1 dòng."
                       >
                         <Sparkles className="w-2.5 h-2.5 text-amber-500" />
-                        <span>Chọn dịch ({inspectedUnits.filter((u) => selectedUnitIds.has(u.id)).length}/{inspectedUnits.length}):</span>
+                        <span>Chọn dịch ({activeFocusUnits.filter((u) => selectedUnitIds.has(u.id)).length}/{activeFocusUnits.length}):</span>
                       </span>
 
                       {/* Nút Chọn tất cả / Bỏ hết */}
                       <button
                         type="button"
                         onClick={(e) => {
-                          const allSelected = inspectedUnits.every((u) => selectedUnitIds.has(u.id));
+                          const allSelected = activeFocusUnits.every((u) => selectedUnitIds.has(u.id));
                           if (allSelected) {
-                            deselectAllUnitsInElement(inspectedUnits, e);
+                            deselectAllUnitsInElement(activeFocusUnits, e);
                           } else {
-                            selectAllUnitsInElement(inspectedUnits, e);
+                            selectAllUnitsInElement(activeFocusUnits, e);
                           }
                         }}
                         className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-white dark:bg-slate-700 hover:bg-amber-500 hover:text-white text-slate-600 dark:text-slate-300 shadow-2xs cursor-pointer transition-all shrink-0 whitespace-nowrap"
-                        title={inspectedUnits.every((u) => selectedUnitIds.has(u.id)) ? "Bỏ chọn tất cả các dòng" : "Chọn tất cả các dòng trong ô"}
+                        title={activeFocusUnits.every((u) => selectedUnitIds.has(u.id)) ? "Bỏ chọn tất cả các dòng" : "Chọn tất cả các dòng trong ô"}
                       >
-                        {inspectedUnits.every((u) => selectedUnitIds.has(u.id)) ? "Bỏ hết" : "Tất cả"}
+                        {activeFocusUnits.every((u) => selectedUnitIds.has(u.id)) ? "Bỏ hết" : "Tất cả"}
                       </button>
 
                       <div className="flex items-center gap-0.5 max-w-[180px] sm:max-w-[240px] 2xl:max-w-[340px] overflow-x-auto no-scrollbar py-0.5">
-                        {inspectedUnits.map((u, idx) => {
+                        {activeFocusUnits.map((u, idx) => {
                           const isSelected = selectedUnitIds.has(u.id);
                           return (
                             <button
@@ -3445,7 +4157,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                               type="button"
                               onClick={(e) => {
                                 if (e.altKey) {
-                                  selectOnlyThisUnit(u, inspectedUnits, e);
+                                  selectOnlyThisUnit(u, activeFocusUnits, e);
                                 } else {
                                   toggleUnitSelection(u.id, e);
                                 }
@@ -3465,46 +4177,52 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       </div>
                     </div>
                   </div>
-                ) : inspectedUnits.length === 1 ? (
+                </>
+              ) : activeFocusElement && activeFocusUnits.length === 1 ? (
+                <>
+                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
                   <button
                     type="button"
-                    onClick={(e) => startEdit(inspectedUnits[0], e)}
+                    onClick={(e) => startEdit(activeFocusUnits[0], e)}
                     className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors shrink-0 flex items-center gap-1"
                     title="Sửa chữ trực tiếp (Enter / Nhấp đúp)"
                   >
                     <Pencil className="w-3 h-3" />
                     <span className="text-[10px] font-semibold">Sửa chữ</span>
                   </button>
-                ) : null}
+                </>
+              ) : null}
 
-                <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
-
-                {/* Thao tác Duplicate & Delete */}
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleDuplicateElement(inspectedElement)}
-                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
-                    title="Nhân bản ô (Ctrl + D)"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteElement(inspectedElement.id)}
-                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
-                    title="Xóa ô này (Delete / Backspace)"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 italic hidden 2xl:inline-flex items-center gap-1 pl-1 font-normal select-none">
-                <MousePointerClick className="w-3 h-3 text-slate-400" />
-                <span>Nhấp chọn ô để định dạng Office 365</span>
-              </span>
-            )}
+              {/* Thao tác Duplicate & Delete */}
+              {activeFocusElement ? (
+                <>
+                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleDuplicateElement(activeFocusElement)}
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                      title="Nhân bản ô (Ctrl + D)"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteElement(activeFocusElement.id)}
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
+                      title="Xóa ô này (Delete / Backspace)"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 italic hidden 2xl:inline-flex items-center gap-1 pl-1 font-normal select-none">
+                  <MousePointerClick className="w-3 h-3 text-slate-400" />
+                  <span>Rê chuột vào ô bất kỳ để xem & đổi font size (Alt + Lăn chuột)</span>
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Right: Clean Grouped Control Blocks */}
@@ -3562,6 +4280,20 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 title="Song ngữ đối chiếu"
               >
                 Song ngữ
+              </button>
+              {/* UX Improvement 5: Before-After Split Slider Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsSplitCompareActive((prev) => !prev)}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                  isSplitCompareActive
+                    ? "bg-sky-600 text-white shadow-2xs font-bold"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+                title="So sánh Trước / Sau dạng thanh trượt kéo (Before-After Split Slider)"
+              >
+                <Split className="w-3 h-3 text-sky-400" />
+                <span className="hidden md:inline">Split VI/EN</span>
               </button>
             </div>
 
@@ -3649,25 +4381,31 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               </button>
             </div>
 
-            {/* History Pill (Undo, Redo, Reset) */}
+            {/* UX Improvement 8: History Pill (Undo, Redo, Reset) with step count */}
             <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
               <button
                 type="button"
                 onClick={handleUndo}
                 disabled={undoStack.length === 0}
-                className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                title={`Hoàn tác (Ctrl + Z)${undoStack.length > 0 ? ` [${undoStack.length}]` : ""}`}
+                className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center gap-0.5"
+                title={`Hoàn tác (Ctrl + Z)${undoStack.length > 0 ? ` [${undoStack.length} bước]` : ""}`}
               >
                 <Undo2 className="w-3.5 h-3.5" />
+                {undoStack.length > 0 && (
+                  <span className="text-[9px] font-mono font-bold text-sky-600 dark:text-sky-400">{undoStack.length}</span>
+                )}
               </button>
               <button
                 type="button"
                 onClick={handleRedo}
                 disabled={redoStack.length === 0}
-                className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                title={`Làm lại (Ctrl + Y hoặc Ctrl + Shift + Z)${redoStack.length > 0 ? ` [${redoStack.length}]` : ""}`}
+                className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center gap-0.5"
+                title={`Làm lại (Ctrl + Y hoặc Ctrl + Shift + Z)${redoStack.length > 0 ? ` [${redoStack.length} bước]` : ""}`}
               >
                 <Redo2 className="w-3.5 h-3.5" />
+                {redoStack.length > 0 && (
+                  <span className="text-[9px] font-mono font-bold text-sky-600 dark:text-sky-400">{redoStack.length}</span>
+                )}
               </button>
               {hasCustomPositionsOnCurrentSlide && (
                 <button
@@ -3696,6 +4434,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 onClick={() => {
                   setFitMode("contain");
                   setZoomScale(1.0);
+                  setPanOffset({ x: 0, y: 0 });
                 }}
                 className="px-1.5 text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300 hover:text-sky-500 cursor-pointer flex items-center gap-0.5"
                 title="Visual Fit (Tự động khớp khung hình - Phím 0)"
@@ -3703,6 +4442,20 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 <Scan className="w-2.5 h-2.5 text-sky-500" />
                 <span>{Math.round(zoomScale * 100)}%</span>
               </button>
+              {/* Reset view button if panned or zoomed */}
+              {(panOffset.x !== 0 || panOffset.y !== 0 || zoomScale !== 1.0) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPanOffset({ x: 0, y: 0 });
+                    setZoomScale(1.0);
+                  }}
+                  className="px-1 text-[9px] font-mono font-bold text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40 rounded cursor-pointer transition-colors"
+                  title="Đặt lại khung nhìn gốc (100% & giữa màn hình)"
+                >
+                  Reset
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setZoomScale((prev) => Math.min(1.8, Number((prev + 0.1).toFixed(2))))}
@@ -3851,6 +4604,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             e.preventDefault();
           }
         }}
+        onMouseDown={handleCanvasContainerMouseDown}
+        onMouseUp={handleCanvasMouseUp}
+        style={{
+          cursor: isSpacePressed ? (isPanningRef.current ? "grabbing" : "grab") : undefined,
+        }}
         className="flex-1 min-h-0 relative overflow-y-auto overflow-x-hidden w-full bg-slate-100 dark:bg-slate-950 rounded-xl select-none shadow-inner border border-slate-200 dark:border-slate-800 scroll-smooth"
       >
         {/* Real-time Font Size HUD Toast Feedback (Alt + Mouse Wheel) */}
@@ -3872,7 +4630,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         )}
         {layoutMode === "isq_dual" && dualSlideInfo ? (
           // DUAL SLIDE ISQ SIDE-BY-SIDE
-          <div className="w-full min-h-full flex items-start justify-center pt-3 pb-8 px-2">
+          <div
+            className="w-full min-h-full flex items-start justify-center pt-3 pb-8 px-2"
+            style={{
+              transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+              transition: isPanningRef.current ? "none" : "transform 0.05s ease-out",
+            }}
+          >
             <div className="flex items-start justify-center gap-3 shrink-0">
               {renderSlideSheet(
                 dualSlideInfo.viNum,
@@ -3897,9 +4661,74 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           <div className="w-full min-h-full flex items-start justify-center pt-3 pb-8 px-2">
             <div
               key={`slide_canvas_${currentSlide}`}
+              style={{
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+                transition: isPanningRef.current ? "none" : "transform 0.05s ease-out",
+              }}
               className="animate-in fade-in zoom-in-[0.99] duration-150 transition-all flex flex-col items-center shrink-0 shadow-2xl rounded-lg"
             >
-              {renderSlideSheet(currentSlide, currentVisualLayout, unitById, viewMode)}
+              {/* UX Improvement 5: Visual Before-After Split Comparison Slider */}
+              {isSplitCompareActive ? (
+                <div
+                  className="relative overflow-hidden rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-none bg-white shrink-0"
+                  style={{
+                    width: `${slideDimensions.width}px`,
+                    minHeight: `${slideDimensions.height}px`,
+                  }}
+                >
+                  {/* Layer 1: Source (Vietnamese Original) */}
+                  <div className="absolute inset-0 pointer-events-auto">
+                    {renderSlideSheet(currentSlide, currentVisualLayout, unitById, "source")}
+                  </div>
+                  {/* Layer 2: Target (English Translated), clipped by split slider */}
+                  <div
+                    className="absolute inset-0 pointer-events-auto overflow-hidden"
+                    style={{
+                      clipPath: `polygon(${splitSliderPercent}% 0, 100% 0, 100% 100%, ${splitSliderPercent}% 100%)`,
+                    }}
+                  >
+                    {renderSlideSheet(currentSlide, currentVisualLayout, unitById, "target")}
+                  </div>
+                  {/* Draggable Divider Handle */}
+                  <div
+                    className="absolute top-0 bottom-0 z-50 flex items-center justify-center cursor-ew-resize group select-none"
+                    style={{
+                      left: `${splitSliderPercent}%`,
+                      transform: "translateX(-50%)",
+                      width: "32px",
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsDraggingSplitter(true);
+                      const startX = e.clientX;
+                      const startPct = splitSliderPercent;
+                      const sheetW = slideDimensions.width || 1000;
+                      const handleMouseMove = (moveEvt: MouseEvent) => {
+                        const dx = moveEvt.clientX - startX;
+                        const newPct = Math.max(5, Math.min(95, startPct + (dx / sheetW) * 100));
+                        setSplitSliderPercent(Number(newPct.toFixed(1)));
+                      };
+                      const handleMouseUp = () => {
+                        setIsDraggingSplitter(false);
+                        window.removeEventListener("mousemove", handleMouseMove);
+                        window.removeEventListener("mouseup", handleMouseUp);
+                      };
+                      window.addEventListener("mousemove", handleMouseMove);
+                      window.addEventListener("mouseup", handleMouseUp);
+                    }}
+                  >
+                    <div className="w-[3px] h-full bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.9)]" />
+                    <div className="absolute top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/95 text-white font-mono text-[10px] font-bold shadow-2xl border border-sky-400 group-hover:scale-110 transition-transform">
+                      <span className="text-amber-400">VI</span>
+                      <span className="text-slate-500">|</span>
+                      <span className="text-sky-400">EN</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                renderSlideSheet(currentSlide, currentVisualLayout, unitById, viewMode)
+              )}
             </div>
           </div>
         )}
@@ -3919,6 +4748,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 <span>Kính lúp chi tiết</span>
                 <span className="text-[10px] text-slate-400 font-mono font-normal">
                   ({activeInspector.element.shapeName || "Ô dữ liệu"})
+                </span>
+                <span className="text-[10px] text-sky-300 font-mono font-bold bg-sky-950/80 border border-sky-800/80 px-1.5 py-0.5 rounded shadow-2xs">
+                  {canvasState.styles[activeInspector.element.id]?.fontSizePt ?? activeInspector.element.fontSizePt ?? 11}pt
                 </span>
               </div>
               <div className="flex items-center gap-1">
@@ -4345,14 +5177,87 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             W : Rộng rõ tối đa
           </span>
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold flex items-center gap-1 shadow-2xs">
+            <Paintbrush className="w-2.5 h-2.5 text-amber-500" />
+            Ctrl+Shift+C / V : Sao chép Style
+          </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            I : Kính lúp
+            Space + Kéo : Di chuyển (Pan)
+          </span>
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+            Ctrl + Cuộn : Thu phóng
+          </span>
+          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+            Shift + Nhấp : Chọn nhiều ô
           </span>
           <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
             Esc : Bỏ chọn
           </span>
         </div>
       </div>
+
+      {/* UX Improvement 7: Floating Mini Quick-Action Menu on Text Selection */}
+      {textSelectionMenu && (
+        <div
+          className="fixed z-50 flex items-center gap-1 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md text-white text-xs px-2 py-1.5 rounded-xl shadow-2xl border border-slate-700/80 animate-in fade-in zoom-in-95 duration-100"
+          style={{
+            left: `${textSelectionMenu.x}px`,
+            top: `${textSelectionMenu.y}px`,
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(textSelectionMenu.text);
+              setQuickActionNotice("Đã sao chép cụm từ!");
+              setTextSelectionMenu(null);
+              if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+              quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2000);
+            }}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-800 text-slate-200 hover:text-white transition-colors cursor-pointer text-[11px]"
+            title="Sao chép văn bản đã chọn"
+          >
+            <Copy className="w-3 h-3 text-sky-400" />
+            <span>Chép</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenGlossary) {
+                onOpenGlossary(textSelectionMenu.text);
+              } else {
+                navigator.clipboard.writeText(textSelectionMenu.text);
+                setQuickActionNotice(`Đã sao chép: "${textSelectionMenu.text}" (Mở Glossary để thêm)`);
+                if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2500);
+              }
+              setTextSelectionMenu(null);
+            }}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-800 text-emerald-300 hover:text-emerald-200 transition-colors cursor-pointer text-[11px]"
+            title="Tra hoặc thêm vào Glossary từ điển SOP"
+          >
+            <BookOpen className="w-3 h-3 text-emerald-400" />
+            <span>Glossary</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTextSelectionMenu(null)}
+            className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            title="Đóng menu"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Floating Quick Action Notice Toast */}
+      {quickActionNotice && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/95 text-white font-medium text-xs shadow-2xl border border-sky-500/50 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-150 pointer-events-none">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span>{quickActionNotice}</span>
+        </div>
+      )}
     </div>
   );
 };

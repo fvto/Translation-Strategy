@@ -198,7 +198,7 @@ test("Selective Slide Translation: only translates slides in slideRange, leaves 
   assert.ok(slide2After.includes("Step successfully verified"), "Slide 2 was successfully translated");
 });
 
-test("PPTX Translator: In-slide interleaved 1.EN 1.VI 2.EN 2.VI layout is preserved in ipqc_bilingual mode", async () => {
+test("PPTX Translator: IPQC bilingual outputs block layout (1.EN 2.EN ... 1.VI 2.VI ...) instead of interleaved", async () => {
   const { pptxTranslatorService } = await import("../services/documents/pptx-translator.ts");
   const JSZip = (await import("jszip")).default;
 
@@ -303,14 +303,14 @@ test("PPTX Translator: In-slide interleaved 1.EN 1.VI 2.EN 2.VI layout is preser
   assert.ok(p4EnIdx !== -1, "p4En found");
   assert.ok(p4ViIdx !== -1, "p4Vi found");
 
-  // Interleaved order: 1.EN < 1.VI < 2.EN < 2.VI < 3.EN < 3.VI < 4.EN < 4.VI
-  assert.ok(p1EnIdx < p1ViIdx, "1.EN precedes 1.VI");
-  assert.ok(p1ViIdx < p2EnIdx, "1.VI precedes 2.EN");
-  assert.ok(p2EnIdx < p2ViIdx, "2.EN precedes 2.VI");
-  assert.ok(p2ViIdx < p3EnIdx, "2.VI precedes 3.EN");
-  assert.ok(p3EnIdx < p3ViIdx, "3.EN precedes 3.VI");
-  assert.ok(p3ViIdx < p4EnIdx, "3.VI precedes 4.EN");
-  assert.ok(p4EnIdx < p4ViIdx, "4.EN precedes 4.VI");
+  // Block layout: all EN first (1.EN < 2.EN < 3.EN < 4.EN), then all VI (1.VI < 2.VI < 3.VI < 4.VI)
+  assert.ok(p1EnIdx < p2EnIdx, "1.EN precedes 2.EN");
+  assert.ok(p2EnIdx < p3EnIdx, "2.EN precedes 3.EN");
+  assert.ok(p3EnIdx < p4EnIdx, "3.EN precedes 4.EN");
+  assert.ok(p4EnIdx < p1ViIdx, "All EN precede VI block");
+  assert.ok(p1ViIdx < p2ViIdx, "1.VI precedes 2.VI");
+  assert.ok(p2ViIdx < p3ViIdx, "2.VI precedes 3.VI");
+  assert.ok(p3ViIdx < p4ViIdx, "3.VI precedes 4.VI");
 });
 
 test("PPTX Translator: In-slide interleaved in replace_en mode outputs ONLY English without Vietnamese or duplicates", async () => {
@@ -450,7 +450,7 @@ test("PPTX Translator & Smart Audit: Supports 1.VI 1.EN 2.VI 2.EN order seamless
     assert.equal(u.selectedForTranslation, false, "Must not be selected for translation");
   }
 
-  // 2. Translation in ipqc_bilingual: preserves 1.VI then 1.EN, 2.VI then 2.EN
+  // 2. Translation in ipqc_bilingual: outputs 1.EN 2.EN then 1.VI 2.VI
   const mockProvider = {
     name: "mock-engine",
     async translateBatch() { return { results: new Map(), provider: "mock-engine", durationMs: 5 }; },
@@ -474,9 +474,9 @@ test("PPTX Translator & Smart Audit: Supports 1.VI 1.EN 2.VI 2.EN order seamless
 
   assert.ok(idx1Vi !== -1 && idx1En !== -1, "1.VI and 1.EN present");
   assert.ok(idx2Vi !== -1 && idx2En !== -1, "2.VI and 2.EN present");
-  assert.ok(idx1Vi < idx1En, "1.VI precedes 1.EN");
-  assert.ok(idx1En < idx2Vi, "1.EN precedes 2.VI");
-  assert.ok(idx2Vi < idx2En, "2.VI precedes 2.EN");
+  assert.ok(idx1En < idx2En, "1.EN precedes 2.EN");
+  assert.ok(idx2En < idx1Vi, "All EN precede VI block");
+  assert.ok(idx1Vi < idx2Vi, "1.VI precedes 2.VI");
 
   // 3. Translation in replace_en: outputs ONLY 1.EN and 2.EN
   const enResult = await pptxTranslatorService.translate(buffer, {

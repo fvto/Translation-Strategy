@@ -29,6 +29,7 @@ interface ScanOptions {
   historyPairs?: AuditMemoryPair[];
   expectedSuggestions?: { id: string; sourceText: string; suggestedTranslation: string }[];
   customTranslations?: Record<string, string>;
+  customFontSizes?: Record<string, number>;
   viRefAction?: "duplicate" | "overwrite" | "bilingual";
   slideViHandling?: Record<number, "duplicate" | "overwrite" | "bilingual">;
 }
@@ -1556,7 +1557,8 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
       const unit = replacements.get(index++);
       if (!unit) return pXml;
       if (paragraphText(pXml).trim() !== unit.sourceText) throw new Error("Nội dung đã thay đổi; hãy quét lại trước khi áp dụng.");
-      return replaceParagraphTranslation(pXml, unit.suggestedTranslation!, unit.sourceText);
+      const overrideFontSizePt = options.customFontSizes?.[unit.id];
+      return replaceParagraphTranslation(pXml, unit.suggestedTranslation!, unit.sourceText, overrideFontSizePt);
     });
     zip.file(part, result);
   }

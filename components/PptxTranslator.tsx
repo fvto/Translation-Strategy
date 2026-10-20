@@ -293,7 +293,8 @@ export const PptxTranslator: React.FC = () => {
   const applyAuditSuggestions = async (
     unitIds: string[],
     customTranslations?: Record<string, string>,
-    options?: ViHandlingOptions
+    options?: ViHandlingOptions,
+    customFontSizes?: Record<string, number>
   ) => {
     if (!file || !auditReport) return;
     const formData = new FormData();
@@ -317,6 +318,9 @@ export const PptxTranslator: React.FC = () => {
     formData.append("auditPreview", JSON.stringify(previewList));
     if (customTranslations && Object.keys(customTranslations).length > 0) {
       formData.append("customTranslations", JSON.stringify(customTranslations));
+    }
+    if (customFontSizes && Object.keys(customFontSizes).length > 0) {
+      formData.append("customFontSizes", JSON.stringify(customFontSizes));
     }
     const response = await fetch("/api/documents/translate-pptx", { method: "POST", body: formData });
     if (!response.ok) { const data = await response.json(); throw new Error(data.error || "Không thể áp dụng gợi ý."); }
@@ -379,6 +383,7 @@ export const PptxTranslator: React.FC = () => {
       translateMissingOnly?: boolean;
       selectedUnitIds?: string[];
       customTranslations?: Record<string, string>;
+      customFontSizes?: Record<string, number>;
       viRefAction?: string;
       slideViHandling?: Record<number, string>;
     }
@@ -423,6 +428,9 @@ export const PptxTranslator: React.FC = () => {
       }
       if (options.customTranslations && Object.keys(options.customTranslations).length > 0) {
         formData.append("customTranslations", JSON.stringify(options.customTranslations));
+      }
+      if (options.customFontSizes && Object.keys(options.customFontSizes).length > 0) {
+        formData.append("customFontSizes", JSON.stringify(options.customFontSizes));
       }
       if (options.viRefAction) {
         formData.append("viRefAction", options.viRefAction);
@@ -1994,12 +2002,13 @@ export const PptxTranslator: React.FC = () => {
         auditReport={auditReport}
         file={file}
         onApplySuggestions={applyAuditSuggestions}
-        onTranslateMissingOnly={(selectedUnitIds, customTranslations, viOptions) => {
+        onTranslateMissingOnly={(selectedUnitIds, customTranslations, viOptions, customFontSizes) => {
           setIsAuditModalOpen(false);
           executeAction("translate", {
             translateMissingOnly: true,
             selectedUnitIds,
             customTranslations,
+            customFontSizes,
             viRefAction: viOptions?.viHandlingMode,
             slideViHandling: viOptions?.slideViHandling,
           });

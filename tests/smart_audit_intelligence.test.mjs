@@ -358,3 +358,57 @@ test('Existing English with ambiguous footwear words cannot reappear through glo
     ...opts,expectedSuggestions:[{id:cutting.id,sourceText:'Cutting die',suggestedTranslation:'cutting die'}],
   }),/không còn hợp lệ/);
 });
+
+test('Custom font sizes from Canvas Alt+Scroll are accurately written into PowerPoint XML sz attribute', async () => {
+  translationCache.clear();
+  const buffer = await deck([shape('Kiểm tra thiết bị trước khi vận hành')]);
+  const report = await auditPptxGaps(buffer, 'font-size-test.pptx', { sourceLang: 'vi', targetLang: 'en', mode: 'replace_en' });
+  const unitId = report.units[0].id;
+
+  const result = await pptxTranslatorService.translate(buffer, {
+    sourceLanguage: 'vi',
+    targetLanguage: 'en',
+    mode: 'replace_en',
+    fileName: 'font-size-test.pptx',
+    provider: { name: 'mock', translate: async () => ({ translatedText: 'Check equipment before operation' }) },
+    translateMissingOnly: true,
+    selectedUnitIds: [unitId],
+    customFontSizes: { [unitId]: 14.5 } // 14.5pt -> sz="1450"
+  });
+
+  const zip = await JSZip.loadAsync(result.translatedBuffer);
+  const slide1Xml = await zip.file('ppt/slides/slide1.xml').async('string');
+  assert.match(slide1Xml, /sz="1450"/);
+  assert.match(slide1Xml, /Check equipment before operation/);
+});
+
+test('Independent multi-element font sizing: each hovered element gets its own custom sz without cross-bleed', async () => {
+  translationCache.clear();
+  const buffer = await deck([shape('Quy trình 1: Định hình nhiệt') + shape('Quy trình 2: Mài cạnh đế')]);
+  const report = await auditPptxGaps(buffer, 'multi-font-test.pptx', { sourceLang: 'vi', targetLang: 'en', mode: 'replace_en' });
+  assert.equal(report.units.length, 2);
+  const u1 = report.units[0].id;
+  const u2 = report.units[1].id;
+
+  const result = await pptxTranslatorService.translate(buffer, {
+    sourceLanguage: 'vi',
+    targetLanguage: 'en',
+    mode: 'replace_en',
+    fileName: 'multi-font-test.pptx',
+    provider: { name: 'mock', translate: async (text) => ({ translatedText: text.includes('1') ? 'Process 1: Hot shaping' : 'Process 2: Sole buffing' }) },
+    translateMissingOnly: true,
+    selectedUnitIds: [u1, u2],
+    customFontSizes: {
+      [u1]: 16.0, // 16pt -> sz="1600"
+      [u2]: 12.0  // 12pt -> sz="1200"
+    }
+  });
+
+  const zip = await JSZip.loadAsync(result.translatedBuffer);
+  const slide1Xml = await zip.file('ppt/slides/slide1.xml').async('string');
+  assert.match(slide1Xml, /sz="1600"/);
+  assert.match(slide1Xml, /sz="1200"/);
+  assert.ok(slide1Xml.includes('Process 1:'), "Slide contains Process 1");
+  assert.ok(slide1Xml.includes('Process 2:'), "Slide contains Process 2");
+});
+

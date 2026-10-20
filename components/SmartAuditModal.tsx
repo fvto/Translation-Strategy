@@ -20,13 +20,15 @@ interface SmartAuditModalProps {
   onTranslateMissingOnly: (
     selectedUnitIds?: string[],
     customTranslations?: Record<string, string>,
-    options?: ViHandlingOptions
+    options?: ViHandlingOptions,
+    customFontSizes?: Record<string, number>
   ) => void;
   onTranslateAll?: () => void;
   onApplySuggestions?: (
     unitIds: string[],
     customTranslations?: Record<string, string>,
-    options?: ViHandlingOptions
+    options?: ViHandlingOptions,
+    customFontSizes?: Record<string, number>
   ) => Promise<void>;
   isLoading?: boolean;
 }
@@ -55,6 +57,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   const [aiReport, setAiReport] = useState<SmartAuditReport | null>(null);
   const [aiAuditMsg, setAiAuditMsg] = useState("");
   const [isMaximized, setIsMaximized] = useState(false);
+  const [customFontSizes, setCustomFontSizes] = useState<Record<string, number>>({});
 
   const report = aiReport || auditReport;
 
@@ -414,7 +417,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     if (!preview || !onApplySuggestions) return;
     setBusy(true); setError("");
     try {
-      await onApplySuggestions(preview, customEdits, { viHandlingMode, slideViHandling });
+      await onApplySuggestions(preview, customEdits, { viHandlingMode, slideViHandling }, customFontSizes);
       setPreview(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể áp dụng gợi ý.");
@@ -703,6 +706,9 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               slideViHandling={slideViHandling}
               onSetSlideViHandling={(sNum, mode) => {
                 setSlideViHandling((prev) => ({ ...prev, [sNum]: mode }));
+              }}
+              onCustomFontSizesChange={(newSizes) => {
+                setCustomFontSizes((prev) => ({ ...prev, ...newSizes }));
               }}
             />
           ) : tab === "slides" ? (
@@ -1700,7 +1706,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                   id="btn-apply-manual-edits-only"
                   className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
                   disabled={loading}
-                  onClick={() => onTranslateMissingOnly([], customEdits, { viHandlingMode, slideViHandling })}
+                  onClick={() => onTranslateMissingOnly([], customEdits, { viHandlingMode, slideViHandling }, customFontSizes)}
                   title="Chỉ áp dụng các câu bạn đã sửa thủ công vào file PPTX (0 token AI, không dịch các câu khác)"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -1711,7 +1717,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                 id="btn-translate-missing-only"
                 className="px-5 py-2 rounded-full bg-[#E60023] hover:bg-[#CC001F] text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 cursor-pointer"
                 disabled={loading || (!selectedMissing.length && customEditsCount === 0)}
-                onClick={() => onTranslateMissingOnly(selectedMissing.map((u) => u.id), customEdits, { viHandlingMode, slideViHandling })}
+                onClick={() => onTranslateMissingOnly(selectedMissing.map((u) => u.id), customEdits, { viHandlingMode, slideViHandling }, customFontSizes)}
               >
                 {loading ? "Đang xử lý..." : `Dịch & sửa phần chưa dịch (${selectedMissing.length + customEditsCount})`}
               </button>

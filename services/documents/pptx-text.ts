@@ -32,21 +32,43 @@ export function canReplaceParagraphText(xml: string, target: string): boolean {
   return runs.length > 0 && (accentOnly || styles.size <= 1);
 }
 
+export function applyFontSizeToXml(xml: string, fontSizePt: number): string {
+  const szVal = Math.round(fontSizePt * 100);
+  let updated = xml;
+  if (/<a:rPr\b[^>]*\bsz=["']\d+["']/.test(updated)) {
+    updated = updated.replace(/(<a:rPr\b[^>]*?)\bsz=["']\d+["']/g, `$1sz="${szVal}"`);
+  } else if (/<a:rPr\b/.test(updated)) {
+    updated = updated.replace(/<a:rPr\b/g, `<a:rPr sz="${szVal}"`);
+  } else {
+    updated = updated.replace(/(<a:r(?:\s[^>]*)?>)/g, `$1<a:rPr sz="${szVal}"/>`);
+  }
+  if (/<a:endParaRPr\b[^>]*\bsz=["']\d+["']/.test(updated)) {
+    updated = updated.replace(/(<a:endParaRPr\b[^>]*?)\bsz=["']\d+["']/g, `$1sz="${szVal}"`);
+  } else if (/<a:endParaRPr\b/.test(updated)) {
+    updated = updated.replace(/<a:endParaRPr\b/g, `<a:endParaRPr sz="${szVal}"`);
+  }
+  return updated;
+}
+
 /** Only text node contents change; paragraph/run properties and all surrounding XML remain verbatim. */
-export function replaceParagraphText(xml: string, target: string): string {
+export function replaceParagraphText(xml: string, target: string, overrideFontSizePt?: number): string {
   if (!canReplaceParagraphText(xml, target)) throw new Error("This paragraph requires manual review to preserve mixed formatting, fields or line breaks.");
   const nodes = Array.from(xml.matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g));
   const lastSubstantiveNode = nodes.findLastIndex((node) => decodePptxText(node[1]).length > 0);
   const chars = Array.from(target);
   let offset = 0;
   let index = 0;
-  return xml.replace(/(<a:t(?:\s[^>]*)?>)([\s\S]*?)(<\/a:t>)/g, (_, open, raw, close) => {
+  let res = xml.replace(/(<a:t(?:\s[^>]*)?>)([\s\S]*?)(<\/a:t>)/g, (_, open, raw, close) => {
     const length = Array.from(decodePptxText(raw)).length;
     const text = length ? chars.slice(offset, index === lastSubstantiveNode ? chars.length : offset + length).join("") : "";
     offset += length;
     index++;
     return open + text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + close;
   });
+  if (overrideFontSizePt != null && !isNaN(overrideFontSizePt)) {
+    res = applyFontSizeToXml(res, overrideFontSizePt);
+  }
+  return res;
 }
 
 /** AI translation may consolidate text into its dominant substantive source run.
@@ -57,8 +79,8 @@ export function canTranslateParagraphText(xml: string): boolean {
   return !/<a:fld\b/.test(xml) && /<a:r(?:\s[^>]*)?>[\s\S]*?<a:t(?:\s[^>]*)?>/.test(xml);
 }
 
-export function replaceParagraphTranslation(xml: string, target: string, sourceText?: string): string {
-  if (canReplaceParagraphText(xml, target)) return replaceParagraphText(xml, target);
+export function replaceParagraphTranslation(xml: string, target: string, sourceText?: string, overrideFontSizePt?: number): string {
+  if (canReplaceParagraphText(xml, target)) return replaceParagraphText(xml, target, overrideFontSizePt);
   if (!canTranslateParagraphText(xml) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(target)) {
     throw new Error("This paragraph contains unsupported fields or explicit breaks.");
   }
@@ -82,7 +104,7 @@ export function replaceParagraphTranslation(xml: string, target: string, sourceT
   const shouldScaleDown = targetLen > 40 && origLen > 0 && targetLen > origLen * 1.35;
 
   let index = 0;
-  return xml.replace(/<a:br\b[^>]*(?:\/>|>[\s\S]*?<\/a:br>)/g, "").replace(/<a:r(?:\s[^>]*)?>[\s\S]*?<\/a:r>/g, r => {
+  let result = xml.replace(/<a:br\b[^>]*(?:\/>|>[\s\S]*?<\/a:br>)/g, "").replace(/<a:r(?:\s[^>]*)?>[\s\S]*?<\/a:r>/g, r => {
     const selected = index++ === chosen;
     let firstText = true;
     let updated = r.replace(/(<a:t(?:\s[^>]*)?>)[\s\S]*?(<\/a:t>)/g, (_,open,close) => {
@@ -93,7 +115,16 @@ export function replaceParagraphTranslation(xml: string, target: string, sourceT
       if (/<a:rPr\b/.test(updated)) updated = updated.replace(/<a:rPr\b([^>]*?)(\/?>)/, (_,attrs,end) => `<a:rPr${attrs.replace(/\s+b=["'][^"']*["']/g, "")} b="0"${end}`);
       else updated = updated.replace(/(<a:r(?:\s[^>]*)?>)/, '$1<a:rPr b="0"/>');
     }
-    if (selected && shouldScaleDown) {
+    if (selected && overrideFontSizePt != null && !isNaN(overrideFontSizePt)) {
+      const szVal = Math.round(overrideFontSizePt * 100);
+      if (/\bsz=["'](\d+)["']/.test(updated)) {
+        updated = updated.replace(/\bsz=["'](\d+)["']/g, `sz="${szVal}"`);
+      } else if (/<a:rPr\b/.test(updated)) {
+        updated = updated.replace(/<a:rPr\b/, `<a:rPr sz="${szVal}"`);
+      } else {
+        updated = updated.replace(/(<a:r(?:\s[^>]*)?>)/, `$1<a:rPr sz="${szVal}"/>`);
+      }
+    } else if (selected && shouldScaleDown) {
       updated = updated.replace(/\bsz=["'](\d+)["']/, (_, szStr) => {
         const currentSz = parseInt(szStr, 10);
         if (currentSz >= 1200) {
@@ -109,4 +140,15 @@ export function replaceParagraphTranslation(xml: string, target: string, sourceT
     }).join('<a:br/>');
     return updated;
   });
+
+  if (overrideFontSizePt != null && !isNaN(overrideFontSizePt)) {
+    const szVal = Math.round(overrideFontSizePt * 100);
+    if (/<a:endParaRPr\b[^>]*\bsz=["']\d+["']/.test(result)) {
+      result = result.replace(/(<a:endParaRPr\b[^>]*?)\bsz=["']\d+["']/g, `$1sz="${szVal}"`);
+    } else if (/<a:endParaRPr\b/.test(result)) {
+      result = result.replace(/<a:endParaRPr\b/g, `<a:endParaRPr sz="${szVal}"`);
+    }
+  }
+
+  return result;
 }
