@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
+import { extractNumericParameters } from "@/services/translation/vietnamese-detector";
 import {
   Presentation,
   ChevronLeft,
@@ -329,6 +331,23 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const [zoomScale, setZoomScale] = useState<number>(1.0);
   const [isCanvasFullscreen, setIsCanvasFullscreen] = useState<boolean>(false);
 
+  // Top Header Slot in SmartAuditModal (Ngang hàng với các tab như Trực quan Slide PPTX)
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const updateSlot = () => {
+      const el = document.getElementById("canvas-top-header-slot");
+      if (el) setHeaderSlot(el);
+    };
+    updateSlot();
+    const t1 = setTimeout(updateSlot, 50);
+    const t2 = setTimeout(updateSlot, 200);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
   // Fit Mode: "contain" (fits slide into viewport) | "width" (stretches slide across comfortable width with vertical scroll for dense tables/shapes)
   const [fitMode, setFitMode] = useState<"contain" | "width">("width");
 
@@ -393,6 +412,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     currentY: number;
   } | null>(null);
   const isAreaSelectingRef = useRef<boolean>(false);
+  const justFinishedRightDraggingRef = useRef<boolean>(false);
   // Feature 4: Tự động gập / thu nhỏ thanh công cụ nổi HUD để không che slide
   const [isHudCollapsed, setIsHudCollapsed] = useState<boolean>(false);
 
@@ -532,6 +552,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const [resizingElementId, setResizingElementId] = useState<string | null>(null);
   const [resizeInfo, setResizeInfo] = useState<{ elId: string; width: number; height: number } | null>(null);
   const [colorPopover, setColorPopover] = useState<{ type: "textColor" | "fill"; elId: string } | null>(null);
+  const [lineToolMode, setLineToolMode] = useState<"translate" | "edit">("translate");
 
   const [undoStack, setUndoStack] = useState<SlideCanvasCustomState[]>([]);
   const [redoStack, setRedoStack] = useState<SlideCanvasCustomState[]>([]);
@@ -769,10 +790,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     return [...activeBase, ...slideAdded];
   }, [currentVisualLayout, canvasState.deletedElementIds, canvasState.addedElements, currentSlide]);
 
-  // Marquee Area Selection (Select Area / Rubberband Drag)
+  // Marquee Area Selection (Select Area / Rubberband Drag bằng bấm giữ CHUỘT PHẢI hoặc bật chế độ Quét)
   const handleStartAreaSelection = useCallback(
     (e: React.MouseEvent) => {
-      if (e.button !== 0) return;
+      // Chỉ kích hoạt khi bấm CHUỘT PHẢI (e.button === 2) hoặc khi đã chủ động bật nút "Quét vùng" (e.button === 0)
+      if (e.button !== 2 && !(isAreaSelectMode && e.button === 0)) return;
       const target = e.target as HTMLElement;
       if (
         target.closest("input") ||
@@ -783,19 +805,31 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         return;
       }
 
-      e.preventDefault();
-      isAreaSelectingRef.current = true;
+      const isRightClick = e.button === 2;
       const startX = e.clientX;
       const startY = e.clientY;
-      setSelectionBox({ startX, startY, currentX: startX, currentY: startY });
+      let hasExceededThreshold = false;
 
       const handleAreaMouseMove = (moveEvt: MouseEvent) => {
-        if (!isAreaSelectingRef.current) return;
-        moveEvt.preventDefault();
-        window.getSelection()?.removeAllRanges();
-
         const curX = moveEvt.clientX;
         const curY = moveEvt.clientY;
+        const dist = Math.hypot(curX - startX, curY - startY);
+
+        if (!hasExceededThreshold) {
+          if (dist > 5) {
+            hasExceededThreshold = true;
+            isAreaSelectingRef.current = true;
+            if (isRightClick) {
+              justFinishedRightDraggingRef.current = true;
+            }
+            justFinishedDraggingRef.current = true;
+          } else {
+            return;
+          }
+        }
+
+        moveEvt.preventDefault();
+        window.getSelection()?.removeAllRanges();
 
         setSelectionBox({
           startX,
@@ -809,31 +843,38 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         const selRight = Math.max(startX, curX);
         const selBottom = Math.max(startY, curY);
 
-        if (Math.hypot(selRight - selLeft, selBottom - selTop) > 6) {
-          justFinishedDraggingRef.current = true;
-          const cellDomElements = document.querySelectorAll<HTMLElement>("[data-element-id]");
-          const selected = new Set<string>();
-          cellDomElements.forEach((elNode) => {
-            const id = elNode.getAttribute("data-element-id");
-            if (!id) return;
-            const rect = elNode.getBoundingClientRect();
-            const overlaps = !(
-              rect.right < selLeft ||
-              rect.left > selRight ||
-              rect.bottom < selTop ||
-              rect.top > selBottom
-            );
-            if (overlaps) {
-              selected.add(id);
-            }
-          });
-          setMultiSelectedElementIds(selected);
-        }
+        const cellDomElements = document.querySelectorAll<HTMLElement>("[data-element-id]");
+        const selected = new Set<string>();
+        cellDomElements.forEach((elNode) => {
+          const id = elNode.getAttribute("data-element-id");
+          if (!id) return;
+          const rect = elNode.getBoundingClientRect();
+          const overlaps = !(
+            rect.right < selLeft ||
+            rect.left > selRight ||
+            rect.bottom < selTop ||
+            rect.top > selBottom
+          );
+          if (overlaps) {
+            selected.add(id);
+          }
+        });
+        setMultiSelectedElementIds(selected);
       };
 
-      const handleAreaMouseUp = () => {
+      const handleAreaMouseUp = (upEvt: MouseEvent) => {
         isAreaSelectingRef.current = false;
         setSelectionBox(null);
+
+        if (hasExceededThreshold && isRightClick) {
+          justFinishedRightDraggingRef.current = true;
+          setTimeout(() => {
+            justFinishedRightDraggingRef.current = false;
+          }, 300);
+        } else if (!hasExceededThreshold && isRightClick) {
+          justFinishedRightDraggingRef.current = false;
+        }
+
         setTimeout(() => {
           justFinishedDraggingRef.current = false;
         }, 150);
@@ -845,12 +886,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       window.addEventListener("mousemove", handleAreaMouseMove);
       window.addEventListener("mouseup", handleAreaMouseUp);
     },
-    []
+    [isAreaSelectMode]
   );
 
   // Mouse handler to drag & move slide elements with Canva-style alignment guides & snapping
   const handleElementMouseDown = useCallback(
     (e: React.MouseEvent, el: SlideVisualElement, sheetW: number, sheetH: number) => {
+      // Bấm chuột phải hoặc bật chế độ Quét: Kích hoạt quét vùng
+      if (e.button === 2 || (isAreaSelectMode && e.button === 0)) {
+        handleStartAreaSelection(e);
+        return;
+      }
       if (e.button !== 0) return;
 
       const target = e.target as HTMLElement;
@@ -863,7 +909,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         return;
       }
 
-      if (isAreaSelectMode || e.shiftKey) {
+      if (e.shiftKey) {
         handleStartAreaSelection(e);
         return;
       }
@@ -1921,6 +1967,22 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         return unit.suggestedTranslation;
       }
       if (unit.existingTranslation && unit.existingTranslation.trim().toLowerCase() !== unit.sourceText.trim().toLowerCase()) {
+        // Defensive hygiene: reject corrupted legacy pairings where different shoe sizes or measurements were falsely linked
+        if (/size\s*#?\d+/i.test(unit.sourceText) && /size\s*#?\d+/i.test(unit.existingTranslation)) {
+          const sMatch = unit.sourceText.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0]?.toLowerCase().replace(/\s+/g, "");
+          const tMatch = unit.existingTranslation.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0]?.toLowerCase().replace(/\s+/g, "");
+          if (sMatch && tMatch && sMatch !== tMatch) {
+            return "";
+          }
+        }
+        const numS = extractNumericParameters(unit.sourceText);
+        const numT = extractNumericParameters(unit.existingTranslation);
+        if (numS.length > 0 && numT.length > 0) {
+          const shared = numS.filter((n) => numT.includes(n));
+          if (shared.length === 0 && (numS.length >= 2 || numT.length >= 2)) {
+            return "";
+          }
+        }
         return unit.existingTranslation;
       }
       return "";
@@ -2457,14 +2519,16 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         return;
       }
 
-      // 2. Area Selection Mode
-      if (isAreaSelectMode || e.shiftKey || (!target.closest("[data-element-id]") && e.button === 0)) {
-        if (!e.shiftKey && !isAreaSelectMode && !target.closest("[data-element-id]")) {
-          setMultiSelectedElementIds(new Set());
-          setSelectedElementId(null);
-        }
+      // 2. Right Click (Chuột phải) hoặc chế độ Quét: Bấm giữ kéo để quét chọn nhiều ô
+      if (e.button === 2 || (isAreaSelectMode && e.button === 0)) {
         handleStartAreaSelection(e);
         return;
+      }
+
+      // 3. Left Click trên nền trống canvas: Hủy chọn ô đang chọn
+      if (e.button === 0 && !target.closest("[data-element-id]")) {
+        setMultiSelectedElementIds(new Set());
+        setSelectedElementId(null);
       }
     },
     [panOffset, isAreaSelectMode, handleStartAreaSelection]
@@ -2831,7 +2895,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       <div
         className="relative rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-none bg-white shrink-0"
         onMouseDown={(e) => {
-          if (isAreaSelectMode || e.shiftKey) {
+          if (e.button === 2 || (isAreaSelectMode && e.button === 0)) {
             handleStartAreaSelection(e);
           }
         }}
@@ -3053,6 +3117,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                             onDoubleClick={(e) => { e.stopPropagation(); startEdit(u, e); }}
                             onContextMenu={(e) => {
                               e.preventDefault(); e.stopPropagation();
+                              if (justFinishedRightDraggingRef.current) return;
                               const sel = window.getSelection()?.toString().trim();
                               const x = Math.min(e.clientX, window.innerWidth - 350);
                               const y = Math.min(e.clientY, window.innerHeight - 440);
@@ -3170,6 +3235,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     onContextMenu={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      if (justFinishedRightDraggingRef.current) return;
                       const sel = window.getSelection()?.toString().trim();
                       const x = Math.min(e.clientX, window.innerWidth - 350);
                       const y = Math.min(e.clientY, window.innerHeight - 440);
@@ -3474,7 +3540,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     rowSpan={el.rowSpan && el.rowSpan > 1 ? el.rowSpan : undefined}
                                     colSpan={el.colSpan && el.colSpan > 1 ? el.colSpan : undefined}
                                     onMouseDown={(e) => {
-                                      if (isAreaSelectMode || e.shiftKey) {
+                                      if (e.button === 2 || (isAreaSelectMode && e.button === 0)) {
                                         handleStartAreaSelection(e);
                                       }
                                     }}
@@ -3493,9 +3559,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                           return next;
                                         });
                                       } else {
-                                        if (!multiSelectedElementIds.has(el.id)) {
-                                          setMultiSelectedElementIds(new Set([el.id]));
-                                        }
+                                        // Bấm chuột trái đơn lẻ: xóa multiSelected để KHÔNG bị đè lớp tím
+                                        setMultiSelectedElementIds(new Set());
                                       }
                                       setSelectedElementId(el.id);
                                       setLastActiveElementId(el.id);
@@ -3527,6 +3592,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     onContextMenu={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
+                                      if (justFinishedRightDraggingRef.current) return;
                                       const sel = window.getSelection()?.toString().trim();
                                       const x = Math.min(e.clientX, window.innerWidth - 350);
                                       const y = Math.min(e.clientY, window.innerHeight - 440);
@@ -3936,9 +4002,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                           return next;
                         });
                       } else {
-                        if (!multiSelectedElementIds.has(el.id)) {
-                          setMultiSelectedElementIds(new Set([el.id]));
-                        }
+                        // Bấm chuột trái đơn lẻ: xóa multiSelected để KHÔNG bị đè lớp tím
+                        setMultiSelectedElementIds(new Set());
                       }
                       setSelectedElementId(el.id);
                       setLastActiveElementId(el.id);
@@ -3971,6 +4036,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     onContextMenu={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      if (justFinishedRightDraggingRef.current) return;
                       const sel = window.getSelection()?.toString().trim();
                       const x = Math.min(e.clientX, window.innerWidth - 350);
                       const y = Math.min(e.clientY, window.innerHeight - 440);
@@ -4184,7 +4250,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                   ? "bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-400"
                   : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
-              title="Chế độ Quét chọn vùng (Phím S hoặc giữ Shift + kéo chuột trên canvas để quét chọn nhiều ô cùng lúc)"
+              title="Chế độ Quét chọn vùng (Bấm giữ chuột phải và kéo trên slide để quét chọn nhiều ô cùng lúc, hoặc bật nút này)"
             >
               <BoxSelect className={`w-3.5 h-3.5 ${isAreaSelectMode ? "text-white" : "text-indigo-500"}`} />
               <span className="text-[11px] font-bold hidden md:inline">
@@ -4193,7 +4259,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             </button>
 
             {/* Microsoft Office 365 Formatting Ribbon - ALWAYS DISPLAYED */}
-            <div className="flex items-center gap-1.5 shrink-0 pl-1.5 border-l border-slate-200 dark:border-slate-800 transition-all">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 pl-1.5 border-l border-slate-200 dark:border-slate-800 transition-all">
               {/* UX Improvement 2: Multi-Select Batch Indicator */}
               {multiSelectedElementIds.size > 0 ? (
                 <div className="flex items-center gap-1.5 shrink-0 animate-in fade-in zoom-in-95 duration-150">
@@ -4569,45 +4635,65 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 </button>
               </div>
 
-              {/* Sửa & Chọn dịch khi ô có nhiều dòng */}
+              {/* Thao tác Duplicate & Delete: Đặt cố định cạnh Layer, không bị đẩy mất khi ô có nhiều dòng */}
+              {activeFocusElement ? (
+                <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleDuplicateElement(activeFocusElement)}
+                    className="p-1 rounded hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 cursor-pointer transition-colors"
+                    title="Nhân bản ô (Ctrl + D)"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteElement(activeFocusElement.id)}
+                    className="p-1 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 cursor-pointer transition-colors"
+                    title="Xóa ô này (Delete / Backspace)"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : null}
+
+              {/* Sửa & Chọn dịch khi ô có nhiều dòng: Chế độ Dịch / Sửa thông minh, toàn bộ các nút D1..Dn hiển thị trọn vẹn không bị che */}
               {activeFocusElement && activeFocusUnits.length > 1 ? (
                 <>
                   <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
-                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 rounded-lg px-2 py-0.5 border border-slate-200 dark:border-slate-700 shrink-0">
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Pencil className="w-3 h-3 text-sky-600 dark:text-sky-400 shrink-0" />
-                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium shrink-0">Sửa:</span>
-                      <div className="flex items-center gap-0.5 max-w-[150px] sm:max-w-[200px] 2xl:max-w-[300px] overflow-x-auto no-scrollbar py-0.5">
-                        {activeFocusUnits.map((u, idx) => (
-                          <button
-                            key={u.id}
-                            type="button"
-                            onClick={(e) => startEdit(u, e)}
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all shrink-0 whitespace-nowrap ${
-                              editingUnitId === u.id
-                                ? "bg-sky-600 text-white shadow-xs scale-105"
-                                : "bg-white dark:bg-slate-700 hover:bg-sky-500 hover:text-white text-slate-700 dark:text-slate-200 shadow-2xs"
-                            }`}
-                            title={`Sửa dòng ${idx + 1}: "${u.sourceText.slice(0, 35)}..."`}
-                          >
-                            D{idx + 1}
-                          </button>
-                        ))}
-                      </div>
+                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 rounded-lg px-2 py-0.5 border border-slate-200 dark:border-slate-700 min-w-0 flex-1">
+                    {/* Chuyển đổi linh hoạt giữa Dịch và Sửa chữ */}
+                    <div className="flex items-center bg-white dark:bg-slate-900 rounded-md p-0.5 border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setLineToolMode("translate")}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                          lineToolMode === "translate"
+                            ? "bg-amber-500 text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        }`}
+                        title="Chế độ chọn dịch từng dòng"
+                      >
+                        <Sparkles className="w-2.5 h-2.5" />
+                        <span>Dịch ({activeFocusUnits.filter((u) => selectedUnitIds.has(u.id)).length}/{activeFocusUnits.length})</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLineToolMode("edit")}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                          lineToolMode === "edit"
+                            ? "bg-sky-600 text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        }`}
+                        title="Chế độ sửa nhanh nội dung dòng"
+                      >
+                        <Pencil className="w-2.5 h-2.5" />
+                        <span>Sửa</span>
+                      </button>
                     </div>
 
-                    <div className="w-px h-3 bg-slate-300 dark:bg-slate-700 shrink-0" />
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span
-                        className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-0.5 whitespace-nowrap shrink-0"
-                        title="Bấm để chọn/bỏ chọn từng dòng dịch. Giữ Alt để chỉ chọn riêng 1 dòng."
-                      >
-                        <Sparkles className="w-2.5 h-2.5 text-amber-500" />
-                        <span>Chọn dịch ({activeFocusUnits.filter((u) => selectedUnitIds.has(u.id)).length}/{activeFocusUnits.length}):</span>
-                      </span>
-
-                      {/* Nút Chọn tất cả / Bỏ hết */}
+                    {/* Khi ở chế độ Dịch: Nút Chọn tất cả / Bỏ hết */}
+                    {lineToolMode === "translate" && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -4623,10 +4709,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       >
                         {activeFocusUnits.every((u) => selectedUnitIds.has(u.id)) ? "Bỏ hết" : "Tất cả"}
                       </button>
+                    )}
 
-                      <div className="flex items-center gap-0.5 max-w-[180px] sm:max-w-[240px] 2xl:max-w-[340px] overflow-x-auto no-scrollbar py-0.5">
-                        {activeFocusUnits.map((u, idx) => {
-                          const isSelected = selectedUnitIds.has(u.id);
+                    {/* Danh sách các nút D1..Dn: Dàn trải toàn diện, không còn bị cắt xén che mất */}
+                    <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-0.5 flex-1 min-w-0">
+                      {activeFocusUnits.map((u, idx) => {
+                        const isSelected = selectedUnitIds.has(u.id);
+                        if (lineToolMode === "translate") {
                           return (
                             <button
                               key={`sel_multi_${u.id}`}
@@ -4638,19 +4727,41 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                   toggleUnitSelection(u.id, e);
                                 }
                               }}
+                              onDoubleClick={(e) => startEdit(u, e)}
+                              onContextMenu={(e) => {
+                                e.preventDefault();
+                                startEdit(u, e);
+                              }}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all flex items-center gap-0.5 shrink-0 whitespace-nowrap ${
                                 isSelected
                                   ? "bg-amber-500 text-white shadow-xs scale-105 ring-1 ring-amber-600"
                                   : "bg-white dark:bg-slate-700 hover:bg-amber-100 dark:hover:bg-amber-950/60 hover:text-amber-800 text-slate-700 dark:text-slate-200 shadow-2xs"
                               }`}
-                              title={`Dòng ${idx + 1}: ${isSelected ? "Đang chọn dịch (Bấm để bỏ chọn)" : "Chưa chọn (Bấm để chọn)"} • "${u.sourceText.slice(0, 40)}..." (Giữ Alt để chỉ chọn duy nhất dòng này)`}
+                              title={`Dòng ${idx + 1}: ${isSelected ? "Đang chọn dịch (Bấm để bỏ chọn)" : "Chưa chọn (Bấm để chọn)"} • "${u.sourceText.slice(0, 40)}..." (Giữ Alt để chỉ chọn dòng này • Chuột phải / Nhấp đúp để sửa chữ)`}
                             >
                               {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                               <span>D{idx + 1}</span>
                             </button>
                           );
-                        })}
-                      </div>
+                        }
+
+                        // Mode === 'edit'
+                        return (
+                          <button
+                            key={`edit_line_${u.id}`}
+                            type="button"
+                            onClick={(e) => startEdit(u, e)}
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all shrink-0 whitespace-nowrap ${
+                              editingUnitId === u.id
+                                ? "bg-sky-600 text-white shadow-xs scale-105"
+                                : "bg-white dark:bg-slate-700 hover:bg-sky-500 hover:text-white text-slate-700 dark:text-slate-200 shadow-2xs"
+                            }`}
+                            title={`Sửa dòng ${idx + 1}: "${u.sourceText.slice(0, 35)}..."`}
+                          >
+                            D{idx + 1}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </>
@@ -4667,31 +4778,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     <span className="text-[10px] font-semibold">Sửa chữ</span>
                   </button>
                 </>
-              ) : null}
-
-              {/* Thao tác Duplicate & Delete */}
-              {activeFocusElement ? (
-                <>
-                  <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 shrink-0" />
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleDuplicateElement(activeFocusElement)}
-                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
-                      title="Nhân bản ô (Ctrl + D)"
-                    >
-                      <Copy className="w-3 h-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteElement(activeFocusElement.id)}
-                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors"
-                      title="Xóa ô này (Delete / Backspace)"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                </>
               ) : (
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 italic hidden 2xl:inline-flex items-center gap-1 pl-1 font-normal select-none">
                   <MousePointerClick className="w-3 h-3 text-slate-400" />
@@ -4701,273 +4787,314 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             </div>
           </div>
 
-          {/* Right: Clean Grouped Control Blocks */}
-          <div className="flex items-center gap-1.5 text-xs">
-            {/* Batch Selected Quick Action Pill */}
-            {selectedInCurrentSlide.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-300 dark:border-sky-700 px-2.5 py-0.5 rounded-full text-xs text-sky-800 dark:text-sky-300 font-semibold shadow-2xs">
-                <span>Chọn: <strong>{selectedInCurrentSlide.length}</strong></span>
+          {/* Right: Clean Grouped Control Blocks (Image 3: Đã dời lên ngang hàng với tab Trực quan Slide PPTX qua Portal, chỉ hiển thị tại đây khi ở chế độ toàn màn hình hoặc không có slot) */}
+          {(() => {
+            const isMountedInModalSlot = !isCanvasFullscreen && Boolean(headerSlot);
+            const controlsContent = (
+              <div className="flex items-center gap-1.5 text-xs shrink-0">
+                {/* Batch Selected Quick Action Pill */}
+                {selectedInCurrentSlide.length > 0 && (
+                  <div className="flex items-center gap-1.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-300 dark:border-sky-700 px-2.5 py-0.5 rounded-full text-xs text-sky-800 dark:text-sky-300 font-semibold shadow-2xs">
+                    <span>Chọn: <strong>{selectedInCurrentSlide.length}</strong></span>
+                    <button
+                      type="button"
+                      disabled={isTranslatingQuick}
+                      onClick={handleBatchTranslateSelected}
+                      className="px-2 py-0.5 rounded-full bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      {isTranslatingQuick ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Zap className="w-2.5 h-2.5 text-amber-300" />}
+                      <span>Dịch</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Language Segmented Pill */}
+                <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("source")}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                      viewMode === "source"
+                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                    title="Bản gốc tiếng Việt"
+                  >
+                    VI
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("target")}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                      viewMode === "target"
+                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                    title="Bản dịch tiếng Anh (chuẩn xuất slide)"
+                  >
+                    EN
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("bilingual")}
+                    className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                      viewMode === "bilingual"
+                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                    title="Song ngữ đối chiếu"
+                  >
+                    Song ngữ
+                  </button>
+                  {/* UX Improvement 5: Before-After Split Slider Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setIsSplitCompareActive((prev) => !prev)}
+                    className={`px-1.5 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                      isSplitCompareActive
+                        ? "bg-sky-600 text-white shadow-2xs font-bold"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                    title="So sánh Trước / Sau dạng thanh trượt kéo (Before-After Split Slider)"
+                  >
+                    <Split className="w-3 h-3 text-sky-400" />
+                  </button>
+                </div>
+
+                {/* Zoom, Canvas Fit & Help Controls */}
+                <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs gap-0.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setZoomScale((prev) => Math.max(0.6, Number((prev - 0.1).toFixed(2))))}
+                    className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                    title="Thu nhỏ (- hoặc Ctrl + Cuộn chuột xuống)"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFitMode("contain");
+                      setZoomScale(1.0);
+                      setPanOffset({ x: 0, y: 0 });
+                    }}
+                    className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-1 transition-colors"
+                    title="Tự động khớp khung hình (Visual Fit • Phím 0)"
+                  >
+                    <Scan className="w-3 h-3 text-sky-500" />
+                    <span>{Math.round(zoomScale * 100)}%</span>
+                  </button>
+                  {(panOffset.x !== 0 || panOffset.y !== 0 || zoomScale !== 1.0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPanOffset({ x: 0, y: 0 });
+                        setZoomScale(1.0);
+                      }}
+                      className="px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/60 rounded cursor-pointer transition-colors"
+                      title="Đặt lại khung nhìn gốc (100% & giữa màn hình)"
+                    >
+                      Reset
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setZoomScale((prev) => Math.min(1.8, Number((prev + 0.1).toFixed(2))))}
+                    className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                    title="Phóng to (+ hoặc Ctrl + Cuộn chuột lên)"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+                  <button
+                    type="button"
+                    onClick={() => setIsCanvasFullscreen((prev) => !prev)}
+                    className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                    title={isCanvasFullscreen ? "Thu nhỏ về cửa sổ" : "Mở rộng toàn màn hình canvas"}
+                  >
+                    {isCanvasFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                  </button>
+                  <div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+                  <button
+                    type="button"
+                    onClick={() => setShowShortcutsModal(true)}
+                    className="p-1 rounded text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                    title="Bảng phím tắt & Hướng dẫn thao tác (Phím ?)"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Canvas View Tools Group (Focus, Inspector, Zero-Image, Snap, Shield, Fit) */}
+                <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setFocusPendingOnly((prev) => !prev)}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      focusPendingOnly
+                        ? "bg-rose-600 text-white shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                    title="Focus Tiêu Điểm: Làm mờ ô đã dịch, chỉ sáng ô cần dịch (Phím F)"
+                  >
+                    <Focus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowHoverInspector((prev) => !prev)}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      showHoverInspector
+                        ? "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                    title="Kính lúp xem nhanh chi tiết ô khi rê chuột (Phím I)"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageVisibility((v) => (v === "hidden" ? "wireframe" : "hidden"))}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      imageVisibility === "hidden"
+                        ? "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                        : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    }`}
+                    title={imageVisibility === "hidden" ? "Zero-Image: Đã ẩn ảnh" : "Hiện khung ảnh gốc"}
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMagneticSnapEnabled((prev) => {
+                        const next = !prev;
+                        setQuickActionNotice(next ? "Đã BẬT nam châm gióng hàng (Snap Guides)" : "Đã TẮT nam châm gióng hàng");
+                        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                        return next;
+                      });
+                    }}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      isMagneticSnapEnabled
+                        ? "bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-300 ring-1 ring-pink-500/40 shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                    title={
+                      isMagneticSnapEnabled
+                        ? "Nam châm gióng hàng: Đang BẬT (Tự động hút trục 50% & mép ô khi kéo/resize)"
+                        : "Nam châm gióng hàng: Đang TẮT (Bấm để bật)"
+                    }
+                  >
+                    <Magnet className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsHighlightSopTerms((prev) => {
+                        const next = !prev;
+                        setQuickActionNotice(next ? "Đã BẬT tô sáng thuật ngữ chuẩn SOP & Glossary" : "Đã TẮT tô sáng thuật ngữ SOP");
+                        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                        return next;
+                      });
+                    }}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      isHighlightSopTerms
+                        ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/40 shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                    title={
+                      isHighlightSopTerms
+                        ? "Tô sáng Thuật ngữ SOP & Glossary: Đang BẬT (Hiện huy hiệu xanh ngọc cho SPI, No-sew, Tip-quarter,...)"
+                        : "Tô sáng Thuật ngữ SOP & Glossary: Đang TẮT (Bấm để bật)"
+                    }
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFitMode((prev) => (prev === "contain" ? "width" : "contain"))}
+                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
+                      fitMode === "width"
+                        ? "bg-sky-600 text-white shadow-2xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                    title={fitMode === "width" ? "Chế độ Rộng rõ tối đa (W) - Nhấp để Vừa khung tiêu chuẩn" : "Chế độ Vừa khung tiêu chuẩn - Nhấp để Rộng rõ tối đa (W)"}
+                  >
+                    {fitMode === "width" ? <ArrowLeftRight className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+
+                {/* History Pill (Undo, Redo, Reset) */}
+                <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    disabled={undoStack.length === 0}
+                    className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center gap-0.5"
+                    title={`Hoàn tác (Ctrl + Z)${undoStack.length > 0 ? ` [${undoStack.length} bước]` : ""}`}
+                  >
+                    <Undo2 className="w-3.5 h-3.5" />
+                    {undoStack.length > 0 && (
+                      <span className="text-[9px] font-mono font-bold text-sky-600 dark:text-sky-400">{undoStack.length}</span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRedo}
+                    disabled={redoStack.length === 0}
+                    className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center gap-0.5"
+                    title={`Làm lại (Ctrl + Y hoặc Ctrl + Shift + Z)${redoStack.length > 0 ? ` [${redoStack.length} bước]` : ""}`}
+                  >
+                    <Redo2 className="w-3.5 h-3.5" />
+                    {redoStack.length > 0 && (
+                      <span className="text-[9px] font-mono font-bold text-sky-600 dark:text-sky-400">{redoStack.length}</span>
+                    )}
+                  </button>
+                  {hasCustomPositionsOnCurrentSlide && (
+                    <button
+                      type="button"
+                      onClick={handleResetPositions}
+                      className="p-1 rounded text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer transition-colors"
+                      title="Đặt lại bố cục gốc của slide này"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Fullscreen Toggle */}
                 <button
                   type="button"
-                  disabled={isTranslatingQuick}
-                  onClick={handleBatchTranslateSelected}
-                  className="px-2 py-0.5 rounded-full bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  onClick={() => setIsCanvasFullscreen((prev) => !prev)}
+                  className="p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer transition-colors shadow-2xs"
+                  title={isCanvasFullscreen ? "Thu nhỏ về cửa sổ" : "Mở rộng toàn màn hình canvas"}
                 >
-                  {isTranslatingQuick ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Zap className="w-2.5 h-2.5 text-amber-300" />}
-                  <span>Dịch</span>
+                  {isCanvasFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+
+                {/* Shortcuts & Guide Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowShortcutsModal(true)}
+                  className="p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 cursor-pointer transition-colors shadow-2xs"
+                  title="Bảng phím tắt & Hướng dẫn thao tác (?)"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
                 </button>
               </div>
-            )}
+            );
 
-            {/* Language Segmented Pill */}
-            <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setViewMode("source")}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
-                  viewMode === "source"
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                }`}
-                title="Bản gốc tiếng Việt"
-              >
-                VI
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("target")}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
-                  viewMode === "target"
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                }`}
-                title="Bản dịch tiếng Anh (chuẩn xuất slide)"
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("bilingual")}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
-                  viewMode === "bilingual"
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                }`}
-                title="Song ngữ đối chiếu"
-              >
-                Song ngữ
-              </button>
-              {/* UX Improvement 5: Before-After Split Slider Toggle */}
-              <button
-                type="button"
-                onClick={() => setIsSplitCompareActive((prev) => !prev)}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
-                  isSplitCompareActive
-                    ? "bg-sky-600 text-white shadow-2xs font-bold"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                }`}
-                title="So sánh Trước / Sau dạng thanh trượt kéo (Before-After Split Slider)"
-              >
-                <Split className="w-3 h-3 text-sky-400" />
-                <span className="hidden md:inline">Split VI/EN</span>
-              </button>
-            </div>
-
-            {/* Framework View Mode Pill: Presentation 16:9 vs Document View */}
-            <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setSlideViewMode("document")}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
-                  slideViewMode === "document"
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                }`}
-                title="Chế độ Mở rộng cuộn xem (Phím M): Slide tự giãn dọc theo bảng, cuộn chuột xem trọn vẹn mọi hàng"
-              >
-                <FileText className="w-3 h-3 text-sky-400" />
-                <span className="hidden sm:inline">Mở rộng cuộn</span>
-                <span className="sm:hidden">Cuộn</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSlideViewMode("presentation")}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
-                  slideViewMode === "presentation"
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                }`}
-                title="Chế độ Chuẩn khung 16:9 PowerPoint (Phím M): Giữ nguyên tỷ lệ 16:9 chuẩn chiếu slide, tự động co tỷ lệ vừa khít khung"
-              >
-                <Presentation className="w-3 h-3 text-orange-500" />
-                <span className="hidden sm:inline">Chuẩn 16:9</span>
-                <span className="sm:hidden">16:9</span>
-              </button>
-            </div>
-
-            {/* Canvas View Tools Group (Focus, Inspector, Zero-Image, Fit) */}
-            <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setFocusPendingOnly((prev) => !prev)}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  focusPendingOnly
-                    ? "bg-rose-600 text-white shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-                title="Focus Tiêu Điểm: Làm mờ ô đã dịch, chỉ sáng ô cần dịch (Phím F)"
-              >
-                <Focus className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowHoverInspector((prev) => !prev)}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  showHoverInspector
-                    ? "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-                title="Kính lúp xem nhanh chi tiết ô khi rê chuột (Phím I)"
-              >
-                <Eye className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setImageVisibility((v) => (v === "hidden" ? "wireframe" : "hidden"))}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  imageVisibility === "hidden"
-                    ? "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-                    : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                }`}
-                title={imageVisibility === "hidden" ? "Zero-Image: Đã ẩn ảnh" : "Hiện khung ảnh gốc"}
-              >
-                <Camera className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Feature 3: Magnetic Snap Guides Toggle */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMagneticSnapEnabled((prev) => {
-                    const next = !prev;
-                    setQuickActionNotice(next ? "Đã BẬT nam châm gióng hàng (Snap Guides)" : "Đã TẮT nam châm gióng hàng");
-                    if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
-                    quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
-                    return next;
-                  });
-                }}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  isMagneticSnapEnabled
-                    ? "bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-300 ring-1 ring-pink-500/40 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-                title={
-                  isMagneticSnapEnabled
-                    ? "Nam châm gióng hàng: Đang BẬT (Tự động hút trục 50% & mép ô khi kéo/resize)"
-                    : "Nam châm gióng hàng: Đang TẮT (Bấm để bật)"
-                }
-              >
-                <Magnet className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Feature 5: SOP Term Highlighter Toggle */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsHighlightSopTerms((prev) => {
-                    const next = !prev;
-                    setQuickActionNotice(next ? "Đã BẬT tô sáng thuật ngữ chuẩn SOP & Glossary" : "Đã TẮT tô sáng thuật ngữ SOP");
-                    if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
-                    quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
-                    return next;
-                  });
-                }}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  isHighlightSopTerms
-                    ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/40 shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-                title={
-                  isHighlightSopTerms
-                    ? "Tô sáng Thuật ngữ SOP & Glossary: Đang BẬT (Hiện huy hiệu xanh ngọc cho SPI, No-sew, Tip-quarter,...)"
-                    : "Tô sáng Thuật ngữ SOP & Glossary: Đang TẮT (Bấm để bật)"
-                }
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFitMode((prev) => (prev === "contain" ? "width" : "contain"))}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  fitMode === "width"
-                    ? "bg-sky-600 text-white shadow-2xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-                title={fitMode === "width" ? "Chế độ Rộng rõ tối đa (W) - Nhấp để Vừa khung tiêu chuẩn" : "Chế độ Vừa khung tiêu chuẩn - Nhấp để Rộng rõ tối đa (W)"}
-              >
-                {fitMode === "width" ? <ArrowLeftRight className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-
-            {/* UX Improvement 8: History Pill (Undo, Redo, Reset) with step count */}
-            <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <button
-                type="button"
-                onClick={handleUndo}
-                disabled={undoStack.length === 0}
-                className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center gap-0.5"
-                title={`Hoàn tác (Ctrl + Z)${undoStack.length > 0 ? ` [${undoStack.length} bước]` : ""}`}
-              >
-                <Undo2 className="w-3.5 h-3.5" />
-                {undoStack.length > 0 && (
-                  <span className="text-[9px] font-mono font-bold text-sky-600 dark:text-sky-400">{undoStack.length}</span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={handleRedo}
-                disabled={redoStack.length === 0}
-                className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors flex items-center gap-0.5"
-                title={`Làm lại (Ctrl + Y hoặc Ctrl + Shift + Z)${redoStack.length > 0 ? ` [${redoStack.length} bước]` : ""}`}
-              >
-                <Redo2 className="w-3.5 h-3.5" />
-                {redoStack.length > 0 && (
-                  <span className="text-[9px] font-mono font-bold text-sky-600 dark:text-sky-400">{redoStack.length}</span>
-                )}
-              </button>
-              {hasCustomPositionsOnCurrentSlide && (
-                <button
-                  type="button"
-                  onClick={handleResetPositions}
-                  className="p-1 rounded text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 cursor-pointer transition-colors"
-                  title="Đặt lại bố cục gốc của slide này"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Fullscreen Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsCanvasFullscreen((prev) => !prev)}
-              className="p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer transition-colors shadow-2xs"
-              title={isCanvasFullscreen ? "Thu nhỏ về cửa sổ" : "Mở rộng toàn màn hình canvas"}
-            >
-              {isCanvasFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-            </button>
-
-            {/* Shortcuts & Guide Toggle Button */}
-            <button
-              type="button"
-              onClick={() => setShowShortcutsModal(true)}
-              className="p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 cursor-pointer transition-colors shadow-2xs"
-              title="Bảng phím tắt & Hướng dẫn thao tác (?)"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-            </button>
-          </div>
+            return (
+              <>
+                {isMountedInModalSlot && headerSlot && createPortal(controlsContent, headerSlot)}
+                {!isMountedInModalSlot && controlsContent}
+              </>
+            );
+          })()}
         </div>
 
         {/* Compact Slide Strip Bar with Unified Pager Navigation */}
@@ -5800,71 +5927,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
       </div>
 
-      {/* Floating Zoom & Canvas Fit Controls (Phương án 1: Widget mini góc dưới phong cách Figma / Canva) */}
-      <div className="fixed bottom-4 right-14 z-40 flex items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-1.5 py-1 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xl gap-1 text-xs select-none transition-all">
-        <button
-          type="button"
-          onClick={() => setZoomScale((prev) => Math.max(0.6, Number((prev - 0.1).toFixed(2))))}
-          className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-          title="Thu nhỏ (- hoặc Ctrl + Cuộn chuột xuống)"
-        >
-          <ZoomOut className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setFitMode("contain");
-            setZoomScale(1.0);
-            setPanOffset({ x: 0, y: 0 });
-          }}
-          className="px-1.5 py-0.5 rounded-lg text-[10px] font-mono font-bold text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-1 transition-colors"
-          title="Tự động khớp khung hình (Visual Fit • Phím 0)"
-        >
-          <Scan className="w-3 h-3 text-sky-500" />
-          <span>{Math.round(zoomScale * 100)}%</span>
-        </button>
-        {/* Reset view button if panned or zoomed */}
-        {(panOffset.x !== 0 || panOffset.y !== 0 || zoomScale !== 1.0) && (
-          <button
-            type="button"
-            onClick={() => {
-              setPanOffset({ x: 0, y: 0 });
-              setZoomScale(1.0);
-            }}
-            className="px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/60 rounded cursor-pointer transition-colors"
-            title="Đặt lại khung nhìn gốc (100% & giữa màn hình)"
-          >
-            Reset
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => setZoomScale((prev) => Math.min(1.8, Number((prev + 0.1).toFixed(2))))}
-          className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-          title="Phóng to (+ hoặc Ctrl + Cuộn chuột lên)"
-        >
-          <ZoomIn className="w-3.5 h-3.5" />
-        </button>
-        <div className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
-        <button
-          type="button"
-          onClick={() => setIsCanvasFullscreen((prev) => !prev)}
-          className="p-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-          title={isCanvasFullscreen ? "Thu nhỏ về cửa sổ" : "Mở rộng toàn màn hình canvas"}
-        >
-          {isCanvasFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-        </button>
-      </div>
 
-      {/* Floating Quick Shortcuts & Help Button (?) */}
-      <button
-        type="button"
-        onClick={() => setShowShortcutsModal(true)}
-        className="fixed bottom-4 right-4 z-40 w-8 h-8 rounded-full bg-slate-900/90 dark:bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white shadow-xl border border-slate-700/80 flex items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 group"
-        title="Bảng phím tắt & Hướng dẫn thao tác (Phím ?)"
-      >
-        <HelpCircle className="w-4 h-4" />
-      </button>
 
       {/* Shortcuts & Guide Modal (?) */}
       {showShortcutsModal && (
@@ -6025,29 +6088,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         </div>
       )}
 
-      {/* Visual Marquee Rubberband Selection Overlay */}
-      {selectionBox && (
+      {/* Visual Marquee Rubberband Selection Overlay (Chỉ hiển thị khi thực sự kéo chuột > 4px, không hiện badge che chữ) */}
+      {selectionBox && (Math.abs(selectionBox.currentX - selectionBox.startX) > 4 || Math.abs(selectionBox.currentY - selectionBox.startY) > 4) && (
         <div
-          className="fixed pointer-events-none z-[9999] border-2 border-indigo-500 bg-indigo-500/15 rounded-lg shadow-[0_0_20px_rgba(99,102,241,0.35)] backdrop-blur-[1px]"
+          className="fixed pointer-events-none z-[9999] border-2 border-indigo-500/80 bg-indigo-500/10 rounded-sm shadow-sm"
           style={{
             left: `${Math.min(selectionBox.startX, selectionBox.currentX)}px`,
             top: `${Math.min(selectionBox.startY, selectionBox.currentY)}px`,
             width: `${Math.abs(selectionBox.currentX - selectionBox.startX)}px`,
             height: `${Math.abs(selectionBox.currentY - selectionBox.startY)}px`,
           }}
-        >
-          {/* Live Status Badge */}
-          <div className="absolute -top-7 left-0 px-2.5 py-1 rounded-md bg-indigo-600 text-white font-sans text-[11px] font-bold shadow-lg flex items-center gap-1.5 whitespace-nowrap">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>Đang quét: {multiSelectedElementIds.size} ô</span>
-          </div>
-
-          {/* Corner Guides */}
-          <div className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
-          <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
-          <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
-          <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-indigo-600 rounded-xs shadow-xs" />
-        </div>
+        />
       )}
 
       {/* Floating Multi-Selection HUD Toolbar (Phương án 4: Có khả năng tự động gập / thu nhỏ để không che slide) */}

@@ -595,15 +595,15 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
           </div>
         )}
 
-        <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-3 overflow-x-auto">
-          <div className="bg-slate-100/90 p-1 rounded-full flex gap-1 text-xs shrink-0">
+        <div className="px-6 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
+          <div className="bg-slate-100/90 dark:bg-slate-800/90 p-1 rounded-full flex gap-1 text-xs shrink-0">
             <button
               onClick={() => setTab("visual")}
               aria-pressed={tab === "visual"}
               className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                 tab === "visual"
                   ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <Presentation className="w-3.5 h-3.5 text-rose-500" />
@@ -618,7 +618,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                 tab === "slides"
                   ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -630,7 +630,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
                 tab === "summary"
                   ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Tổng quan
@@ -641,7 +641,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer ${
                 tab === "review"
                   ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               Xem xét ({attention} nhóm)
@@ -652,13 +652,18 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               className={`px-4 py-1.5 rounded-full font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                 tab === "pairs"
                   ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
               <span>Cặp slide ({report.slidePairs?.length || 0})</span>
             </button>
           </div>
+
+          {/* Vùng thanh công cụ Canvas (Image 3) nằm ngang hàng với tab Trực quan Slide PPTX */}
+          {tab === "visual" && (
+            <div id="canvas-top-header-slot" className="flex items-center gap-1.5 ml-auto shrink-0 animate-in fade-in duration-150" />
+          )}
         </div>
 
         <div className={`flex-1 min-h-0 ${tab === "visual" ? "overflow-hidden p-1 sm:p-2 flex flex-col" : "overflow-y-auto p-6 space-y-4"}`}>

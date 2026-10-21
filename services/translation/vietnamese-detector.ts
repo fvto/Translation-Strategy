@@ -175,7 +175,7 @@ export function isPureEnglishText(str: string): boolean {
 /**
  * Extracts numbers, measurements, and numerical parameters from a string.
  */
-function extractNumericParameters(str: string): string[] {
+export function extractNumericParameters(str: string): string[] {
   const matches = str.match(/\b\d+(?:[.,]\d+)?(?:\s*(?:%|mm|cm|m|kg|g|spi|bar|psi|°c|°f|s|sec|min|h|hrs?))?\b/gi);
   return matches ? matches.map((m) => m.toLowerCase().replace(/\s+/g, "")) : [];
 }

@@ -17,7 +17,7 @@ import type { BoundingBox, ScannedTextUnit, SlideVisualElement, SlideVisualLayou
 import { AirGappedTranslationProvider } from "./offline";
 import { matchTerminology } from "../terminology/matcher";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
-import { isVietnameseText, isSemanticBilingualPair } from "./vietnamese-detector";
+import { isVietnameseText, isSemanticBilingualPair, extractNumericParameters } from "./vietnamese-detector";
 
 interface RawUnit { id: string; text: string; xml: string; location: TextUnitLocation; containerId: string; readOnly?: boolean }
 interface ScanOptions {
@@ -836,6 +836,28 @@ export async function scanPptxTranslationIntelligence(
     if (sTrim.toLowerCase() === tTrim.toLowerCase()) return;
     if (/^\d+(?:[.,]\d+)?$/.test(sTrim) || /^\d+(?:[.,]\d+)?$/.test(tTrim)) return;
     if (sTrim.length <= 1 || tTrim.length <= 1) return;
+
+    // Heading structure parity: A process heading (*Heading) cannot pair with body text
+    const sIsHeading = /^[\*•#]/.test(sTrim);
+    const tIsHeading = /^[\*•#]/.test(tTrim);
+    if (sIsHeading !== tIsHeading) return;
+
+    // Shoe size specification guard: Two rows specifying different sizes (e.g. Size #5-#6 vs Size #6.5-#9) cannot be a translation pair
+    if (/size\s*#?\d+/i.test(sTrim) && /size\s*#?\d+/i.test(tTrim)) {
+      const sizeS = sTrim.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0];
+      const sizeT = tTrim.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0];
+      if (sizeS && sizeT && sizeS.toLowerCase().replace(/\s+/g, "") !== sizeT.toLowerCase().replace(/\s+/g, "")) {
+        return;
+      }
+    }
+
+    // Numerical parameter compatibility check
+    const numS = extractNumericParameters(sTrim);
+    const numT = extractNumericParameters(tTrim);
+    if (numS.length > 0 && numT.length > 0) {
+      const shared = numS.filter((n) => numT.includes(n));
+      if (shared.length === 0 && (numS.length >= 2 || numT.length >= 2)) return;
+    }
 
     // Strict length disparity guard: a long paragraph cannot pair with a short label
     const minLen = Math.min(sTrim.length, tTrim.length);
