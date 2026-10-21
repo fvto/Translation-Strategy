@@ -61,6 +61,7 @@ import {
   BookOpen,
   Magnet,
   BoxSelect,
+  Scissors,
 } from "lucide-react";
 import type {
   SmartAuditReport,
@@ -3525,7 +3526,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                       });
                                     }}
                                     style={{
-                                      backgroundColor: isChecked
+                                      backgroundColor: isMultiSelected
+                                        ? "#c7d2fe"
+                                        : isChecked
                                         ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#e0f2fe")
                                         : isPartiallyChecked
                                         ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#f0f9ff")
@@ -3543,7 +3546,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     }}
                                     className={`transition-all duration-150 ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-none relative ${
                                       isMultiSelected
-                                        ? "ring-[2.5px] ring-indigo-600 dark:ring-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/85 shadow-[0_0_14px_rgba(99,102,241,0.45),inset_0_0_10px_rgba(99,102,241,0.15)] z-20"
+                                        ? "ring-[2.5px] ring-indigo-600 dark:ring-indigo-400 shadow-[0_0_0_1px_rgba(79,70,229,0.9),0_4px_16px_rgba(79,70,229,0.3)] z-20"
                                         : isChecked
                                         ? "ring-2 ring-sky-500 bg-sky-50 dark:bg-sky-950/60 shadow-xs"
                                         : isPartiallyChecked
@@ -3556,12 +3559,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     }`}
                                     title={`${el.shapeName || "Ô dữ liệu"} • Nhấp để chọn dịch • Nhấp đúp để sửa`}
                                   >
-                                    {/* Visual Multi-Selection Corner Badge */}
-                                    {isMultiSelected && (
-                                      <div className="absolute -top-1.5 -right-1.5 z-30 flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-md ring-2 ring-white dark:ring-slate-900 animate-in zoom-in-75 duration-150 pointer-events-none">
-                                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                      </div>
-                                    )}
                                     {/* Real-time Hover Font Size Badge */}
                                     {hoveredCell?.element.id === el.id && (
                                       <div className="absolute top-0.5 right-0.5 pointer-events-none z-20 flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md animate-in fade-in zoom-in-95 duration-100">
@@ -3983,7 +3980,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       height: isResizing || isDragging ? `${Math.round((size.height / 100) * sheetHeight)}px` : undefined,
                       maxHeight: isResizing || isDragging ? `${Math.round((size.height / 100) * sheetHeight)}px` : undefined,
                       overflow: isResizing || isDragging ? "hidden" : "visible",
-                      backgroundColor: isChecked
+                      backgroundColor: isMultiSelected
+                        ? "#c7d2fe"
+                        : isChecked
                         ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#e0f2fe")
                         : isPartiallyChecked
                         ? (bgColor && bgColor !== "transparent" && bgColor !== "#FFFFFF" ? bgColor : "#f0f9ff")
@@ -4012,7 +4011,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       isDragging
                         ? "ring-2 ring-indigo-500 shadow-2xl scale-[1.01]"
                         : isMultiSelected
-                        ? "ring-[2.5px] ring-indigo-600 dark:ring-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/85 shadow-[0_0_14px_rgba(99,102,241,0.45),inset_0_0_10px_rgba(99,102,241,0.15)] z-20"
+                        ? "ring-[2.5px] ring-indigo-600 dark:ring-indigo-400 shadow-[0_0_0_1px_rgba(79,70,229,0.9),0_4px_16px_rgba(79,70,229,0.3)] z-20"
                         : isChecked
                         ? "ring-2 ring-sky-500 shadow-md"
                         : isPartiallyChecked
@@ -4025,12 +4024,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     }`}
                     title={`${el.shapeName || "Phần tử"} • Kéo để di chuyển • 8 neo để co giãn • Nhấp đúp để sửa`}
                   >
-                    {/* Visual Multi-Selection Corner Badge */}
-                    {isMultiSelected && !isDragging && (
-                      <div className="absolute -top-2 -right-2 z-30 flex items-center justify-center w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-md ring-2 ring-white dark:ring-slate-900 animate-in zoom-in-75 duration-150 pointer-events-none">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    )}
                     {isDragging && (
                       <div className="absolute -top-6 left-0 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
                         <Move className="w-2.5 h-2.5 text-sky-400" />
@@ -5404,242 +5397,422 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         )}
 
         {/* ================================================================== */}
-        {/* RIGHT-CLICK CUSTOM POP-UP TRANSLATE MENU (AT CURSOR POSITION)      */}
+        {/* POWERPOINT-STYLE RIGHT-CLICK CONTEXT MENU (AT CURSOR POSITION)      */}
         {/* ================================================================== */}
         {contextMenu && (
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "fixed",
-              left: `${contextMenu.x}px`,
-              top: `${contextMenu.y}px`,
+              left: `${Math.min(contextMenu.x, window.innerWidth - 300)}px`,
+              top: `${Math.min(contextMenu.y, window.innerHeight - 480)}px`,
             }}
-            className="w-[330px] bg-slate-900/98 backdrop-blur-xl border border-slate-700/90 rounded-2xl p-3 z-[999] text-xs shadow-2xl text-white space-y-2.5 animate-in fade-in zoom-in-95 duration-100"
+            className="w-[285px] bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl border border-slate-300 dark:border-slate-700/80 rounded-xl shadow-2xl z-[999] text-xs text-slate-800 dark:text-slate-100 select-none animate-in fade-in zoom-in-95 duration-100 overflow-hidden"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
-              <div className="flex items-center gap-1.5 text-sky-400 font-bold text-xs">
-                <Languages className="w-4 h-4 text-sky-400" />
-                <span>Pop-up Dịch Nhanh</span>
+            {/* 1. POWERPOINT MINI FORMATTING TOOLBAR */}
+            <div className="p-1.5 bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700/80 space-y-1">
+              {/* Row 1: Font Family + Font Size with Minus/Plus + Close button */}
+              <div className="flex items-center gap-1">
+                <div className="flex-1 flex items-center px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-[11px] font-medium text-slate-700 dark:text-slate-200 truncate" title="Phông chữ">
+                  <Type className="w-3 h-3 text-slate-400 mr-1 shrink-0" />
+                  <span className="truncate">Calibri / Aptos</span>
+                </div>
+
+                {/* Font Size controls */}
+                <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded px-1 py-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleChangeFontSize(contextMenu.element.id, -1)}
+                    className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 cursor-pointer"
+                    title="Giảm cỡ chữ (A-)"
+                  >
+                    <Minus className="w-2.5 h-2.5" />
+                  </button>
+                  <span className="font-mono font-bold text-[11px] px-1 text-sky-600 dark:text-sky-400 min-w-[26px] text-center">
+                    {`${canvasState.styles[contextMenu.element.id]?.fontSizePt ?? contextMenu.element.fontSizePt ?? 11}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeFontSize(contextMenu.element.id, 1)}
+                    className="p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 cursor-pointer"
+                    title="Tăng cỡ chữ (A+)"
+                  >
+                    <Plus className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setContextMenu(null)}
+                  className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+                  title="Đóng menu (Esc)"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
+
+              {/* Row 2: Bold, Alignments, Color & SOP Presets */}
+              <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center gap-0.5">
+                  {/* Bold Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleBold(contextMenu.element)}
+                    className={`p-1 rounded cursor-pointer transition-all ${
+                      (canvasState.styles[contextMenu.element.id]?.isBold !== undefined
+                        ? canvasState.styles[contextMenu.element.id]?.isBold
+                        : contextMenu.element.isBold)
+                        ? "bg-sky-600 text-white shadow-2xs font-bold"
+                        : "hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+                    }`}
+                    title="In đậm (Bold - Ctrl+B)"
+                  >
+                    <Bold className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Align Left */}
+                  <button
+                    type="button"
+                    onClick={() => handleChangeAlign(contextMenu.element.id, "left")}
+                    className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300 cursor-pointer"
+                    title="Căn trái"
+                  >
+                    <AlignLeft className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Align Center */}
+                  <button
+                    type="button"
+                    onClick={() => handleChangeAlign(contextMenu.element.id, "center")}
+                    className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300 cursor-pointer"
+                    title="Căn giữa"
+                  >
+                    <AlignCenter className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Align Right */}
+                  <button
+                    type="button"
+                    onClick={() => handleChangeAlign(contextMenu.element.id, "right")}
+                    className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-300 cursor-pointer"
+                    title="Căn phải"
+                  >
+                    <AlignRight className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Text Color Popover */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setColorPopover({
+                        type: "textColor",
+                        elId: contextMenu.element.id,
+                      });
+                    }}
+                    className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded text-rose-500 cursor-pointer"
+                    title="Màu chữ (Font Color)"
+                  >
+                    <Palette className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* SOP Presets Quick Chips */}
+                <div className="flex items-center gap-0.5">
+                  {SOP_TYPOGRAPHY_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleApplyTypographyPreset(contextMenu.element.id, preset)}
+                      className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 hover:border-indigo-600 transition-colors cursor-pointer"
+                      title={`${preset.label} (${preset.fontSizePt}pt)`}
+                    >
+                      {preset.fontSizePt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. POWERPOINT CONTEXT MENU LIST */}
+            <div className="p-1 max-h-[380px] overflow-y-auto space-y-0.5 text-[11.5px]">
+              {/* Cut */}
               <button
                 type="button"
-                onClick={() => setContextMenu(null)}
-                className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 cursor-pointer transition-colors"
-                title="Đóng (Esc)"
+                onClick={() => {
+                  const textToCopy = contextMenu.unit?.sourceText || contextMenu.element.text || "";
+                  navigator.clipboard.writeText(textToCopy);
+                  setQuickActionNotice("Đã cắt văn bản vào bộ nhớ đệm!");
+                  setContextMenu(null);
+                  if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                  quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
               >
-                <X className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-2">
+                  <Scissors className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Cắt (Cut)</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">Ctrl+X</span>
               </button>
-            </div>
 
-            {/* Selected Phrase Section (If user highlighted a word or phrase with mouse) */}
-            {contextMenu.selectedPhrase && (
-              <div className="p-2 rounded-xl bg-amber-950/40 border border-amber-800/80 space-y-1.5">
-                <div className="text-[10px] text-amber-300 font-semibold flex items-center gap-1">
-                  <MousePointerClick className="w-3 h-3 text-amber-400" />
-                  <span>Từ / Cụm từ đã bôi đen:</span>
+              {/* Copy */}
+              <button
+                type="button"
+                onClick={() => {
+                  const textToCopy = contextMenu.unit?.sourceText || contextMenu.element.text || "";
+                  navigator.clipboard.writeText(textToCopy);
+                  setQuickActionNotice("Đã sao chép văn bản!");
+                  setContextMenu(null);
+                  if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                  quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Copy className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Sao chép (Copy)</span>
                 </div>
-                <div className="text-white font-medium text-xs break-words px-1 bg-black/40 rounded p-1">
-                  "{contextMenu.selectedPhrase}"
+                <span className="text-[10px] text-slate-400 font-mono">Ctrl+C</span>
+              </button>
+
+              {/* Format Painter */}
+              <button
+                type="button"
+                onClick={() => {
+                  handleCopyStyle(contextMenu.element.id);
+                  setQuickActionNotice("Đã sao chép định dạng!");
+                  setContextMenu(null);
+                  if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                  quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Paintbrush className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Sao chép định dạng</span>
                 </div>
+                <span className="text-[10px] text-slate-400 font-mono">Alt+C</span>
+              </button>
 
-                {contextMenu.phraseTranslation ? (
-                  <div className="space-y-1">
-                    <div className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-semibold">
-                      ➔ {contextMenu.phraseTranslation}
-                    </div>
-                    {contextMenu.unit && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const currentTrans = getTranslationText(contextMenu.unit!) || contextMenu.unit!.sourceText;
-                          const newTrans = currentTrans.replace(contextMenu.selectedPhrase!, contextMenu.phraseTranslation!);
-                          onSaveCustomEdit(contextMenu.unit!.id, newTrans);
-                          setContextMenu(null);
-                        }}
-                        className="w-full py-1 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] cursor-pointer"
-                      >
-                        Áp dụng thay thế vào ô
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={isTranslatingQuick}
-                    onClick={() => handleTranslatePhrase(contextMenu.selectedPhrase!)}
-                    className="w-full py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] flex items-center justify-center gap-1 cursor-pointer transition-colors"
-                  >
-                    {isTranslatingQuick ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-                    <span>Dịch từ / cụm từ này</span>
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Cell Source Text Info */}
-            <div className="space-y-1">
-              <div className="text-[10px] text-slate-400 flex items-center justify-between">
-                <span className="font-semibold text-slate-300">Nội dung ô:</span>
-                <span className="font-mono text-[9px] text-slate-400">{contextMenu.element.shapeName || "Phần tử"}</span>
-              </div>
-              <div className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs max-h-24 overflow-y-auto leading-relaxed">
-                {contextMenu.unit?.sourceText || contextMenu.element.text || "(Trống)"}
-              </div>
-            </div>
-
-            {/* Current Translation Preview & Actions */}
-            {contextMenu.unit && (() => {
-              const ctxUnits = (contextMenu.element?.unitIds && contextMenu.element.unitIds.length > 0)
-                ? contextMenu.element.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
-                : contextMenu.element?.unitId && unitById.get(contextMenu.element.unitId)
-                ? [unitById.get(contextMenu.element.unitId)!]
-                : [contextMenu.unit];
-              const isCtxAllChecked = ctxUnits.length > 0 && ctxUnits.every((u) => selectedUnitIds.has(u.id));
-
-              return (
-                <>
-                  {/* Current Translation Preview (if any) */}
-                  <div className="space-y-0.5">
-                    <div className="text-[10px] text-slate-400 font-semibold">
-                      {ctxUnits.length > 1 ? `Bản dịch hiện tại (${ctxUnits.length} đoạn):` : "Bản dịch hiện tại:"}
-                    </div>
-                    <div className="p-1.5 rounded-lg bg-slate-950/80 border border-slate-800 text-sky-300 font-semibold text-[11px] max-h-24 overflow-y-auto space-y-1">
-                      {ctxUnits.map((u, i) => (
-                        <div key={u.id} className="truncate">
-                          {ctxUnits.length > 1 && <span className="text-slate-400 mr-1">#{i + 1}</span>}
-                          {getTranslationText(u) || <span className="text-slate-400 italic font-normal">(Chưa có bản dịch)</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Instant AI Translation for this Cell */}
-                  <button
-                    type="button"
-                    disabled={isTranslatingQuick}
-                    onClick={() => handleTranslateUnits(ctxUnits)}
-                    className="w-full py-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all disabled:opacity-50"
-                  >
-                    {isTranslatingQuick && !batchTranslateProgress ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Đang dịch AI...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                        <span>{ctxUnits.length > 1 ? `Dịch AI ô này ngay (${ctxUnits.length} đoạn)` : "Dịch AI ô này ngay (In-place)"}</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Quick Toggle Selection & Edit */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const shouldSelect = !isCtxAllChecked;
-                        for (const u of ctxUnits) {
-                          if (shouldSelect) {
-                            if (!selectedUnitIds.has(u.id)) onToggleUnit(u.id);
-                          } else {
-                            if (selectedUnitIds.has(u.id)) onToggleUnit(u.id);
-                          }
-                        }
-                        setContextMenu(null);
-                      }}
-                      className="flex-1 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
-                    >
-                      {isCtxAllChecked ? (
-                        <>
-                          <CheckSquare className="w-3 h-3 text-sky-400" />
-                          <span>Bỏ chọn ô này {ctxUnits.length > 1 ? `(${ctxUnits.length} đoạn)` : ""}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Square className="w-3 h-3 text-slate-400" />
-                          <span>Chọn dịch ô này {ctxUnits.length > 1 ? `(${ctxUnits.length} đoạn)` : ""}</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        startEdit(contextMenu.unit!);
-                        setContextMenu(null);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-                      title="Sửa bản dịch trực tiếp"
-                    >
-                      <Pencil className="w-3 h-3 text-sky-400" />
-                      <span>Sửa {ctxUnits.length > 1 && contextMenu.unit ? `(D${ctxUnits.findIndex((u) => u.id === contextMenu.unit?.id) + 1})` : ""}</span>
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
-
-            {/* Batch Selection Tools ("chọn hàng loạt để dịch") */}
-            <div className="pt-1.5 border-t border-slate-800 space-y-1.5">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                <span>Chọn hàng loạt (Batch)</span>
-                <span className="text-sky-400 font-mono">Đã chọn: {selectedInCurrentSlide.length} ô</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1">
+              {copiedStyle && (
                 <button
                   type="button"
                   onClick={() => {
-                    // Select all pending on this slide
-                    for (const u of currentUnits) {
-                      if (u.status === "NEEDS_TRANSLATION" || u.status === "MIXED_LANGUAGE" || u.status === "REVIEW_REQUIRED") {
-                        if (!selectedUnitIds.has(u.id)) onToggleUnit(u.id);
-                      }
-                    }
+                    handlePasteStyle(contextMenu.element.id);
+                    setQuickActionNotice("Đã áp dụng định dạng!");
                     setContextMenu(null);
+                    if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                    quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
                   }}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] font-medium text-slate-300 text-left flex items-center gap-1 cursor-pointer transition-colors"
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
                 >
-                  <ListPlus className="w-3 h-3 text-amber-400" />
-                  <span>Chọn ô chưa dịch</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSelectAllInSlide(currentSlide);
-                    setContextMenu(null);
-                  }}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] font-medium text-slate-300 text-left flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <CheckCheck className="w-3 h-3 text-emerald-400" />
-                  <span>Chọn hết slide</span>
-                </button>
-              </div>
-
-              {/* Batch Translate Selected Button */}
-              {selectedInCurrentSlide.length > 0 && (
-                <button
-                  type="button"
-                  disabled={isTranslatingQuick}
-                  onClick={handleBatchTranslateSelected}
-                  className="w-full mt-1 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md cursor-pointer transition-all disabled:opacity-50"
-                >
-                  {isTranslatingQuick && batchTranslateProgress ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang dịch {batchTranslateProgress.current}/{batchTranslateProgress.total} ô...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-3.5 h-3.5 text-amber-300" />
-                      <span>Dịch hàng loạt {selectedInCurrentSlide.length} ô đã chọn ngay</span>
-                    </>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <Paintbrush className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Dán định dạng đã chép</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">Alt+V</span>
                 </button>
               )}
+
+              {/* Separator */}
+              <div className="my-1 border-t border-slate-200 dark:border-slate-800" />
+
+              {/* Translation Section (Dịch thuật) */}
+              <div className="px-2 pt-0.5 pb-0.5 text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider flex items-center gap-1">
+                <Languages className="w-3 h-3 text-sky-500" />
+                <span>Chức năng Dịch Thuật</span>
+              </div>
+
+              {/* Batch Translate All in Selection if multi-selected */}
+              {multiSelectedElementIds.size > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleToggleBatchTranslate();
+                    setContextMenu(null);
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-bold hover:bg-amber-100 dark:hover:bg-amber-900/60 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Dịch cả vùng ({multiSelectedElementIds.size} ô)</span>
+                  </div>
+                  <span className="text-[10px] text-amber-600 font-mono">Batch</span>
+                </button>
+              )}
+
+              {/* Instant AI Translation */}
+              <button
+                type="button"
+                disabled={isTranslatingQuick}
+                onClick={() => {
+                  const ctxUnits = (contextMenu.element?.unitIds && contextMenu.element.unitIds.length > 0)
+                    ? contextMenu.element.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+                    : contextMenu.element?.unitId && unitById.get(contextMenu.element.unitId)
+                    ? [unitById.get(contextMenu.element.unitId)!]
+                    : contextMenu.unit ? [contextMenu.unit] : [];
+                  if (ctxUnits.length > 0) {
+                    handleTranslateUnits(ctxUnits);
+                  }
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-semibold cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  {isTranslatingQuick ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-amber-500" />}
+                  <span>Dịch AI ô này ngay (In-place)</span>
+                </div>
+                <span className="text-[10px] text-sky-500 font-mono">AI</span>
+              </button>
+
+              {/* Toggle translate selection */}
+              {contextMenu.unit && (() => {
+                const ctxUnits = (contextMenu.element?.unitIds && contextMenu.element.unitIds.length > 0)
+                  ? contextMenu.element.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+                  : contextMenu.element?.unitId && unitById.get(contextMenu.element.unitId)
+                  ? [unitById.get(contextMenu.element.unitId)!]
+                  : [contextMenu.unit];
+                const isCtxAllChecked = ctxUnits.length > 0 && ctxUnits.every((u) => selectedUnitIds.has(u.id));
+
+                return (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const shouldSelect = !isCtxAllChecked;
+                      for (const u of ctxUnits) {
+                        if (shouldSelect) {
+                          if (!selectedUnitIds.has(u.id)) onToggleUnit(u.id);
+                        } else {
+                          if (selectedUnitIds.has(u.id)) onToggleUnit(u.id);
+                        }
+                      }
+                      setContextMenu(null);
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      {isCtxAllChecked ? <CheckSquare className="w-3.5 h-3.5 text-sky-500" /> : <Square className="w-3.5 h-3.5 text-slate-400" />}
+                      <span>{isCtxAllChecked ? "Bỏ chọn dịch ô này" : "Chọn dịch ô này"}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">Space</span>
+                  </button>
+                );
+              })()}
+
+              {/* Edit Text */}
+              {contextMenu.unit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    startEdit(contextMenu.unit!);
+                    setContextMenu(null);
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Pencil className="w-3.5 h-3.5 text-sky-500" />
+                    <span>Sửa nội dung văn bản</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">F2</span>
+                </button>
+              )}
+
+              {/* Glossary dictionary */}
+              {onOpenGlossary && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const queryText = contextMenu.selectedPhrase || contextMenu.unit?.sourceText || contextMenu.element.text || "";
+                    onOpenGlossary(queryText);
+                    setContextMenu(null);
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Tra cứu từ điển SOP Glossary</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">Dict</span>
+                </button>
+              )}
+
+              {/* Separator */}
+              <div className="my-1 border-t border-slate-200 dark:border-slate-800" />
+
+              {/* Group 3: Định dạng & Tiện ích */}
+              <div className="px-2 pt-0.5 pb-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Định dạng & Tiện ích
+              </div>
+
+              {/* Auto-Fit Text */}
+              <button
+                type="button"
+                onClick={() => {
+                  const cellText = contextMenu.unit?.sourceText || contextMenu.element.text || "";
+                  handleAutoFitText(contextMenu.element, cellText);
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Tự động co chữ (Auto-Fit)</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">Fit</span>
+              </button>
+
+              {/* Reset Font Size */}
+              {canvasState.styles[contextMenu.element.id]?.fontSizePt !== undefined && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleResetFontSize(contextMenu.element.id);
+                    setContextMenu(null);
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-amber-600 dark:text-amber-400 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Khôi phục cỡ chữ gốc ban đầu</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">Reset</span>
+                </button>
+              )}
+
+              {/* Separator */}
+              <div className="my-1 border-t border-slate-200 dark:border-slate-800" />
+
+              {/* Group 4: Thứ tự lớp */}
+              <button
+                type="button"
+                onClick={() => {
+                  handleLayerOrder(contextMenu.element.id, "forward");
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowUp className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Đưa lên trên (Bring Forward)</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">]</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleLayerOrder(contextMenu.element.id, "backward");
+                  setContextMenu(null);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <ArrowDown className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Đưa xuống dưới (Send Backward)</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">[</span>
+              </button>
             </div>
           </div>
         )}
