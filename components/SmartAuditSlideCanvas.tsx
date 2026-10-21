@@ -62,6 +62,7 @@ import {
   Magnet,
   BoxSelect,
   Scissors,
+  HelpCircle,
 } from "lucide-react";
 import type {
   SmartAuditReport,
@@ -378,6 +379,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     fill?: string;
   } | null>(null);
   const [isFormatPainterActive, setIsFormatPainterActive] = useState<boolean>(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
 
   // UX Improvement 2: Multi-Select Batch Resize & Area Selection (Select Area)
   const [multiSelectedElementIds, setMultiSelectedElementIds] = useState<Set<string>>(new Set());
@@ -2311,6 +2313,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         if (inspectedUnit) startEdit(inspectedUnit);
       } else if (e.key === "Escape") {
         e.preventDefault();
+        if (showShortcutsModal) setShowShortcutsModal(false);
         setIsAreaSelectMode(false);
         setMultiSelectedElementIds(new Set());
         if (colorPopover) setColorPopover(null);
@@ -2318,6 +2321,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         else if (editingUnitId) cancelEdit();
         else if (selectedElementId) setSelectedElementId(null);
         else if (isFormatPainterActive) setIsFormatPainterActive(false);
+      } else if (e.key === "?" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+        const isInputActive = activeTag === "input" || activeTag === "textarea" || (document.activeElement as HTMLElement)?.isContentEditable;
+        if (!isInputActive && !editingUnitId) {
+          e.preventDefault();
+          setShowShortcutsModal((prev) => !prev);
+        }
       } else if (e.key === " " && !e.repeat) {
         const activeTag = (document.activeElement?.tagName || "").toLowerCase();
         const isInputActive = activeTag === "input" || activeTag === "textarea" || (document.activeElement as HTMLElement)?.isContentEditable;
@@ -4988,6 +4998,16 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             >
               {isCanvasFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
+
+            {/* Shortcuts & Guide Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setShowShortcutsModal(true)}
+              className="p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 cursor-pointer transition-colors shadow-2xs"
+              title="Bảng phím tắt & Hướng dẫn thao tác (?)"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -5820,88 +5840,174 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
       </div>
 
-      {/* 3. Compact Keyboard Cheatsheet Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-1 rounded-lg bg-slate-100/90 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 text-[10px] text-slate-500 shrink-0">
-        <div className="flex items-center gap-1.5">
-          <Keyboard className="w-3 h-3 text-slate-400" />
-          <span className="font-semibold text-slate-700 dark:text-slate-300">Phím tắt:</span>
+      {/* Floating Quick Shortcuts & Help Button (?) */}
+      <button
+        type="button"
+        onClick={() => setShowShortcutsModal(true)}
+        className="fixed bottom-4 right-4 z-40 w-8 h-8 rounded-full bg-slate-900/90 dark:bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white shadow-xl border border-slate-700/80 flex items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 group"
+        title="Bảng phím tắt & Hướng dẫn thao tác (Phím ?)"
+      >
+        <HelpCircle className="w-4 h-4" />
+      </button>
+
+      {/* Shortcuts & Guide Modal (?) */}
+      {showShortcutsModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+          onClick={() => setShowShortcutsModal(false)}
+        >
+          <div
+            className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 text-slate-800 dark:text-slate-100 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                  <Keyboard className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Bảng Phím Tắt & Hướng Dẫn Thao Tác Canvas
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Phím tắt & cử chỉ chuột tối ưu cho biên tập Slide & bảng dữ liệu SOP
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShortcutsModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                title="Đóng (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content: 3 Logical Columns */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              {/* Column 1: Thao tác Chuột & Di chuyển */}
+              <div className="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80">
+                <div className="font-bold text-[11px] text-sky-600 dark:text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Move className="w-3.5 h-3.5" />
+                  <span>Chuột & Khung nhìn</span>
+                </div>
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Kéo di chuyển ô</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Giữ chuột trái</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Co giãn kích thước</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">8 điểm neo</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Quét chọn nhiều ô</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Phím S / Shift+Kéo</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Trượt xem canvas</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Space + Kéo</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Thu phóng Zoom</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Ctrl + Cuộn</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Menu chuột phải</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Chuột phải</kbd>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 2: Định dạng & Cỡ chữ */}
+              <div className="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80">
+                <div className="font-bold text-[11px] text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Type className="w-3.5 h-3.5" />
+                  <span>Định dạng & Font</span>
+                </div>
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Chỉnh cỡ chữ nhanh</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-mono font-bold text-[10px]">Alt + Cuộn</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Tăng / Giảm 1pt</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">[ hoặc ]</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">In đậm chữ (Bold)</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Ctrl + B</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Sao chép Style</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Ctrl+Shift+C</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Dán Style</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Ctrl+Shift+V</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Đổi thứ tự lớp</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Ctrl + [ / ]</kbd>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 3: Dịch thuật & Thao tác */}
+              <div className="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80">
+                <div className="font-bold text-[11px] text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Languages className="w-3.5 h-3.5" />
+                  <span>Dịch & Thao tác</span>
+                </div>
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Chọn dịch ô đang trỏ</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Space</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Sửa nội dung ô</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">F2 / Nhấp đúp</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Chuyển đổi Slide</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">A / D hoặc ← / →</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Hoàn tác / Làm lại</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Ctrl+Z / Ctrl+Y</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Bỏ chọn / Đóng menu</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px]">Esc</kbd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-300">Mở bảng hướng dẫn này</span>
+                    <kbd className="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 font-mono font-bold text-[10px]">?</kbd>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500">
+              <span className="flex items-center gap-1 text-slate-400">
+                <span>Mẹo: Bạn có thể nhấn phím</span>
+                <kbd className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-mono font-bold text-slate-700 dark:text-slate-300">?</kbd>
+                <span>bất kỳ lúc nào để xem nhanh bảng này.</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowShortcutsModal(false)}
+                className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer transition-colors"
+              >
+                Đã hiểu
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 font-mono text-[9px]">
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-semibold flex items-center gap-1">
-            <Move className="w-2.5 h-2.5" />
-            Giữ chuột trái : Kéo di chuyển ô
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-semibold flex items-center gap-1">
-            <Maximize2 className="w-2.5 h-2.5" />
-            8 điểm neo : Co giãn (Resize)
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-300 font-semibold">
-            Ctrl+D : Nhân bản
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-700 dark:text-rose-300 font-semibold">
-            Delete : Xóa ô
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-pink-700 dark:text-pink-300 font-semibold flex items-center gap-1">
-            <Magnet className="w-2.5 h-2.5 text-pink-500" />
-            Nam châm Snap : {isMagneticSnapEnabled ? "Bật" : "Tắt"}
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
-            <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
-            Chuẩn SOP : 1-Click
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold">
-            Ctrl+Z / Ctrl+Y : Hoàn tác / Làm lại
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Ctrl+B : In đậm
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            [ / ] : Cỡ chữ
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-sky-300 dark:border-sky-700 text-sky-700 dark:text-sky-300 font-bold flex items-center gap-1 shadow-2xs">
-            <Type className="w-2.5 h-2.5 text-sky-500" />
-            Alt + Cuộn chuột : Tăng/Giảm cỡ chữ
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sky-700 dark:text-sky-300 font-semibold">
-            Ctrl+[ / Ctrl+] : Đổi lớp (Layer)
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium">
-            A / D : Đổi Slide
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Nhấp đúp / Enter : Sửa chữ
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Chuột phải : Pop-up Dịch
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Space : Chọn dịch
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            W : Rộng rõ tối đa
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 font-medium flex items-center gap-1">
-            <BoxSelect className="w-2.5 h-2.5 text-indigo-500" />
-            Phím S / Shift + Kéo : Quét vùng
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 font-bold flex items-center gap-1 shadow-2xs">
-            <Paintbrush className="w-2.5 h-2.5 text-amber-500" />
-            Ctrl+Shift+C / V : Sao chép Style
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Space + Kéo : Di chuyển (Pan)
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Ctrl + Cuộn : Thu phóng
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Shift + Nhấp : Chọn nhiều ô
-          </span>
-          <span className="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-            Esc : Bỏ chọn
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Visual Marquee Rubberband Selection Overlay */}
       {selectionBox && (
