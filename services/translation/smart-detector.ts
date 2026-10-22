@@ -590,10 +590,26 @@ export function isBilingualText(text: string): boolean {
   // Note: Parentheses are NOT delimiters for this check; strip parenthesized loanwords/specs first
   const textWithoutParens = trimmed.replace(/\([^\(\)]*\)/g, " ").replace(/\s+/g, " ").trim();
 
+  const MEASUREMENT_UNITS = new Set([
+    "inch", "inches", "cm", "mm", "m", "kg", "g", "spi", "sec", "min", "hr", "hour", "hours",
+    "bar", "psi", "rpm", "prs", "pair", "pairs", "deg", "degree", "c", "f", "cm2", "cm²", "m2", "m²",
+    "kg/cm²", "m/s", "lỗ", "mũi"
+  ]);
+
   if (/[-–—\/\|]/.test(textWithoutParens)) {
     // Delimit by hyphen, dash, slash, or pipe
     const parts = textWithoutParens.split(/\s*[-–—\/\|]\s*|[-–—\/\|]/).map((p) => p.trim()).filter(Boolean);
     if (parts.length === 2) {
+      const p0Lower = parts[0].toLowerCase();
+      const p1Lower = parts[1].toLowerCase();
+      if (MEASUREMENT_UNITS.has(p0Lower) || MEASUREMENT_UNITS.has(p1Lower)) {
+        return false;
+      }
+      const lenRatio = Math.min(parts[0].length, parts[1].length) / Math.max(parts[0].length, parts[1].length);
+      if (lenRatio < 0.28) {
+        return false;
+      }
+
       const p0En = isPureEnglish(parts[0]) && !isNonTranslatable(parts[0]) && !isItemPrefixOrCode(parts[0]);
       const p0Vi = hasViDiacritics(parts[0]);
       const p1En = isPureEnglish(parts[1]) && !isNonTranslatable(parts[1]) && !isItemPrefixOrCode(parts[1]);
@@ -605,9 +621,14 @@ export function isBilingualText(text: string): boolean {
       }
     } else if (parts.length > 2) {
       const viParts = parts.filter(hasViDiacritics);
-      const enParts = parts.filter((p) => isPureEnglish(p) && !isNonTranslatable(p) && !isItemPrefixOrCode(p));
+      const enParts = parts.filter((p) => isPureEnglish(p) && !isNonTranslatable(p) && !isItemPrefixOrCode(p) && !MEASUREMENT_UNITS.has(p.toLowerCase()));
       if (enParts.length >= 1 && viParts.length === 1 && (enParts.length + viParts.length === parts.length)) {
-        return true;
+        const totalViLen = viParts.reduce((acc, p) => acc + p.length, 0);
+        const totalEnLen = enParts.reduce((acc, p) => acc + p.length, 0);
+        const lenRatio = Math.min(totalViLen, totalEnLen) / Math.max(totalViLen, totalEnLen);
+        if (lenRatio >= 0.28) {
+          return true;
+        }
       }
     }
   }

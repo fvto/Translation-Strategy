@@ -89,7 +89,26 @@ export function deduceSlideContentBilingualPair(
     };
   }
 
-  // 3. Technical Measurements / Tolerances Consistency
+  // 3. Manufacturing Department / Process Stage Conflict Check
+  const isEnCutting = allEn.includes("cutting") && !allEn.includes("after cutting");
+  const isViCutting = (allVi.includes("chặt") || allVi.includes("cutting")) && !allVi.includes("sau khi chặt");
+  const isEnAssembly = allEn.includes("assembly") || allEn.includes("lasting") || allEn.includes("bpm") || allEn.includes("gò");
+  const isViAssembly = allVi.includes("thành hình") || allVi.includes("lắp ráp") || allVi.includes("gò") || allVi.includes("bpm");
+  const isEnStitching = allEn.includes("stitching") || allEn.includes("sewing");
+  const isViStitching = allVi.includes("may") && !allVi.includes("may mắn");
+
+  if ((isEnCutting && !isViCutting && (isViAssembly || isViStitching)) ||
+      (isViCutting && !isEnCutting && (isEnAssembly || isEnStitching)) ||
+      (isEnAssembly && !isViAssembly && (isViCutting || isViStitching)) ||
+      (isViAssembly && !isEnAssembly && (isEnCutting || isEnStitching))) {
+    return {
+      isPair: false,
+      confidence: 0,
+      reason: "Xung đột bộ phận/công đoạn sản xuất (Cutting vs Stitching vs Assembly)."
+    };
+  }
+
+  // 4. Technical Measurements / Tolerances Consistency
   const extractSpecNumbers = (texts: string[]) => {
     return texts
       .flatMap((t) => extractNumericParameters(t))
@@ -113,7 +132,7 @@ export function deduceSlideContentBilingualPair(
     }
   }
 
-  // 4. Semantic Content Overlap via Translation Probe
+  // 5. Semantic Content Overlap via Translation Probe
   const offline = new AirGappedTranslationProvider();
   const probeEn = offline.translateVietnameseToEnglish(allVi, []).toLowerCase();
 
@@ -122,7 +141,9 @@ export function deduceSlideContentBilingualPair(
     "manual", "procedure", "process", "check", "make", "sure", "before", "after",
     "must", "slide", "title", "step", "presentation", "company", "ching", "luh",
     "nike", "points", "shoe", "upper", "line", "into", "when", "just", "with",
-    "from", "that", "this", "have", "been", "will", "need", "follow", "sample"
+    "from", "that", "this", "have", "been", "will", "need", "follow", "sample",
+    "stop", "result", "results", "adjustment", "grade", "weekly", "completely",
+    "time", "temperature", "pressure", "degree", "unit", "units", "pairs", "pair"
   ]);
 
   const extractContentTokens = (text: string) => {
@@ -138,7 +159,7 @@ export function deduceSlideContentBilingualPair(
   const sharedWords = probeTokens.filter((pw) => enTokens.some((ew) => ew.includes(pw) || pw.includes(ew)));
   const overlapRatio = probeTokens.length > 0 ? sharedWords.length / probeTokens.length : 0;
 
-  if (overlapRatio < 0.18 && !hasStepMatch && !hasExplicitMarker) {
+  if (overlapRatio < 0.22 && !hasStepMatch && !hasExplicitMarker) {
     return {
       isPair: false,
       confidence: overlapRatio,

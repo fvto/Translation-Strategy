@@ -284,8 +284,9 @@ export function isSemanticBilingualPair(
   }
 
   // 4. Numerical parameters check: If both contain measurements/numbers, they must be consistent
-  const numVi = extractNumericParameters(viText);
-  const numEn = extractNumericParameters(enText);
+  // Exclude step numbers so bare step digits (1, 2, 3...) are not treated as shared technical measurements
+  const numVi = extractNumericParameters(viText).filter((n) => n !== stepVi && (!/^\d{1,2}$/.test(n) || n.length > 2));
+  const numEn = extractNumericParameters(enText).filter((n) => n !== stepEn && (!/^\d{1,2}$/.test(n) || n.length > 2));
   if (numVi.length > 0 && numEn.length > 0) {
     const sharedNumbers = numVi.filter((n) => numEn.includes(n));
     if (sharedNumbers.length === 0 && (numVi.length >= 2 || numEn.length >= 2)) {
@@ -322,7 +323,12 @@ export function isSemanticBilingualPair(
     "if", "from", "into", "than", "then", "its", "all", "any", "both", "each", "such",
     // Generic meta-words / document structure terms that must not cause false pairings
     "inspection", "focuses", "focus", "strategy", "standard", "standards", "manual",
-    "procedure", "process", "stage", "title", "sop", "qa", "qc", "ipqc", "oqc", "ctq"
+    "procedure", "process", "stage", "title", "sop", "qa", "qc", "ipqc", "oqc", "ctq",
+    // Generic action verbs & routine instructional filler that appear on virtually every slide
+    "check", "checking", "inspect", "inspecting", "use", "using", "make", "sure", "adjust",
+    "adjusting", "need", "needed", "conduct", "conducted", "follow", "following", "before", "after",
+    "operator", "operation", "method", "result", "results", "item", "items", "line", "lines",
+    "have", "has", "had", "will", "would", "can", "could", "should", "must"
   ]);
 
   // Length ratio sanity check: If one is a single short word or header and the other is a long paragraph, reject early
@@ -352,7 +358,7 @@ export function isSemanticBilingualPair(
   // Criteria for genuine bilingual pair:
   // - High glossary alignment (shared domain terms), OR
   // - Significant content word overlap between probe translation and EN text (>= 0.35 AND shared >= 2), OR
-  // - Matching step number WITH at least 1 shared content word or identical numbers
+  // - Matching step number WITH substantive content overlap (shared >= 2, or shared specs/glossary)
   if (matchedGlossaryCount >= 1 && (tokenRatio >= 0.25 || numVi.some((n) => numEn.includes(n)))) {
     return {
       isPair: true,
@@ -369,7 +375,10 @@ export function isSemanticBilingualPair(
     };
   }
 
-  if (sameStep && (tokenRatio >= 0.2 || sharedContentWords >= 1)) {
+  // Same step requires either multiple shared substantive technical words, identical numeric specs, or glossary match
+  const hasSharedSpecs = numVi.length > 0 && numVi.some((n) => numEn.includes(n));
+  const isShortStep = Math.max(viText.length, enText.length) <= 30;
+  if (sameStep && (hasSharedSpecs || matchedGlossaryCount >= 1 || sharedContentWords >= 2 || (isShortStep && sharedContentWords >= 1))) {
     return {
       isPair: true,
       confidence: 0.85,

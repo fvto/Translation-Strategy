@@ -125,118 +125,6 @@
       ]
     },
     {
-      "id": "term_fc2e36d7ce05",
-      "sourceTerm": "Polysemy_Test_1792643697169",
-      "targetTerm": "ý nghĩa thứ nhất",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": null,
-      "category": null,
-      "sourceDocument": null,
-      "status": "approved",
-      "priority": 1,
-      "confidence": 1,
-      "createdBy": "test@local",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-22T04:34:57.170Z",
-      "updatedAt": "2026-10-22T04:34:57.170Z",
-      "editHistory": [
-        {
-          "id": "hist_2b33369c",
-          "timestamp": "2026-10-22T04:34:57.170Z",
-          "editedBy": "test@local",
-          "action": "created",
-          "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_4be001f2aecb",
-      "sourceTerm": "Polysemy_Test_1792640382785",
-      "targetTerm": "ý nghĩa thứ hai",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": null,
-      "category": null,
-      "sourceDocument": null,
-      "status": "approved",
-      "priority": 1,
-      "confidence": 1,
-      "createdBy": "test@local",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-22T03:39:42.849Z",
-      "updatedAt": "2026-10-22T03:39:42.849Z",
-      "editHistory": [
-        {
-          "id": "hist_73dc147f",
-          "timestamp": "2026-10-22T03:39:42.849Z",
-          "editedBy": "test@local",
-          "action": "created",
-          "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_d9a2ed264c41",
-      "sourceTerm": "Polysemy_Test_1792639229946",
-      "targetTerm": "ý nghĩa thứ nhất",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": null,
-      "category": null,
-      "sourceDocument": null,
-      "status": "approved",
-      "priority": 1,
-      "confidence": 1,
-      "createdBy": "test@local",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-22T03:20:29.946Z",
-      "updatedAt": "2026-10-22T03:20:29.946Z",
-      "editHistory": [
-        {
-          "id": "hist_5dfcd7c1",
-          "timestamp": "2026-10-22T03:20:29.946Z",
-          "editedBy": "test@local",
-          "action": "created",
-          "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_2d8492b322b0",
-      "sourceTerm": "Polysemy_Test_1792636508762",
-      "targetTerm": "ý nghĩa thứ nhất",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": null,
-      "category": null,
-      "sourceDocument": null,
-      "status": "approved",
-      "priority": 1,
-      "confidence": 1,
-      "createdBy": "test@local",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-22T02:35:08.762Z",
-      "updatedAt": "2026-10-22T02:35:08.762Z",
-      "editHistory": [
-        {
-          "id": "hist_1678bfc1",
-          "timestamp": "2026-10-22T02:35:08.762Z",
-          "editedBy": "test@local",
-          "action": "created",
-          "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
       "id": "term_c8087a334bb9",
       "sourceTerm": "Kiểm tra keo dán",
       "targetTerm": "Cement application inspection",
@@ -253,8 +141,24 @@
       "approvedBy": null,
       "version": null,
       "createdAt": "2026-10-17T08:40:04.750Z",
-      "updatedAt": "2026-10-22T04:40:14.633Z",
+      "updatedAt": "2026-10-22T05:01:05.046Z",
       "editHistory": [
+        {
+          "id": "hist_1f38be7b",
+          "timestamp": "2026-10-22T05:01:05.046Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_8c4e65d5",
+          "timestamp": "2026-10-22T04:56:54.439Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_526ce1ad",
           "timestamp": "2026-10-22T04:40:14.633Z",
@@ -1129,8 +1033,24 @@
       "approvedBy": null,
       "version": null,
       "createdAt": "2026-10-17T08:40:04.750Z",
-      "updatedAt": "2026-10-22T04:40:14.633Z",
+      "updatedAt": "2026-10-22T05:01:05.046Z",
       "editHistory": [
+        {
+          "id": "hist_45284e44",
+          "timestamp": "2026-10-22T05:01:05.046Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
+        {
+          "id": "hist_6376f551",
+          "timestamp": "2026-10-22T04:56:54.439Z",
+          "editedBy": "system",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_10fb3f8a",
           "timestamp": "2026-10-22T04:40:14.633Z",
@@ -2003,6 +1923,90 @@
       ]
     },
     {
+      "id": "term_fc2e36d7ce05",
+      "sourceTerm": "Polysemy_Test_1792643697169",
+      "targetTerm": "ý nghĩa thứ nhất",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-22T04:34:57.170Z",
+      "updatedAt": "2026-10-22T04:34:57.170Z",
+      "editHistory": [
+        {
+          "id": "hist_2b33369c",
+          "timestamp": "2026-10-22T04:34:57.170Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_4be001f2aecb",
+      "sourceTerm": "Polysemy_Test_1792640382785",
+      "targetTerm": "ý nghĩa thứ hai",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-22T03:39:42.849Z",
+      "updatedAt": "2026-10-22T03:39:42.849Z",
+      "editHistory": [
+        {
+          "id": "hist_73dc147f",
+          "timestamp": "2026-10-22T03:39:42.849Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
+      "id": "term_d9a2ed264c41",
+      "sourceTerm": "Polysemy_Test_1792639229946",
+      "targetTerm": "ý nghĩa thứ nhất",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-22T03:20:29.946Z",
+      "updatedAt": "2026-10-22T03:20:29.946Z",
+      "editHistory": [
+        {
+          "id": "hist_5dfcd7c1",
+          "timestamp": "2026-10-22T03:20:29.946Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
+        }
+      ]
+    },
+    {
       "id": "term_42e56ee21155",
       "sourceTerm": "Định hình nóng lạnh",
       "targetTerm": "Hot/cool shaping",
@@ -2019,8 +2023,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-01T09:26:22.559Z",
-      "updatedAt": "2026-10-22T02:47:32.749Z",
+      "updatedAt": "2026-10-22T04:54:19.926Z",
       "editHistory": [
+        {
+          "id": "hist_4b514a6c",
+          "timestamp": "2026-10-22T04:54:19.926Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_35514151",
           "timestamp": "2026-10-22T02:47:32.749Z",
@@ -2126,8 +2138,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-08T01:55:43.224Z",
-      "updatedAt": "2026-10-22T02:47:32.749Z",
+      "updatedAt": "2026-10-22T04:54:19.926Z",
       "editHistory": [
+        {
+          "id": "hist_1e7393aa",
+          "timestamp": "2026-10-22T04:54:19.926Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_8d3d9596",
           "timestamp": "2026-10-22T02:47:32.749Z",
@@ -2246,8 +2266,16 @@
       "approvedBy": "reviewer@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-05T09:08:58.752Z",
-      "updatedAt": "2026-10-22T02:47:32.749Z",
+      "updatedAt": "2026-10-22T04:54:19.926Z",
       "editHistory": [
+        {
+          "id": "hist_664f01c8",
+          "timestamp": "2026-10-22T04:54:19.926Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_9ec6ee02",
           "timestamp": "2026-10-22T02:47:32.749Z",
@@ -2408,8 +2436,16 @@
       "approvedBy": null,
       "version": "v1.0",
       "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-22T02:47:32.749Z",
+      "updatedAt": "2026-10-22T04:54:19.926Z",
       "editHistory": [
+        {
+          "id": "hist_a2e40905",
+          "timestamp": "2026-10-22T04:54:19.926Z",
+          "editedBy": "Auto-Harvester",
+          "action": "updated",
+          "changes": [],
+          "note": "Cập nhật dữ liệu từ lần nhập mới"
+        },
         {
           "id": "hist_df124a93",
           "timestamp": "2026-10-22T02:47:32.749Z",
@@ -2480,6 +2516,34 @@
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
+        }
+      ]
+    },
+    {
+      "id": "term_2d8492b322b0",
+      "sourceTerm": "Polysemy_Test_1792636508762",
+      "targetTerm": "ý nghĩa thứ nhất",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "definition": null,
+      "context": null,
+      "category": null,
+      "sourceDocument": null,
+      "status": "approved",
+      "priority": 1,
+      "confidence": 1,
+      "createdBy": "test@local",
+      "approvedBy": null,
+      "version": "v1.0",
+      "createdAt": "2026-10-22T02:35:08.762Z",
+      "updatedAt": "2026-10-22T02:35:08.762Z",
+      "editHistory": [
+        {
+          "id": "hist_1678bfc1",
+          "timestamp": "2026-10-22T02:35:08.762Z",
+          "editedBy": "test@local",
+          "action": "created",
+          "note": "Khởi tạo thuật ngữ ban đầu"
         }
       ]
     },
@@ -24967,6 +25031,54 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1792645266660_48a2c84d",
+      "timestamp": "2026-10-22T05:01:06.660Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792645015912_f4de83dc",
+      "timestamp": "2026-10-22T04:56:55.912Z",
+      "userId": "test_user",
+      "userEmail": "test@secure.local",
+      "operation": "TRANSLATE_TEST",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 15,
+      "errorCode": null,
+      "details": {
+        "safeMetric": 42
+      }
+    },
+    {
+      "id": "log_1792644859877_20ca170f",
+      "timestamp": "2026-10-22T04:54:19.877Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 465418,
+      "errorCode": null,
+      "details": {
+        "fileName": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
+        "totalSlides": 39,
+        "totalParagraphs": 1104,
+        "totalImagesProtected": 209,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
     {
       "id": "log_1792644016036_5d1df9a9",
       "timestamp": "2026-10-22T04:40:16.036Z",
