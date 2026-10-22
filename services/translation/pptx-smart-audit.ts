@@ -9,7 +9,7 @@ import { getAuditHistoryPairs } from "./translation-memory";
 import { AUDIT_CONFIDENCE, AuditMemoryIndex, auditTextForms, chooseAuditMatch, languageEvidence, memoryPriority, vietnameseQuality } from "./audit-intelligence";
 import type { AuditMemoryPair } from "./audit-intelligence";
 import { PPTX_PARAGRAPH_PATTERN, paragraphText, canReplaceParagraphText, replaceParagraphText, canTranslateParagraphText, replaceParagraphTranslation } from "../documents/pptx-text";
-import { orderedSlidePaths, readIsqSlidePairs, duplicateIsqSlides, duplicateViReferenceSlides } from "../documents/pptx-slide-order";
+import { orderedSlidePaths, readIsqSlidePairs, readExplicitIsqSlidePairs, duplicateIsqSlides, duplicateViReferenceSlides } from "../documents/pptx-slide-order";
 import { dynamicDeckDetector } from "../documents/pptx-structure";
 import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { classifyTextUnit, computeSourceHash, hasViDiacritics, isInspectionStatusLabel, isNonTranslatable, isPureEnglish, isShoeModelName, isEnglishImmunityProtected, isBilingualText, isItemPrefixOrCode } from "./smart-detector";
@@ -404,7 +404,7 @@ function parseSlideShapes(
               absEnd: cellAbsEnd,
               type: "cell",
               shapeName: cellName,
-              isTitle: r === 0,
+              isTitle: false,
               box: cellBox,
               fill,
               textColor,
@@ -445,7 +445,12 @@ function parseSlideShapes(
         const box = toBoundingBox(trans, slideW, slideH);
         const nameMatch = shapeXml.match(/<p:cNvPr\b[^>]*\bname="([^"]*)"/);
         const shapeName = nameMatch ? nameMatch[1] : "";
-        const isTitle = /<p:ph\b[^>]*type="(?:title|ctrTitle)"/.test(shapeXml);
+        const textMatches = shapeXml.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g) || [];
+        const plainText = textMatches.map((t) => t.replace(/<[^>]+>/g, "").trim()).join(" ");
+        const isPhTitle = /<p:ph\b[^>]*type="(?:title|ctrTitle)"/.test(shapeXml) || /^Title\b/i.test(shapeName);
+        const isSopTitleText = /^(assembly|cutting|stitching|outgoing|stockfit)?\s*(inspection\s*strategy|chiến\s*lược\s*kiểm\s*tra|standard\s*operating\s*procedure|ipqc\s*manual|qa\/?ipqc\s*manual)/i.test(plainText.trim());
+        const isTopBanner = trans.y <= 650000 && trans.w >= 4000000 && plainText.length <= 80 && !/\b\d+\.\s*[A-Za-z]/.test(plainText) && !/\b(?:SB|SBQ|QA|QC)-\d+/i.test(plainText);
+        const isTitle = isPhTitle || isSopTitleText || isTopBanner;
 
         const spPr = shapeXml.match(/<p:spPr[\s\S]*?<\/p:spPr>/)?.[0] || "";
         const spPrNoLines = spPr.replace(/<a:ln\b[\s\S]*?<\/a:ln>/g, "");
@@ -516,7 +521,14 @@ async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: num
     const partPath = paths[s], slideIndex = s + 1;
     const xml = await zip.file(partPath)!.async("string");
     const containers = Array.from(xml.matchAll(/<(?:p|a):txBody(?:\s[^>]*)?>[\s\S]*?<\/(?:p|a):txBody>/g));
-    const titleRanges = Array.from(xml.matchAll(/<p:sp(?:\s[^>]*)?>[\s\S]*?<\/p:sp>/g)).filter((m) => /<p:ph\b[^>]*type="(?:title|ctrTitle)"/.test(m[0]));
+    const titleRanges = Array.from(xml.matchAll(/<p:sp(?:\s[^>]*)?>[\s\S]*?<\/p:sp>/g)).filter((m) => {
+      const spXml = m[0];
+      if (/<p:ph\b[^>]*type="(?:title|ctrTitle)"/.test(spXml)) return true;
+      const nm = spXml.match(/<p:cNvPr\b[^>]*\bname="([^"]*)"/)?.[1] || "";
+      if (/^Title\b/i.test(nm)) return true;
+      const txt = Array.from(spXml.matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g)).map(t => t[1].replace(/<[^>]+>/g, "").trim()).join(" ");
+      return /\b(?:inspection\s*strategy|chiến\s*lược\s*kiểm\s*tra|standard\s*operating\s*procedure|ipqc\s*manual|qa\/?ipqc\s*manual)\b/i.test(txt.trim());
+    });
     
     // Parse shapes and bounding boxes
     const slideShapes = parseSlideShapes(xml, 0, slideWidthEmu, slideHeightEmu);
@@ -542,10 +554,11 @@ async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: num
         shapeUnitMap.get(parentShape)!.push(unitId);
       }
 
+      const isTableCell = Boolean(parentShape?.type === "cell" || parentShape?.type === "table" || parentShape?.tableRow !== undefined || xml.lastIndexOf("<a:tc", offset) > xml.lastIndexOf("</a:tc>", offset));
       units.push({ id: unitId, text, xml: match[0], containerId,
         location: { partPath, containerId, slideIndex, shapeIndex: containerIndex + 1, paragraphIndex: index,
-          isTitle: titleRanges.some((m) => offset >= m.index! && offset < m.index! + m[0].length) || Boolean(parentShape?.isTitle),
-          isTable: xml.lastIndexOf("<a:tc", offset) > xml.lastIndexOf("</a:tc>", offset) || parentShape?.type === "table" || parentShape?.type === "cell",
+          isTitle: !isTableCell && (titleRanges.some((m) => offset >= m.index! && offset < m.index! + m[0].length) || Boolean(parentShape?.isTitle)),
+          isTable: isTableCell,
           box: parentShape?.box },
       });
     }
@@ -624,7 +637,7 @@ async function extractUnits(zip: JSZip): Promise<{ units: RawUnit[]; slides: num
   return { units, slides: paths.length, visualLayouts };
 }
 
-function buildGroups(units: ScannedTextUnit[], pairs: AuditMemoryPair[], preservedIds = new Set<string>()): TranslationAuditGroup[] {
+function buildGroups(units: ScannedTextUnit[], pairs: AuditMemoryPair[], targetLang = "en"): TranslationAuditGroup[] {
   const groups: TranslationAuditGroup[] = [];
   const bySource = new Map<string, AuditMemoryPair[]>();
   for (const pair of pairs) {
@@ -656,7 +669,11 @@ function buildGroups(units: ScannedTextUnit[], pairs: AuditMemoryPair[], preserv
     if (variants.size < 2) continue;
     const sorted = [...variants.values()].sort((a, b) => Number(b.approved) - Number(a.approved) || b.count - a.count);
     const ids = new Set(present.map((p) => p.targetUnitId!));
-    const affected = [...ids].map((id) => byId.get(id)).filter((u): u is ScannedTextUnit => Boolean(u) && auditTextForms(u!.sourceText).normalized !== auditTextForms(sorted[0].text).normalized);
+    const affected = [...ids].map((id) => byId.get(id)).filter((u): u is ScannedTextUnit =>
+      Boolean(u) &&
+      !(targetLang === "en" && (isPureEnglish(u!.sourceText) || isEnglishImmunityProtected(u!.sourceText, "vi"))) &&
+      auditTextForms(u!.sourceText).normalized !== auditTextForms(sorted[0].text).normalized
+    );
     if (!affected.length) continue;
     for (const unit of affected) {
       unit.status = "TRANSLATION_CONFLICT"; unit.selectedForTranslation = false;
@@ -694,8 +711,11 @@ export async function scanPptxTranslationIntelligence(
   const targetLang = (options.targetLang || (options as any).targetLanguage || "en").toLowerCase();
   const zip = await JSZip.loadAsync(buffer);
   const extracted = await extractUnits(zip);
+  const explicitIsqPairs = await readExplicitIsqSlidePairs(zip);
   const isqSlidePairs = await readIsqSlidePairs(zip);
-  const referencePaths = new Set(isqSlidePairs.map(p=>p.vi));
+  // Only slides that are explicitly marked in XML as ISQ reference slides should have their text units suppressed.
+  // Raw uploaded decks are scanned sequentially from start to finish without silencing any slide!
+  const referencePaths = new Set(explicitIsqPairs.map(p=>p.vi));
   const isqPaths = new Set<string>();
   if (sourceLang === "vi" && targetLang === "en" && options.mode !== "replace_en") {
     const slideUnits = new Map<string,RawUnit[]>();
@@ -837,42 +857,84 @@ export async function scanPptxTranslationIntelligence(
     if (/^\d+(?:[.,]\d+)?$/.test(sTrim) || /^\d+(?:[.,]\d+)?$/.test(tTrim)) return;
     if (sTrim.length <= 1 || tTrim.length <= 1) return;
 
+    // Language polarity check: One must have Vietnamese language evidence, one must be English
+    const sIsVi = hasViDiacritics(sTrim) || isVietnameseText(sTrim) || languageEvidence(sTrim).vi.length > 0;
+    const tIsVi = hasViDiacritics(tTrim) || isVietnameseText(tTrim) || languageEvidence(tTrim).vi.length > 0;
+    if (sIsVi === tIsVi) return;
+
+    // Normalizing polarity based on language direction
+    let realSource = source;
+    let realTarget = target;
+    if (sourceLang === "vi" && targetLang === "en") {
+      realSource = sIsVi ? source : target;
+      realTarget = sIsVi ? target : source;
+    } else if (sourceLang === "en" && targetLang === "vi") {
+      realSource = sIsVi ? target : source;
+      realTarget = sIsVi ? source : target;
+    }
+    const realSTrim = realSource.text.trim();
+    const realTTrim = realTarget.text.trim();
+
     // Heading structure parity: A process heading (*Heading) cannot pair with body text
-    const sIsHeading = /^[\*•#]/.test(sTrim);
-    const tIsHeading = /^[\*•#]/.test(tTrim);
+    const sIsHeading = /^[\*•#]/.test(realSTrim);
+    const tIsHeading = /^[\*•#]/.test(realTTrim);
     if (sIsHeading !== tIsHeading) return;
 
+    // Step number consistency guard: If both have step prefixes (e.g. 1. vs 2.), they must match
+    const stepS = extractItemStepNumber(realSTrim);
+    const stepT = extractItemStepNumber(realTTrim);
+    if (stepS && stepT && stepS !== stepT) return;
+    if ((stepS && !stepT) || (!stepS && stepT)) {
+      if (sIsHeading || tIsHeading || isHeadingLike(realSTrim) || isHeadingLike(realTTrim)) return;
+    }
+
     // Shoe size specification guard: Two rows specifying different sizes (e.g. Size #5-#6 vs Size #6.5-#9) cannot be a translation pair
-    if (/size\s*#?\d+/i.test(sTrim) && /size\s*#?\d+/i.test(tTrim)) {
-      const sizeS = sTrim.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0];
-      const sizeT = tTrim.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0];
+    if (/size\s*#?\d+/i.test(realSTrim) && /size\s*#?\d+/i.test(realTTrim)) {
+      const sizeS = realSTrim.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0];
+      const sizeT = realTTrim.match(/size\s*#?\d+(?:[.,]\d+)?(?:\s*-\s*#?\d+(?:[.,]\d+)?)?/i)?.[0];
       if (sizeS && sizeT && sizeS.toLowerCase().replace(/\s+/g, "") !== sizeT.toLowerCase().replace(/\s+/g, "")) {
         return;
       }
     }
 
     // Numerical parameter compatibility check
-    const numS = extractNumericParameters(sTrim);
-    const numT = extractNumericParameters(tTrim);
+    const numS = extractNumericParameters(realSTrim);
+    const numT = extractNumericParameters(realTTrim);
     if (numS.length > 0 && numT.length > 0) {
       const shared = numS.filter((n) => numT.includes(n));
       if (shared.length === 0 && (numS.length >= 2 || numT.length >= 2)) return;
     }
 
+    // Title vs Body cross-container guard:
+    // A slide title / top banner must NEVER pair with body content in a different container
+    if (Boolean(source.location.isTitle) !== Boolean(target.location.isTitle) && source.containerId !== target.containerId) {
+      return;
+    }
+
+    // Spatial Y-Adjacency guard: If both units are on the same slide and have bounding boxes,
+    // prevent pairing across huge vertical distances (unless explicitly bound by matching step numbers)
+    if (realSource.location.box && realTarget.location.box && realSource.location.slideIndex === realTarget.location.slideIndex) {
+      const topDiff = Math.abs(realSource.location.box.top - realTarget.location.box.top);
+      const sameStep = Boolean(stepS && stepT && stepS === stepT);
+      if (topDiff > 55 && !sameStep && realSource.containerId !== realTarget.containerId) {
+        return;
+      }
+    }
+
     // Strict length disparity guard: a long paragraph cannot pair with a short label
-    const minLen = Math.min(sTrim.length, tTrim.length);
-    const maxLen = Math.max(sTrim.length, tTrim.length);
+    const minLen = Math.min(realSTrim.length, realTTrim.length);
+    const maxLen = Math.max(realSTrim.length, realTTrim.length);
     if (maxLen >= 15 && minLen < 5) return;
     if (maxLen >= 25 && minLen / maxLen < 0.25) return;
 
-    pairs.push({ source: source.text, target: target.text, origin: "presentation", slideIndex: source.location.slideIndex, sourceUnitId: source.id, targetUnitId: target.id });
-    paired.set(source.id, target.text); paired.set(target.id, source.text);
-    pairedPartnerId.set(source.id, target.id); pairedPartnerId.set(target.id, source.id);
+    pairs.push({ source: realSource.text, target: realTarget.text, origin: "presentation", slideIndex: realSource.location.slideIndex, sourceUnitId: realSource.id, targetUnitId: realTarget.id });
+    paired.set(realSource.id, realTarget.text); paired.set(realTarget.id, realSource.text);
+    pairedPartnerId.set(realSource.id, realTarget.id); pairedPartnerId.set(realTarget.id, realSource.id);
 
-    const cleanSrc = cleanStepPrefix(source.text);
-    const cleanTgt = cleanStepPrefix(target.text);
-    if (cleanSrc && cleanTgt && cleanSrc.length > 2 && cleanTgt.length > 2 && (cleanSrc !== source.text || cleanTgt !== target.text)) {
-      pairs.push({ source: cleanSrc, target: cleanTgt, origin: "presentation", slideIndex: source.location.slideIndex });
+    const cleanSrc = cleanStepPrefix(realSource.text);
+    const cleanTgt = cleanStepPrefix(realTarget.text);
+    if (cleanSrc && cleanTgt && cleanSrc.length > 2 && cleanTgt.length > 2 && (cleanSrc !== realSource.text || cleanTgt !== realTarget.text)) {
+      pairs.push({ source: cleanSrc, target: cleanTgt, origin: "presentation", slideIndex: realSource.location.slideIndex });
     }
   };
   const isHeadingLike = (text: string): boolean => {
@@ -936,11 +998,14 @@ export async function scanPptxTranslationIntelligence(
             if (u2) addPair(u1, u2);
           }
         }
-        // Match unnumbered items by index if equal length
+        // Match unnumbered items by index if equal length and semantically compatible
         if (b1.length === b2.length) {
           for (let i = 0; i < b1.length; i++) {
             if (!paired.has(b1[i].id) && !paired.has(b2[i].id)) {
-              addPair(b1[i], b2[i]);
+              const pairCheck = isSemanticBilingualPair(b1[i].text, b2[i].text, glossary);
+              if (pairCheck.isPair) {
+                addPair(b1[i], b2[i]);
+              }
             }
           }
         } else {
@@ -955,12 +1020,15 @@ export async function scanPptxTranslationIntelligence(
           const subRem1 = rem1.filter((u) => !paired.has(u.id));
           const subRem2 = rem2.filter((u) => !paired.has(u.id));
           if (subRem1.length === 1 && subRem2.length >= 1) {
-            const bestMatch = subRem2.find((u) => u.text.trim().length >= 20) || subRem2[subRem2.length - 1];
+            const bestMatch = subRem2.find((u) => isSemanticBilingualPair(subRem1[0].text, u.text, glossary).isPair);
             if (bestMatch) addPair(subRem1[0], bestMatch);
           } else {
             const minRem = Math.min(subRem1.length, subRem2.length);
             for (let i = 0; i < minRem; i++) {
-              addPair(subRem1[i], subRem2[i]);
+              const pairCheck = isSemanticBilingualPair(subRem1[i].text, subRem2[i].text, glossary);
+              if (pairCheck.isPair) {
+                addPair(subRem1[i], subRem2[i]);
+              }
             }
           }
         }
@@ -1015,11 +1083,14 @@ export async function scanPptxTranslationIntelligence(
           if (matchingTgt) {
             addPair(src, matchingTgt);
           }
-        } else if (remSources.length === remTargets.length && remSources.length >= 2) {
+        } else if (remSources.length === remTargets.length && remSources.length >= 2 && remSources.length <= 8) {
           const idx = remSources.indexOf(src);
           const cand = remTargets[idx];
           if (cand && !paired.has(cand.id)) {
-            addPair(src, cand);
+            const pairCheck = isSemanticBilingualPair(src.text, cand.text, glossary);
+            if (pairCheck.isPair) {
+              addPair(src, cand);
+            }
           }
         }
       }
@@ -1114,8 +1185,8 @@ export async function scanPptxTranslationIntelligence(
 
     // B. Match technical process/inspection headings on the same slide
     // (e.g. 'IPQC Stitching Inspection Focuses: Swoosh stitching' with 'Trọng điểm kiểm tra may logo')
-    const remViHeadings = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0) && isHeadingLike(u.text));
-    const remEnHeadings = slideUnits.filter((u) => isEnSlideUnit(u) && isHeadingLike(u.text));
+    const remViHeadings = slideUnits.filter((u) => !paired.has(u.id) && !u.location.isTitle && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0) && isHeadingLike(u.text));
+    const remEnHeadings = slideUnits.filter((u) => isEnSlideUnit(u) && !u.location.isTitle && isHeadingLike(u.text));
     for (const vh of remViHeadings) {
       if (paired.has(vh.id)) continue;
       const matchedEn = remEnHeadings.find((eh) => !paired.has(eh.id) && isSemanticBilingualPair(vh.text, eh.text, glossary).isPair);
@@ -1128,8 +1199,8 @@ export async function scanPptxTranslationIntelligence(
     // (e.g. 'Due to the design...' with 'Do thiết kế phần eo...')
     const hasAnchoredSteps = slideUnits.some((u) => paired.has(u.id) && extractItemStepNumber(u.text));
     if (hasAnchoredSteps) {
-      const remViNotes = slideUnits.filter((u) => !paired.has(u.id) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
-      const remEnNotes = slideUnits.filter(isEnSlideUnit);
+      const remViNotes = slideUnits.filter((u) => !paired.has(u.id) && !u.location.isTitle && !extractItemStepNumber(u.text) && !modelSubScopeUnitIds.has(u.id) && !isInspectionStatusLabel(u.text) && (hasViDiacritics(u.text) || languageEvidence(u.text).vi.length > 0));
+      const remEnNotes = slideUnits.filter((u) => isEnSlideUnit(u) && !u.location.isTitle && !extractItemStepNumber(u.text));
       for (const vn of remViNotes) {
         if (paired.has(vn.id)) continue;
         const matchedEn = remEnNotes.find((en) => !paired.has(en.id) && isSemanticBilingualPair(vn.text, en.text, glossary).isPair);
@@ -1202,6 +1273,13 @@ export async function scanPptxTranslationIntelligence(
     partToPair.set(pair.vi, { role: "vi", partnerSlide: enSlide, partnerPart: pair.en, pairNum: idx + 1 });
   }
 
+  const containersWithVi = new Set<string>();
+  for (const raw of extracted.units) {
+    if (raw.containerId && (hasViDiacritics(raw.text) || isVietnameseText(raw.text) || languageEvidence(raw.text).vi.length > 0)) {
+      containersWithVi.add(raw.containerId);
+    }
+  }
+
   const units: ScannedTextUnit[] = extracted.units.map((raw) => {
     const language = languageEvidence(raw.text);
     const base = classifyTextUnit(raw.text, raw.location, { sourceLang, targetLang,
@@ -1212,7 +1290,7 @@ export async function scanPptxTranslationIntelligence(
     if (raw.location.partPath && partToPair.has(raw.location.partPath)) {
       const pInfo = partToPair.get(raw.location.partPath)!;
       unit.location.pairedSlideIndex = pInfo.partnerSlide;
-      if (pInfo.role === "vi") {
+      if (pInfo.role === "vi" && referencePaths.has(raw.location.partPath)) {
         unit.location.isIsqReference = true;
       }
     }
@@ -1243,6 +1321,27 @@ export async function scanPptxTranslationIntelligence(
       unit.selectedForTranslation = false;
       if (paired.has(raw.id)) unit.existingTranslation = paired.get(raw.id);
       delete unit.suggestedTranslation;
+      return unit;
+    }
+
+    // In footwear SOPs, parameter and size specification sub-lines (e.g. "Size #6.5-#9: 50-55 kg/cm²")
+    // belonging to a predominantly Vietnamese instruction block must NOT be excluded as ALREADY_TRANSLATED.
+    // They must be preserved/translated as part of the container flow.
+    const isParameterSpecSubLine = sourceLang === "vi" &&
+      raw.containerId &&
+      containersWithVi.has(raw.containerId) &&
+      (/^[-–—*•#]?\s*size\s*#?[\d\.\,\-]+/i.test(raw.text.trim()) ||
+       /^[-–—*•#]?\s*#?\d+(?:[.,]\d+)?(?:\s*[-–—/]\s*#?\d+(?:[.,]\d+)?)?\s*[:：]?\s*[\d\.\,\-+±~]+\s*(?:kg\/cm²|kg|g|cm|mm|℃|°c|sec|s|min|bar|psi|spi|%|m\/s|v|w|a)?$/i.test(raw.text.trim()));
+
+    if (isParameterSpecSubLine) {
+      unit.status = "TM_REUSE";
+      unit.suggestedTranslation = raw.text;
+      unit.safeToApply = true;
+      unit.canApply = true;
+      unit.requiresTranslation = true;
+      unit.selectedForTranslation = true;
+      unit.confidence = 1.0;
+      unit.reason = "Dòng thông số kích thước / kỹ thuật đi kèm quy trình; giữ nguyên giá trị thông số trong bản dịch EN.";
       return unit;
     }
 
@@ -1400,7 +1499,7 @@ export async function scanPptxTranslationIntelligence(
           const airgapped = new AirGappedTranslationProvider();
           const translated = airgapped.translateVietnameseToEnglish(raw.text, glossary);
           const enforced = enforceTerminologyCompliance(raw.text, translated, glossary, sourceLang, targetLang);
-          const candidate = cleanTargetTerm(enforced.text);
+          const candidate = enforced.text.trim();
           if (candidate && !hasViDiacritics(candidate) && candidate.toLowerCase() !== raw.text.toLowerCase()) {
             unit.suggestedTranslation = candidate;
             unit.status = "NEEDS_TRANSLATION";
@@ -1453,7 +1552,7 @@ export async function scanPptxTranslationIntelligence(
     }
     return unit;
   });
-  const groups = buildGroups(units, pairs, preservedIds);
+  const groups = buildGroups(units, pairs, targetLang);
   // Consistency suggestions may change after grouping.
   const rawById = new Map(extracted.units.map((r) => [r.id, r]));
   for (const unit of units) {
@@ -1503,13 +1602,13 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
   const selected = report.units.filter((u) => requested.has(u.id));
   if (options.customTranslations) {
     for (const unit of selected) {
-      if (typeof options.customTranslations[unit.id] === "string" && options.customTranslations[unit.id].trim()) {
+      if (typeof options.customTranslations[unit.id] === "string") {
         unit.suggestedTranslation = options.customTranslations[unit.id].trim();
         unit.canApply = true;
       }
     }
   }
-  if (!selected.length || selected.length !== requested.size || selected.some((u) => (!u.canApply && !u.location.isIsq && !options.customTranslations?.[u.id]) || !u.suggestedTranslation)) {
+  if (!selected.length || selected.length !== requested.size || selected.some((u) => (!u.canApply && !u.location.isIsq && options.customTranslations?.[u.id] === undefined) || (u.suggestedTranslation === undefined && options.customTranslations?.[u.id] === undefined))) {
     throw new Error("Một số gợi ý không còn hợp lệ hoặc cần chỉnh sửa thủ công để giữ định dạng. Hãy quét lại.");
   }
   if (options.expectedSuggestions) {
@@ -1573,14 +1672,23 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
     byPart.get(targetPart)!.set(unit.location.paragraphIndex!, unit);
   }
   for (const [part, replacements] of byPart) {
-    const xml = await zip.file(part)!.async("string");
+    const fileEntry = zip.file(part);
+    if (!fileEntry) continue;
+    const xml = await fileEntry.async("string");
     let index = 0;
-    const result = xml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (pXml) => {
+    let result = xml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (pXml) => {
       const unit = replacements.get(index++);
       if (!unit) return pXml;
       if (paragraphText(pXml).trim() !== unit.sourceText) throw new Error("Nội dung đã thay đổi; hãy quét lại trước khi áp dụng.");
       const overrideFontSizePt = options.customFontSizes?.[unit.id];
       return replaceParagraphTranslation(pXml, unit.suggestedTranslation!, unit.sourceText, overrideFontSizePt);
+    });
+    // Schema Safety: Ensure no <p:txBody> is left completely empty without an <a:p>
+    result = result.replace(/<p:txBody\b([^>]*)>([\s\S]*?)<\/p:txBody>/g, (fullMatch, attrs, content) => {
+      if (!/<a:p\b/.test(content)) {
+        return `<p:txBody${attrs}>${content}<a:p><a:endParaRPr/></a:p></p:txBody>`;
+      }
+      return fullMatch;
     });
     zip.file(part, result);
   }
@@ -1599,6 +1707,13 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
     if (viParagraphsWithEn.size > 0) {
       let pIdx = 0;
       enXml = enXml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (p) => (viParagraphsWithEn.has(pIdx++) ? "" : p));
+      // Schema Safety: Ensure no <p:txBody> is left completely empty without an <a:p>
+      enXml = enXml.replace(/<p:txBody\b([^>]*)>([\s\S]*?)<\/p:txBody>/g, (fullMatch, attrs, content) => {
+        if (!/<a:p\b/.test(content)) {
+          return `<p:txBody${attrs}>${content}<a:p><a:endParaRPr/></a:p></p:txBody>`;
+        }
+        return fullMatch;
+      });
     }
     zip.file(enPath, enXml);
   }
@@ -1607,9 +1722,8 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
   const postFlight = await auditAndRepairPptxPostFlight(rawBuffer, (options.mode || "ipqc_bilingual") as any);
 
   // Compute remaining unhandled Vietnamese units and their slide locations
-  const allViUnits = report.units.filter((u) => u.requiresTranslation || isVietnameseText(u.sourceText));
   const appliedIds = new Set(selected.map((u) => u.id));
-  const unhandled = allViUnits.filter((u) => !appliedIds.has(u.id));
+  const unhandled = report.units.filter((u) => u.requiresTranslation && !appliedIds.has(u.id));
   const unhandledSlides = [...new Set(unhandled.map((u) => u.location.slideIndex || 1))].sort((a, b) => a - b);
 
   return {

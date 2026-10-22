@@ -16,7 +16,6 @@ import {
   RotateCcw,
   Sparkles,
   ShieldCheck,
-  Eye,
   Layers,
   Info,
   CheckCircle2,
@@ -119,6 +118,8 @@ interface ContextMenuState {
   y: number;
   element: SlideVisualElement;
   unit: ScannedTextUnit | null;
+  unitIndex?: number;
+  elementUnits?: ScannedTextUnit[];
   selectedPhrase?: string;
   phraseTranslation?: string;
 }
@@ -261,6 +262,10 @@ export const SOP_TYPOGRAPHY_PRESETS: TypographyPreset[] = [
 
 export const SOP_TERM_REGEX = /(SPI\s+\d+(?:-\d+)?\s+stitches\/inch|No-sew|no-sew|Tip-quarter|tip-quarter|\*(?:Hot\/cool shaping|Buffing|Cementing|Stitching|Cutting|Assembly|Skiving|Embroidery|Pressing|Priming):?|Tip shape|Toe shape|Collar shape|Heel shape|Tongue shape|Eyestay shape|Backtab shape|Bonding gap|Overflow|Dirty mark|Delamination|Wrinkle|Crooked|Asymmetry|Stitch run-off|Broken stitch|Loose stitch|High\/low|Excess cement)/gi;
 
+// High-performance LRU cache for offscreen canvas text measurements (eliminates layout thrashing)
+const textFitCache = new Map<string, { fontScale: number; lineCount: number; isOverflowing: boolean }>();
+const MAX_TEXT_FIT_CACHE_SIZE = 3000;
+
 export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   report,
   selectedUnitIds,
@@ -301,7 +306,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   useEffect(() => {
     onSlideChange?.(currentSlide);
     setSelectedElementId(null);
-    setHoveredCell(null);
     setLastActiveElementId(null);
   }, [currentSlide, onSlideChange]);
 
@@ -354,17 +358,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   // Presentation Framework Mode: "document" (Natural expanded height for tables) | "presentation" (Strict 16:9 projector fit with OpenXML normAutofit)
   const [slideViewMode, setSlideViewMode] = useState<"document" | "presentation">("document");
 
-  // Hovered Cell state for the Floating Quick Inspector Magnifier
-  const [hoveredCell, setHoveredCell] = useState<{
-    element: SlideVisualElement;
-    units: ScannedTextUnit[];
-  } | null>(null);
-
-  // Last active or hovered element ID (keeps toolbar alive & responsive when cursor moves between canvas and toolbar)
+  // Last active element ID (keeps toolbar alive & responsive when cursor moves between canvas and toolbar)
   const [lastActiveElementId, setLastActiveElementId] = useState<string | null>(null);
-
-  // Toggle for Floating Quick Inspector
-  const [showHoverInspector, setShowHoverInspector] = useState<boolean>(true);
 
   // Focus Mode (dims translated/immutable cells, lights up pending ones)
   const [focusPendingOnly, setFocusPendingOnly] = useState<boolean>(false);
@@ -809,6 +804,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       const startX = e.clientX;
       const startY = e.clientY;
       let hasExceededThreshold = false;
+      let cachedElementRects: Array<{ id: string; left: number; top: number; right: number; bottom: number }> | null = null;
+      let areaRafId: number | null = null;
 
       const handleAreaMouseMove = (moveEvt: MouseEvent) => {
         const curX = moveEvt.clientX;
@@ -823,6 +820,21 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               justFinishedRightDraggingRef.current = true;
             }
             justFinishedDraggingRef.current = true;
+            // Pre-cache DOM element bounding rects once (avoids continuous layout thrashing)
+            const cellDomElements = document.querySelectorAll<HTMLElement>("[data-element-id]");
+            cachedElementRects = [];
+            cellDomElements.forEach((elNode) => {
+              const id = elNode.getAttribute("data-element-id");
+              if (!id) return;
+              const rect = elNode.getBoundingClientRect();
+              cachedElementRects!.push({
+                id,
+                left: rect.left,
+                top: rect.top,
+                right: rect.right,
+                bottom: rect.bottom,
+              });
+            });
           } else {
             return;
           }
@@ -831,38 +843,41 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         moveEvt.preventDefault();
         window.getSelection()?.removeAllRanges();
 
-        setSelectionBox({
-          startX,
-          startY,
-          currentX: curX,
-          currentY: curY,
-        });
+        if (areaRafId) cancelAnimationFrame(areaRafId);
+        areaRafId = requestAnimationFrame(() => {
+          setSelectionBox({
+            startX,
+            startY,
+            currentX: curX,
+            currentY: curY,
+          });
 
-        const selLeft = Math.min(startX, curX);
-        const selTop = Math.min(startY, curY);
-        const selRight = Math.max(startX, curX);
-        const selBottom = Math.max(startY, curY);
+          if (!cachedElementRects) return;
+          const selLeft = Math.min(startX, curX);
+          const selTop = Math.min(startY, curY);
+          const selRight = Math.max(startX, curX);
+          const selBottom = Math.max(startY, curY);
 
-        const cellDomElements = document.querySelectorAll<HTMLElement>("[data-element-id]");
-        const selected = new Set<string>();
-        cellDomElements.forEach((elNode) => {
-          const id = elNode.getAttribute("data-element-id");
-          if (!id) return;
-          const rect = elNode.getBoundingClientRect();
-          const overlaps = !(
-            rect.right < selLeft ||
-            rect.left > selRight ||
-            rect.bottom < selTop ||
-            rect.top > selBottom
-          );
-          if (overlaps) {
-            selected.add(id);
+          const selected = new Set<string>();
+          for (let i = 0; i < cachedElementRects.length; i++) {
+            const item = cachedElementRects[i];
+            const overlaps = !(
+              item.right < selLeft ||
+              item.left > selRight ||
+              item.bottom < selTop ||
+              item.top > selBottom
+            );
+            if (overlaps) {
+              selected.add(item.id);
+            }
           }
+          setMultiSelectedElementIds(selected);
         });
-        setMultiSelectedElementIds(selected);
       };
 
       const handleAreaMouseUp = (upEvt: MouseEvent) => {
+        if (areaRafId) cancelAnimationFrame(areaRafId);
+        cachedElementRects = null;
         isAreaSelectingRef.current = false;
         setSelectionBox(null);
 
@@ -889,12 +904,61 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     [isAreaSelectMode]
   );
 
+  // UX Shortcut: Chuột giữa (nút lăn chuột / wheel click) CHỈ có chức năng DUY NHẤT: HỦY TOÀN BỘ Ô DỊCH
+  const handleMiddleClickElement = useCallback(
+    (e: React.MouseEvent, units: ScannedTextUnit[]) => {
+      if (e.button === 1) { // 1 = Middle mouse button (nút lăn chuột)
+        e.preventDefault();
+        e.stopPropagation();
+        if (!units || units.length === 0) return;
+        // CHỈ HỦY TOÀN BỘ Ô DỊCH: Bỏ chọn toàn bộ các dòng đang được chọn trong ô này (Không bật lại, không toggle)
+        let canceledAny = false;
+        for (const u of units) {
+          if (selectedUnitIds.has(u.id)) {
+            onToggleUnit(u.id);
+            canceledAny = true;
+          }
+        }
+        if (canceledAny) {
+          if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+          setQuickActionNotice("Đã hủy dịch ô này (Chuột giữa)");
+          quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1500);
+        }
+      }
+    },
+    [selectedUnitIds, onToggleUnit]
+  );
+
+  // UX Shortcut: Chuột giữa vào dòng cụ thể -> CHỈ hủy toàn bộ ô dịch
+  const handleLineMiddleClick = useCallback(
+    (e: React.MouseEvent, _u: ScannedTextUnit, allUnits: ScannedTextUnit[]) => {
+      if (e.button === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleMiddleClickElement(e, allUnits);
+      }
+    },
+    [handleMiddleClickElement]
+  );
+
   // Mouse handler to drag & move slide elements with Canva-style alignment guides & snapping
   const handleElementMouseDown = useCallback(
     (e: React.MouseEvent, el: SlideVisualElement, sheetW: number, sheetH: number) => {
       // Bấm chuột phải hoặc bật chế độ Quét: Kích hoạt quét vùng
       if (e.button === 2 || (isAreaSelectMode && e.button === 0)) {
         handleStartAreaSelection(e);
+        return;
+      }
+      // Bấm chuột giữa (nút lăn chuột): Hủy / chuyển đổi ô dịch
+      if (e.button === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetUnits = (el.unitIds && el.unitIds.length > 0)
+          ? el.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+          : el.unitId && unitById.get(el.unitId)
+          ? [unitById.get(el.unitId)!]
+          : [];
+        handleMiddleClickElement(e, targetUnits);
         return;
       }
       if (e.button !== 0) return;
@@ -946,6 +1010,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         snapshot: currentSnapshot,
       };
 
+      let dragRafId: number | null = null;
       const handleMouseMove = (moveEvent: MouseEvent) => {
         if (!dragStartRef.current) return;
         const dx = moveEvent.clientX - dragStartRef.current.startX;
@@ -960,111 +1025,120 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           moveEvent.preventDefault();
           window.getSelection()?.removeAllRanges();
 
-          const deltaLeft = (dx / (dragStartRef.current.sheetW || 1)) * 100;
-          const deltaTop = (dy / (dragStartRef.current.sheetH || 1)) * 100;
+          const clientX = moveEvent.clientX;
+          const clientY = moveEvent.clientY;
 
-          const rawLeft = Math.round((dragStartRef.current.origLeft + deltaLeft) * 10) / 10;
-          const rawTop = Math.round((dragStartRef.current.origTop + deltaTop) * 10) / 10;
+          if (dragRafId) cancelAnimationFrame(dragRafId);
+          dragRafId = requestAnimationFrame(() => {
+            if (!dragStartRef.current) return;
 
-          const SNAP_THRESHOLD_X = isMagneticSnapEnabled ? 1.6 : 0.0;
-          const SNAP_THRESHOLD_Y = isMagneticSnapEnabled ? 1.6 : 0.0;
+            const deltaLeft = ((clientX - dragStartRef.current.startX) / (dragStartRef.current.sheetW || 1)) * 100;
+            const deltaTop = ((clientY - dragStartRef.current.startY) / (dragStartRef.current.sheetH || 1)) * 100;
 
-          let snappedLeft = rawLeft;
-          let verticalGuide: number | null = null;
-          let bestDiffX = SNAP_THRESHOLD_X;
-          let snapLabelX = "";
+            const rawLeft = Math.round((dragStartRef.current.origLeft + deltaLeft) * 10) / 10;
+            const rawTop = Math.round((dragStartRef.current.origTop + deltaTop) * 10) / 10;
 
-          if (isMagneticSnapEnabled) {
-            for (const tx of targetXs) {
-              const isCenter50 = Math.abs(tx - 50) < 0.01;
-              const dL = Math.abs(rawLeft - tx);
-              if (dL < bestDiffX) {
-                bestDiffX = dL;
-                snappedLeft = tx;
-                verticalGuide = tx;
-                snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp mép trái";
-              }
-              const dC = Math.abs(rawLeft + el.box.width / 2 - tx);
-              if (dC < bestDiffX) {
-                bestDiffX = dC;
-                snappedLeft = tx - el.box.width / 2;
-                verticalGuide = tx;
-                snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp tâm đối tượng";
-              }
-              const dR = Math.abs(rawLeft + el.box.width - tx);
-              if (dR < bestDiffX) {
-                bestDiffX = dR;
-                snappedLeft = tx - el.box.width;
-                verticalGuide = tx;
-                snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp mép phải";
-              }
-            }
-          }
+            const SNAP_THRESHOLD_X = isMagneticSnapEnabled ? 1.6 : 0.0;
+            const SNAP_THRESHOLD_Y = isMagneticSnapEnabled ? 1.6 : 0.0;
 
-          let snappedTop = rawTop;
-          let horizontalGuide: number | null = null;
-          let bestDiffY = SNAP_THRESHOLD_Y;
-          let snapLabelY = "";
+            let snappedLeft = rawLeft;
+            let verticalGuide: number | null = null;
+            let bestDiffX = SNAP_THRESHOLD_X;
+            let snapLabelX = "";
 
-          if (isMagneticSnapEnabled) {
-            for (const ty of targetYs) {
-              const isCenter50 = Math.abs(ty - 50) < 0.01;
-              const dT = Math.abs(rawTop - ty);
-              if (dT < bestDiffY) {
-                bestDiffY = dT;
-                snappedTop = ty;
-                horizontalGuide = ty;
-                snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp mép trên";
-              }
-              const dC = Math.abs(rawTop + el.box.height / 2 - ty);
-              if (dC < bestDiffY) {
-                bestDiffY = dC;
-                snappedTop = ty - el.box.height / 2;
-                horizontalGuide = ty;
-                snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp tâm ngang";
-              }
-              const dB = Math.abs(rawTop + el.box.height - ty);
-              if (dB < bestDiffY) {
-                bestDiffY = dB;
-                snappedTop = ty - el.box.height;
-                horizontalGuide = ty;
-                snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp mép dưới";
+            if (isMagneticSnapEnabled) {
+              for (const tx of targetXs) {
+                const isCenter50 = Math.abs(tx - 50) < 0.01;
+                const dL = Math.abs(rawLeft - tx);
+                if (dL < bestDiffX) {
+                  bestDiffX = dL;
+                  snappedLeft = tx;
+                  verticalGuide = tx;
+                  snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp mép trái";
+                }
+                const dC = Math.abs(rawLeft + el.box.width / 2 - tx);
+                if (dC < bestDiffX) {
+                  bestDiffX = dC;
+                  snappedLeft = tx - el.box.width / 2;
+                  verticalGuide = tx;
+                  snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp tâm đối tượng";
+                }
+                const dR = Math.abs(rawLeft + el.box.width - tx);
+                if (dR < bestDiffX) {
+                  bestDiffX = dR;
+                  snappedLeft = tx - el.box.width;
+                  verticalGuide = tx;
+                  snapLabelX = isCenter50 ? "Tâm dọc Slide (50%)" : "Khớp mép phải";
+                }
               }
             }
-          }
 
-          const maxLeft = Math.max(0, 100 - Math.min(el.box.width, 10));
-          const maxTop = Math.max(0, 100 - Math.min(el.box.height, 5));
-          const newLeft = Math.max(-5, Math.min(maxLeft, Math.round(snappedLeft * 10) / 10));
-          const newTop = Math.max(-5, Math.min(maxTop, Math.round(snappedTop * 10) / 10));
+            let snappedTop = rawTop;
+            let horizontalGuide: number | null = null;
+            let bestDiffY = SNAP_THRESHOLD_Y;
+            let snapLabelY = "";
 
-          setActiveGuides({
-            vertical: verticalGuide !== null ? [verticalGuide] : [],
-            horizontal: horizontalGuide !== null ? [horizontalGuide] : [],
-          });
+            if (isMagneticSnapEnabled) {
+              for (const ty of targetYs) {
+                const isCenter50 = Math.abs(ty - 50) < 0.01;
+                const dT = Math.abs(rawTop - ty);
+                if (dT < bestDiffY) {
+                  bestDiffY = dT;
+                  snappedTop = ty;
+                  horizontalGuide = ty;
+                  snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp mép trên";
+                }
+                const dC = Math.abs(rawTop + el.box.height / 2 - ty);
+                if (dC < bestDiffY) {
+                  bestDiffY = dC;
+                  snappedTop = ty - el.box.height / 2;
+                  horizontalGuide = ty;
+                  snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp tâm ngang";
+                }
+                const dB = Math.abs(rawTop + el.box.height - ty);
+                if (dB < bestDiffY) {
+                  bestDiffY = dB;
+                  snappedTop = ty - el.box.height;
+                  horizontalGuide = ty;
+                  snapLabelY = isCenter50 ? "Tâm ngang Slide (50%)" : "Khớp mép dưới";
+                }
+              }
+            }
 
-          if (isMagneticSnapEnabled && (verticalGuide !== null || horizontalGuide !== null)) {
-            const label = snapLabelX && snapLabelY ? `${snapLabelX} & ${snapLabelY}` : (snapLabelX || snapLabelY);
-            setSnapFeedback({
-              label,
-              x: verticalGuide !== null ? verticalGuide : snappedLeft + el.box.width / 2,
-              y: horizontalGuide !== null ? horizontalGuide : snappedTop,
+            const maxLeft = Math.max(0, 100 - Math.min(el.box.width, 10));
+            const maxTop = Math.max(0, 100 - Math.min(el.box.height, 5));
+            const newLeft = Math.max(-5, Math.min(maxLeft, Math.round(snappedLeft * 10) / 10));
+            const newTop = Math.max(-5, Math.min(maxTop, Math.round(snappedTop * 10) / 10));
+
+            setActiveGuides({
+              vertical: verticalGuide !== null ? [verticalGuide] : [],
+              horizontal: horizontalGuide !== null ? [horizontalGuide] : [],
             });
-          } else {
-            setSnapFeedback(null);
-          }
 
-          setCanvasState((prev) => ({
-            ...prev,
-            positions: {
-              ...prev.positions,
-              [el.id]: { left: newLeft, top: newTop },
-            },
-          }));
+            if (isMagneticSnapEnabled && (verticalGuide !== null || horizontalGuide !== null)) {
+              const label = snapLabelX && snapLabelY ? `${snapLabelX} & ${snapLabelY}` : (snapLabelX || snapLabelY);
+              setSnapFeedback({
+                label,
+                x: verticalGuide !== null ? verticalGuide : snappedLeft + el.box.width / 2,
+                y: horizontalGuide !== null ? horizontalGuide : snappedTop,
+              });
+            } else {
+              setSnapFeedback(null);
+            }
+
+            setCanvasState((prev) => ({
+              ...prev,
+              positions: {
+                ...prev.positions,
+                [el.id]: { left: newLeft, top: newTop },
+              },
+            }));
+          });
         }
       };
 
       const handleMouseUp = () => {
+        if (dragRafId) cancelAnimationFrame(dragRafId);
         setActiveGuides({ vertical: [], horizontal: [] });
         setSnapFeedback(null);
         if (dragStartRef.current?.hasMoved) {
@@ -1138,6 +1212,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         targetYs.push(oPos.top, oPos.top + oSize.height / 2, oPos.top + oSize.height);
       }
 
+      let resizeRafId: number | null = null;
       const handleMouseMove = (moveEvent: MouseEvent) => {
         if (!resizeStartRef.current) return;
         const ref = resizeStartRef.current;
@@ -1152,122 +1227,134 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           moveEvent.preventDefault();
           window.getSelection()?.removeAllRanges();
 
-          const deltaW = (dx / ref.sheetW) * 100;
-          const deltaH = (dy / ref.sheetH) * 100;
+          const clientX = moveEvent.clientX;
+          const clientY = moveEvent.clientY;
 
-          let newLeft = ref.origLeft;
-          let newTop = ref.origTop;
-          let newWidth = ref.origWidth;
-          let newHeight = ref.origHeight;
+          if (resizeRafId) cancelAnimationFrame(resizeRafId);
+          resizeRafId = requestAnimationFrame(() => {
+            if (!resizeStartRef.current) return;
+            const curRef = resizeStartRef.current;
+            const curDx = clientX - curRef.startX;
+            const curDy = clientY - curRef.startY;
 
-          const MIN_W = 3.0;
-          const MIN_H = 2.0;
+            const deltaW = (curDx / curRef.sheetW) * 100;
+            const deltaH = (curDy / curRef.sheetH) * 100;
 
-          if (handle.includes("e")) {
-            newWidth = Math.max(MIN_W, ref.origWidth + deltaW);
-          }
-          if (handle.includes("s")) {
-            newHeight = Math.max(MIN_H, ref.origHeight + deltaH);
-          }
-          if (handle.includes("w")) {
-            const maxDeltaW = ref.origWidth - MIN_W;
-            const actualDeltaW = Math.min(deltaW, maxDeltaW);
-            newLeft = ref.origLeft + actualDeltaW;
-            newWidth = ref.origWidth - actualDeltaW;
-          }
-          if (handle.includes("n")) {
-            const maxDeltaH = ref.origHeight - MIN_H;
-            const actualDeltaH = Math.min(deltaH, maxDeltaH);
-            newTop = ref.origTop + actualDeltaH;
-            newHeight = ref.origHeight - actualDeltaH;
-          }
+            let newLeft = curRef.origLeft;
+            let newTop = curRef.origTop;
+            let newWidth = curRef.origWidth;
+            let newHeight = curRef.origHeight;
 
-          const SNAP_THRESHOLD = isMagneticSnapEnabled ? 1.5 : 0.0;
-          let vGuide: number | null = null;
-          let hGuide: number | null = null;
+            const MIN_W = 3.0;
+            const MIN_H = 2.0;
 
-          if (isMagneticSnapEnabled) {
             if (handle.includes("e")) {
-              const rightEdge = newLeft + newWidth;
-              for (const tx of targetXs) {
-                if (Math.abs(rightEdge - tx) < SNAP_THRESHOLD) {
-                  newWidth = Math.max(MIN_W, tx - newLeft);
-                  vGuide = tx;
-                  break;
-                }
-              }
-            } else if (handle.includes("w")) {
-              for (const tx of targetXs) {
-                if (Math.abs(newLeft - tx) < SNAP_THRESHOLD) {
-                  const diff = tx - newLeft;
-                  newLeft = tx;
-                  newWidth = Math.max(MIN_W, newWidth - diff);
-                  vGuide = tx;
-                  break;
-                }
-              }
+              newWidth = Math.max(MIN_W, curRef.origWidth + deltaW);
             }
-
             if (handle.includes("s")) {
-              const bottomEdge = newTop + newHeight;
-              for (const ty of targetYs) {
-                if (Math.abs(bottomEdge - ty) < SNAP_THRESHOLD) {
-                  newHeight = Math.max(MIN_H, ty - newTop);
-                  hGuide = ty;
-                  break;
+              newHeight = Math.max(MIN_H, curRef.origHeight + deltaH);
+            }
+            if (handle.includes("w")) {
+              const maxDeltaW = curRef.origWidth - MIN_W;
+              const actualDeltaW = Math.min(deltaW, maxDeltaW);
+              newLeft = curRef.origLeft + actualDeltaW;
+              newWidth = curRef.origWidth - actualDeltaW;
+            }
+            if (handle.includes("n")) {
+              const maxDeltaH = curRef.origHeight - MIN_H;
+              const actualDeltaH = Math.min(deltaH, maxDeltaH);
+              newTop = curRef.origTop + actualDeltaH;
+              newHeight = curRef.origHeight - actualDeltaH;
+            }
+
+            const SNAP_THRESHOLD = isMagneticSnapEnabled ? 1.5 : 0.0;
+            let vGuide: number | null = null;
+            let hGuide: number | null = null;
+
+            if (isMagneticSnapEnabled) {
+              if (handle.includes("e")) {
+                const rightEdge = newLeft + newWidth;
+                for (const tx of targetXs) {
+                  if (Math.abs(rightEdge - tx) < SNAP_THRESHOLD) {
+                    newWidth = Math.max(MIN_W, tx - newLeft);
+                    vGuide = tx;
+                    break;
+                  }
+                }
+              } else if (handle.includes("w")) {
+                for (const tx of targetXs) {
+                  if (Math.abs(newLeft - tx) < SNAP_THRESHOLD) {
+                    const diff = tx - newLeft;
+                    newLeft = tx;
+                    newWidth = Math.max(MIN_W, newWidth - diff);
+                    vGuide = tx;
+                    break;
+                  }
                 }
               }
-            } else if (handle.includes("n")) {
-              for (const ty of targetYs) {
-                if (Math.abs(newTop - ty) < SNAP_THRESHOLD) {
-                  const diff = ty - newTop;
-                  newTop = ty;
-                  newHeight = Math.max(MIN_H, newHeight - diff);
-                  hGuide = ty;
-                  break;
+
+              if (handle.includes("s")) {
+                const bottomEdge = newTop + newHeight;
+                for (const ty of targetYs) {
+                  if (Math.abs(bottomEdge - ty) < SNAP_THRESHOLD) {
+                    newHeight = Math.max(MIN_H, ty - newTop);
+                    hGuide = ty;
+                    break;
+                  }
+                }
+              } else if (handle.includes("n")) {
+                for (const ty of targetYs) {
+                  if (Math.abs(newTop - ty) < SNAP_THRESHOLD) {
+                    const diff = ty - newTop;
+                    newTop = ty;
+                    newHeight = Math.max(MIN_H, newHeight - diff);
+                    hGuide = ty;
+                    break;
+                  }
                 }
               }
             }
-          }
 
-          newLeft = Math.round(newLeft * 10) / 10;
-          newTop = Math.round(newTop * 10) / 10;
-          newWidth = Math.round(newWidth * 10) / 10;
-          newHeight = Math.round(newHeight * 10) / 10;
+            newLeft = Math.round(newLeft * 10) / 10;
+            newTop = Math.round(newTop * 10) / 10;
+            newWidth = Math.round(newWidth * 10) / 10;
+            newHeight = Math.round(newHeight * 10) / 10;
 
-          setActiveGuides({
-            vertical: vGuide !== null ? [vGuide] : [],
-            horizontal: hGuide !== null ? [hGuide] : [],
-          });
-
-          if (isMagneticSnapEnabled && (vGuide !== null || hGuide !== null)) {
-            const isCenter = (vGuide !== null && Math.abs(vGuide - 50) < 0.01) || (hGuide !== null && Math.abs(hGuide - 50) < 0.01);
-            setSnapFeedback({
-              label: isCenter ? "Khớp tâm 50%" : "Khớp mép đối tượng",
-              x: vGuide !== null ? vGuide : newLeft + newWidth,
-              y: hGuide !== null ? hGuide : newTop + newHeight,
+            setActiveGuides({
+              vertical: vGuide !== null ? [vGuide] : [],
+              horizontal: hGuide !== null ? [hGuide] : [],
             });
-          } else {
-            setSnapFeedback(null);
-          }
 
-          setResizeInfo({ elId: el.id, width: newWidth, height: newHeight });
+            if (isMagneticSnapEnabled && (vGuide !== null || hGuide !== null)) {
+              const isCenter = (vGuide !== null && Math.abs(vGuide - 50) < 0.01) || (hGuide !== null && Math.abs(hGuide - 50) < 0.01);
+              setSnapFeedback({
+                label: isCenter ? "Khớp tâm 50%" : "Khớp mép đối tượng",
+                x: vGuide !== null ? vGuide : newLeft + newWidth,
+                y: hGuide !== null ? hGuide : newTop + newHeight,
+              });
+            } else {
+              setSnapFeedback(null);
+            }
 
-          setCanvasState((prev) => ({
-            ...prev,
-            positions: {
-              ...prev.positions,
-              [el.id]: { left: newLeft, top: newTop },
-            },
-            sizes: {
-              ...prev.sizes,
-              [el.id]: { width: newWidth, height: newHeight },
-            },
-          }));
+            setResizeInfo({ elId: el.id, width: newWidth, height: newHeight });
+
+            setCanvasState((prev) => ({
+              ...prev,
+              positions: {
+                ...prev.positions,
+                [el.id]: { left: newLeft, top: newTop },
+              },
+              sizes: {
+                ...prev.sizes,
+                [el.id]: { width: newWidth, height: newHeight },
+              },
+            }));
+          });
         }
       };
 
       const handleMouseUp = () => {
+        if (resizeRafId) cancelAnimationFrame(resizeRafId);
         setActiveGuides({ vertical: [], horizontal: [] });
         setSnapFeedback(null);
         setResizeInfo(null);
@@ -1896,17 +1983,28 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     const bodies: ScannedTextUnit[] = [];
 
     for (const u of currentUnits) {
-      if (u.location.isTitle && !title) {
-        title = u;
-      } else if (u.location.isTable) {
+      if (u.location.isTable) {
         tables.push(u);
+      } else if (u.location.isTitle && !title) {
+        title = u;
       } else {
         bodies.push(u);
       }
     }
 
-    if (!title && bodies.length > 0 && bodies[0].sourceText.length <= 80 && !bodies[0].sourceText.includes("\n")) {
-      title = bodies.shift();
+    if (!title && bodies.length > 0) {
+      const bannerIdx = bodies.findIndex((b) => {
+        const text = b.sourceText.trim();
+        if (text.length > 90 || text.includes("\n") || /\b\d+\.\s*[A-Za-z]/.test(text)) return false;
+        if (/^(assembly|cutting|stitching|outgoing|stockfit)?\s*(inspection\s*strategy|chiến\s*lược\s*kiểm\s*tra|standard\s*operating\s*procedure|ipqc\s*manual|qa\/?ipqc\s*manual)/i.test(text)) return true;
+        if (b.location.box && b.location.box.top <= 12 && b.location.box.width >= 40) return true;
+        return false;
+      });
+      if (bannerIdx >= 0) {
+        title = bodies.splice(bannerIdx, 1)[0];
+      } else if (bodies[0].sourceText.length <= 80 && !bodies[0].sourceText.includes("\n") && !/\b\d+\.\s*[A-Za-z]/.test(bodies[0].sourceText)) {
+        title = bodies.shift();
+      }
     }
 
     return { titleUnit: title, tableUnits: tables, bodyUnits: bodies };
@@ -2112,6 +2210,96 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     [selectedUnitIds, onToggleUnit]
   );
 
+  const handleMergeLine = useCallback(
+    (
+      direction: "up" | "down",
+      targetUnit?: ScannedTextUnit | null,
+      uIdx?: number,
+      unitsList?: ScannedTextUnit[]
+    ) => {
+      const units =
+        unitsList ||
+        contextMenu?.elementUnits ||
+        (contextMenu?.element?.unitIds
+          ? contextMenu.element.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+          : []);
+      if (!units || units.length <= 1) return;
+
+      const unit = targetUnit || contextMenu?.unit || units[0];
+      const idx = uIdx !== undefined ? uIdx : units.findIndex((u) => u.id === unit.id);
+      if (idx < 0) return;
+
+      if (direction === "up") {
+        if (idx === 0) return;
+        const aboveUnit = units[idx - 1];
+        const currentUnit = units[idx];
+
+        // Merge source text
+        const sAbove = (aboveUnit.sourceText || "").trim();
+        const sCurrent = (currentUnit.sourceText || "").trim();
+        const mergedSource = sAbove ? (sCurrent ? `${sAbove} ${sCurrent}` : sAbove) : sCurrent;
+
+        // Merge translation / custom text if any
+        const tAbove = getTranslationText(aboveUnit).trim();
+        const tCurrent = getTranslationText(currentUnit).trim();
+        let mergedTrans = "";
+        if (tAbove || tCurrent) {
+          mergedTrans = tAbove ? (tCurrent ? `${tAbove} ${tCurrent}` : tAbove) : tCurrent;
+        }
+
+        aboveUnit.sourceText = mergedSource;
+        currentUnit.sourceText = "";
+
+        if (mergedTrans) {
+          onSaveCustomEdit(aboveUnit.id, mergedTrans);
+        }
+        onSaveCustomEdit(currentUnit.id, "");
+
+        if (selectedUnitIds.has(currentUnit.id)) {
+          onToggleUnit(currentUnit.id);
+        }
+        if (!selectedUnitIds.has(aboveUnit.id) && !mergedTrans) {
+          onToggleUnit(aboveUnit.id);
+        }
+      } else if (direction === "down") {
+        if (idx >= units.length - 1) return;
+        const currentUnit = units[idx];
+        const belowUnit = units[idx + 1];
+
+        // Merge source text
+        const sCurrent = (currentUnit.sourceText || "").trim();
+        const sBelow = (belowUnit.sourceText || "").trim();
+        const mergedSource = sCurrent ? (sBelow ? `${sCurrent} ${sBelow}` : sCurrent) : sBelow;
+
+        // Merge translation / custom text if any
+        const tCurrent = getTranslationText(currentUnit).trim();
+        const tBelow = getTranslationText(belowUnit).trim();
+        let mergedTrans = "";
+        if (tCurrent || tBelow) {
+          mergedTrans = tCurrent ? (tBelow ? `${tCurrent} ${tBelow}` : tCurrent) : tBelow;
+        }
+
+        currentUnit.sourceText = mergedSource;
+        belowUnit.sourceText = "";
+
+        if (mergedTrans) {
+          onSaveCustomEdit(currentUnit.id, mergedTrans);
+        }
+        onSaveCustomEdit(belowUnit.id, "");
+
+        if (selectedUnitIds.has(belowUnit.id)) {
+          onToggleUnit(belowUnit.id);
+        }
+        if (!selectedUnitIds.has(currentUnit.id) && !mergedTrans) {
+          onToggleUnit(currentUnit.id);
+        }
+      }
+
+      setContextMenu(null);
+    },
+    [contextMenu, unitById, getTranslationText, onSaveCustomEdit, selectedUnitIds, onToggleUnit]
+  );
+
   const cancelEdit = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setEditingUnitId(null);
@@ -2166,7 +2354,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   }, [inspectedUnits, getTranslationText, inspectedElement]);
 
   // Active Focus Element for Ribbon Toolbar & quick shortcuts:
-  // Prioritizes: Explicitly selected elements > Clicked element > Hovered element under cursor > Inspected element > Last active element
+  // Prioritizes: Explicitly selected elements > Clicked element > Inspected element > Last active element
   const activeFocusElement = useMemo(() => {
     if (multiSelectedElementIds.size > 0) {
       const firstId = Array.from(multiSelectedElementIds)[0];
@@ -2177,14 +2365,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       const found = currentSlideElements.find((el) => el.id === selectedElementId);
       if (found) return found;
     }
-    if (hoveredCell?.element) return hoveredCell.element;
     if (inspectedElement) return inspectedElement;
     if (lastActiveElementId) {
       const found = currentSlideElements.find((el) => el.id === lastActiveElementId);
       if (found) return found;
     }
     return null;
-  }, [multiSelectedElementIds, selectedElementId, hoveredCell, inspectedElement, lastActiveElementId, currentSlideElements]);
+  }, [multiSelectedElementIds, selectedElementId, inspectedElement, lastActiveElementId, currentSlideElements]);
 
   const activeFocusUnits = useMemo(() => {
     if (!activeFocusElement) return [];
@@ -2200,20 +2387,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const activeFocusFullText = useMemo(() => {
     return activeFocusUnits.map((u) => getTranslationText(u) || u.sourceText).join(" ") || activeFocusElement?.text || "";
   }, [activeFocusUnits, getTranslationText, activeFocusElement]);
-
-  // Active Inspector for Floating Quick Inspector Magnifier
-  const activeInspector = useMemo(() => {
-    if (hoveredCell) return hoveredCell;
-    if (inspectedElement) {
-      const uList = (inspectedElement.unitIds && inspectedElement.unitIds.length > 0)
-        ? inspectedElement.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
-        : inspectedElement.unitId && unitById.get(inspectedElement.unitId)
-        ? [unitById.get(inspectedElement.unitId)!]
-        : [];
-      return { element: inspectedElement, units: uList };
-    }
-    return null;
-  }, [hoveredCell, inspectedElement, unitById]);
 
   // Stepping through layers
   const handleSelectNextLayer = useCallback(() => {
@@ -2417,9 +2590,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       } else if (e.key.toLowerCase() === "w") {
         e.preventDefault();
         setFitMode((prev) => (prev === "contain" ? "width" : "contain"));
-      } else if (e.key.toLowerCase() === "i") {
-        e.preventDefault();
-        setShowHoverInspector((prev) => !prev);
       } else if (e.key === "+" || e.key === "=") {
         setZoomScale((prev) => Math.min(1.8, Number((prev + 0.1).toFixed(2))));
       } else if (e.key === "-") {
@@ -2496,18 +2666,25 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           origPanY: panOffset.y,
         };
 
+        let panRafId: number | null = null;
         const handleMouseMove = (moveEvt: MouseEvent) => {
           if (!isPanningRef.current || !panStartRef.current) return;
           moveEvt.preventDefault();
           const dx = moveEvt.clientX - panStartRef.current.startX;
           const dy = moveEvt.clientY - panStartRef.current.startY;
-          setPanOffset({
-            x: panStartRef.current.origPanX + dx,
-            y: panStartRef.current.origPanY + dy,
+          const nextX = panStartRef.current.origPanX + dx;
+          const nextY = panStartRef.current.origPanY + dy;
+          if (panRafId) cancelAnimationFrame(panRafId);
+          panRafId = requestAnimationFrame(() => {
+            setPanOffset({
+              x: nextX,
+              y: nextY,
+            });
           });
         };
 
         const handleMouseUp = () => {
+          if (panRafId) cancelAnimationFrame(panRafId);
           isPanningRef.current = false;
           panStartRef.current = null;
           window.removeEventListener("mousemove", handleMouseMove);
@@ -2543,6 +2720,24 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   const wheelGestureActiveRef = useRef(false);
   const wheelGestureTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Keep fresh references to avoid tearing down and re-binding wheel listeners on every render
+  const activeFocusElementRef = useRef(activeFocusElement);
+  activeFocusElementRef.current = activeFocusElement;
+  const selectedElementIdRef = useRef(selectedElementId);
+  selectedElementIdRef.current = selectedElementId;
+  const inspectedElementRef = useRef(inspectedElement);
+  inspectedElementRef.current = inspectedElement;
+  const currentSlideElementsRef = useRef(currentSlideElements);
+  currentSlideElementsRef.current = currentSlideElements;
+  const unitByIdRef = useRef(unitById);
+  unitByIdRef.current = unitById;
+  const handleChangeFontSizeRef = useRef(handleChangeFontSize);
+  handleChangeFontSizeRef.current = handleChangeFontSize;
+  const pushUndoSnapshotRef = useRef(pushUndoSnapshot);
+  pushUndoSnapshotRef.current = pushUndoSnapshot;
+  const canvasStateRef = useRef(canvasState);
+  canvasStateRef.current = canvasState;
+
   useEffect(() => {
     const container = canvasContainerRef.current;
     if (!container) return;
@@ -2570,23 +2765,22 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         targetId = hitDom.getAttribute("data-element-id");
       }
 
+      const elements = currentSlideElementsRef.current;
       if (targetId) {
-        targetEl = currentSlideElements.find((x) => x.id === targetId) || null;
+        targetEl = elements.find((x) => x.id === targetId) || null;
       }
 
-      // 2. Fallback to hoveredCell
-      if (!targetId && hoveredCell?.element) {
-        targetId = hoveredCell.element.id;
-        targetEl = hoveredCell.element;
-      }
+      // 2. Fallback to activeFocusElement / lastActiveElement / selectedElementId
+      const activeFocus = activeFocusElementRef.current;
+      const selId = selectedElementIdRef.current;
+      const inspected = inspectedElementRef.current;
 
-      // 3. Fallback to activeFocusElement / lastActiveElement / selectedElementId
-      if (!targetId && activeFocusElement) {
-        targetId = activeFocusElement.id;
-        targetEl = activeFocusElement;
-      } else if (!targetId && selectedElementId) {
-        targetId = selectedElementId;
-        targetEl = inspectedElement;
+      if (!targetId && activeFocus) {
+        targetId = activeFocus.id;
+        targetEl = activeFocus;
+      } else if (!targetId && selId) {
+        targetId = selId;
+        targetEl = inspected;
       }
 
       if (!targetId) return;
@@ -2598,7 +2792,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       // At start of wheel gesture, record a single undo snapshot
       if (!wheelGestureActiveRef.current) {
         wheelGestureActiveRef.current = true;
-        pushUndoSnapshot({ ...canvasState });
+        pushUndoSnapshotRef.current({ ...canvasStateRef.current });
       }
 
       // Reset gesture timer
@@ -2616,17 +2810,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         // Scrolling DOWN (deltaY > 0) -> Decrease font size (-1pt)
         const step = wheelAccumulatorRef.current < 0 ? 1 : -1;
         wheelAccumulatorRef.current = 0;
-        handleChangeFontSize(targetId, step, true);
+        handleChangeFontSizeRef.current(targetId, step, true);
 
-        // Keep hoveredCell and lastActiveElementId in sync with the element being adjusted
+        // Keep lastActiveElementId in sync with the element being adjusted
         if (targetEl) {
           setLastActiveElementId(targetId);
-          const uList = (targetEl.unitIds && targetEl.unitIds.length > 0)
-            ? targetEl.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
-            : targetEl.unitId && unitById.get(targetEl.unitId)
-            ? [unitById.get(targetEl.unitId)!]
-            : [];
-          setHoveredCell({ element: targetEl, units: uList });
         }
       }
     };
@@ -2636,18 +2824,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       container.removeEventListener("wheel", handleWheel);
       if (wheelGestureTimerRef.current) clearTimeout(wheelGestureTimerRef.current);
     };
-  }, [
-    selectedElementId,
-    hoveredCell,
-    lastActiveElementId,
-    activeFocusElement,
-    currentSlideElements,
-    unitById,
-    handleChangeFontSize,
-    pushUndoSnapshot,
-    canvasState,
-    inspectedElement,
-  ]);
+  }, []);
 
   // ==========================================================================
   // TRANSLATION ACTIONS (SINGLE & BATCH)
@@ -2854,6 +3031,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     fontFamily: string = "Arial, sans-serif"
   ): { fontScale: number; lineCount: number; isOverflowing: boolean } => {
     if (!text || boxWidthPx <= 0 || boxHeightPx <= 0) return { fontScale: 1.0, lineCount: 1, isOverflowing: false };
+
+    // 1. High-speed LRU memory lookup
+    const cacheKey = `${text}::${Math.round(boxWidthPx)}::${Math.round(boxHeightPx)}::${baseFontSizePt}::${fontFamily}`;
+    const cached = textFitCache.get(cacheKey);
+    if (cached) return cached;
+
     const ctx = getOffscreenCanvasCtx();
     if (!ctx) return { fontScale: 1.0, lineCount: 1, isOverflowing: false };
 
@@ -2861,19 +3044,34 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     ctx.font = `${basePx}px ${fontFamily}`;
     const textWidth = ctx.measureText(text).width;
 
+    let result: { fontScale: number; lineCount: number; isOverflowing: boolean };
+
     if (textWidth <= boxWidthPx) {
-      return { fontScale: 1.0, lineCount: 1, isOverflowing: false };
+      result = { fontScale: 1.0, lineCount: 1, isOverflowing: false };
+    } else {
+      const estLines = Math.max(1, Math.ceil(textWidth / boxWidthPx));
+      const totalRequiredH = estLines * basePx * 1.25;
+      const isOverflowing = totalRequiredH > boxHeightPx;
+      if (isOverflowing) {
+        const scale = Math.max(0.70, Math.min(1.0, Math.sqrt((boxWidthPx * boxHeightPx) / (textWidth * basePx * 1.25))));
+        result = { fontScale: Number(scale.toFixed(2)), lineCount: estLines, isOverflowing: true };
+      } else {
+        result = { fontScale: 1.0, lineCount: estLines, isOverflowing: false };
+      }
     }
 
-    const estLines = Math.max(1, Math.ceil(textWidth / boxWidthPx));
-    const totalRequiredH = estLines * basePx * 1.25;
-    const isOverflowing = totalRequiredH > boxHeightPx;
-    if (isOverflowing) {
-      const scale = Math.max(0.70, Math.min(1.0, Math.sqrt((boxWidthPx * boxHeightPx) / (textWidth * basePx * 1.25))));
-      return { fontScale: Number(scale.toFixed(2)), lineCount: estLines, isOverflowing: true };
+    // 2. Cache result with LRU hygiene
+    if (textFitCache.size >= MAX_TEXT_FIT_CACHE_SIZE) {
+      const iter = textFitCache.keys();
+      for (let i = 0; i < 500; i++) {
+        const k = iter.next().value;
+        if (!k) break;
+        textFitCache.delete(k);
+      }
     }
+    textFitCache.set(cacheKey, result);
 
-    return { fontScale: 1.0, lineCount: estLines, isOverflowing: false };
+    return result;
   }, [getOffscreenCanvasCtx]);
 
   const renderSlideSheet = (
@@ -3103,17 +3301,34 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
               // Mode Bilingual + Multi-line: Block Bilingual (1.EN 2.EN 3.EN ... 1.VI 2.VI 3.VI ...)
               if (activeViewMode === "bilingual" && elementUnits.length > 1) {
+                const isViUnit = (u: ScannedTextUnit) => {
+                  const text = u.sourceText.trim();
+                  return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text);
+                };
+                const viCount = elementUnits.filter(isViUnit).length;
+                const enCount = elementUnits.length - viCount;
+                const hasExistingBilingualMix = viCount > 0 && enCount > 0;
+
+                const enDisplayUnits = hasExistingBilingualMix
+                  ? elementUnits.filter((u) => !isViUnit(u))
+                  : elementUnits;
+                const viDisplayUnits = hasExistingBilingualMix
+                  ? elementUnits.filter(isViUnit)
+                  : elementUnits;
+
                 return (
                   <div className="w-full space-y-1">
                     {/* EN Block: 1.EN, 2.EN, 3.EN... */}
                     <div className="space-y-0.5">
-                      {elementUnits.map((u, uIdx) => {
+                      {enDisplayUnits.map((u, uIdx) => {
                         if (editingUnitId === u.id) return renderUnitEditor(u, uIdx);
                         const transText = getTranslationText(u);
                         const isHeading = u.sourceText.startsWith("*") || u.location.isTitle || el.isTitle || isBold;
                         return (
                           <div
                             key={`en_${u.id}`}
+                            onMouseDown={(e) => handleLineMiddleClick(e, u, elementUnits)}
+                            onAuxClick={(e) => handleLineMiddleClick(e, u, elementUnits)}
                             onDoubleClick={(e) => { e.stopPropagation(); startEdit(u, e); }}
                             onContextMenu={(e) => {
                               e.preventDefault(); e.stopPropagation();
@@ -3125,7 +3340,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                               setContextMenu({
                                 x: Math.max(10, x), y: Math.max(10, y),
                                 element: { ...el, box: { ...el.box, left: pos?.left ?? el.box.left, top: pos?.top ?? el.box.top, width: size?.width ?? el.box.width, height: size?.height ?? el.box.height } },
-                                unit: u, selectedPhrase: sel && sel.length > 0 ? sel : undefined,
+                                unit: u,
+                                unitIndex: uIdx,
+                                elementUnits: enDisplayUnits,
+                                selectedPhrase: sel && sel.length > 0 ? sel : undefined,
                               });
                             }}
                             style={{ fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined }}
@@ -3188,11 +3406,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
                     {/* VI Block: 1.VI, 2.VI, 3.VI... */}
                     <div className="space-y-0.5 opacity-75">
-                      {elementUnits.map((u, uIdx) => {
+                      {viDisplayUnits.map((u, uIdx) => {
                         const isHeading = u.sourceText.startsWith("*") || u.location.isTitle || el.isTitle || isBold;
                         return (
                           <div
                             key={`vi_${u.id}`}
+                            onMouseDown={(e) => handleLineMiddleClick(e, u, elementUnits)}
+                            onAuxClick={(e) => handleLineMiddleClick(e, u, elementUnits)}
                             onDoubleClick={(e) => { e.stopPropagation(); startEdit(u, e); }}
                             style={{ fontSize: displayFontSizePt ? `${Math.max(7.5, displayFontSizePt * 0.92)}pt` : undefined }}
                             className={`group/line-vi relative rounded px-1 -mx-1 py-0.5 transition-colors cursor-text hover:bg-slate-500/10 ${
@@ -3228,6 +3448,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 return (
                   <div
                     key={u.id}
+                    onMouseDown={(e) => handleLineMiddleClick(e, u, elementUnits)}
+                    onAuxClick={(e) => handleLineMiddleClick(e, u, elementUnits)}
                     onDoubleClick={(e) => {
                       e.stopPropagation();
                       startEdit(u, e);
@@ -3245,6 +3467,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                         y: Math.max(10, y),
                         element: { ...el, box: { ...el.box, left: pos?.left ?? el.box.left, top: pos?.top ?? el.box.top, width: size?.width ?? el.box.width, height: size?.height ?? el.box.height } },
                         unit: u,
+                        unitIndex: uIdx,
+                        elementUnits: elementUnits,
                         selectedPhrase: sel && sel.length > 0 ? sel : undefined,
                       });
                     }}
@@ -3540,8 +3764,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                     rowSpan={el.rowSpan && el.rowSpan > 1 ? el.rowSpan : undefined}
                                     colSpan={el.colSpan && el.colSpan > 1 ? el.colSpan : undefined}
                                     onMouseDown={(e) => {
+                                      if (e.button === 1) {
+                                        handleMiddleClickElement(e, elementUnits);
+                                        return;
+                                      }
                                       if (e.button === 2 || (isAreaSelectMode && e.button === 0)) {
                                         handleStartAreaSelection(e);
+                                      }
+                                    }}
+                                    onAuxClick={(e) => {
+                                      if (e.button === 1) {
+                                        handleMiddleClickElement(e, elementUnits);
                                       }
                                     }}
                                     onClick={(e) => {
@@ -3575,16 +3808,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                         }
                                       }
                                     }}
-                                    onMouseEnter={() => {
-                                      setLastActiveElementId(el.id);
-                                      setHoveredCell({
-                                        element: el,
-                                        units: elementUnits,
-                                      });
-                                    }}
-                                    onMouseLeave={() => {
-                                      setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
-                                    }}
                                     onDoubleClick={(e) => {
                                       e.stopPropagation();
                                       if (primaryUnit) startEdit(primaryUnit, e);
@@ -3602,6 +3825,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                         y: Math.max(10, y),
                                         element: el,
                                         unit: primaryUnit || null,
+                                        unitIndex: 0,
+                                        elementUnits: elementUnits,
                                         selectedPhrase: sel && sel.length > 0 ? sel : undefined,
                                       });
                                     }}
@@ -3624,7 +3849,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                       boxSizing: "border-box",
                                       minHeight: cellHeightPx ? `${cellHeightPx}px` : undefined,
                                     }}
-                                    className={`transition-all duration-150 ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-none relative ${
+                                    className={`group/cell transition-colors duration-150 ${isAreaSelectMode ? "cursor-crosshair" : "cursor-pointer"} select-none relative ${
                                       isMultiSelected
                                         ? "ring-[2.5px] ring-indigo-600 dark:ring-indigo-400 shadow-[0_0_0_1px_rgba(79,70,229,0.9),0_4px_16px_rgba(79,70,229,0.3)] z-20"
                                         : isChecked
@@ -3637,38 +3862,39 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                         ? "ring-2 ring-rose-500 shadow-xs animate-pulse"
                                         : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                                     }`}
-                                    title={`${el.shapeName || "Ô dữ liệu"} • Nhấp để chọn dịch • Nhấp đúp để sửa`}
+                                    title={`${el.shapeName || "Ô dữ liệu"}${
+                                      isPartiallyChecked
+                                        ? ` • Đang chọn dịch ${elementUnits.filter((u) => selectedUnitIds.has(u.id)).length}/${elementUnits.length} dòng`
+                                        : ""
+                                    } • Nhấp chuột trái để chọn • Chuột giữa để hủy ô dịch • Nhấp đúp để sửa`}
                                   >
-                                    {/* Real-time Hover Font Size Badge */}
-                                    {hoveredCell?.element.id === el.id && (
-                                      <div className="absolute top-0.5 right-0.5 pointer-events-none z-20 flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md animate-in fade-in zoom-in-95 duration-100">
-                                        <span className="text-sky-300">{effectiveFontSizePt ?? 11}pt</span>
-                                        <span className="text-[8px] text-slate-400 font-sans font-normal border-l border-slate-700 pl-1 hidden sm:inline">Alt+Cuộn</span>
-                                      </div>
-                                    )}
-                                    {/* UX Improvement 4: Auto Overflow Warning Indicator */}
-                                    {canvasFit.isOverflowing && hoveredCell?.element.id !== el.id && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleAutoFitText(el, cellTextContent);
-                                        }}
-                                        className="absolute top-0.5 right-0.5 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/95 hover:bg-amber-600 text-white text-[8px] font-bold shadow-md cursor-pointer transition-transform hover:scale-105 select-none"
-                                        title="Chữ có dấu hiệu tràn ô • Bấm để tự động co chữ (Auto-Fit)"
-                                      >
-                                        <AlertTriangle className="w-2.5 h-2.5" />
-                                        <span>Tràn</span>
-                                      </button>
-                                    )}
-                                    {isPartiallyChecked && (
-                                      <div className="absolute top-0.5 right-1 pointer-events-none z-10 flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 text-[8px] font-bold shadow-2xs backdrop-blur-xs select-none">
-                                        <Sparkles className="w-2.5 h-2.5 text-amber-500" />
-                                        <span>
-                                          Chỉ dịch {elementUnits.map((u, i) => selectedUnitIds.has(u.id) ? `D${i + 1}` : null).filter(Boolean).join(", ")}/{elementUnits.length}
-                                        </span>
-                                      </div>
-                                    )}
+                                    {/* Real-time Hover Font Size Badge via zero-lag GPU CSS group-hover */}
+                                    <div className="hidden group-hover/cell:flex absolute top-0.5 right-0.5 pointer-events-none z-20 items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md">
+                                      <span className="text-sky-300">{effectiveFontSizePt ?? 11}pt</span>
+                                      <span className="text-[8px] text-slate-400 font-sans font-normal border-l border-slate-700 pl-1 hidden sm:inline">Alt+Cuộn</span>
+                                    </div>
+                                    {/* Warning Button Container (Only when overflowing) */}
+                                    {canvasFit.isOverflowing && (() => {
+                                      const isSmallCell = (el.box?.height && el.box.height <= 34) || (el.box?.width && el.box.width <= 95) || cellTextContent.trim().length <= 15;
+                                      return (
+                                        <div className="absolute top-0.5 right-0.5 z-20 flex items-center gap-1 pointer-events-auto">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleAutoFitText(el, cellTextContent);
+                                            }}
+                                            className={`group-hover/cell:hidden flex items-center gap-0.5 rounded bg-amber-500/95 hover:bg-amber-600 text-white text-[8px] font-bold shadow-md cursor-pointer transition-transform hover:scale-105 select-none shrink-0 ${
+                                              isSmallCell ? "p-1" : "px-1.5 py-0.5"
+                                            }`}
+                                            title="Chữ có dấu hiệu tràn ô • Bấm để tự động co chữ (Auto-Fit)"
+                                          >
+                                            <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+                                            {!isSmallCell && <span>Tràn</span>}
+                                          </button>
+                                        </div>
+                                      );
+                                    })()}
                                     <div
                                       style={{
                                         fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined,
@@ -3984,6 +4210,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     key={el.id}
                     data-element-id={el.id}
                     onMouseDown={(e) => handleElementMouseDown(e, el, sheetWidth, sheetHeight)}
+                    onAuxClick={(e) => {
+                      if (e.button === 1) {
+                        handleMiddleClickElement(e, elementUnits);
+                      }
+                    }}
                     onClick={(e) => {
                       if (justFinishedDraggingRef.current || isAreaSelectMode) {
                         e.stopPropagation();
@@ -4018,16 +4249,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                         }
                       }
                     }}
-                    onMouseEnter={() => {
-                      setLastActiveElementId(el.id);
-                      setHoveredCell({
-                        element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
-                        units: elementUnits,
-                      });
-                    }}
-                    onMouseLeave={() => {
-                      setHoveredCell((prev) => (prev?.element.id === el.id ? null : prev));
-                    }}
                     onDoubleClick={(e) => {
                       if (justFinishedDraggingRef.current) return;
                       e.stopPropagation();
@@ -4046,6 +4267,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                         y: Math.max(10, y),
                         element: { ...el, box: { ...el.box, left: pos.left, top: pos.top, width: size.width, height: size.height } },
                         unit: primaryUnit || null,
+                        unitIndex: 0,
+                        elementUnits: elementUnits,
                         selectedPhrase: sel && sel.length > 0 ? sel : undefined,
                       });
                     }}
@@ -4102,7 +4325,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                         ? "ring-2 ring-rose-500 shadow-md animate-pulse"
                         : "hover:ring-1 hover:ring-sky-400/70"
                     }`}
-                    title={`${el.shapeName || "Phần tử"} • Kéo để di chuyển • 8 neo để co giãn • Nhấp đúp để sửa`}
+                    title={`${el.shapeName || "Phần tử"}${
+                      isPartiallyChecked
+                        ? ` • Đang chọn dịch ${elementUnits.filter((u) => selectedUnitIds.has(u.id)).length}/${elementUnits.length} dòng`
+                        : ""
+                    } • Kéo để di chuyển • Chuột giữa để hủy ô dịch • 8 neo để co giãn • Nhấp đúp để sửa`}
                   >
                     {isDragging && (
                       <div className="absolute -top-6 left-0 bg-slate-900/95 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-50 flex items-center gap-1 border border-slate-700 whitespace-nowrap animate-in fade-in duration-100">
@@ -4130,37 +4357,36 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       </div>
                     )}
 
-                    {/* Real-time Hover Font Size Badge */}
-                    {hoveredCell?.element.id === el.id && !isDragging && (
-                      <div className="absolute top-0.5 right-0.5 pointer-events-none z-20 flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md animate-in fade-in zoom-in-95 duration-100">
+                    {/* Real-time Hover Font Size Badge via zero-lag GPU CSS group-hover */}
+                    {!isDragging && (
+                      <div className="hidden group-hover:flex absolute top-0.5 right-0.5 pointer-events-none z-20 items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 text-white border border-sky-400/60 text-[9px] font-mono font-bold shadow-md">
                         <span className="text-sky-300">{effectiveFontSizePt ?? 11}pt</span>
                         <span className="text-[8px] text-slate-400 font-sans font-normal border-l border-slate-700 pl-1 hidden sm:inline">Alt+Cuộn</span>
                       </div>
                     )}
 
-                    {/* UX Improvement 4: Auto Overflow Warning Indicator */}
-                    {canvasFit.isOverflowing && hoveredCell?.element.id !== el.id && !isDragging && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAutoFitText(el, shapeFullText);
-                        }}
-                        className="absolute top-0.5 right-0.5 z-20 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/95 hover:bg-amber-600 text-white text-[8px] font-bold shadow-md cursor-pointer transition-transform hover:scale-105 select-none"
-                        title="Chữ có dấu hiệu tràn khung • Bấm để tự động co chữ (Auto-Fit)"
-                      >
-                        <AlertTriangle className="w-2.5 h-2.5" />
-                        <span>Tràn</span>
-                      </button>
-                    )}
-                    {isPartiallyChecked && (
-                      <div className="absolute top-0.5 right-1 pointer-events-none z-10 flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/40 text-[8px] font-bold shadow-2xs backdrop-blur-xs select-none">
-                        <Sparkles className="w-2.5 h-2.5 text-amber-500" />
-                        <span>
-                          Chỉ dịch {elementUnits.map((u, i) => selectedUnitIds.has(u.id) ? `D${i + 1}` : null).filter(Boolean).join(", ")}/{elementUnits.length}
-                        </span>
-                      </div>
-                    )}
+                    {/* Warning Button Container (Only when overflowing) */}
+                    {!isDragging && canvasFit.isOverflowing && (() => {
+                      const isSmallShape = (el.box?.height && el.box.height <= 34) || (el.box?.width && el.box.width <= 95) || shapeFullText.trim().length <= 15;
+                      return (
+                        <div className="absolute top-0.5 right-0.5 z-20 flex items-center gap-1 pointer-events-auto">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAutoFitText(el, shapeFullText);
+                            }}
+                            className={`group-hover:hidden flex items-center gap-0.5 rounded bg-amber-500/95 hover:bg-amber-600 text-white text-[8px] font-bold shadow-md cursor-pointer transition-transform hover:scale-105 select-none shrink-0 ${
+                              isSmallShape ? "p-1" : "px-1.5 py-0.5"
+                            }`}
+                            title="Chữ có dấu hiệu tràn khung • Bấm để tự động co chữ (Auto-Fit)"
+                          >
+                            <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+                            {!isSmallShape && <span>Tràn</span>}
+                          </button>
+                        </div>
+                      );
+                    })()}
 
                     <div
                       style={{
@@ -4288,15 +4514,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 </div>
               ) : activeFocusElement ? (
                 <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline-flex items-center gap-1 ${
-                    hoveredCell?.element.id === activeFocusElement.id
-                      ? "text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/70 border border-sky-300 dark:border-sky-800"
-                      : "text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-300 dark:border-indigo-800"
-                  }`}
-                  title={hoveredCell?.element.id === activeFocusElement.id ? "Đang trỏ chuột vào ô này" : "Đã chọn ô này"}
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline-flex items-center gap-1 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-300 dark:border-indigo-800"
+                  title="Đã chọn ô này"
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${hoveredCell?.element.id === activeFocusElement.id ? "bg-sky-500 animate-pulse" : "bg-indigo-500"}`} />
-                  <span>{hoveredCell?.element.id === activeFocusElement.id ? "Đang trỏ ô" : "Đã chọn ô"}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                  <span>Đã chọn ô</span>
                 </span>
               ) : (
                 <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded shadow-2xs shrink-0 select-none hidden lg:inline-flex items-center gap-1">
@@ -4711,6 +4933,44 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                       </button>
                     )}
 
+                    {/* Gộp dòng ở trên hoặc ở dưới trực tiếp trên thanh công cụ */}
+                    {(() => {
+                      const activeToolbarLineIdx = activeFocusUnits.findIndex((u) => u.id === editingUnitId || selectedUnitIds.has(u.id));
+                      const safeToolbarLineIdx = activeToolbarLineIdx >= 0 ? activeToolbarLineIdx : 0;
+                      return (
+                        <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 rounded-md p-0.5 border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => handleMergeLine("up", activeFocusUnits[safeToolbarLineIdx], safeToolbarLineIdx, activeFocusUnits)}
+                            disabled={safeToolbarLineIdx <= 0}
+                            className="px-1.5 py-0.5 rounded text-[9.5px] font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-0.5"
+                            title={
+                              safeToolbarLineIdx > 0
+                                ? `Gộp dòng D${safeToolbarLineIdx + 1} với dòng D${safeToolbarLineIdx} ở trên`
+                                : "Gộp dòng ở trên (Hãy chọn từ dòng D2 trở đi)"
+                            }
+                          >
+                            <ArrowUp className="w-2.5 h-2.5 text-indigo-500" />
+                            <span>Gộp trên</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMergeLine("down", activeFocusUnits[safeToolbarLineIdx], safeToolbarLineIdx, activeFocusUnits)}
+                            disabled={safeToolbarLineIdx >= activeFocusUnits.length - 1}
+                            className="px-1.5 py-0.5 rounded text-[9.5px] font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center gap-0.5"
+                            title={
+                              safeToolbarLineIdx < activeFocusUnits.length - 1
+                                ? `Gộp dòng D${safeToolbarLineIdx + 1} với dòng D${safeToolbarLineIdx + 2} ở dưới`
+                                : "Gộp dòng ở dưới (Dòng cuối cùng không thể gộp xuống)"
+                            }
+                          >
+                            <ArrowDown className="w-2.5 h-2.5 text-indigo-500" />
+                            <span>Gộp dưới</span>
+                          </button>
+                        </div>
+                      );
+                    })()}
+
                     {/* Danh sách các nút D1..Dn: Dàn trải toàn diện, không còn bị cắt xén che mất */}
                     <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-0.5 flex-1 min-w-0">
                       {activeFocusUnits.map((u, idx) => {
@@ -4730,14 +4990,25 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                               onDoubleClick={(e) => startEdit(u, e)}
                               onContextMenu={(e) => {
                                 e.preventDefault();
-                                startEdit(u, e);
+                                e.stopPropagation();
+                                const x = Math.min(e.clientX, window.innerWidth - 350);
+                                const y = Math.min(e.clientY, window.innerHeight - 440);
+                                setSelectedElementId(activeFocusElement.id);
+                                setContextMenu({
+                                  x: Math.max(10, x),
+                                  y: Math.max(10, y),
+                                  element: activeFocusElement,
+                                  unit: u,
+                                  unitIndex: idx,
+                                  elementUnits: activeFocusUnits,
+                                });
                               }}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all flex items-center gap-0.5 shrink-0 whitespace-nowrap ${
                                 isSelected
                                   ? "bg-amber-500 text-white shadow-xs scale-105 ring-1 ring-amber-600"
                                   : "bg-white dark:bg-slate-700 hover:bg-amber-100 dark:hover:bg-amber-950/60 hover:text-amber-800 text-slate-700 dark:text-slate-200 shadow-2xs"
                               }`}
-                              title={`Dòng ${idx + 1}: ${isSelected ? "Đang chọn dịch (Bấm để bỏ chọn)" : "Chưa chọn (Bấm để chọn)"} • "${u.sourceText.slice(0, 40)}..." (Giữ Alt để chỉ chọn dòng này • Chuột phải / Nhấp đúp để sửa chữ)`}
+                              title={`Dòng ${idx + 1}: ${isSelected ? "Đang chọn dịch (Bấm để bỏ chọn)" : "Chưa chọn (Bấm để chọn)"} • "${u.sourceText.slice(0, 40)}..." (Giữ Alt để chỉ chọn dòng này • Chuột phải để gộp dòng / xem tùy chọn • Nhấp đúp để sửa)`}
                             >
                               {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                               <span>D{idx + 1}</span>
@@ -4751,12 +5022,27 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                             key={`edit_line_${u.id}`}
                             type="button"
                             onClick={(e) => startEdit(u, e)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const x = Math.min(e.clientX, window.innerWidth - 350);
+                              const y = Math.min(e.clientY, window.innerHeight - 440);
+                              setSelectedElementId(activeFocusElement.id);
+                              setContextMenu({
+                                x: Math.max(10, x),
+                                y: Math.max(10, y),
+                                element: activeFocusElement,
+                                unit: u,
+                                unitIndex: idx,
+                                elementUnits: activeFocusUnits,
+                              });
+                            }}
                             className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all shrink-0 whitespace-nowrap ${
                               editingUnitId === u.id
                                 ? "bg-sky-600 text-white shadow-xs scale-105"
                                 : "bg-white dark:bg-slate-700 hover:bg-sky-500 hover:text-white text-slate-700 dark:text-slate-200 shadow-2xs"
                             }`}
-                            title={`Sửa dòng ${idx + 1}: "${u.sourceText.slice(0, 35)}..."`}
+                            title={`Sửa dòng ${idx + 1}: "${u.sourceText.slice(0, 35)}..." (Chuột phải để gộp dòng)`}
                           >
                             D{idx + 1}
                           </button>
@@ -4781,7 +5067,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               ) : (
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 italic hidden 2xl:inline-flex items-center gap-1 pl-1 font-normal select-none">
                   <MousePointerClick className="w-3 h-3 text-slate-400" />
-                  <span>Rê chuột vào ô bất kỳ để xem & đổi font size (Alt + Lăn chuột)</span>
+                  <span>Bấm chọn ô để đổi font size (Alt + Lăn chuột)</span>
                 </span>
               )}
             </div>
@@ -4938,18 +5224,6 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     title="Focus Tiêu Điểm: Làm mờ ô đã dịch, chỉ sáng ô cần dịch (Phím F)"
                   >
                     <Focus className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowHoverInspector((prev) => !prev)}
-                    className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                      showHoverInspector
-                        ? "bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300"
-                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    }`}
-                    title="Kính lúp xem nhanh chi tiết ô khi rê chuột (Phím I)"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
                   </button>
                   <button
                     type="button"
@@ -5254,6 +5528,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             style={{
               transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
               transition: isPanningRef.current ? "none" : "transform 0.05s ease-out",
+              willChange: "transform",
             }}
           >
             <div className="flex items-start justify-center gap-3 shrink-0">
@@ -5283,8 +5558,9 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               style={{
                 transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
                 transition: isPanningRef.current ? "none" : "transform 0.05s ease-out",
+                willChange: "transform",
               }}
-              className="animate-in fade-in zoom-in-[0.99] duration-150 transition-all flex flex-col items-center shrink-0 shadow-2xl rounded-lg"
+              className="animate-in fade-in zoom-in-[0.99] duration-150 flex flex-col items-center shrink-0 shadow-2xl rounded-lg"
             >
               {/* UX Improvement 5: Visual Before-After Split Comparison Slider */}
               {isSplitCompareActive ? (
@@ -5359,149 +5635,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
           </div>
         )}
 
-        {/* ================================================================== */}
-        {/* FLOATING QUICK INSPECTOR MAGNIFIER (KÍNH LÚP XEM NHANH CHI TIẾT Ô) */}
-        {/* ================================================================== */}
-        {showHoverInspector && activeInspector && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-3 right-3 max-w-sm sm:max-w-md w-full bg-slate-900/95 dark:bg-slate-900/98 backdrop-blur-md border border-slate-700/80 rounded-2xl p-3 shadow-2xl text-white z-40 animate-in fade-in slide-in-from-bottom-2 duration-150 space-y-2 pointer-events-auto"
-          >
-            {/* Inspector Header */}
-            <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
-              <div className="flex items-center gap-1.5 text-sky-400 font-bold text-xs">
-                <Eye className="w-3.5 h-3.5 text-sky-400" />
-                <span>Kính lúp chi tiết</span>
-                <span className="text-[10px] text-slate-400 font-mono font-normal">
-                  ({activeInspector.element.shapeName || "Ô dữ liệu"})
-                </span>
-                <span className="text-[10px] text-sky-300 font-mono font-bold bg-sky-950/80 border border-sky-800/80 px-1.5 py-0.5 rounded shadow-2xs">
-                  {canvasState.styles[activeInspector.element.id]?.fontSizePt ?? activeInspector.element.fontSizePt ?? 11}pt
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                {activeInspector.units.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const allChecked = activeInspector.units.every((u) => selectedUnitIds.has(u.id));
-                      for (const u of activeInspector.units) {
-                        if (!allChecked && !selectedUnitIds.has(u.id)) onToggleUnit(u.id);
-                        else if (allChecked && selectedUnitIds.has(u.id)) onToggleUnit(u.id);
-                      }
-                    }}
-                    className="px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-semibold flex items-center gap-1 cursor-pointer"
-                  >
-                    {activeInspector.units.every((u) => selectedUnitIds.has(u.id)) ? (
-                      <>
-                        <CheckSquare className="w-3 h-3 text-sky-400" />
-                        <span>Đã chọn</span>
-                      </>
-                    ) : (
-                      <>
-                        <Square className="w-3 h-3 text-slate-400" />
-                        <span>Chọn dịch</span>
-                      </>
-                    )}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowHoverInspector(false)}
-                  className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 cursor-pointer transition-colors"
-                  title="Ẩn kính lúp (Phím I)"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
 
-            {/* Inspector Content */}
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
-              {activeInspector.units.length > 0 ? (
-                activeInspector.units.map((u, i) => {
-                  const trans = getTranslationText(u);
-                  return (
-                    <div key={u.id} className="space-y-1 bg-slate-950/70 p-2 rounded-xl border border-slate-800/80">
-                      {activeInspector.units.length > 1 && (
-                        <div className="text-[9px] font-mono text-slate-500 uppercase tracking-wider">
-                          Đoạn #{i + 1}
-                        </div>
-                      )}
-                      {/* Vietnamese Source */}
-                      <div>
-                        <div className="text-[9px] font-semibold text-rose-400 uppercase tracking-wider mb-0.5 flex items-center justify-between">
-                          <span>Tiếng Việt (Nguồn):</span>
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopyText(u.sourceText, `${u.id}_vi`, e)}
-                            className="text-slate-400 hover:text-slate-200 flex items-center gap-0.5 font-normal text-[9px] cursor-pointer"
-                          >
-                            <Copy className="w-2.5 h-2.5" />
-                            <span>{copiedUnitId === `${u.id}_vi` ? "Đã chép" : "Chép"}</span>
-                          </button>
-                        </div>
-                        <div className="text-xs text-slate-100 font-medium leading-relaxed select-text">
-                          {u.sourceText}
-                        </div>
-                      </div>
-
-                      {/* English Translation */}
-                      <div className="pt-1 border-t border-slate-800/60">
-                        <div className="text-[9px] font-semibold text-sky-400 uppercase tracking-wider mb-0.5 flex items-center justify-between">
-                          <span>Tiếng Anh (Bản dịch):</span>
-                          {trans && (
-                            <button
-                              type="button"
-                              onClick={(e) => handleCopyText(trans, `${u.id}_en`, e)}
-                              className="text-slate-400 hover:text-slate-200 flex items-center gap-0.5 font-normal text-[9px] cursor-pointer"
-                            >
-                              <Copy className="w-2.5 h-2.5" />
-                              <span>{copiedUnitId === `${u.id}_en` ? "Đã chép" : "Chép"}</span>
-                            </button>
-                          )}
-                        </div>
-                        <div className="text-xs font-semibold leading-relaxed select-text">
-                          {trans ? (
-                            <span className="text-emerald-300">{trans}</span>
-                          ) : (
-                            <span className="text-amber-400/90 italic font-normal">(Chưa có bản dịch - Nhấp chuột phải để dịch AI)</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : activeInspector.element.text ? (
-                <div className="bg-slate-950/70 p-2 rounded-xl border border-slate-800/80">
-                  <div className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
-                    Nội dung văn bản:
-                  </div>
-                  <div className="text-xs text-slate-200 select-text leading-relaxed">
-                    {activeInspector.element.text}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-xs text-slate-400 italic">Không có nội dung văn bản</div>
-              )}
-            </div>
-
-            {/* Quick action bar */}
-            <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px] text-slate-400">
-              <span className="font-mono text-[9px]">Rê chuột để đổi ô • Phím I: Ẩn/Hiện</span>
-              {activeInspector.units.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => startEdit(activeInspector.units[0])}
-                  className="text-sky-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
-                >
-                  <Pencil className="w-3 h-3" />
-                  <span>Sửa nhanh</span>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* ================================================================== */}
         {/* POWERPOINT-STYLE RIGHT-CLICK CONTEXT MENU (AT CURSOR POSITION)      */}
@@ -5824,6 +5958,69 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                   <span className="text-[10px] text-slate-400 font-mono">F2</span>
                 </button>
               )}
+
+              {/* Gộp dòng ở trên hoặc ở dưới (Line Merge) */}
+              {(() => {
+                const units = (contextMenu.elementUnits && contextMenu.elementUnits.length > 0)
+                  ? contextMenu.elementUnits
+                  : (contextMenu.element?.unitIds && contextMenu.element.unitIds.length > 0)
+                  ? contextMenu.element.unitIds.map((id) => unitById.get(id)).filter((u): u is ScannedTextUnit => Boolean(u))
+                  : [];
+                if (units.length <= 1) return null;
+
+                const targetIdx = contextMenu.unitIndex !== undefined
+                  ? contextMenu.unitIndex
+                  : contextMenu.unit
+                  ? units.findIndex((u) => u.id === contextMenu.unit?.id)
+                  : 0;
+
+                const canMergeUp = targetIdx > 0;
+                const canMergeDown = targetIdx >= 0 && targetIdx < units.length - 1;
+
+                return (
+                  <>
+                    <button
+                      type="button"
+                      disabled={!canMergeUp}
+                      onClick={() => {
+                        handleMergeLine("up", contextMenu.unit, targetIdx, units);
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 transition-colors ${
+                        canMergeUp
+                          ? "hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
+                          : "opacity-40 cursor-not-allowed"
+                      }`}
+                      title={canMergeUp ? `Gộp dòng D${targetIdx + 1} vào dòng D${targetIdx} ở trên` : "Dòng đầu tiên, không có dòng ở trên để gộp"}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ArrowUp className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Gộp dòng ở trên</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">D{targetIdx + 1} ↑ D{targetIdx}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!canMergeDown}
+                      onClick={() => {
+                        handleMergeLine("down", contextMenu.unit, targetIdx, units);
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-slate-700 dark:text-slate-200 transition-colors ${
+                        canMergeDown
+                          ? "hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
+                          : "opacity-40 cursor-not-allowed"
+                      }`}
+                      title={canMergeDown ? `Gộp dòng D${targetIdx + 2} ở dưới vào dòng D${targetIdx + 1}` : "Dòng cuối cùng, không có dòng ở dưới để gộp"}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ArrowDown className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Gộp dòng ở dưới</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">D{targetIdx + 1} ↓ D{targetIdx + 2}</span>
+                    </button>
+                  </>
+                );
+              })()}
 
               {/* Glossary dictionary */}
               {onOpenGlossary && (

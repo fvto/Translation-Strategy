@@ -13,6 +13,7 @@ import { recordTranslationSession } from "@/services/translation/translation-mem
 import { applyPptxAuditSuggestions } from "@/services/translation/pptx-smart-audit";
 import { harvestTerminologyFromSlides } from "@/services/translation/harvester";
 import { auditPptxGaps, runAiDeepAudit } from "@/services/translation/smart-detector";
+import { auditAndRepairPptxPostFlight } from "@/services/qa/pptx-postflight-gate";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -155,7 +156,19 @@ export async function POST(req: NextRequest) {
       }
       try {
         const expectedSuggestions = JSON.parse(String(formData.get("auditPreview") || "null"));
-        if (!Array.isArray(expectedSuggestions) || expectedSuggestions.length !== new Set(selectedUnitIds).size || expectedSuggestions.some((u) => !u || typeof u.id !== "string" || typeof u.sourceText !== "string" || typeof u.suggestedTranslation !== "string")) {
+        const selectedIdSet = new Set(selectedUnitIds);
+        if (
+          !Array.isArray(expectedSuggestions) ||
+          expectedSuggestions.length !== selectedIdSet.size ||
+          expectedSuggestions.some(
+            (u) =>
+              !u ||
+              typeof u.id !== "string" ||
+              !selectedIdSet.has(u.id) ||
+              typeof u.sourceText !== "string" ||
+              typeof u.suggestedTranslation !== "string"
+          )
+        ) {
           return NextResponse.json({ error: "Thiếu nội dung xem trước. Hãy quét lại." }, { status: 400 });
         }
 
@@ -181,15 +194,27 @@ export async function POST(req: NextRequest) {
           slideViHandling,
         });
 
-        return new Response(translationResult.translatedBuffer as any, {
+        // Truthful Postflight QA verification
+        const postFlight = await auditAndRepairPptxPostFlight(
+          translationResult.translatedBuffer,
+          mode,
+          targetLanguage
+        );
+        const unhandledSlides = [...new Set(postFlight.untranslatedRemaining?.map((u: { slide: string; text: string }) => u.slide) || [])];
+
+        const outputFileName = file.name.replace(/\.pptx$/i, "-audited.pptx");
+        const asciiFallback = outputFileName.replace(/[^\x20-\x7E]/g, "_").replace(/"/g, '\\"');
+        const utf8Encoded = encodeURIComponent(outputFileName).replace(/['()]/g, escape).replace(/\*/g, "%2A");
+
+        return new Response(postFlight.auditedBuffer as any, {
           headers: {
             "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "X-Audit-Applied-Count": String(selectedUnitIds.length),
-            "X-Audit-Unhandled-Count": "0",
-            "X-Audit-Unhandled-Slides": JSON.stringify([]),
-            "X-Postflight-Passed": "true",
+            "X-Audit-Unhandled-Count": String(postFlight.untranslatedRemaining?.length || 0),
+            "X-Audit-Unhandled-Slides": JSON.stringify(unhandledSlides),
+            "X-Postflight-Passed": String(postFlight.passed),
             "Access-Control-Expose-Headers": "X-Audit-Applied-Count, X-Audit-Unhandled-Count, X-Audit-Unhandled-Slides, X-Postflight-Passed",
-            "Content-Disposition": `attachment; filename="${encodeURIComponent(file.name.replace(/\.pptx$/i, "-audited.pptx"))}"`,
+            "Content-Disposition": `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8Encoded}`,
           },
         });
       } catch (error: any) {

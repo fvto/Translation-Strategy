@@ -111,7 +111,18 @@ export function replaceParagraphTranslation(xml: string, target: string, sourceT
       const text = selected && firstText ? lines[0] : ""; firstText = false;
       return open + text + close;
     });
-    if (selected && partialBold) {
+    const isStarHeading = /^\s*\*[\w\/\s&-]+:?/u.test(target) || /^\s*\*[\w\/\s&-]+:?/u.test(sourceText || paragraphText(xml));
+    if (selected && isStarHeading) {
+      // Production Rule #2: Technical process headings starting with '*' must strictly preserve bold (b="1")
+      if (/<a:rPr\b/.test(updated)) {
+        updated = updated.replace(/<a:rPr\b([^>]*?)(\/?>)/, (_,attrs,end) => {
+          const newAttrs = /\bb=["'][^"']*["']/.test(attrs) ? attrs.replace(/\bb=["'][^"']*["']/, 'b="1"') : `${attrs} b="1"`;
+          return `<a:rPr${newAttrs}${end}`;
+        });
+      } else {
+        updated = updated.replace(/(<a:r(?:\s[^>]*)?>)/, '$1<a:rPr b="1"/>');
+      }
+    } else if (selected && partialBold) {
       if (/<a:rPr\b/.test(updated)) updated = updated.replace(/<a:rPr\b([^>]*?)(\/?>)/, (_,attrs,end) => `<a:rPr${attrs.replace(/\s+b=["'][^"']*["']/g, "")} b="0"${end}`);
       else updated = updated.replace(/(<a:r(?:\s[^>]*)?>)/, '$1<a:rPr b="0"/>');
     }

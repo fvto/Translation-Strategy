@@ -38,6 +38,10 @@ data/secure_storage/*
 *.sqlite-wal
 *.sqlite-shm
 data/*.sqlite*
+*.db
+*.db-wal
+*.db-shm
+data/*.db*
 
 # temporary scratch artifacts
 scratch/

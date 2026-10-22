@@ -33,7 +33,15 @@ export function cleanTargetTerm(term: string): string {
   // 2. Strip any Vietnamese parenthetical notes: "(sd cho định vị)", "(trong tiêu chuẩn)", etc.
   t = t.replace(/\s*\([^)]*[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ][^)]*\)/gi, "").trim();
 
-  // 3. If multiple slash variants remain (e.g. "flashing/edge/material edge")
+  // 3. Protect technical measurement units with slashes (e.g. stitches/inch, m/s) from multi-choice splitting
+  const unitLocks: string[] = [];
+  t = t.replace(/\b(?:stitches|stitch|mũi)\s*\/\s*inch\b/gi, (match) => {
+    const lock = `___UNIT_LOCK_${unitLocks.length}___`;
+    unitLocks.push(match);
+    return lock;
+  });
+
+  // 4. If multiple slash variants remain (e.g. "flashing/edge/material edge")
   if (t.includes("/")) {
     const parts = t.split("/").map((p) => p.trim()).filter(Boolean);
     // Prefer the most descriptive phrase (contains space) or the last clean variant
@@ -41,10 +49,18 @@ export function cleanTargetTerm(term: string): string {
     t = compound || parts[0];
   }
 
-  // 4. Standardize compound defect hyphenation
+  // Restore protected measurement units
+  for (let i = 0; i < unitLocks.length; i++) {
+    t = t.replace(`___UNIT_LOCK_${i}___`, unitLocks[i]);
+  }
+
+  // 5. Standardize compound defect hyphenation
   if (/^run[\s-]off\s+stitching$/i.test(t)) {
     return "run-off stitching";
   }
+
+  // 6. Enforce Production Rule #3 hyphenation on glossary target terms
+  t = normalizeFootwearHyphenation(t);
 
   return t;
 }
@@ -158,7 +174,14 @@ export function normalizeSpiTerminology(text: string): string {
 
   // 3. Vietnamese stitch units:
   // '9-10 mũi/inch', '10-12 mũi/inch', '9-10 mũi' (range with mũi) -> 'SPI 9-10 stitches/inch'
-  res = res.replace(/\b(\d+(?:[.,]\d+)?\s*-\s*\d+(?:[.,]\d+)?)\s*mũi(?:\s*\/\s*inch)?\b/giu, "SPI $1 stitches/inch");
+  // GUARD: Do NOT convert backstitching counts (e.g. "lùi mũi 2-3 mũi", "lại mũi 2-3 mũi", "khóa 2-3 mũi") into SPI!
+  res = res.replace(/\b(\d+(?:[.,]\d+)?\s*-\s*\d+(?:[.,]\d+)?)\s*mũi(?:\s*\/\s*inch)?\b/giu, (match, range, offset, fullStr) => {
+    const before = fullStr.slice(Math.max(0, offset - 25), offset).toLowerCase();
+    if (/(?:lùi|lại|khóa)\s*(?:mũi\s*)?$/i.test(before)) {
+      return match;
+    }
+    return `SPI ${range} stitches/inch`;
+  });
   res = res.replace(/\b(\d+(?:[.,]\d+)?)\s*mũi\s*\/\s*inch\b/giu, "SPI $1 stitches/inch");
 
   // 4. Any combination of SPI and/or stitches/inch around a range or count:
@@ -197,6 +220,30 @@ export function normalizeSpiTerminology(text: string): string {
 }
 
 /**
+ * Normalizes footwear manufacturing terminology hyphenation according to Production Rule #3:
+ * - Always write "No-sew" or "no-sew" with a hyphen. NEVER "Nosew" or "nosew".
+ * - Always write "Tip-quarter" or "tip-quarter" with a hyphen. NEVER "Tipquarter" or "Tip quarter".
+ */
+export function normalizeFootwearHyphenation(text: string): string {
+  if (!text) return "";
+  let res = text;
+  // Rule 3: No-sew
+  res = res.replace(/\bNosew\b/g, "No-sew");
+  res = res.replace(/\bnosew\b/g, "no-sew");
+  res = res.replace(/\bNOSEW\b/g, "NO-SEW");
+
+  // Rule 3: Tip-quarter
+  res = res.replace(/\bTipquarter\b/g, "Tip-quarter");
+  res = res.replace(/\btipquarter\b/g, "tip-quarter");
+  res = res.replace(/\bTIPQUARTER\b/g, "TIP-QUARTER");
+  res = res.replace(/\bTip\s+quarter\b/g, "Tip-quarter");
+  res = res.replace(/\btip\s+quarter\b/g, "tip-quarter");
+  res = res.replace(/\bTIP\s+QUARTER\b/g, "TIP-QUARTER");
+
+  return res;
+}
+
+/**
  * Normalizes inverted CTQ noun phrases to standard English noun phrase order:
  * [Component] shape (e.g. "Shape tip" -> "Tip shape", "Shape toe" -> "Toe shape", "Shape collar" -> "Collar shape", "Shape heel" -> "Heel shape")
  */
@@ -228,7 +275,10 @@ export function formatUppercaseStructure(text: string): string {
   // 3. Normalize inverted CTQ noun phrases (Shape tip -> Tip shape, Shape toe -> Toe shape)
   res = normalizeInvertedNounPhrases(res);
 
-  // 4. Capitalize after sentence-ending punctuation (. ! ?)
+  // 4. Normalize footwear hyphenation (No-sew, Tip-quarter per Production Rule #3)
+  res = normalizeFootwearHyphenation(res);
+
+  // 5. Capitalize after sentence-ending punctuation (. ! ?)
   res = res.replace(/([.!?]\s+)([\p{Ll}])/gu, (m, p1, p2) => p1 + p2.toUpperCase());
 
   // 5. Capitalize start of lines, section titles (*Title:), and numbered items (1. Check, 2. Verify)

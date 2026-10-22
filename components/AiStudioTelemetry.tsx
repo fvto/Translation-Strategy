@@ -101,27 +101,38 @@ export const AiStudioTelemetry: React.FC<AiStudioTelemetryProps> = ({
               <span>Tốc độ gọi (RPM)</span>
             </span>
             <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-              ≤ {maxRpm} RPM
+              Ổn định: 9-10 | Ngưỡng: ≤ {metrics?.rpm.thresholdRpm ?? 12}
             </span>
           </div>
           <div className="flex items-baseline space-x-1.5">
             <span className="text-xl font-bold font-mono text-slate-900 dark:text-white">
               {currentRpm}
             </span>
-            <span className="text-xs text-slate-400 font-mono">/ {maxRpm} RPM</span>
+            <span className="text-xs text-slate-400 font-mono">
+              / {metrics?.rpm.thresholdRpm ?? 12} RPM (Ngưỡng an toàn)
+            </span>
           </div>
           <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                rpmPercent > 80 ? "bg-amber-500" : "bg-blue-500"
+                currentRpm >= (metrics?.rpm.thresholdRpm ?? 12)
+                  ? "bg-rose-500"
+                  : currentRpm >= 10
+                  ? "bg-amber-500"
+                  : "bg-blue-500"
               }`}
-              style={{ width: `${Math.max(8, rpmPercent)}%` }}
+              style={{
+                width: `${Math.max(
+                  8,
+                  Math.min(100, Math.round((currentRpm / (metrics?.rpm.thresholdRpm ?? 12)) * 100))
+                )}%`,
+              }}
             />
           </div>
           <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-            <span>Giãn cách:</span>
+            <span>Tốc độ ổn định:</span>
             <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
-              ≥ {((metrics?.rpm.minIntervalMs ?? 4500) / 1000).toFixed(1)}s / req
+              ~{((metrics?.rpm.safetyRateRpm ?? 9.7)).toFixed(1)} RPM (≥ {((metrics?.rpm.minIntervalMs ?? 6200) / 1000).toFixed(1)}s/req)
             </span>
           </div>
         </div>

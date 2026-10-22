@@ -55,12 +55,18 @@ export async function auditAndRepairPptxPostFlight(
   const zip = await JSZip.loadAsync(pptxBuffer);
   const isqPairs = await readIsqSlidePairs(zip);
   const isqEnPaths = new Set(isqPairs.map((p) => p.en));
+  const isqViPaths = new Set(isqPairs.map((p) => p.vi));
   const issues: PostFlightIssue[] = [];
   let repairedCount = 0;
   let totalSlidesAudited = 0;
 
   for (const [filename, file] of Object.entries(zip.files)) {
     if (!filename.startsWith("ppt/slides/slide") || !filename.endsWith(".xml")) continue;
+    // CRITICAL: Original Vietnamese reference slides in ISQ pairs must be preserved intact!
+    if (isqViPaths.has(filename)) {
+      totalSlidesAudited++;
+      continue;
+    }
     totalSlidesAudited++;
 
     let xml = await file.async("string");
@@ -96,6 +102,10 @@ export async function auditAndRepairPptxPostFlight(
 
     // 2. Audit and Auto-Repair Stitch Density & Domain Phrasing/Typos in <a:t>
     xml = xml.replace(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g, (tMatch, tContent) => {
+      // Preserve Vietnamese text runs intact (do NOT run English replacements or mangle Vietnamese backstitching)
+      if (hasViDiacritics(tContent)) {
+        return tMatch;
+      }
       let updated = tContent;
 
       // Normalize SPI
@@ -223,20 +233,48 @@ export async function auditAndRepairPptxPostFlight(
       }
 
       // Auto-Repair QA Tolerance sentence on Tip quarter uneven surface
+      const isTipQuarterTolerance =
+        /\bTip[- ]quarter\b/i.test(updated) ||
+        /\b(?:screen-printed|base\s+paint|chảy\s+sơn|in\s+sơn)\b/i.test(updated) ||
+        /\buneven\s+surface\b/i.test(updated);
+
       if (
-        /\bflat\s+does\s+not\s+accept\b/i.test(updated) ||
-        /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(updated) ||
-        /\baccept\s+the\s+quality\s+standard\s+level\b/i.test(updated) ||
-        (/\buneven\s+(?:surface\s+design\s+of\s+the\s+)?Tip[- ]quarter\b/i.test(updated) && !/\bquality\s+standard\s+are\s+acceptable\b/i.test(updated))
+        isTipQuarterTolerance &&
+        (/\bflat\s+does\s+not\s+accept\b/i.test(updated) ||
+          /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(updated) ||
+          /\baccept\s+the\s+quality\s+standard\s+level\b/i.test(updated) ||
+          (/\buneven\s+(?:surface\s+design\s+of\s+the\s+)?Tip[- ]quarter\b/i.test(updated) &&
+            !/\bquality\s+standard\s+are\s+acceptable\b/i.test(updated)))
       ) {
-        const fixed = "Due to the uneven surface design of the Tip quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual";
+        const fixed =
+          "Due to the uneven surface design of the Tip-quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after no-sew, as shown in the updated QA manual";
         if (fixed !== updated) {
           xmlModified = true;
           repairedCount++;
           issues.push({
             slide: filename,
             type: "typo_repair",
-            message: "Auto-repaired QA standard sentence to 'quality standard are acceptable'",
+            message: "Auto-repaired Tip-quarter QA standard sentence to 'quality standard are acceptable'",
+            targetText: fixed,
+            autoRepaired: true,
+          });
+          updated = fixed;
+        }
+      } else if (
+        /\bflat\s+does\s+not\s+accept\b/i.test(updated) ||
+        /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(updated)
+      ) {
+        // Generic tolerance inversion without overwriting unrelated component sentences
+        const fixed = updated
+          .replace(/\bflat\s+does\s+not\s+accept\b/gi, "quality standard are acceptable")
+          .replace(/\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/gi, "quality standard are acceptable");
+        if (fixed !== updated) {
+          xmlModified = true;
+          repairedCount++;
+          issues.push({
+            slide: filename,
+            type: "typo_repair",
+            message: "Auto-repaired inverted tolerance phrasing to 'quality standard are acceptable'",
             targetText: fixed,
             autoRepaired: true,
           });
@@ -320,23 +358,33 @@ export async function auditAndRepairPptxPostFlight(
       }
 
       if (updated !== tContent) {
-        return tMatch.replace(tContent, updated);
+        return tMatch.replace(tContent, () => updated);
       }
       return tMatch;
     });
 
     // 3. Audit for Lost Bold on Star Headings (*Heading)
     // Headings starting with '*' are standard industrial process titles and MUST be bold.
-    // Fix #5: Pattern tightened to require a real leading word so stray *1 or *- do NOT trigger bold injection.
+    // Supports Vietnamese diacritics using unicode property \p{L}\p{N}
     xml = xml.replace(/(<a:p\b[\s\S]*?<\/a:p>)/g, (pXml) => {
-      if (/\*[\w\/\s&-]+:?/u.test(pXml) && !/<a:rPr[^>]*\bb=["'](?:1|true)["']/.test(pXml)) {
+      if (/\*[\p{L}\p{N}\/\s&-]+:?/u.test(pXml) && !/<a:rPr[^>]*\bb=["'](?:1|true)["']/.test(pXml)) {
         // Headings must have b="1" on their text run
-        const repairedPXml = pXml.replace(/<a:rPr([^>]*)>/, (_m, attrs) => {
-          const newAttrs = /\bb=["'][^"']*["']/.test(attrs)
-            ? attrs.replace(/\bb=["'][^"']*["']/, 'b="1"')
-            : `${attrs} b="1"`;
-          return `<a:rPr${newAttrs}>`;
-        });
+        let repairedPXml = pXml;
+        if (/<a:rPr\b/.test(repairedPXml)) {
+          repairedPXml = repairedPXml.replace(/<a:rPr\b([^>]*?)(\/?>)/, (_m, rawAttrs, slash) => {
+            let attrs = rawAttrs.trimEnd();
+            const isSelfClosing = slash === "/>" || attrs.endsWith("/");
+            if (attrs.endsWith("/")) {
+              attrs = attrs.slice(0, -1).trimEnd();
+            }
+            const newAttrs = /\bb=["'][^"']*["']/.test(attrs)
+              ? attrs.replace(/\bb=["'][^"']*["']/, 'b="1"')
+              : `${attrs} b="1"`;
+            return `<a:rPr ${newAttrs.trim()}${isSelfClosing ? "/>" : ">"}`;
+          });
+        } else if (/<a:r(?:\s[^>]*)?>/.test(repairedPXml)) {
+          repairedPXml = repairedPXml.replace(/(<a:r(?:\s[^>]*)?>)/, '$1<a:rPr b="1"/>');
+        }
         if (repairedPXml !== pXml) {
           xmlModified = true;
           repairedCount++;
@@ -416,8 +464,16 @@ export async function auditAndRepairPptxPostFlight(
     if ((mode === "replace_en" || isqEnPaths.has(filename)) && targetLanguage.toLowerCase().startsWith("en")) {
       const pMatches = xml.match(/<a:p\b[\s\S]*?<\/a:p>/g) || [];
       for (const pXml of pMatches) {
-        const tMatches = pXml.match(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g) || [];
-        const fullText = tMatches.map((t) => t.replace(/<[^>]+>/g, "").trim()).join(" ");
+        const rawRunTexts = Array.from(pXml.matchAll(/<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g), (m) => m[1]);
+        const fullRaw = rawRunTexts.join("");
+        const fullText = fullRaw
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, '"')
+          .replace(/&apos;/g, "'")
+          .replace(/\s+/g, " ")
+          .trim();
         if (hasViDiacritics(fullText) || isVietnameseText(fullText)) {
           // Auto-translate untranslated Vietnamese content using Glossary Review & Airgapped Provider
           // NEVER blindly delete paragraph XML into an empty string to avoid wiping manufacturing instructions!
@@ -426,11 +482,11 @@ export async function auditAndRepairPptxPostFlight(
             const airgapped = new AirGappedTranslationProvider();
             const translated = airgapped.translateVietnameseToEnglish(fullText, glossary);
             const enforced = enforceTerminologyCompliance(fullText, translated, glossary, "vi", "en");
-            const candidate = cleanTargetTerm(enforced.text);
+            const candidate = enforced.text.trim();
 
             if (candidate && !hasViDiacritics(candidate) && candidate.toLowerCase() !== fullText.toLowerCase()) {
               const repairedPXml = replaceParagraphTranslation(pXml, candidate, fullText);
-              xml = xml.replace(pXml, repairedPXml);
+              xml = xml.replace(pXml, () => repairedPXml);
               xmlModified = true;
               repairedCount++;
               issues.push({
@@ -489,6 +545,15 @@ export async function auditAndRepairPptxPostFlight(
         }
       }
     }
+
+    // Schema Safety: Ensure every <p:txBody> has at least one <a:p> element
+    xml = xml.replace(/<p:txBody\b([^>]*)>([\s\S]*?)<\/p:txBody>/g, (fullMatch, attrs, content) => {
+      if (!/<a:p\b/.test(content)) {
+        xmlModified = true;
+        return `<p:txBody${attrs}>${content}<a:p><a:endParaRPr/></a:p></p:txBody>`;
+      }
+      return fullMatch;
+    });
 
     if (xmlModified) {
       zip.file(filename, xml);

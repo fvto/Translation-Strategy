@@ -15,6 +15,7 @@ export interface AiStudioMetrics {
     limit: number;
     minIntervalMs: number;
     safetyRateRpm: number;
+    thresholdRpm?: number;
   };
   rpd: {
     used: number;

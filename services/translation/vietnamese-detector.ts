@@ -78,7 +78,15 @@ const COMMON_EN_WORDS = new Set([
   "step", "tools", "operator", "production", "specification", "prevent", "during",
   "placed", "placing", "position", "positioned", "aligned", "alignment", "molding",
   "shaping", "hammering", "short", "even", "smooth", "wrinkles", "straight", "markers",
-  "marking", "markings", "gauge", "last", "bottom", "size", "larger", "follow", "specifications"
+  "marking", "markings", "gauge", "last", "bottom", "size", "larger", "follow", "specifications",
+  "lot", "die", "shift", "vamp", "tongue", "facing", "counter", "foxing", "mudguard",
+  "overlay", "underlay", "insole", "foam", "rubber", "mesh", "leather", "textile", "knit",
+  "tape", "film", "tpu", "eva", "phylon", "eyelet", "lace", "thread", "seam", "adhesive",
+  "heat", "press", "pass", "fail", "reject", "accept", "rework", "scrap", "line",
+  "station", "stage", "target", "actual", "result", "status", "remark", "dirty", "tight",
+  "loose", "crooked", "bubble", "wrinkle", "crease", "crack", "tear", "burn", "stain",
+  "glue", "oil", "dust", "width", "height", "thickness", "weight", "density", "hardness",
+  "spi", "rpm", "psi", "bar", "deg", "sec", "min", "hr", "hrs", "date", "month", "code"
 ]);
 
 /**
@@ -91,6 +99,24 @@ export function isVietnameseText(str: string): boolean {
   // 1. Accented Vietnamese
   if (hasVietnameseDiacritics(trimmed)) return true;
 
+  // Contextual bigram/collocation disambiguation for English footwear manufacturing & date patterns
+  // (Prevents homographs like May/Lot/Day/Tan/Last from being misclassified as unaccented Vietnamese)
+  if (/\bmay\s+(?:20\d{2}|\d{1,2}(?:st|nd|rd|th)?(?:\s*,\s*20\d{2}|\s+20\d{2}|$))\b/i.test(trimmed)) {
+    return false;
+  }
+  if (/\blot\s*(?:#|no\.?|number|id|code|size|qty)\b/i.test(trimmed)) {
+    return false;
+  }
+  if (/\bday\s*(?:shift|off|time|work|\d+)\b/i.test(trimmed)) {
+    return false;
+  }
+  if (/\btan\s*(?:color|colour|leather|suede)\b/i.test(trimmed)) {
+    return false;
+  }
+  if (/\blast\s*(?:step|check|operation|stage|process|inspection)\b/i.test(trimmed)) {
+    return false;
+  }
+
   const form = auditTextForms(trimmed);
   const compact = form.compact.toLowerCase();
 
@@ -99,8 +125,8 @@ export function isVietnameseText(str: string): boolean {
     if (compact.includes(pattern)) return true;
   }
 
-  // 2.5. Footwear operation commands (even with mixed code-switching like "May mudguard", "May logo", "Quét primer")
-  if (/(?:^|\s)[\*•\-#]?\s*(?:\d+[.)]\s*)?(?:may|dan|mai|quet|go|chat|ep|kiem\s*tra|dinh\s*hinh|ve\s*sinh)\s+(?:mudguard|logo|vien|lot|vong\s*co|de|mui|than|luoi|upper|outsole|midsole|heel|toe|collar|lining|tongue|strap|eyestay|label|jig|khuon|keo|primer)/i.test(trimmed)) {
+  // 2.5. Footwear operation commands (even with mixed code-switching like "May mudguard", "May 1 kim", "May logo", "Quét primer")
+  if (/(?:^|\s)[\*•\-#]?\s*(?:\d+[.)]\s*)?(?:may|dan|mai|quet|go|chat|ep|kiem\s*tra|dinh\s*hinh|ve\s*sinh)\s+(?:mudguard|logo|vien|lot|vong\s*co|de|mui|than|luoi|upper|outsole|midsole|heel|toe|collar|lining|tongue|strap|eyestay|label|jig|khuon|keo|primer|\d+\s*kim|zigzag|chi|rap|cup|drap)/i.test(trimmed)) {
     return true;
   }
 
@@ -206,33 +232,21 @@ export function isSemanticBilingualPair(
   const t2 = text2.trim();
 
   // 1. Language orientation check: One must be Vietnamese, one must be English
-  const t1HasDiacritics = hasVietnameseDiacritics(t1);
-  const t2HasDiacritics = hasVietnameseDiacritics(t2);
+  const t1IsVi = hasVietnameseDiacritics(t1) || isVietnameseText(t1);
+  const t2IsVi = hasVietnameseDiacritics(t2) || isVietnameseText(t2);
 
-  let viText: string;
-  let enText: string;
-
-  if (t1HasDiacritics && !t2HasDiacritics) {
-    viText = t1;
-    enText = t2;
-  } else if (!t1HasDiacritics && t2HasDiacritics) {
-    viText = t2;
-    enText = t1;
-  } else {
-    const t1IsVi = isVietnameseText(t1);
-    const t2IsVi = isVietnameseText(t2);
-
-    if ((t1IsVi && t2IsVi) || (!t1IsVi && !t2IsVi)) {
-      return {
-        isPair: false,
-        confidence: 0,
-        reason: "Cả hai đoạn văn bản đều cùng một ngôn ngữ (không phải cặp song ngữ VI/EN)."
-      };
-    }
-
-    viText = t1IsVi ? t1 : t2;
-    enText = t1IsVi ? t2 : t1;
+  if (t1IsVi === t2IsVi) {
+    return {
+      isPair: false,
+      confidence: 0,
+      reason: t1IsVi
+        ? "Cả hai đoạn văn bản đều là tiếng Việt (không phải cặp song ngữ VI/EN)."
+        : "Cả hai đoạn văn bản đều là tiếng Anh (không phải cặp song ngữ VI/EN)."
+    };
   }
+
+  const viText = t1IsVi ? t1 : t2;
+  const enText = t1IsVi ? t2 : t1;
 
   // 2. Heading structure check: process headings (*Heading) must only pair with process headings
   const isHeadingVi = /^[\*•#]/.test(viText);
@@ -245,7 +259,9 @@ export function isSemanticBilingualPair(
     };
   }
 
-  // 3. Step number consistency check: If both have step numbers, they MUST match
+  // 3. Step number consistency check:
+  // - If both have step numbers, they MUST match
+  // - If one is a numbered step (e.g. "1. Kiểm tra...") and the other is an unnumbered title/heading/strategy, they cannot pair
   const stepVi = extractItemStepPrefix(viText);
   const stepEn = extractItemStepPrefix(enText);
   if (stepVi && stepEn && stepVi !== stepEn) {
@@ -254,6 +270,17 @@ export function isSemanticBilingualPair(
       confidence: 0,
       reason: `Số thứ tự bước không khớp (VI: bước ${stepVi}, EN: bước ${stepEn}).`
     };
+  }
+  if ((stepVi && !stepEn) || (!stepVi && stepEn)) {
+    const viIsHeading = isHeadingVi || /strategy|focus|tiêu điểm|trọng điểm|quy trình|tiêu chuẩn/i.test(viText);
+    const enIsHeading = isHeadingEn || /strategy|focus|focuses|process|procedure|standard|title|manual/i.test(enText);
+    if (viIsHeading || enIsHeading) {
+      return {
+        isPair: false,
+        confidence: 0,
+        reason: "Một bên là bước quy trình có đánh số, bên kia là tiêu đề hoặc chiến lược."
+      };
+    }
   }
 
   // 4. Numerical parameters check: If both contain measurements/numbers, they must be consistent
@@ -289,8 +316,28 @@ export function isSemanticBilingualPair(
   const offlineProvider = new AirGappedTranslationProvider();
   const probeEn = offlineProvider.translateVietnameseToEnglish(viText, glossary).toLowerCase();
 
-  const probeTokens = probeEn.split(/\s+/).filter((w) => w.length >= 3 && !COMMON_EN_WORDS.has(w));
-  const enTokens = enLower.split(/\s+/).filter((w) => w.length >= 3 && !COMMON_EN_WORDS.has(w));
+  const EN_STOP_WORDS = new Set([
+    "the", "a", "an", "and", "or", "of", "to", "in", "on", "at", "by", "for", "with",
+    "is", "are", "was", "were", "be", "been", "that", "this", "it", "not", "no", "as",
+    "if", "from", "into", "than", "then", "its", "all", "any", "both", "each", "such",
+    // Generic meta-words / document structure terms that must not cause false pairings
+    "inspection", "focuses", "focus", "strategy", "standard", "standards", "manual",
+    "procedure", "process", "stage", "title", "sop", "qa", "qc", "ipqc", "oqc", "ctq"
+  ]);
+
+  // Length ratio sanity check: If one is a single short word or header and the other is a long paragraph, reject early
+  const lenRatio = Math.min(viText.length, enText.length) / Math.max(viText.length, enText.length);
+  const sameStep = Boolean(stepVi && stepEn && stepVi === stepEn);
+  if (lenRatio < 0.35 && !sameStep) {
+    return {
+      isPair: false,
+      confidence: 0.1,
+      reason: "Độ dài chênh lệch quá lớn, không đủ bằng chứng ngữ nghĩa để coi là cặp dịch."
+    };
+  }
+
+  const probeTokens = probeEn.replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w.length >= 3 && !EN_STOP_WORDS.has(w));
+  const enTokens = enLower.replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((w) => w.length >= 3 && !EN_STOP_WORDS.has(w));
 
   let sharedContentWords = 0;
   for (const pt of probeTokens) {
@@ -299,13 +346,14 @@ export function isSemanticBilingualPair(
     }
   }
 
-  const tokenRatio = probeTokens.length > 0 ? sharedContentWords / probeTokens.length : 0;
+  const minTokens = Math.min(probeTokens.length, enTokens.length);
+  const tokenRatio = minTokens > 0 ? sharedContentWords / minTokens : 0;
 
   // Criteria for genuine bilingual pair:
   // - High glossary alignment (shared domain terms), OR
-  // - Significant content word overlap between probe translation and EN text (>= 0.3), OR
+  // - Significant content word overlap between probe translation and EN text (>= 0.35 AND shared >= 2), OR
   // - Matching step number WITH at least 1 shared content word or identical numbers
-  if (matchedGlossaryCount >= 1 && (tokenRatio >= 0.2 || numVi.some((n) => numEn.includes(n)))) {
+  if (matchedGlossaryCount >= 1 && (tokenRatio >= 0.25 || numVi.some((n) => numEn.includes(n)))) {
     return {
       isPair: true,
       confidence: 0.95,
@@ -313,7 +361,7 @@ export function isSemanticBilingualPair(
     };
   }
 
-  if (tokenRatio >= 0.35) {
+  if (sharedContentWords >= 2 && tokenRatio >= 0.35) {
     return {
       isPair: true,
       confidence: 0.88,
@@ -321,21 +369,11 @@ export function isSemanticBilingualPair(
     };
   }
 
-  if (stepVi && stepEn && stepVi === stepEn && (tokenRatio >= 0.2 || sharedContentWords >= 1)) {
+  if (sameStep && (tokenRatio >= 0.2 || sharedContentWords >= 1)) {
     return {
       isPair: true,
       confidence: 0.85,
       reason: `Cùng số thứ tự bước ${stepVi} và có từ khóa kỹ thuật tương đồng.`
-    };
-  }
-
-  // Length ratio sanity check: If one is a single short word and the other is a long paragraph, reject
-  const lenRatio = Math.min(viText.length, enText.length) / Math.max(viText.length, enText.length);
-  if (lenRatio < 0.25) {
-    return {
-      isPair: false,
-      confidence: 0.1,
-      reason: "Độ dài chênh lệch quá lớn, không đủ bằng chứng ngữ nghĩa để coi là cặp dịch."
     };
   }
 

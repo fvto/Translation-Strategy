@@ -57,7 +57,7 @@ const KNOWN_SYNONYM_PATTERNS: { [canonicalTargetLower: string]: RegExp } = {
   "perforation holes": /\b(?:decorative\s+holes|embellishment\s+holes|pattern\s+holes)\b/gi,
   "cement overflow": /\b(?:glue\s+overflow|overflowing\s+cement|spill\s+cement|excess\s+cement)\b/gi,
   "used together without color matching": /\b(?:(?:printed|assembled|used)\s+together\s+without\s+(?:color\s+)?matching|printed\s+together\s+without\s+coordination)\b/gi,
-  "no nosew bond gap": /\b(?:no\s+nosew\s+glue\s+opening|without\s+nosew\s+bond\s+gap|not\s+open\s+nosew\s+glue)\b/gi,
+  "no no-sew bond gap": /\b(?:no\s+(?:no-sew|nosew)\s+glue\s+opening|without\s+(?:no-sew|nosew)\s+bond\s+gap|not\s+open\s+(?:no-sew|nosew)\s+glue)\b/gi,
   "note": /\b(?:caution|attention|notice)\b/gi,
   "color shade variation": /\b(?:placement\s+with\s+color\s+variation|shade\s+fluctuation)\b/gi,
   "color different": /\b(?:color\s+migration|shade\s+variation|different\s+color|color\s+shade\s+variation)\b/gi,
@@ -160,21 +160,40 @@ export function enforceTerminologyCompliance(
     /\bkhông\s+bằng\s+phẳng\b/i.test(sourceText) &&
     /\bchấp\s+nhận\s+(?:mức\s+độ\s+)?tiêu\s+chuẩn\b/i.test(sourceText)
   ) {
-    if (
-      !/\bquality\s+standard\s+are\s+acceptable\b/i.test(currentText) ||
-      /\btolerances\b/i.test(currentText) ||
-      /\bflat\s+does\s+not\s+accept\b/i.test(currentText) ||
-      /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(currentText) ||
-      /\baccept\s+the\s+quality\s+standard\b/i.test(currentText)
-    ) {
-      const fixedTolerance = "Due to the uneven surface design of the Tip quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after nosew, as shown in the updated QA manual";
-      replacements.push({
-        sourceTerm: "Do thiết kế bề mặt Tip quarter không bằng phẳng chấp nhận mức độ tiêu chuẩn...",
-        expectedTarget: "Due to the uneven surface design of the Tip quarter, quality standard are acceptable...",
-        originalText: currentText,
-        replacementText: fixedTolerance,
-      });
-      currentText = fixedTolerance;
+    const isTipQuarter =
+      /\b(?:tip[- ]quarter|in\s+sơn|logo|chảy\s+sơn)\b/i.test(sourceText) ||
+      /\btip[- ]quarter\b/i.test(currentText);
+
+    if (isTipQuarter) {
+      if (
+        !/\bquality\s+standard\s+are\s+acceptable\b/i.test(currentText) ||
+        /\btolerances\b/i.test(currentText) ||
+        /\bflat\s+does\s+not\s+accept\b/i.test(currentText) ||
+        /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(currentText) ||
+        /\baccept\s+the\s+quality\s+standard\b/i.test(currentText)
+      ) {
+        const fixedTolerance = "Due to the uneven surface design of the Tip-quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after no-sew, as shown in the updated QA manual";
+        replacements.push({
+          sourceTerm: "Do thiết kế bề mặt Tip quarter không bằng phẳng chấp nhận mức độ tiêu chuẩn...",
+          expectedTarget: "Due to the uneven surface design of the Tip-quarter, quality standard are acceptable...",
+          originalText: currentText,
+          replacementText: fixedTolerance,
+        });
+        currentText = fixedTolerance;
+      }
+    } else {
+      const fixed = currentText
+        .replace(/\bflat\s+does\s+not\s+accept\b/gi, "quality standard are acceptable")
+        .replace(/\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/gi, "quality standard are acceptable");
+      if (fixed !== currentText) {
+        replacements.push({
+          sourceTerm: "không bằng phẳng chấp nhận mức độ tiêu chuẩn",
+          expectedTarget: "quality standard are acceptable",
+          originalText: currentText,
+          replacementText: fixed,
+        });
+        currentText = fixed;
+      }
     }
   }
 

@@ -71,12 +71,25 @@ export function saveAuditTrace(
         requiresIsqDuplicate: report.requiresIsqDuplicate,
       },
       slidesSummary,
-      report,
     };
 
     fs.writeFileSync(tracePath, JSON.stringify(traceData, null, 2), "utf-8");
     fs.writeFileSync(historyPath, JSON.stringify(traceData, null, 2), "utf-8");
     console.log(`[AuditTrace] Saved telemetry trace to ${tracePath} and ${historyPath}`);
+
+    // Auto-prune old history files (keep latest 20)
+    try {
+      const files = fs.readdirSync(HISTORY_DIR)
+        .filter((f) => f.endsWith(".json"))
+        .map((f) => ({ name: f, path: path.join(HISTORY_DIR, f), time: fs.statSync(path.join(HISTORY_DIR, f)).mtimeMs }))
+        .sort((a, b) => b.time - a.time);
+      if (files.length > 20) {
+        for (const oldFile of files.slice(20)) {
+          try { fs.unlinkSync(oldFile.path); } catch {}
+        }
+      }
+    } catch {}
+
     return tracePath;
   } catch (err) {
     console.warn("[AuditTrace] Failed to save audit trace:", err);

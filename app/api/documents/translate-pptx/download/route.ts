@@ -4,6 +4,12 @@ import { pptxTranslatorService, PptxSlideData, formatSopFileName, PptxTranslatio
 import { recordTranslationSession, getTranslationSessionById } from "@/services/translation/translation-memory";
 import { harvestTerminologyFromSlides } from "@/services/translation/harvester";
 
+function buildContentDisposition(filename: string): string {
+  const asciiFallback = filename.replace(/[^\x20-\x7E]/g, "_").replace(/"/g, '\\"');
+  const utf8Encoded = encodeURIComponent(filename).replace(/['()]/g, escape).replace(/\*/g, "%2A");
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8Encoded}`;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -24,7 +30,7 @@ export async function GET(req: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "Content-Disposition": `attachment; filename="${encodeURIComponent(downloadName)}"`,
+        "Content-Disposition": buildContentDisposition(downloadName),
         "Content-Length": session.translatedBuffer.length.toString(),
       },
     });
@@ -141,7 +147,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "Content-Disposition": `attachment; filename="${encodeURIComponent(downloadName)}"`,
+        "Content-Disposition": buildContentDisposition(downloadName),
         "Content-Length": rebuiltBuffer.length.toString(),
       },
     });

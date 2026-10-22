@@ -41,19 +41,20 @@ export class AirGappedTranslationProvider implements TranslationProvider {
 
     let translatedText: string;
 
+    const approved = request.approvedTerminology || [];
     if (isEnToVi) {
-      translatedText = this.translateEnglishToVietnamese(sourceText, request.approvedTerminology);
+      translatedText = this.translateEnglishToVietnamese(sourceText, approved);
     } else {
       // If auto-corrected from EN->VI to VI->EN, retrieve reverse approved terminology if needed
       const terms = hasViChars && request.sourceLanguage === "en"
-        ? request.approvedTerminology.map((t: any) => ({
+        ? approved.map((t: any) => ({
             ...t,
             sourceTerm: t.targetTerm,
             targetTerm: t.sourceTerm,
             sourceLanguage: "vi",
             targetLanguage: "en",
           }))
-        : request.approvedTerminology;
+        : approved;
 
       translatedText = this.translateVietnameseToEnglish(sourceText, terms);
     }
@@ -233,7 +234,7 @@ export class AirGappedTranslationProvider implements TranslationProvider {
   /**
    * Translates Vietnamese text to English using reverse lookup.
    */
-  public translateVietnameseToEnglish(text: string, approvedTerminology: any[]): string {
+  public translateVietnameseToEnglish(text: string, approvedTerminology: any[] = []): string {
     let workingText = text;
     const placeholders: { placeholder: string; target: string }[] = [];
 
@@ -295,7 +296,7 @@ export class AirGappedTranslationProvider implements TranslationProvider {
     }
 
     // Then add approved terminology from the database
-    for (const t of approvedTerminology) {
+    for (const t of (approvedTerminology || [])) {
       if (t.sourceTerm && t.sourceTerm.trim().length >= 2) {
         combinedTerms.push(t);
         // Only mark as seen if NOT already covered by a longer COMMON_PHRASES entry
@@ -427,10 +428,10 @@ export class AirGappedTranslationProvider implements TranslationProvider {
       // Normalize any "quality standard tolerances are acceptable" to "quality standard are acceptable"
       .replace(/\bquality\s+standard\s+tolerances\s+are\s+acceptable\b/gi,
         "quality standard are acceptable")
-      // Ensure "Nosew" / "nosew" (NEVER "No-sew" or "no-sew")
-      .replace(/\bNo-[sS]ew\b/g, "Nosew")
-      .replace(/\bno-sew\b/g, "nosew")
-      .replace(/\bNO-SEW\b/g, "NOSEW");
+      // Ensure standard "No-sew" / "no-sew" with hyphen (Production Rule #3, NEVER unhyphenated "Nosew" or "nosew")
+      .replace(/\bNosew\b/g, "No-sew")
+      .replace(/\bnosew\b/g, "no-sew")
+      .replace(/\bNOSEW\b/g, "NO-SEW");
 
     return formatUppercaseStructure(workingText).replace(/\bspi\b/gi, "SPI");
   }

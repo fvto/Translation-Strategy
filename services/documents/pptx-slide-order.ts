@@ -1,4 +1,7 @@
 import type JSZip from "jszip";
+import { extractNumericParameters } from "../translation/vietnamese-detector";
+import { AirGappedTranslationProvider } from "../translation/offline";
+
 export const ISQ_PAIRS_PART = "customXml/smart-audit-isq-pairs.xml";
 export interface IsqSlidePair { en: string; vi: string }
 const VI_DIACRITICS_REGEX = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i;
@@ -26,26 +29,133 @@ function hasExplicitViMarker(texts: string[]): boolean {
   return texts.slice(0, 6).some((t) => /\b(?:\d+[._-]?)?(?:VI|VN)\b/i.test(t) || /\[VI\]|\(VI\)/i.test(t));
 }
 
+export interface SlideProfile {
+  path: string;
+  slideIndex: number;
+  viCount: number;
+  enCount: number;
+  totalTexts: number;
+  viRatio: number;
+  enRatio: number;
+  stepNumber: string | null;
+  hasEnMarker: boolean;
+  hasViMarker: boolean;
+  title1?: string;
+  title2?: string;
+  viLong: number;
+  enLong: number;
+  texts: string[];
+}
+
+/**
+ * Deduces whether Slide A (EN) and Slide B (VI) are genuinely a bilingual counterpart pair
+ * by deeply analyzing the actual slide content, technical measurements, component domain entities,
+ * and semantic operations.
+ */
+export function deduceSlideContentBilingualPair(
+  enSlide: SlideProfile,
+  viSlide: SlideProfile
+): { isPair: boolean; confidence: number; reason: string } {
+  // 1. Explicit Step Conflict: If both declare step numbers, they must match
+  if (enSlide.stepNumber && viSlide.stepNumber && enSlide.stepNumber !== viSlide.stepNumber) {
+    return {
+      isPair: false,
+      confidence: 0,
+      reason: `Số thứ tự bước không khớp (EN: bước ${enSlide.stepNumber}, VI: bước ${viSlide.stepNumber}).`
+    };
+  }
+
+  const allEn = enSlide.texts.join(" ").toLowerCase();
+  const allVi = viSlide.texts.join(" ").toLowerCase();
+
+  // 2. Component Conflict Check (Physical positions on the footwear upper/sole)
+  const enHasHeel = allEn.includes("heel");
+  const enHasToe = allEn.includes("toe") || allEn.includes("tip");
+  const viHasGót = allVi.includes("gót") || allVi.includes("hậu");
+  const viHasMũi = allVi.includes("mũi");
+
+  if (enHasHeel && !enHasToe && viHasMũi && !viHasGót) {
+    return {
+      isPair: false,
+      confidence: 0,
+      reason: "Xung đột vị trí chi tiết giày: Slide EN chuyên về Gót (Heel), Slide VI chuyên về Mũi (Toe)."
+    };
+  }
+  if (enHasToe && !enHasHeel && viHasGót && !viHasMũi) {
+    return {
+      isPair: false,
+      confidence: 0,
+      reason: "Xung đột vị trí chi tiết giày: Slide EN chuyên về Mũi (Toe), Slide VI chuyên về Gót (Heel)."
+    };
+  }
+
+  // 3. Technical Measurements / Tolerances Consistency
+  const extractSpecNumbers = (texts: string[]) => {
+    return texts
+      .flatMap((t) => extractNumericParameters(t))
+      .filter((n) => !["1", "2", "3", "4", "5"].includes(n));
+  };
+
+  const numEn = Array.from(new Set(extractSpecNumbers(enSlide.texts)));
+  const numVi = Array.from(new Set(extractSpecNumbers(viSlide.texts)));
+
+  const hasStepMatch = Boolean(enSlide.stepNumber && viSlide.stepNumber && enSlide.stepNumber === viSlide.stepNumber);
+  const hasExplicitMarker = Boolean(enSlide.hasEnMarker && viSlide.hasViMarker);
+
+  if (numEn.length >= 2 && numVi.length >= 1 && !hasStepMatch && !hasExplicitMarker) {
+    const shared = numEn.filter((n) => numVi.includes(n));
+    if (shared.length === 0) {
+      return {
+        isPair: false,
+        confidence: 0,
+        reason: `Thông số kỹ thuật không tương thích: EN có [${numEn.join(", ")}], VI có [${numVi.join(", ")}], không có thông số chung.`
+      };
+    }
+  }
+
+  // 4. Semantic Content Overlap via Translation Probe
+  const offline = new AirGappedTranslationProvider();
+  const probeEn = offline.translateVietnameseToEnglish(allVi, []).toLowerCase();
+
+  const STOP_WORDS = new Set([
+    "inspection", "strategy", "focuses", "focus", "standard", "standards",
+    "manual", "procedure", "process", "check", "make", "sure", "before", "after",
+    "must", "slide", "title", "step", "presentation", "company", "ching", "luh",
+    "nike", "points", "shoe", "upper", "line", "into", "when", "just", "with",
+    "from", "that", "this", "have", "been", "will", "need", "follow", "sample"
+  ]);
+
+  const extractContentTokens = (text: string) => {
+    return text
+      .replace(/[^\p{L}\p{N}\s]/gu, " ")
+      .split(/\s+/)
+      .filter((w) => w.length >= 4 && !STOP_WORDS.has(w));
+  };
+
+  const enTokens = Array.from(new Set(extractContentTokens(allEn)));
+  const probeTokens = Array.from(new Set(extractContentTokens(probeEn)));
+
+  const sharedWords = probeTokens.filter((pw) => enTokens.some((ew) => ew.includes(pw) || pw.includes(ew)));
+  const overlapRatio = probeTokens.length > 0 ? sharedWords.length / probeTokens.length : 0;
+
+  if (overlapRatio < 0.18 && !hasStepMatch && !hasExplicitMarker) {
+    return {
+      isPair: false,
+      confidence: overlapRatio,
+      reason: `Độ tương đồng ngữ nghĩa nội dung quá thấp (${Math.round(overlapRatio * 100)}%), không phản ánh cùng một quy trình thao tác.`
+    };
+  }
+
+  return {
+    isPair: true,
+    confidence: Math.max(overlapRatio, hasStepMatch ? 0.9 : 0.6),
+    reason: `Nội dung tương đồng (${Math.round(overlapRatio * 100)}%), từ vựng và thao tác kỹ thuật phù hợp.`
+  };
+}
+
 export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
   const ordered = await orderedSlidePaths(zip);
   if (ordered.length < 2) return [];
-
-  interface SlideProfile {
-    path: string;
-    slideIndex: number;
-    viCount: number;
-    enCount: number;
-    totalTexts: number;
-    viRatio: number;
-    enRatio: number;
-    stepNumber: string | null;
-    hasEnMarker: boolean;
-    hasViMarker: boolean;
-    title1?: string;
-    title2?: string;
-    viLong: number;
-    enLong: number;
-  }
 
   const profiles: SlideProfile[] = [];
   for (let i = 0; i < ordered.length; i++) {
@@ -74,6 +184,7 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
       title2,
       viLong,
       enLong,
+      texts,
     });
   }
 
@@ -94,6 +205,14 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
       (s.viCount >= 2);
   };
 
+  const checkDeduction = (enS: SlideProfile, viS: SlideProfile) => {
+    const res = deduceSlideContentBilingualPair(enS, viS);
+    if (!res.isPair) {
+      console.log(`[SlidePairDeduction] Không ghép cặp ${enS.path} (EN) và ${viS.path} (VI): ${res.reason}`);
+    }
+    return res.isPair;
+  };
+
   // 1. Interleaved adjacent pairs [1.EN, 1.VI], [2.EN, 2.VI] or [1.VI, 1.EN], [2.VI, 2.EN]
   for (let i = 0; i < profiles.length - 1; i++) {
     const curr = profiles[i];
@@ -104,8 +223,23 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     const diffStep = Boolean(curr.stepNumber && next.stepNumber && curr.stepNumber !== next.stepNumber);
     if (diffStep) continue;
 
-    const sameMainTitle = Boolean(curr.title1 && next.title1 && (curr.title1 === next.title1 || curr.title1.includes(next.title1) || next.title1.includes(curr.title1)));
-    const sameSubTitle = Boolean(curr.title2 && next.title2 && (curr.title2 === next.title2));
+    const isGenericBanner = (t?: string) =>
+      Boolean(t && /\b(?:assembly\s*inspection\s*strategy|inspection\s*strategy|chiến\s*lược\s*kiểm\s*tra|standard\s*operating\s*procedure|ipqc\s*manual|qa\/?ipqc\s*manual)\b/i.test(t));
+
+    const sameMainTitle = Boolean(
+      curr.title1 &&
+      next.title1 &&
+      !isGenericBanner(curr.title1) &&
+      !isGenericBanner(next.title1) &&
+      (curr.title1 === next.title1 || curr.title1.includes(next.title1) || next.title1.includes(curr.title1))
+    );
+    const sameSubTitle = Boolean(
+      curr.title2 &&
+      next.title2 &&
+      !isGenericBanner(curr.title2) &&
+      !isGenericBanner(next.title2) &&
+      curr.title2 === next.title2
+    );
     const titleTopicMatch = Boolean(
       ((sameMainTitle && curr.title1 && curr.title1.length >= 8) || (sameSubTitle && curr.title2 && curr.title2.length >= 8)) &&
       ((curr.enLong >= 2 && next.viLong >= 2) || (curr.viLong >= 2 && next.enLong >= 2))
@@ -119,25 +253,33 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     const hasTitleOrMarker = sameMainTitle || sameSubTitle || titleTopicMatch || explicitMarker;
 
     if (currIsEn && nextIsVi && (stepMatch || explicitMarker || titleTopicMatch) && hasTitleOrMarker) {
-      rawCandidatePairs.push({ en: curr.path, vi: next.path });
-      pairedPaths.add(curr.path);
-      pairedPaths.add(next.path);
-      i++;
+      if (checkDeduction(curr, next)) {
+        rawCandidatePairs.push({ en: curr.path, vi: next.path });
+        pairedPaths.add(curr.path);
+        pairedPaths.add(next.path);
+        i++;
+      }
     } else if (currIsVi && nextIsEn && (stepMatch || explicitMarker || titleTopicMatch) && hasTitleOrMarker) {
-      rawCandidatePairs.push({ en: next.path, vi: curr.path });
-      pairedPaths.add(curr.path);
-      pairedPaths.add(next.path);
-      i++;
+      if (checkDeduction(next, curr)) {
+        rawCandidatePairs.push({ en: next.path, vi: curr.path });
+        pairedPaths.add(curr.path);
+        pairedPaths.add(next.path);
+        i++;
+      }
     } else if (stepMatch && hasTitleOrMarker && (curr.viCount < next.viCount) && currIsEn && nextIsVi) {
-      rawCandidatePairs.push({ en: curr.path, vi: next.path });
-      pairedPaths.add(curr.path);
-      pairedPaths.add(next.path);
-      i++;
+      if (checkDeduction(curr, next)) {
+        rawCandidatePairs.push({ en: curr.path, vi: next.path });
+        pairedPaths.add(curr.path);
+        pairedPaths.add(next.path);
+        i++;
+      }
     } else if (stepMatch && hasTitleOrMarker && (curr.viCount > next.viCount) && currIsVi && nextIsEn) {
-      rawCandidatePairs.push({ en: next.path, vi: curr.path });
-      pairedPaths.add(curr.path);
-      pairedPaths.add(next.path);
-      i++;
+      if (checkDeduction(next, curr)) {
+        rawCandidatePairs.push({ en: next.path, vi: curr.path });
+        pairedPaths.add(curr.path);
+        pairedPaths.add(next.path);
+        i++;
+      }
     }
   }
 
@@ -153,44 +295,118 @@ export async function detectDynamicSlidePairs(zip: JSZip): Promise<IsqSlidePair[
     return rawCandidatePairs;
   }
 
-  // 2. Parallel block pairs (e.g. block of VI slides, followed by block of EN slides)
-  const viSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isViSlide(s) && s.slideIndex > 1);
-  const enSlides = profiles.filter((s) => !pairedPaths.has(s.path) && isEnSlide(s) && s.slideIndex > 1);
-  const minViIndex = viSlides.length > 0 ? Math.min(...viSlides.map((s) => s.slideIndex)) : 0;
-  const maxViIndex = viSlides.length > 0 ? Math.max(...viSlides.map((s) => s.slideIndex)) : 0;
-  const minEnIndex = enSlides.length > 0 ? Math.min(...enSlides.map((s) => s.slideIndex)) : 0;
-  const maxEnIndex = enSlides.length > 0 ? Math.max(...enSlides.map((s) => s.slideIndex)) : 0;
-  const isSeparatedBlocks = (minEnIndex > maxViIndex) || (minViIndex > maxEnIndex);
+  // 2. Global Cross-Distance Deductive Matching (handles distant blocks like 3x-4x VI and 5x-6x EN, reordered slides, or arbitrary distances)
+  const remainingVi = profiles.filter((s) => !pairedPaths.has(s.path) && isViSlide(s));
+  const remainingEn = profiles.filter((s) => !pairedPaths.has(s.path) && isEnSlide(s));
 
-  if (
-    viSlides.length >= 5 &&
-    enSlides.length >= 5 &&
-    Math.abs(viSlides.length - enSlides.length) <= 10 &&
-    isSeparatedBlocks
-  ) {
-    const pairs: IsqSlidePair[] = [];
-    const minLen = Math.min(viSlides.length, enSlides.length);
-    for (let k = 0; k < minLen; k++) {
-      pairs.push({ en: enSlides[k].path, vi: viSlides[k].path });
+  if (remainingVi.length > 0 && remainingEn.length > 0) {
+    interface ScoredCandidatePair {
+      en: SlideProfile;
+      vi: SlideProfile;
+      score: number;
+      reason: string;
     }
-    return pairs;
+
+    const isGenericBanner = (t?: string) =>
+      Boolean(t && /\b(?:assembly\s*inspection\s*strategy|inspection\s*strategy|chiến\s*lược\s*kiểm\s*tra|standard\s*operating\s*procedure|ipqc\s*manual|qa\/?ipqc\s*manual)\b/i.test(t));
+
+    const candidates: ScoredCandidatePair[] = [];
+
+    for (const enS of remainingEn) {
+      for (const viS of remainingVi) {
+        if (enS.path === viS.path) continue;
+
+        // Run deep content reasoning
+        const deduction = deduceSlideContentBilingualPair(enS, viS);
+        if (!deduction.isPair) continue;
+
+        let score = Math.round(deduction.confidence * 100);
+
+        // Step number match
+        const stepMatch = Boolean(enS.stepNumber && viS.stepNumber && enS.stepNumber === viS.stepNumber);
+        if (stepMatch) score += 60;
+
+        // Explicit EN/VI markers
+        const explicitMarker = Boolean(enS.hasEnMarker && viS.hasViMarker);
+        if (explicitMarker) score += 40;
+
+        // Title match
+        const sameMainTitle = Boolean(
+          enS.title1 && viS.title1 && !isGenericBanner(enS.title1) && !isGenericBanner(viS.title1) &&
+          (enS.title1 === viS.title1 || enS.title1.includes(viS.title1) || viS.title1.includes(enS.title1))
+        );
+        const sameSubTitle = Boolean(
+          enS.title2 && viS.title2 && !isGenericBanner(enS.title2) && !isGenericBanner(viS.title2) &&
+          enS.title2 === viS.title2
+        );
+        if (sameMainTitle || sameSubTitle) score += 35;
+
+        // Technical parameters match
+        const extractSpecNumbers = (texts: string[]) =>
+          texts.flatMap((t) => extractNumericParameters(t)).filter((n) => !["1", "2", "3", "4", "5"].includes(n));
+        const numEn = Array.from(new Set(extractSpecNumbers(enS.texts)));
+        const numVi = Array.from(new Set(extractSpecNumbers(viS.texts)));
+        const sharedSpecs = numEn.filter((n) => numVi.includes(n));
+        if (sharedSpecs.length > 0) score += 25;
+
+        // Small adjacency tie-breaker if close
+        if (Math.abs(enS.slideIndex - viS.slideIndex) === 1) score += 10;
+
+        candidates.push({
+          en: enS,
+          vi: viS,
+          score,
+          reason: deduction.reason
+        });
+      }
+    }
+
+    // Sort by score descending
+    candidates.sort((a, b) => b.score - a.score);
+
+    // Greedy bipartite assignment
+    const assignedEn = new Set<string>();
+    const assignedVi = new Set<string>();
+    const distantPairs: IsqSlidePair[] = [];
+
+    for (const cand of candidates) {
+      if (assignedEn.has(cand.en.path) || assignedVi.has(cand.vi.path)) continue;
+      // Minimum confidence threshold
+      if (cand.score >= 45) {
+        assignedEn.add(cand.en.path);
+        assignedVi.add(cand.vi.path);
+        distantPairs.push({ en: cand.en.path, vi: cand.vi.path });
+      }
+    }
+
+    if (distantPairs.length > 0) {
+      distantPairs.sort((a, b) => {
+        const aIdx = Number(a.vi.match(/slide(\d+)/)?.[1] || 0);
+        const bIdx = Number(b.vi.match(/slide(\d+)/)?.[1] || 0);
+        return aIdx - bIdx;
+      });
+      return [...rawCandidatePairs, ...distantPairs];
+    }
   }
 
   return rawCandidatePairs.length > 0 ? rawCandidatePairs : [];
 }
 
-export async function readIsqSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
+export async function readExplicitIsqSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
   const xml =
     (await zip.file(ISQ_PAIRS_PART)?.async("string")) ||
     (await zip.file(`ppt/${ISQ_PAIRS_PART}`)?.async("string")) ||
     (await zip.file("customXml/pairs.xml")?.async("string")) ||
     (await zip.file("ppt/customXml/pairs.xml")?.async("string")) ||
     "";
-  const xmlPairs = Array.from(
+  return Array.from(
     xml.matchAll(/<pair en="(ppt\/slides\/slide\d+\.xml)" vi="(ppt\/slides\/slide\d+\.xml)"\/>/g),
     (m) => ({ en: m[1], vi: m[2] })
   ).filter((p) => zip.file(p.en) && zip.file(p.vi));
+}
 
+export async function readIsqSlidePairs(zip: JSZip): Promise<IsqSlidePair[]> {
+  const xmlPairs = await readExplicitIsqSlidePairs(zip);
   const dynamicPairs = await detectDynamicSlidePairs(zip);
   if (xmlPairs.length === 0) return dynamicPairs;
 
@@ -280,12 +496,17 @@ export async function duplicateIsqSlides(
   if (!presXml || !relsXml || !contentTypesXml) return existingPairs;
 
   const sldEntries = Array.from(
-    presXml.matchAll(/<p:sldId[^>]*id="(\d+)"[^>]*r:id="([^"]+)"[^>]*\/>/g)
-  ).map((m) => ({
-    fullTag: m[0],
-    id: parseInt(m[1], 10),
-    rId: m[2],
-  }));
+    presXml.matchAll(/<p:sldId\b[^>]*>/g)
+  ).map((m) => {
+    const fullTag = m[0];
+    const idMatch = fullTag.match(/\bid="(\d+)"/);
+    const rIdMatch = fullTag.match(/\br:id="([^"]+)"/);
+    return {
+      fullTag,
+      id: idMatch ? parseInt(idMatch[1], 10) : 0,
+      rId: rIdMatch ? rIdMatch[1] : "",
+    };
+  }).filter((s) => s.id > 0 && s.rId !== "");
 
   if (sldEntries.length === 0) return existingPairs;
 
@@ -333,12 +554,16 @@ export async function duplicateIsqSlides(
     zip.file(newSlidePath, slideData);
     newPairs.push({ en: origSlidePath, vi: newSlidePath });
 
-    // 2. Copy slide rels if exists
+    // 2. Copy slide rels if exists (stripping notesSlide & comments to prevent 1-to-many relationship collision in PowerPoint)
     const origRelPath = origSlidePath.replace("slides/", "slides/_rels/") + ".rels";
-    const relData = await zip.file(origRelPath)?.async("nodebuffer");
-    if (relData) {
+    const relDataStr = await zip.file(origRelPath)?.async("string");
+    if (relDataStr) {
+      const cleanRelXml = relDataStr.replace(
+        /<Relationship\b[^>]*Type="[^"]*(?:\/notesSlide|\/comments)"[^>]*\/>/g,
+        ""
+      );
       const newRelPath = newSlidePath.replace("slides/", "slides/_rels/") + ".rels";
-      zip.file(newRelPath, relData);
+      zip.file(newRelPath, cleanRelXml);
     }
 
     // 3. New rId and sldId
@@ -376,7 +601,7 @@ export async function duplicateIsqSlides(
 
     relsXml = relsXml.replace("</Relationships>", `${newRels.join("")}</Relationships>`);
     presXml = presXml.replace(
-      /<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/,
+      /<p:sldIdLst\b[^>]*>[\s\S]*?<\/p:sldIdLst>|<p:sldIdLst\b[^>]*\/>/,
       `<p:sldIdLst>${pairedEntries.join("")}</p:sldIdLst>`
     );
     contentTypesXml = contentTypesXml.replace("</Types>", `${newOverrides.join("")}</Types>`);
@@ -412,12 +637,17 @@ export async function duplicateViReferenceSlides(
   const newPairs = [...existingPairs];
 
   const sldEntries = Array.from(
-    presXml.matchAll(/<p:sldId[^>]*id="(\d+)"[^>]*r:id="([^"]+)"[^>]*\/>/g)
-  ).map((m) => ({
-    fullTag: m[0],
-    id: parseInt(m[1], 10),
-    rId: m[2],
-  }));
+    presXml.matchAll(/<p:sldId\b[^>]*>/g)
+  ).map((m) => {
+    const fullTag = m[0];
+    const idMatch = fullTag.match(/\bid="(\d+)"/);
+    const rIdMatch = fullTag.match(/\br:id="([^"]+)"/);
+    return {
+      fullTag,
+      id: idMatch ? parseInt(idMatch[1], 10) : 0,
+      rId: rIdMatch ? rIdMatch[1] : "",
+    };
+  }).filter((s) => s.id > 0 && s.rId !== "");
 
   if (sldEntries.length === 0) return viToEnMap;
 
@@ -457,12 +687,16 @@ export async function duplicateViReferenceSlides(
       if (slideData) {
         zip.file(newSlidePath, slideData);
 
-        // 2. Copy slide rels if exists
+        // 2. Copy slide rels if exists (stripping notesSlide & comments to prevent 1-to-many relationship collision in PowerPoint)
         const origRelPath = origSlidePath.replace("slides/", "slides/_rels/") + ".rels";
-        const relData = await zip.file(origRelPath)?.async("nodebuffer");
-        if (relData) {
+        const relDataStr = await zip.file(origRelPath)?.async("string");
+        if (relDataStr) {
+          const cleanRelXml = relDataStr.replace(
+            /<Relationship\b[^>]*Type="[^"]*(?:\/notesSlide|\/comments)"[^>]*\/>/g,
+            ""
+          );
           const newRelPath = newSlidePath.replace("slides/", "slides/_rels/") + ".rels";
-          zip.file(newRelPath, relData);
+          zip.file(newRelPath, cleanRelXml);
         }
 
         maxRId++;
@@ -505,7 +739,7 @@ export async function duplicateViReferenceSlides(
 
     relsXml = relsXml.replace("</Relationships>", `${newRels.join("")}</Relationships>`);
     presXml = presXml.replace(
-      /<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/,
+      /<p:sldIdLst\b[^>]*>[\s\S]*?<\/p:sldIdLst>|<p:sldIdLst\b[^>]*\/>/,
       `<p:sldIdLst>${pairedEntries.join("")}</p:sldIdLst>`
     );
     contentTypesXml = contentTypesXml.replace("</Types>", `${newOverrides.join("")}</Types>`);

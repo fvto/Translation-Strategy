@@ -1,4 +1,5 @@
 import { TerminologyEntry } from "../database/types";
+import { normalizeFootwearHyphenation } from "../translation/casing";
 
 export function hasViDiacritics(str: string): boolean {
   return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i.test(str);
@@ -132,6 +133,10 @@ export function sanitizeTerminologyEntry(entry: Partial<TerminologyEntry>): Term
   if (/\*?Spray cement and (?:aplly|apply) (?:cement )?foam/i.test(cleanedTarget)) {
     cleanedTarget = cleanedTarget.replace(/\*?Spray cement and (?:aplly|apply) (?:cement )?foam/gi, "*Spray cement and attach cement foam");
   }
+
+  // 7. Proactive Auto-Correction: Rule #3 Footwear Hyphenation (No-sew, Tip-quarter)
+  cleanedTarget = normalizeFootwearHyphenation(cleanedTarget);
+
   if (cleanedTarget !== target) {
     return {
       valid: true,

@@ -31,6 +31,7 @@ interface SmartAuditModalProps {
     customFontSizes?: Record<string, number>
   ) => Promise<void>;
   isLoading?: boolean;
+  onScanComplete?: () => void;
 }
 
 const LABELS: Record<TextUnitStatus, string> = {
@@ -41,7 +42,7 @@ const LABELS: Record<TextUnitStatus, string> = {
 };
 const ORIGINS: Record<string, string> = { approved: "Thuật ngữ đã duyệt", correction: "Người dùng đã sửa", presentation: "PowerPoint hiện tại", history: "Tài liệu trước" };
 
-export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslateMissingOnly, onApplySuggestions, isLoading = false }: SmartAuditModalProps) {
+export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslateMissingOnly, onApplySuggestions, isLoading = false, onScanComplete }: SmartAuditModalProps) {
   const [tab, setTab] = useState<"visual" | "slides" | "summary" | "review" | "pairs">("visual");
   const [filter, setFilter] = useState("attention");
   const [slide, setSlide] = useState("all");
@@ -82,8 +83,12 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   useEffect(() => {
     setAiReport(null);
     setAiAuditMsg("");
-    setAiAuditing(false);
-    setSelected(new Set());
+    const initialSelected = new Set(
+      (auditReport?.units || [])
+        .filter((u) => u.selectedForTranslation !== undefined ? u.selectedForTranslation : Boolean(u.requiresTranslation || u.status === "NEEDS_TRANSLATION"))
+        .map((u) => u.id)
+    );
+    setSelected(initialSelected);
     setIgnored(new Set());
     setCustomEdits({});
     setEditingGroupId(null);
@@ -213,7 +218,11 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
 
   const selectOnlyPending = () => {
     if (!report) return;
-    setSelected(new Set(report.units.filter((u) => u.status === "NEEDS_TRANSLATION").map((u) => u.id)));
+    setSelected(new Set(
+      report.units
+        .filter((u) => u.selectedForTranslation !== undefined ? u.selectedForTranslation : Boolean(u.requiresTranslation || u.status === "NEEDS_TRANSLATION"))
+        .map((u) => u.id)
+    ));
   };
 
   const selectHighConfidenceSafe = () => {
@@ -461,6 +470,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
         setAiAuditMsg(
           `AI Studio đã phân tích xong: Tự động ghép ${data.pairedCount || 0} cặp song ngữ và bảo toàn ${data.immuneCount || 0} thuật ngữ!`
         );
+        onScanComplete?.();
       }
     } catch (err: any) {
       setError(err instanceof Error ? err.message : "Lỗi khi gọi AI Studio.");
@@ -691,13 +701,10 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               }}
               customEdits={customEdits}
               onSaveCustomEdit={(unitId, text) => {
-                const trimmed = text.trim();
-                setCustomEdits((prev) => {
-                  const next = { ...prev };
-                  if (trimmed) next[unitId] = trimmed;
-                  else delete next[unitId];
-                  return next;
-                });
+                setCustomEdits((prev) => ({
+                  ...prev,
+                  [unitId]: text.trim(),
+                }));
               }}
               onResetCustomEdit={(unitId) => {
                 setCustomEdits((prev) => {
@@ -731,7 +738,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
                 <div className="flex flex-wrap items-center gap-2">
                   <button type="button" className={button} onClick={selectAllSlides}>Chọn tất cả ({report.units.length})</button>
                   <button type="button" className={button} onClick={deselectAllSlides}>Bỏ chọn tất cả</button>
-                  <button type="button" className={button + " text-sky-600 font-semibold"} onClick={selectOnlyPending}>Chỉ chọn slide thiếu ({report.needsTranslationCount})</button>
+                  <button type="button" className={button + " text-sky-600 font-semibold"} onClick={selectOnlyPending}>Chỉ chọn slide thiếu ({report.translatableMissingCount ?? report.needsTranslationCount})</button>
                   <button type="button" className={button + " bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 font-semibold"} onClick={selectHighConfidenceSafe}>
                     Chọn nhanh gợi ý tin cậy ({report.units.filter((u) => u.safeToApply || u.status === "LOCKED_TERMINOLOGY" || u.status === "TM_REUSE").length})
                   </button>

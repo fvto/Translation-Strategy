@@ -109,6 +109,40 @@ export function formatSopFileName(originalName: string): string {
   return `${enBaseName}.pptx`;
 }
 
+export function downloadPptxBlob(blob: Blob, fileName: string): void {
+  const pptxBlob = blob.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ? blob
+    : new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" });
+
+  let finalName = fileName.trim();
+  if (!/\.pptx$/i.test(finalName)) {
+    finalName = `${finalName}.pptx`;
+  }
+
+  const url = window.URL.createObjectURL(pptxBlob);
+  const link = document.createElement("a");
+  link.style.display = "none";
+  link.href = url;
+  link.setAttribute("download", finalName);
+  link.download = finalName;
+  document.body.appendChild(link);
+  link.click();
+
+  // Asynchronous cleanup with 60s delay:
+  // Immediate URL.revokeObjectURL causes Chromium on Windows to drop the filename
+  // and fall back to the blob's UUID with no extension.
+  setTimeout(() => {
+    try {
+      if (link.parentNode) {
+        link.parentNode.removeChild(link);
+      }
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+  }, 60000);
+}
+
 export const PptxTranslator: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -165,6 +199,9 @@ export const PptxTranslator: React.FC = () => {
   const [auditReport, setAuditReport] = useState<SmartAuditReport | null>(null);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState<boolean>(false);
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
+  const [showAuditSuccessPopup, setShowAuditSuccessPopup] = useState<boolean>(false);
+
+  // Popup completion persists until manual user dismissal
 
   // Unmapped specialized terminology detection & suggestion states
   const [unmappedTerms, setUnmappedTerms] = useState<UnmappedTermItem[]>([]);
@@ -275,6 +312,7 @@ export const PptxTranslator: React.FC = () => {
       if (!res.ok || !data.success) throw new Error(data.error || "Không thể quét PowerPoint.");
       if (data.success && data.auditReport) {
         setAuditReport(data.auditReport);
+        setShowAuditSuccessPopup(true);
         if (openModal) {
           setIsAuditModalOpen(true);
         }
@@ -338,11 +376,7 @@ export const PptxTranslator: React.FC = () => {
     }
     const blob = await response.blob();
     const updatedFile = new File([blob], file.name, { type: file.type });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = file.name.replace(/\.pptx$/i, "-audited.pptx");
-    document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    downloadPptxBlob(blob, file.name.replace(/\.pptx$/i, "-audited.pptx"));
     setFile(updatedFile); setSlides([]); setStats(null); setSessionId(null); setUnmappedTerms([]);
     if (unhandledCount > 0) {
       setErrorMessage(`Đã áp dụng ${appliedCount} vị trí. Vẫn còn ${unhandledCount} mục chưa được xử lý${unhandledSlidesText}. Đang tự động quét lại...`);
@@ -448,11 +482,7 @@ export const PptxTranslator: React.FC = () => {
       if (!response.ok) throw new Error("Đã dịch xong nhưng chưa tải được PPTX. Vui lòng thử tải lại.");
       const blob = await response.blob();
       const updatedFile = new File([blob], file.name, { type: file.type });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = file.name.replace(/\.pptx$/i, "-fixed.pptx");
-      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+      downloadPptxBlob(blob, file.name.replace(/\.pptx$/i, "-fixed.pptx"));
       setFile(updatedFile); setSlides([]); setStats(null); setSessionId(null); setUnmappedTerms([]);
       setProgressInfo({ stage: "done", percent: 100, message: "Đã sửa phần chưa dịch và tải PPTX. Đang kiểm tra lại..." });
       await runSmartAudit(updatedFile);
@@ -675,14 +705,7 @@ export const PptxTranslator: React.FC = () => {
       }
 
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = formatSopFileName(file ? file.name : "presentation");
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      downloadPptxBlob(blob, formatSopFileName(file ? file.name : "presentation.pptx"));
     } catch (err: any) {
       alert("Lỗi tải file: " + err.message);
     } finally {
@@ -714,14 +737,7 @@ export const PptxTranslator: React.FC = () => {
       }
 
       const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = formatSopFileName(file ? file.name : "presentation.pptx");
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      downloadPptxBlob(blob, formatSopFileName(file ? file.name : "presentation.pptx"));
     } catch (err: any) {
       alert("Lỗi lưu và xuất file: " + err.message);
     } finally {
@@ -2017,8 +2033,52 @@ export const PptxTranslator: React.FC = () => {
           setIsAuditModalOpen(false);
           executeAction("translate");
         }}
+        onScanComplete={() => setShowAuditSuccessPopup(true)}
         isLoading={isProcessing || isAuditing}
       />
+
+      {/* Pop-up báo quét Smart Audit hoàn tất với dấu tick xanh */}
+      {showAuditSuccessPopup && (
+        <div
+          id="audit-scan-success-popup"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
+          onClick={() => setShowAuditSuccessPopup(false)}
+        >
+          <div
+            className="relative max-w-sm sm:max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-emerald-200 dark:border-emerald-800/60 p-6 sm:p-7 flex flex-col items-center text-center animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowAuditSuccessPopup(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Đóng"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Dấu tick xanh */}
+            <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/70 border-2 border-emerald-300 dark:border-emerald-600 flex items-center justify-center mb-4 shadow-sm animate-bounce">
+              <CheckCircle2 className="w-9 h-9 text-emerald-500 dark:text-emerald-400" />
+            </div>
+
+            {/* Thông báo chính xác theo yêu cầu */}
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 leading-snug">
+              Quét xong rồi đó onii-chan ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              Smart Audit đã quét toàn diện cấu trúc slide, phát hiện các khoảng trống dịch thuật và sẵn sàng tối ưu!
+            </p>
+
+            <button
+              onClick={() => setShowAuditSuccessPopup(false)}
+              className="px-6 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              <span>Cảm ơn em</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -521,7 +521,7 @@ const INITIAL_TERMINOLOGY: TerminologyEntry[] = [
   {
     id: "term_footwear_022",
     sourceTerm: "không hở keo nosew",
-    targetTerm: "no nosew bond gap",
+    targetTerm: "no no-sew bond gap",
     sourceLanguage: "vi",
     targetLanguage: "en",
     category: "Footwear",
@@ -566,7 +566,7 @@ const INITIAL_TERMINOLOGY: TerminologyEntry[] = [
   {
     id: "term_footwear_025",
     sourceTerm: "mức độ trắng các lỗ trang trí và biên tip quarter",
-    targetTerm: "whitening at perforation holes and tip quarter edges",
+    targetTerm: "whitening at perforation holes and Tip-quarter edges",
     sourceLanguage: "vi",
     targetLanguage: "en",
     category: "Footwear",
@@ -1239,14 +1239,21 @@ class Database {
 
       // Expand slash-separated term variations (e.g. "lỗ đinh/lỗ định vị" -> "lỗ đinh", "lỗ định vị")
       // Do NOT split units of measurement (e.g. "mũi/inch", "kg/cm2", "km/h") or fractions ("1/2")
+      // Do NOT split technical acronyms with internal slashes (e.g. "H/F", "O/S", "M/S", "W/B", "I/S", "N/S", "QA/QC")
       const isUnitOrMeasurement = /\b(mũi\s*\/\s*inch|kg\s*\/\s*cm2|g\s*\/\s*cm2|km\s*\/\s*h|\d+\s*\/\s*\d+)\b/i.test(item.sourceTerm);
-      if (item.sourceTerm.includes("/") && !isUnitOrMeasurement) {
-        const parts = item.sourceTerm
+      const ACRONYMS_SLASH = /\b(H\/F|O\/S|M\/S|W\/B|I\/S|N\/S|QA\/QC|QA\/IPQC|IPQC\/QA|P\/N|F\/W|S\/S|SU\/FA)\b/gi;
+      const protectAcronymSlashes = (s: string) => s.replace(ACRONYMS_SLASH, (m) => m.replace(/\//g, "\uE000"));
+      const unprotectAcronymSlashes = (s: string) => s.replace(/\uE000/g, "/");
+
+      const protectedSource = protectAcronymSlashes(item.sourceTerm);
+      if (protectedSource.includes("/") && !isUnitOrMeasurement) {
+        const parts = protectedSource
           .split("/")
-          .map((p) => p.replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim())
+          .map((p) => unprotectAcronymSlashes(p).replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim())
           .filter((p) => p.length >= 2 && !/^(inch|cm2|mm|kg|size|mũi|gót|đế)$/i.test(p));
-        const targetParts = item.targetTerm.includes("/")
-          ? item.targetTerm.split("/").map((p) => cleanGlossaryTarget(p).replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim()).filter((p) => p.length >= 2)
+        const protectedTarget = protectAcronymSlashes(item.targetTerm);
+        const targetParts = protectedTarget.includes("/")
+          ? protectedTarget.split("/").map((p) => unprotectAcronymSlashes(cleanGlossaryTarget(p)).replace(/^[/\\,;:.\s]+|[/\\,;:.\s]+$/g, "").trim()).filter((p) => p.length >= 2)
           : [];
 
         if (targetParts.length === parts.length && parts.length > 0) {

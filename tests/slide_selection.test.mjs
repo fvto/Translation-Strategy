@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import JSZip from "jszip";
-import { parseSlideRange, detectDynamicSlidePairs } from "../services/documents/pptx-slide-order";
+import { parseSlideRange, detectDynamicSlidePairs, deduceSlideContentBilingualPair } from "../services/documents/pptx-slide-order";
 import { pptxTranslatorService } from "../services/documents/pptx-translator";
 import { auditPptxGaps, hasViDiacritics } from "../services/translation/smart-detector";
 
@@ -2115,6 +2115,206 @@ test("Test 35: Free user selection overrides audit default selectedForTranslatio
   const slide2Xml = await resultZip.file('ppt/slides/slide2.xml').async('string');
   assert.ok(slide2Xml.includes('Do not apply adhesive on airbag window openings'), "Translated text must appear on slide 2");
 });
+
+test("deduceSlideContentBilingualPair: reasons about actual content and rejects Slide 17 vs Slide 18 while accepting real pairs", () => {
+  // Slide 17 Profile (Heel, Hot Shaping, Chilling, BPM temperature)
+  const slide17 = {
+    path: "ppt/slides/slide17.xml",
+    slideIndex: 17,
+    viCount: 0,
+    enCount: 20,
+    totalTexts: 25,
+    viRatio: 0,
+    enRatio: 0.8,
+    stepNumber: null,
+    hasEnMarker: false,
+    hasViMarker: false,
+    title1: "assembly inspection strategy",
+    title2: "ipqc inspection focuses",
+    viLong: 0,
+    enLong: 6,
+    texts: [
+      "Assembly Inspection Strategy",
+      "IPQC Inspection Focuses",
+      "Hot shaping",
+      "Temperature: 80-90 Degree",
+      "Time: 30”",
+      "Pressure: 4-6KG/cm2",
+      "Chilling",
+      "Temperature: ≤40 Degree",
+      "1.Use temperature measurement machine to check BPM temperature",
+      "1.After shaping, cut at 3 heel points to check if TR completely hot-melted",
+      "4.QC measure upper temperature directly on BPM machine: at least 15mm away from TR",
+      "5.After hot shaping, upper must be transfer to cold shaping within 5”"
+    ]
+  };
+
+  // Slide 18 Profile (Toe eyelet stitching, Toe lasting, Pounding)
+  const slide18 = {
+    path: "ppt/slides/slide18.xml",
+    slideIndex: 18,
+    viCount: 11,
+    enCount: 4,
+    totalTexts: 15,
+    viRatio: 0.73,
+    enRatio: 0.27,
+    stepNumber: null,
+    hasEnMarker: false,
+    hasViMarker: false,
+    title1: "assembly inspection strategy",
+    title2: "ipqc inspection focuses:",
+    viLong: 6,
+    enLong: 0,
+    texts: [
+      "Assembly Inspection Strategy",
+      "IPQC Inspection Focuses:",
+      "Tránh tình trạng nhăn mũi khi kiểm tra cần chú ý",
+      "*May ô dê ở vị trí mũi",
+      "1.Kiểm tra may dằn mũi đường may suôn đều theo định vị tâm trên ô dê",
+      "2.Các notch sau khi may phải vừa sát nhau không được quá chật hoặc quá lỏng tránh tình trạng mũi bị nhăn khi gò mũi, 7-8 mũi/inch",
+      "*Gò mũi",
+      "1.Kiểm tra thao tác gò mũi: mũi giày được đặt vào ngay trung tâm máy gò mũi",
+      "2.Kiểm tra sau khi gò: Mép mặt giày vừa che kín lỗ định vị đế trung",
+      "*Dập bằng",
+      "1.Kiểm tra công nhân thao tác dùng búa dập phẳng những vị trí bị cộm trên mũi giày",
+      "OK",
+      "NO"
+    ]
+  };
+
+  const deduction = deduceSlideContentBilingualPair(slide17, slide18);
+  assert.equal(deduction.isPair, false, "Must deduce that Slide 17 and Slide 18 are NOT a bilingual pair");
+  assert.ok(
+    deduction.reason.includes("Gót") || deduction.reason.includes("Heel") || deduction.reason.includes("Thông số"),
+    "Deduction reason must explain the technical/component conflict"
+  );
+
+  // Real pair (Collar Stitching EN vs VI)
+  const realEn = {
+    path: "ppt/slides/slide1.xml",
+    slideIndex: 1,
+    viCount: 0,
+    enCount: 4,
+    totalTexts: 4,
+    viRatio: 0,
+    enRatio: 1,
+    stepNumber: "1",
+    hasEnMarker: true,
+    hasViMarker: false,
+    title1: "collar stitching standard",
+    viLong: 0,
+    enLong: 2,
+    texts: [
+      "1. EN Collar Stitching Standard",
+      "Ensure smooth stitching line around collar",
+      "SPI 9-10 stitches/inch",
+      "No wrinkle allowed"
+    ]
+  };
+
+  const realVi = {
+    path: "ppt/slides/slide2.xml",
+    slideIndex: 2,
+    viCount: 4,
+    enCount: 0,
+    totalTexts: 4,
+    viRatio: 1,
+    enRatio: 0,
+    stepNumber: "1",
+    hasEnMarker: false,
+    hasViMarker: true,
+    title1: "tiêu chuẩn may vòng cổ",
+    viLong: 2,
+    enLong: 0,
+    texts: [
+      "1. VI Tiêu chuẩn may vòng cổ",
+      "Đảm bảo đường may suông đều quanh cổ giày",
+      "SPI 9-10 stitches/inch",
+      "Không bị nhăn"
+    ]
+  };
+
+  const realDeduction = deduceSlideContentBilingualPair(realEn, realVi);
+  assert.equal(realDeduction.isPair, true, "Must deduce that real Collar Stitching slides ARE a bilingual pair");
+  assert.ok(realDeduction.confidence >= 0.5, "Confidence must be high for matching step and domain terms");
+});
+
+test("detectDynamicSlidePairs: detects distant cross-block pairs where slides 31-33 are VI and slides 51-53 are EN with reordering", async () => {
+  const zip = new JSZip();
+
+  // Helper to make slide XML
+  const makeSlide = (title, body, spec) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld><p:spTree>
+    <p:sp><p:txBody>
+      <a:p><a:r><a:t>${title}</a:t></a:r></a:p>
+      <a:p><a:r><a:t>${body}</a:t></a:r></a:p>
+      <a:p><a:r><a:t>${spec}</a:t></a:r></a:p>
+    </p:txBody></p:sp>
+  </p:spTree></p:cSld>
+</p:sld>`;
+
+  // Create empty presentation and rels
+  let presXml = `<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:sldIdLst>`;
+  let relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
+
+  // Total 60 slides:
+  // Slide 31: Step 1 Toe lasting (VI)
+  // Slide 32: Step 2 Heel shaping (VI)
+  // Slide 33: Step 3 Collar stitching (VI)
+  // Slide 51: Step 1 Toe lasting (EN)
+  // Slide 52: Step 3 Collar stitching (EN) - reordered!
+  // Slide 53: Step 2 Heel shaping (EN) - reordered!
+  for (let i = 1; i <= 60; i++) {
+    const rId = `rId${i}`;
+    presXml += `<p:sldId id="${255 + i}" r:id="${rId}"/>`;
+    relsXml += `<Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i}.xml"/>`;
+
+    let content = "";
+    if (i === 31) {
+      content = makeSlide("Bước 1: Gò mũi giày", "Đặt mũi giày ngay ngắn vào khuôn định hình mũi", "Dung sai ± 0.5mm, không nhăn");
+    } else if (i === 32) {
+      content = makeSlide("Bước 2: Định hình gót nóng lạnh", "Định hình nhiệt hậu gót và ép lạnh giữ phom gót", "Nhiệt độ 120°C thời gian 15s");
+    } else if (i === 33) {
+      content = makeSlide("Bước 3: May đường vòng cổ", "Kiểm tra may vòng cổ suông đều quanh miệng cổ", "SPI 9-10 stitches/inch không đứt chỉ");
+    } else if (i === 51) {
+      content = makeSlide("Step 1: Toe lasting process", "Position shoe toe upper into shaping mold properly", "Tolerance ± 0.5mm, without wrinkles");
+    } else if (i === 52) {
+      // Step 3 placed at slide 52!
+      content = makeSlide("Step 3: Collar stitching standard", "Inspect collar stitching line smoothly around opening", "SPI 9-10 stitches/inch without broken threads");
+    } else if (i === 53) {
+      // Step 2 placed at slide 53!
+      content = makeSlide("Step 2: Heel hot and cool shaping", "Hot melt shaping heel counter and chilling to retain shape", "Temperature 120°C for 15s dwell time");
+    } else {
+      content = makeSlide(`Overview ${i}`, `Standard manufacturing note ${i}`, `General QA line ${i}`);
+    }
+    zip.file(`ppt/slides/slide${i}.xml`, content);
+  }
+
+  presXml += `</p:sldIdLst></p:presentation>`;
+  relsXml += `</Relationships>`;
+  zip.file("ppt/presentation.xml", presXml);
+  zip.file("ppt/_rels/presentation.xml.rels", relsXml);
+
+  const pairs = await detectDynamicSlidePairs(zip);
+  assert.ok(pairs.length >= 3, `Must dynamically detect at least 3 distant pairs, found ${pairs.length}`);
+
+  // Find pair for Slide 31 (Toe)
+  const pair31 = pairs.find((p) => p.vi === "ppt/slides/slide31.xml");
+  assert.ok(pair31, "Must find pair for Slide 31 (VI Toe)");
+  assert.equal(pair31.en, "ppt/slides/slide51.xml", "Slide 31 (VI Toe) must match Slide 51 (EN Toe)");
+
+  // Find pair for Slide 32 (Heel)
+  const pair32 = pairs.find((p) => p.vi === "ppt/slides/slide32.xml");
+  assert.ok(pair32, "Must find pair for Slide 32 (VI Heel)");
+  assert.equal(pair32.en, "ppt/slides/slide53.xml", "Slide 32 (VI Heel) must match Slide 53 (EN Heel) despite reordering");
+
+  // Find pair for Slide 33 (Collar)
+  const pair33 = pairs.find((p) => p.vi === "ppt/slides/slide33.xml");
+  assert.ok(pair33, "Must find pair for Slide 33 (VI Collar)");
+  assert.equal(pair33.en, "ppt/slides/slide52.xml", "Slide 33 (VI Collar) must match Slide 52 (EN Collar) despite reordering");
+});
+
 
 
 

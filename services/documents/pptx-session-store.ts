@@ -63,6 +63,10 @@ function purgeBufferCacheIfNeeded() {
 
 export const pptxSessionStore = {
   get(id: string): PptxSession | null {
+    if (!id || !/^[a-zA-Z0-9_\-]+$/.test(id)) {
+      return null;
+    }
+
     const metaFile = path.join(STORAGE_DIR, `${id}.json`);
     const origFile = path.join(STORAGE_DIR, `${id}.orig.pptx`);
     const transFile = path.join(STORAGE_DIR, `${id}.trans.pptx`);
@@ -118,6 +122,10 @@ export const pptxSessionStore = {
   },
 
   set(id: string, session: PptxSession): void {
+    if (!id || !/^[a-zA-Z0-9_\-]+$/.test(id)) {
+      return;
+    }
+
     const meta: SessionMetadata = {
       id: session.id,
       fileName: session.fileName,
@@ -125,6 +133,7 @@ export const pptxSessionStore = {
       stats: session.stats,
       mode: session.mode,
       createdAt: session.createdAt,
+      unmappedTerms: session.unmappedTerms,
       sourceLanguage: session.sourceLanguage,
       targetLanguage: session.targetLanguage,
     };

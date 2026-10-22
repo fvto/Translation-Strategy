@@ -86,7 +86,8 @@ export class GeminiTranslationProvider implements TranslationProvider {
     const quotaManager = GeminiQuotaManager.getInstance();
     const quotaState = quotaManager.getQuotaState(modelName);
     const minInterval = GeminiRateLimiter.getMinInterval(modelName);
-    const safeRpm = minInterval > 0 ? Math.round((60000 / minInterval) * 10) / 10 : 15;
+    const safeRpm = minInterval > 0 ? Math.round((60000 / minInterval) * 10) / 10 : 9.7;
+    const thresholdRpm = GeminiRateLimiter.getThresholdRpm(modelName);
 
     const displayModel =
       modelName.includes("3.5") || modelName.includes("3.1")
@@ -100,6 +101,7 @@ export class GeminiTranslationProvider implements TranslationProvider {
         limit: GeminiRateLimiter.getRpmLimit(modelName),
         minIntervalMs: minInterval,
         safetyRateRpm: safeRpm,
+        thresholdRpm,
       },
       rpd: {
         used: quotaState.used,
@@ -406,6 +408,7 @@ Key domain translation guidelines:
 - Grammatical Noun-Phrase Ordering for Inspection Criteria / CTQ: In footwear inspection headings, attributes like "Hình dạng [bộ vị]" MUST be translated with English noun adjunct ordering "[Component] shape" (e.g. "Hình dạng mũi" -> "Tip shape" / "Toe shape", NEVER "Shape tip"; "Hình dạng gót" -> "Heel shape"; "Hình dạng vòng cổ" -> "Collar shape"). Do NOT invert noun phrases into imperative verb actions.
 - Lists & Headings: Process titles starting with '*' (e.g. *Lacing, *Buffing) mark top-level process sections; NEVER create or duplicate process headings inside numbered lists (e.g. never place *Lacing between step 2 and 3).
 - Line Break & Multi-line Preservation: If a sourceText item contains newline characters ('\\n') separating lines or numbered steps (e.g. '2. ...\\n3. ...'), you MUST strictly preserve the exact same line break structure in translatedText. Each line must remain on its own line separated by '\\n'. NEVER merge multiple numbered steps or lines into a single continuous sentence.
+- Lean Technical Phrasing (Nike Technical SOP Style): Keep inspection actions direct, concise, and telegraphic. For inspection instructions, strictly use "Check if [condition]..." or "Check [parameter]..." (e.g. "Check if oven temperature and time comply with PFC...", "Check toe lasting operation..."). NEVER use the word "Verify" — the SOP presentation standard strictly requires "Check if" or "Check". Use active action verbs for physical operations ("Trim excess outsole material...", "Hammer and flatten vamp wrinkles...", "Align outsole accurately..."). Strip conversational filler clauses like "The operator uses scissors to...", "The operator must use a hammer to...", "in order to avoid the situation where...", "the operation must be done so that...". Standard acceptance clauses must be concise: "Standard: Hole margin deviation <= 0.5mm per updated QA manual." Retain 100% of technical entities, numbers, measurements, defects, and components while eliminating 30-50% of wordy conversational filler.
 - Strictly preserve all dimensions (mm, cm, kg/cm2), temperature ranges (e.g. 90-110oC), fractions (e.g. 1/2 size), acronyms (PFC, SPI, QAM, CTQ, CTP, ISQ, H/F, BPM), codes, and punctuation.
 IMPORTANT: You MUST translate every item that is in ${request.sourceLanguage.toUpperCase()} into accurate, fluent, technical English. Do NOT return the source Vietnamese text.
 Return strictly a valid JSON array of objects with keys "id" and "translatedText".`;

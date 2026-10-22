@@ -16,7 +16,7 @@ export const DEFAULT_SOP_RULES: SopContextRule[] = [
     examples: [
       {
         source: "Do thiết kế bề mặt Tip quarter không bằng phẳng chấp nhận mức độ tiêu chuẩn logo in sơn không suôn, chảy sơn nền sau khi nosew như hình QA manual cập nhật.",
-        target: "Due to the uneven surface design of the tip quarter, quality standards are acceptable for unsmooth screen-printed logos and base paint bleeding after nosew as shown in the updated QA manual.",
+        target: "Due to the uneven surface design of the Tip-quarter, quality standards are acceptable for unsmooth screen-printed logos and base paint bleeding after no-sew as shown in the updated QA manual.",
         rationale: "Translates tolerance acceptance correctly with 'quality standards are acceptable' without the word 'tolerances'."
       }
     ],
