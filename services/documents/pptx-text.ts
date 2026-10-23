@@ -79,7 +79,15 @@ export function canTranslateParagraphText(xml: string): boolean {
   return !/<a:fld\b/.test(xml) && /<a:r(?:\s[^>]*)?>[\s\S]*?<a:t(?:\s[^>]*)?>/.test(xml);
 }
 
+import { mapAndBuildParagraphRuns } from "../translation/color-mapper";
+
 export function replaceParagraphTranslation(xml: string, target: string, sourceText?: string, overrideFontSizePt?: number): string {
+  const mappedRuns = mapAndBuildParagraphRuns(xml, target, { overrideFontSizePt });
+  if (mappedRuns) {
+    const pPrMatch = xml.match(/<a:pPr(?:[\s>][\s\S]*?<\/a:pPr>|[^>]*\/>)/);
+    const pPr = pPrMatch ? pPrMatch[0] : "";
+    return `<a:p>${pPr}${mappedRuns}</a:p>`;
+  }
   if (canReplaceParagraphText(xml, target)) return replaceParagraphText(xml, target, overrideFontSizePt);
   if (!canTranslateParagraphText(xml) || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(target)) {
     throw new Error("This paragraph contains unsupported fields or explicit breaks.");

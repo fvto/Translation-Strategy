@@ -60,5 +60,6 @@ data/audit_traces/history/*
 data/translation_memory/test_*
 data/translation_memory/tm_zero_*
 data/translation_memory/pptx_*
+data/debug_live.json
 
 

@@ -4,15 +4,15 @@
     "dailyLimit": 500,
     "used": 10,
     "remaining": 490,
-    "retriesConsumed": 1,
-    "date": "2026-10-22"
+    "retriesConsumed": 4,
+    "date": "2026-10-23"
   },
   "gemini-3.1-flash-lite": {
     "model": "gemini-3.1-flash-lite",
     "dailyLimit": 500,
-    "used": 2,
-    "remaining": 498,
-    "retriesConsumed": 1,
-    "date": "2026-10-22"
+    "used": 31,
+    "remaining": 469,
+    "retriesConsumed": 3,
+    "date": "2026-10-23"
   }
 }

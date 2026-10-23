@@ -1,5 +1,93 @@
 [
   {
+    "sessionId": "pptx_1792718517628_b458f290",
+    "fileName": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-23T01:32:18.114Z",
+    "slideCount": 39,
+    "totalPairs": 1104,
+    "harvestedCount": 4
+  },
+  {
+    "sessionId": "pptx_1792661985357_b155aa23",
+    "fileName": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-22T09:52:15.018Z",
+    "slideCount": 39,
+    "totalPairs": 1104,
+    "harvestedCount": 4
+  },
+  {
+    "sessionId": "tm_zero_img_1792660495898",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-22T09:14:55.898Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792660495807",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-22T09:14:55.807Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
+    "sessionId": "tm_zero_img_1792652527886",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-22T07:02:07.887Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792652527777",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-22T07:02:07.778Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
+    "sessionId": "tm_zero_img_1792652261719",
+    "fileName": "Image_Check_SOP.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-22T06:57:41.719Z",
+    "slideCount": 1,
+    "totalPairs": 1,
+    "harvestedCount": 0
+  },
+  {
+    "sessionId": "test_session_1792652261613",
+    "fileName": "Test_SOP_01.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-22T06:57:41.614Z",
+    "slideCount": 1,
+    "totalPairs": 2,
+    "harvestedCount": 2
+  },
+  {
     "sessionId": "tm_zero_img_1792645269761",
     "fileName": "Image_Check_SOP.pptx",
     "mode": "ipqc_bilingual",
@@ -2107,94 +2195,6 @@
     "sourceLanguage": "vi",
     "targetLanguage": "en",
     "createdAt": "2026-10-17T08:04:57.019Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1792224296912",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T08:04:56.913Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1792222544331",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T07:35:44.331Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1792222544240",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T07:35:44.241Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1792220419489",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T07:00:19.490Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1792220419390",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T07:00:19.391Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1792219282107",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T06:41:22.107Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
-  },
-  {
-    "sessionId": "test_session_1792219282016",
-    "fileName": "Test_SOP_01.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T06:41:22.016Z",
-    "slideCount": 1,
-    "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1792218578998",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T06:29:38.998Z",
     "slideCount": 1,
     "totalPairs": 1,
     "harvestedCount": 0

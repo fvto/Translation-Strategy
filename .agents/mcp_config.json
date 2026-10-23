@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "secure-translator": {
+      "command": "node",
+      "args": ["c:\\Users\\User\\Desktop\\Chienluoc\\scripts\\mcp-server.mjs"]
+    }
+  }
+}

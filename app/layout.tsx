@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { LiveDebugHud } from "@/components/LiveDebugHud";
 
 export const metadata: Metadata = {
   title: "Secure Translator — Enterprise Controlled Translation & CAT System",
@@ -32,6 +33,7 @@ export default function RootLayout({
       </head>
       <body className="bg-[#f7f7f8] dark:bg-[#090b10] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white antialiased transition-colors duration-150">
         {children}
+        <LiveDebugHud />
       </body>
     </html>
   );

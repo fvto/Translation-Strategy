@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import JSZip from "jszip";
 import { db } from "../database/db";
 import type { TerminologyEntry } from "../database/types";
@@ -742,6 +744,55 @@ export async function scanPptxTranslationIntelligence(
   pairs.push(...(options.historyPairs || getAuditHistoryPairs(sourceLang, targetLang)));
   for (const entry of options.customDocTM?.getAllEntries() || []) pairs.push({ source: entry.sourceOriginal, target: entry.target,
     origin: entry.status === "LOCKED" || entry.status === "APPROVED" ? "approved" : "presentation", slideIndex: entry.sourceLocation.slide });
+
+  // Load footwear defect catalog pairs (e.g. 0057 Waterfall/collar shape <-> Hình dạng vòng cổ, etc.)
+  try {
+    const catalogPath = path.resolve(process.cwd(), "data", "defect_catalog.json");
+    if (fs.existsSync(catalogPath)) {
+      const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf-8"));
+      const catList: { nameVi?: string; nameEn?: string; code?: string }[] = [
+        ...(catalog.thresholdStandards || []),
+        ...(catalog.stageDefects || []),
+      ];
+      for (const item of catList) {
+        const vi = (item.nameVi || "").trim();
+        const en = (item.nameEn || "").trim();
+        if (vi && en && vi.toLowerCase() !== en.toLowerCase() && hasViDiacritics(vi) && !hasViDiacritics(en)) {
+          pairs.push({ source: vi, target: en, origin: "approved" });
+          if (item.code) {
+            pairs.push({ source: vi, target: `${item.code} ${en}`, origin: "approved" });
+          }
+        }
+      }
+    }
+  } catch {}
+
+  const isFootwearDefectMatch = (viText: string, enText: string): boolean => {
+    const vi = viText.toLowerCase().normalize("NFC");
+    const en = enText.toLowerCase().normalize("NFC");
+    // [Component] shape (Toe shape, Collar shape, Heel shape, Tongue shape...)
+    if (/hình\s*dạng\s*(vòng\s*cổ\s*trên|vòng\s*cổ|mũi|gót|lưỡi|thân|hộp|dây)/.test(vi) && /(collar|toe|heel|tongue|quarter|box|strap)\s*shape/.test(en)) return true;
+    // [Component] off center (Collar, Toe, Heel, Tongue, Eyestay, Webbing off center)
+    if (/(vòng\s*cổ|mũi|gót|lưỡi|ô\s*dê|dây\s*đai)\s*méo/.test(vi) && /(collar|toe|heel|tongue|eyestay|webbing)\s*off\s*center/.test(en)) return true;
+    // Wrinkle [Component] (Wrinkle collar lining, wrinkle upper, wrinkle toe...)
+    if (/nhăn\s*(lót\s*)?(vòng\s*cổ|mặt\s*giày|mũi|gót)/.test(vi) && /wrinkle|crease/.test(en)) return true;
+    // Component edge inconsistent / hairy edge
+    if (/mép\s*liệu\s*(không\s*đều|lông\s*biên|cháy)/.test(vi) && /(component\s*edge|edge\s*inconsistent|hairy\s*edge)/.test(en)) return true;
+    // Inconsistent stitching margin / topline
+    if (/cách\s*biên\s*(vòng\s*cổ\s*)?không\s*đạt|may\s*cách\s*biên\s*vòng\s*cổ/.test(vi) && /(stitching\s*margin|inconsistent\s*collar)/.test(en)) return true;
+    // Glue defects (overflow, bond gap, color bleeding, lack of cement)
+    if (/(tràn|hở|lem|thiếu)\s*keo/.test(vi) && /(overflow|gap|bleed|lack).*(cement|glue)/.test(en)) return true;
+    // Stitching uneven / inconsistent
+    if (/chỉ\s*may\s*không\s*đều/.test(vi) && /(stitching|stitch).*(uneven|inconsistent)/.test(en)) return true;
+    // Damaged material / delamination
+    if (/liệu\s*hư|tách\s*lớp/.test(vi) && /(damaged\s*material|delamination)/.test(en)) return true;
+    // Eyestay opening
+    if (/độ\s*mở\s*(ô\s*dê|vòng\s*cổ)/.test(vi) && /(eyestay|collar).*(opening)/.test(en)) return true;
+    // Toe collapse
+    if (/mũi\s*bị\s*gãy/.test(vi) && /toe\s*collapse/.test(en)) return true;
+    return false;
+  };
+
   const extractItemStepNumber = (text: string): string | null => {
     if (!text) return null;
     const m = text.match(/^\s*(?:(?:step|bước|ctq|sop|item|mục|trạm)\s*[:#]?\s*(\d+(?:\.\d+)?)|#?\s*(\d+(?:\.\d+)?)\s*(?:[.:\-\/)]|\s*(?:en|vi|vn)\b))/i);
@@ -782,11 +833,34 @@ export async function scanPptxTranslationIntelligence(
     if (isBilingualText(raw.text)) {
       inlineBilingual.add(raw.id);
     }
-    const parts = raw.text.split(/\r?\n|\s+[-–—/|:]\s+|[-–—/|:]/).map((t) => t.replace(/^(?:EN|VI|VN)\s*:\s*/i, "").trim()).filter(Boolean);
+    // Rejoin multi-line split footwear defect terms before splitting or pairing:
+    const rawTextClean = raw.text
+      .replace(/\b(hình\s*dạng)\s*\r?\n\s*(vòng\s*cổ\s*trên|vòng\s*cổ|mũi|gót|lưỡi\s*gà|lưỡi\s*giày|lưỡi|than|thân\s*giày|thân|hộp|dây)\b/gi, "$1 $2")
+      .replace(/\b(tràn|hở|lem|thiếu)\s*\r?\n\s*(keo|primer|sơn|mực)\b/gi, "$1 $2")
+      .replace(/\b(độ\s*dính|lực\s*dính)\s*\r?\n\s*(băng\s*keo|keo|màng)\b/gi, "$1 $2")
+      .replace(/\b(mép\s*liệu|liệu|mặt\s*liệu)\s*\r?\n\s*(không\s*đều|hư|tách\s*lớp|khác\s*màu|biến\s*vàng|trầy|lông\s*biên|cháy)\b/gi, "$1 $2")
+      .replace(/\b(may\s*cách\s*biên|may\s*dằn|may\s*lót|may\s*rút|may\s*trang\s*trí|lộn|bọc\s*viền)\s*\r?\n\s*(vòng\s*cổ|mũi\s*\/?\s*gót|mũi|gót|lưỡi|ô\s*dê|dập\s*bằng)\b/gi, "$1 $2")
+      .replace(/\b(chỉ\s*may|đường\s*may|chỉ\s*dưới)\s*\r?\n\s*(không\s*đều|đứt|lỏng\s*,?\s*chặt|bỏ\s*mũi|thẳng)\b/gi, "$1 $2")
+      .replace(/\b(nhăn\s*lót|nhăn|nếp\s*gấp)\s*\r?\n\s*(vòng\s*cổ|mặt\s*giày|lót|mũi|gót)\b/gi, "$1 $2")
+      .replace(/\b(độ\s*mở|khoảng\s*cách)\s*\r?\n\s*(ô\s*dê|vòng\s*cổ|đường\s*may)\b/gi, "$1 $2")
+      .replace(/\b(vòng\s*cổ|mũi|gót|ô\s*dê|dây\s*đai)\s*\r?\n\s*(méo|lệch|cao\s*thấp|gãy|biến\s*dạng)\b/gi, "$1 $2")
+      .replace(/\b(hướng\s*chặt|vị\s*trí|cách\s*biên|cách\s*kim)\s*\r?\n\s*(không\s*theo\s*PFC|không\s*đạt|lệch|sai)\b/gi, "$1 $2")
+      .replace(/\b(tem\s*size|tem\s*co|phẩm\s*chất|chất\s*lượng)\s*\r?\n\s*(biến\s*dạng|bị\s*tróc|logo|đệm\s*giày|tpu)\b/gi, "$1 $2");
+
+    // Split lines by explicit newline, pipe separator, colon, or hyphen/dash bounded by words.
+    // NEVER split on bare '-' or '/' inside numbers (9-10) or technical units (mũi/inch, stitches/inch).
+    const parts = rawTextClean
+      .split(/\r?\n|\s*\|\s*|\s*[:]\s+|(?<=[A-Za-z])[-–—](?=[A-Za-zÀ-ỹ])|\s+[-–—]\s+|\s+\/\s+(?=[A-Za-zÀ-ỹ]{2,})/)
+      .map((t) => t.replace(/^(?:EN|VI|VN)\s*:\s*/i, "").trim())
+      .filter(Boolean);
+
+    const isMeasurementOrUnitOnly = (str: string) =>
+      /^(?:inch|inches|mm|cm|m|spi|stitches(?:\/inch)?|mũi(?:\/inch)?|kg(?:\/cm²)?|prs|hours?|\d+(?:-\d+)?|\d+(?:[.,]\d+)?\s*(?:mm|cm|inch|mũi|spi))$/i.test(str.trim());
+
     if (parts.length === 2) {
       const s = parts.find((t) => sourceEvidence(t, sourceLang) && !isItemPrefixOrCode(t));
       const t = parts.find((t) => targetEvidence(t, targetLang) && !isItemPrefixOrCode(t));
-      if (s && t && !isNonTranslatable(s) && !isNonTranslatable(t) && !/^\d+(?:[.,]\d+)?$/.test(s) && !/^\d+(?:[.,]\d+)?$/.test(t)) {
+      if (s && t && !isNonTranslatable(s) && !isNonTranslatable(t) && !isMeasurementOrUnitOnly(s) && !isMeasurementOrUnitOnly(t) && !/^\d+(?:[.,]\d+)?$/.test(s) && !/^\d+(?:[.,]\d+)?$/.test(t)) {
         pairs.push({ source: s, target: t, origin: "presentation", slideIndex: raw.location.slideIndex });
         inlineBilingual.add(raw.id);
       }
@@ -805,7 +879,7 @@ export async function scanPptxTranslationIntelligence(
           for (const it1 of b1) {
             const s1 = extractItemStepNumber(it1);
             const partner = s1 ? b2.find((it2) => extractItemStepNumber(it2) === s1) : b1.length === b2.length ? b2[b1.indexOf(it1)] : undefined;
-            if (partner && !isNonTranslatable(it1) && !isNonTranslatable(partner)) {
+            if (partner && !isNonTranslatable(it1) && !isNonTranslatable(partner) && !isMeasurementOrUnitOnly(it1) && !isMeasurementOrUnitOnly(partner)) {
               const src = firstIsVi ? it1 : partner;
               const tgt = firstIsVi ? partner : it1;
               pairs.push({ source: src, target: tgt, origin: "presentation", slideIndex: raw.location.slideIndex });
@@ -821,6 +895,7 @@ export async function scanPptxTranslationIntelligence(
       for (let k = 0; k < parts.length - 1; k++) {
         const l1 = parts[k], l2 = parts[k + 1];
         if (isInspectionStatusLabel(l1) || isInspectionStatusLabel(l2)) continue;
+        if (isMeasurementOrUnitOnly(l1) || isMeasurementOrUnitOnly(l2)) continue;
         const s1 = sourceEvidence(l1, sourceLang), t1 = targetEvidence(l1, targetLang);
         const s2 = sourceEvidence(l2, sourceLang), t2 = targetEvidence(l2, targetLang);
         const step1 = extractItemStepNumber(l1), step2 = extractItemStepNumber(l2);
@@ -971,7 +1046,60 @@ export async function scanPptxTranslationIntelligence(
     }
 
     for (const scopeMembers of subScopes) {
-      // 0. Check if container itself is a block bilingual layout:
+      // 0. Multi-line Orphan Defect Stitching (e.g. Dòng 2: "Hình dạng", Dòng 3: "vòng cổ" under Potential Defect/Item)
+      for (let i = 0; i < scopeMembers.length - 1; i++) {
+        const u1 = scopeMembers[i], u2 = scopeMembers[i + 1];
+        if (paired.has(u1.id) && paired.has(u2.id)) continue;
+
+        const u1IsVi = hasViDiacritics(u1.text) || languageEvidence(u1.text).vi.length > 0;
+        const u2IsVi = hasViDiacritics(u2.text) || languageEvidence(u2.text).vi.length > 0;
+        if (!u1IsVi || !u2IsVi) continue;
+
+        const s1 = extractItemStepNumber(u1.text), s2 = extractItemStepNumber(u2.text);
+        if (s1 && s2 && s1 !== s2) continue;
+        if (u1.text.trim().length > 60 || u2.text.trim().length > 60) continue;
+
+        const combinedVi = `${cleanStepPrefix(u1.text)} ${cleanStepPrefix(u2.text)}`.trim();
+        const targetUnit = scopeMembers.find((cand) => {
+          if (cand.id === u1.id || cand.id === u2.id) return false;
+          if (hasViDiacritics(cand.text)) return false;
+          const sCand = extractItemStepNumber(cand.text);
+          if (s1 && sCand && s1 !== sCand) return false;
+
+          const pairCheck = isSemanticBilingualPair(combinedVi, cand.text, glossary);
+          if (pairCheck.isPair) return true;
+          const rel = chooseAuditMatch(known.lookup(combinedVi));
+          if (rel.match && !rel.conflict) {
+            const tgtPattern = auditTextForms(rel.match.target).compact;
+            const candCompact = auditTextForms(cand.text).compact;
+            if (candCompact === tgtPattern || candCompact.includes(tgtPattern) || tgtPattern.includes(candCompact)) return true;
+          }
+          if (isFootwearDefectMatch(combinedVi, cand.text)) return true;
+          return false;
+        });
+
+        if (targetUnit) {
+          pairs.push({
+            source: combinedVi,
+            target: targetUnit.text,
+            origin: "presentation",
+            slideIndex: u1.location.slideIndex,
+            sourceUnitId: u1.id,
+            targetUnitId: targetUnit.id,
+          });
+          paired.set(u1.id, targetUnit.text);
+          paired.set(u2.id, targetUnit.text);
+          pairedPartnerId.set(u1.id, targetUnit.id);
+          pairedPartnerId.set(u2.id, targetUnit.id);
+          paired.set(targetUnit.id, combinedVi);
+          pairedPartnerId.set(targetUnit.id, u1.id);
+          inlineBilingual.add(u1.id);
+          inlineBilingual.add(u2.id);
+          inlineBilingual.add(targetUnit.id);
+        }
+      }
+
+      // Check if container itself is a block bilingual layout:
       // (e.g. [E1, E2, E3, V1, V2, V3] or [V1, V2, V3, E1, E2, E3])
       const firstIsVi = scopeMembers.length > 0 && hasViDiacritics(scopeMembers[0].text);
       const transIdx = firstIsVi
@@ -1103,6 +1231,44 @@ export async function scanPptxTranslationIntelligence(
         const pairCheck = isSemanticBilingualPair(s.text, t.text, glossary);
         if (pairCheck.isPair) {
           addPair(s, t);
+        }
+      }
+
+      // 4.5. Orphan Continuation Stitcher (e.g. Dòng 2: "Hình dạng" paired with "Collar shape", Dòng 3: "vòng cổ" left orphaned)
+      for (let i = 0; i < scopeMembers.length - 1; i++) {
+        const u1 = scopeMembers[i], u2 = scopeMembers[i + 1];
+        const u1IsVi = hasViDiacritics(u1.text) || languageEvidence(u1.text).vi.length > 0;
+        const u2IsVi = hasViDiacritics(u2.text) || languageEvidence(u2.text).vi.length > 0;
+        if (!u1IsVi || !u2IsVi) continue;
+
+        const s1 = extractItemStepNumber(u1.text), s2 = extractItemStepNumber(u2.text);
+        if (s1 && s2 && s1 !== s2) continue;
+        if (u1.text.trim().length > 60 || u2.text.trim().length > 60) continue;
+
+        if (paired.has(u1.id) && !paired.has(u2.id)) {
+          const tgt = paired.get(u1.id)!;
+          const combinedVi = `${cleanStepPrefix(u1.text)} ${cleanStepPrefix(u2.text)}`.trim();
+          if (
+            isSemanticBilingualPair(combinedVi, tgt, glossary).isPair ||
+            isFootwearDefectMatch(combinedVi, tgt)
+          ) {
+            paired.set(u2.id, tgt);
+            const pId = pairedPartnerId.get(u1.id);
+            if (pId) pairedPartnerId.set(u2.id, pId);
+            inlineBilingual.add(u2.id);
+          }
+        } else if (!paired.has(u1.id) && paired.has(u2.id)) {
+          const tgt = paired.get(u2.id)!;
+          const combinedVi = `${cleanStepPrefix(u1.text)} ${cleanStepPrefix(u2.text)}`.trim();
+          if (
+            isSemanticBilingualPair(combinedVi, tgt, glossary).isPair ||
+            isFootwearDefectMatch(combinedVi, tgt)
+          ) {
+            paired.set(u1.id, tgt);
+            const pId = pairedPartnerId.get(u2.id);
+            if (pId) pairedPartnerId.set(u1.id, pId);
+            inlineBilingual.add(u1.id);
+          }
         }
       }
     }
