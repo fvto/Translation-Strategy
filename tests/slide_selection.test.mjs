@@ -894,7 +894,8 @@ test("Test 14: English Immunity Shield protects pure English, inspection labels,
   });
 
   // ONLY Vietnamese sentence "Kiểm tra dán đế chắc chắn" should be translated
-  assert.equal(translatedBatches.length, 1, "Only 1 item should be sent to translation provider");
+  assert.equal(new Set(translatedBatches).size, 1, "Only the VI source may be sent, including a bounded glossary retry");
+  assert.ok(translatedBatches.length <= 2);
   assert.ok(translatedBatches[0].includes("Kiểm tra dán đế"), "The translated item is the Vietnamese instruction");
 
   // English immune items must NEVER be translated
@@ -1390,7 +1391,9 @@ test("Test 23: Zero Vietnamese Leakage Gate - Post-Flight QA Gate auto-eliminate
   const zipRepaired = await JSZip.loadAsync(report.auditedBuffer);
   const slide1Xml = await zipRepaired.file("ppt/slides/slide1.xml")?.async("string");
 
-  assert.equal(hasViDiacritics(slide1Xml), false, "Leaked Vietnamese paragraph must be cleanly removed from ISQ EN slide");
+  assert.equal(hasViDiacritics(slide1Xml), true, "Unresolved instructions must be retained rather than silently deleted");
+  assert.equal(report.passed, false, "Untranslated content must fail the audit");
+  assert.ok(report.untranslatedRemaining.length > 0);
   assert.ok(slide1Xml.includes("1. Check the stitching margin"), "English content preserved");
 });
 

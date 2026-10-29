@@ -1,3 +1,4 @@
+import { refreshTranslationQuality, translationQualityGroups } from "./translation-quality";
 import { SmartAuditReport, ScannedTextUnit } from "./smart-detector";
 import { GeminiCircuitBreaker } from "./gemini/circuit-breaker";
 import { GeminiRateLimiter } from "./gemini/rate-limiter";
@@ -44,12 +45,12 @@ export async function runAiDeepAudit(
 
   // Identify candidate units that are marked as needing attention
   const candidateUnits = report.units.filter(
-    (u) =>
+    (u) => !u.qualityIssues?.length && (
       u.selectedForTranslation ||
       u.requiresTranslation ||
       u.status === "NEEDS_TRANSLATION" ||
       u.status === "REVIEW_REQUIRED" ||
-      u.status === "POSSIBLE_TRANSLATION"
+      u.status === "POSSIBLE_TRANSLATION")
   );
 
   if (candidateUnits.length === 0) {
@@ -188,11 +189,13 @@ Respond ONLY with a valid JSON array of verdicts for candidate items:
         for (const v of verdicts) {
           const unit = unitMap.get(v.id);
           if (!unit) continue;
+          if (unit.qualityIssues?.length) continue;
 
           if (v.verdict === "PAIR") {
             unit.status = "ALREADY_TRANSLATED";
             unit.requiresTranslation = false;
             unit.selectedForTranslation = false;
+            unit.pairedUnitId = v.pairedWithId || undefined;
             unit.existingTranslation = v.translation || (v.pairedWithId ? unitMap.get(v.pairedWithId)?.sourceText : undefined);
             unit.reason = v.reason || "AI Studio xác nhận: đã có bản dịch tiếng Anh tương ứng trên slide.";
             delete unit.suggestedTranslation;
@@ -253,6 +256,12 @@ Respond ONLY with a valid JSON array of verdicts for candidate items:
       console.error("[AiDeepAudit] Error calling AI Studio:", err);
     }
   }
+
+  refreshTranslationQuality(report, options.sourceLang || "vi", options.targetLang || "en");
+
+  report.groups = [...(report.groups || []).filter(group => !group.id.startsWith("quality:")), ...translationQualityGroups(report)];
+  report.reviewRequiredCount = report.units.filter(unit => unit.status === "REVIEW_REQUIRED" || unit.qualityStatus === "review_required").length;
+  report.attentionCount = report.groups.filter(group => !group.safeToApply).length;
 
   // Update summary statistics in the report
   const updatedReport: SmartAuditReport = {

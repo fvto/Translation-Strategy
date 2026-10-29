@@ -1,5 +1,7 @@
 import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
+import { shiftFormulaColumns, renameFormulaSheets, uniqueSheetName } from "./xlsx-formulas";
+export { shiftFormulaColumns } from "./xlsx-formulas";
 import { DocumentProcessor, ExtractedDocument, ExtractedTermCandidate, DocumentTable } from "./types";
 import { getTranslationProvider, TranslationProvider } from "../translation";
 import { db } from "../database/db";
@@ -294,20 +296,6 @@ function indexToColLetter(index: number): string {
     index = Math.floor((index - mod) / 26);
   }
   return letter;
-}
-
-export function shiftFormulaColumns(formula: string, insertedColIdx: number, shiftCount: number = 1): string {
-  if (!formula || typeof formula !== "string") return formula;
-  return formula.replace(/(\$?[A-Z]+)(\$?\d+)/g, (match, colPart, rowPart) => {
-    const isAbs = colPart.startsWith("$");
-    const rawCol = isAbs ? colPart.slice(1) : colPart;
-    const colIdx = colLetterToIndex(rawCol);
-    if (colIdx >= insertedColIdx) {
-      const newCol = indexToColLetter(colIdx + shiftCount);
-      return (isAbs ? "$" : "") + newCol + rowPart;
-    }
-    return match;
-  });
 }
 
 const VI_DIACRITICS = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i;
@@ -677,53 +665,58 @@ export class XlsxTranslatorService {
         }
       }
     } else if (mode === "bilingual_sheets") {
-      // Mode 2: Duplicate sheets (ISQ style: 1 VI sheet + 1 EN sheet)
-      const originalSheetNames = workbook.worksheets.map((s) => s.name);
-      for (const sName of originalSheetNames) {
-        const srcSheet = workbook.getWorksheet(sName);
-        if (!srcSheet) continue;
-
-        srcSheet.name = `${sName} (VI)`;
-        const enSheet = workbook.addWorksheet(`${sName} (EN)`);
+      const sourceSheets = [...workbook.worksheets];
+      const usedNames = new Set(sourceSheets.map((sheet) => sheet.name.toLowerCase()));
+      const plans = sourceSheets.map((sheet) => ({ sheet, original: sheet.name,
+        sourceName: uniqueSheetName(sheet.name, sourceLanguage === "en" ? " (EN)" : " (VI)", usedNames),
+        targetName: uniqueSheetName(sheet.name, targetLanguage === "vi" ? " (VI)" : " (EN)", usedNames) }));
+      const sourceNames = new Map(plans.map((p) => [p.original, p.sourceName]));
+      const targetNames = new Map(plans.map((p) => [p.sourceName, p.targetName]));
+      // Materialize shared formulas before structural changes move their master cells.
+      for (const ws of sourceSheets) ws.eachRow((row) => row.eachCell((cell) => {
+        if (cell.type === ExcelJS.ValueType.Formula) cell.value = { formula: renameFormulaSheets(cell.formula, sourceNames), result: cell.result };
+      }));
+      for (const plan of plans) plan.sheet.name = plan.sourceName;
+      for (const { sheet: srcSheet, targetName } of plans) {
+        const enSheet = workbook.addWorksheet(targetName);
         sheetsDuplicated++;
-
-        // Copy columns, widths and rows
-        enSheet.columns = srcSheet.columns.map((c) => ({
-          header: c.header,
-          key: c.key,
-          width: c.width,
-          style: c.style,
-        }));
-
+        enSheet.properties = structuredClone(srcSheet.properties);
+        enSheet.pageSetup = structuredClone(srcSheet.pageSetup);
+        enSheet.headerFooter = structuredClone(srcSheet.headerFooter);
+        enSheet.views = structuredClone(srcSheet.views);
+        (enSheet as any).dataValidations.model = structuredClone((srcSheet as any).dataValidations.model);
+        if (srcSheet.autoFilter) enSheet.autoFilter = structuredClone(srcSheet.autoFilter);
+        enSheet.columns = srcSheet.columns.map((c) => ({ key: c.key, width: c.width, hidden: c.hidden, outlineLevel: c.outlineLevel, style: structuredClone(c.style) }));
         srcSheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
           const enRow = enSheet.getRow(rowNumber);
           enRow.height = row.height;
-
+          enRow.hidden = row.hidden;
+          enRow.outlineLevel = row.outlineLevel;
           row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
             const enCell = enRow.getCell(colNumber);
-
-            // Copy cell styling
-            enCell.style = { ...cell.style };
-
-            let cellVal = cell.value;
-            if (
-              cell.type === ExcelJS.ValueType.Formula ||
-              (cellVal && typeof cellVal === "object" && "formula" in (cellVal as any))
-            ) {
-              enCell.value = cellVal;
-            } else if (typeof cellVal === "string" && isTranslatableText(cellVal)) {
-              const rawT = translationMap.get(cellVal.trim()) || cellVal;
-              const trans = docTM.enforceDocumentTM(cellVal, rawT, sourceLanguage, targetLanguage).text;
-              enCell.value = trans;
+            enCell.style = structuredClone(cell.style);
+            if (cell.dataValidation) enCell.dataValidation = structuredClone(cell.dataValidation);
+            if (cell.note) enCell.note = structuredClone(cell.note);
+            const value = cell.value;
+            if (cell.type === ExcelJS.ValueType.Formula) {
+              enCell.value = { formula: renameFormulaSheets(cell.formula, targetNames), result: cell.result };
+            } else if (typeof value === "string" && isTranslatableText(value)) {
+              const rawT = translationMap.get(value.trim()) || value;
+              enCell.value = docTM.enforceDocumentTM(value, rawT, sourceLanguage, targetLanguage).text;
               translatedCellsCount++;
             } else {
-              enCell.value = cellVal;
+              enCell.value = structuredClone(value);
             }
           });
         });
+        for (const range of srcSheet.model.merges || []) enSheet.mergeCells(range);
+        for (const conditional of (srcSheet.model as any).conditionalFormattings || []) enSheet.addConditionalFormatting(structuredClone(conditional));
       }
     } else if (mode === "bilingual_columns") {
       // Mode 3: Insert parallel translation column next to each translated text column
+      workbook.eachSheet((ws) => ws.eachRow((row) => row.eachCell((cell) => {
+        if (cell.type === ExcelJS.ValueType.Formula) cell.value = { formula: cell.formula, result: cell.result };
+      })));
       workbook.eachSheet((worksheet) => {
         // Find which columns contain translated cells in this sheet
         const sheetCells = cellsToTranslate.filter((c) => c.sheetName === worksheet.name);
@@ -777,24 +770,13 @@ export class XlsxTranslatorService {
             }
           });
 
-          // Shift formula column references across all formula cells in this sheet
-          worksheet.eachRow({ includeEmpty: false }, (row) => {
-            row.eachCell({ includeEmpty: false }, (cell) => {
-              if (
-                cell.type === ExcelJS.ValueType.Formula ||
-                (cell.value && typeof cell.value === "object" && "formula" in (cell.value as any))
-              ) {
-                const formulaObj = cell.value as any;
-                if (formulaObj && formulaObj.formula) {
-                  const newFormula = shiftFormulaColumns(formulaObj.formula, insertIdx, 1);
-                  cell.value = {
-                    ...formulaObj,
-                    formula: newFormula,
-                  };
-                }
-              }
-            });
-          });
+          // References to this sheet can live anywhere in the workbook.
+          workbook.eachSheet((formulaSheet) => formulaSheet.eachRow((row) => row.eachCell((cell) => {
+            if (cell.type !== ExcelJS.ValueType.Formula) return;
+            const formula = cell.formula;
+            const updated = shiftFormulaColumns(formula, insertIdx, 1, { formulaSheetName: formulaSheet.name, shiftedSheetName: worksheet.name });
+            if (updated !== formula) cell.value = { formula: updated, result: cell.result };
+          })));
         }
       });
     }
@@ -806,6 +788,7 @@ export class XlsxTranslatorService {
       translatedItems: translatedCellsCount,
     });
 
+    workbook.calcProperties.fullCalcOnLoad = true;
     const rawBuffer = await workbook.xlsx.writeBuffer();
     const translatedBuffer = Buffer.from(rawBuffer);
 

@@ -265,10 +265,10 @@ export function buildConcisePromptRules(
 CONCISE SOP MODE (ACTIVE — Safe for this sentence):
 - Use telegraphic imperative format: [Action verb] + [Component] + [Spec/Defect/Condition]
 - Strip administrative fillers: "tiến hành thực hiện", "chú ý cẩn thận", "để tránh tình trạng", "kiểm tra xem có... hay không"
-- Convert verbose phrases: "carry out the process of checking" → "Check"
+- For inspection instructions, use "Check if" + subject + finite verb + source condition. Preserve "if"; do not shorten the condition to a noun phrase. Keep operation commands such as "Tuck" or "Apply" for actual source operations.
 - MANDATORY: The following entities MUST appear in your output (do NOT omit any): ${mustKeepList || "all technical terms from source"}
 - FORBIDDEN: Do NOT merge or paraphrase defect lists. If source has 4 defects, output must have exactly 4.
-- Target length: ~40–60% of what a literal word-for-word translation would produce.`.trim();
+- Keep the shortest clear wording that preserves the complete instruction. Do not target a fixed percentage reduction.`.trim();
 }
 
 // ─── Post-Translation Entity Validation ──────────────────────────────────────

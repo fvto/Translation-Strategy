@@ -28,3 +28,14 @@ trigger: always_on
    - Strictly forbidden from capturing, dumping, extracting, or saving image files from company documents (PPTX, PDF, etc.).
    - Process textual context, structure, and metadata only. Do not store or inspect visual image assets containing proprietary SOP details.
 
+6. **Worker-facing Inspection Wording — User Directive**:
+   - Inspection instructions ("Kiểm tra ...") must use **"Check if" + subject + finite verb + the complete source condition** in English, in both text translation and Smart Audit.
+   - Shortening must preserve **if**, negation, measurements and acceptance conditions. Do not replace the instruction with "Check" plus a noun phrase, "Verify", "Ensure" or "Inspect".
+   - Do not mechanically prepend "Check if" to a bare noun phrase. Produce a complete grammatical condition without inventing a requirement.
+   - Physical operation commands and descriptive facts retain their original function.
+
+7. **Consistent Thread Defect Naming — User Clarification**:
+   - The reported `breaking / breakage` inconsistency refers to **đứt chỉ**. Use the approved **Broken thread** label consistently in defect labels/lists.
+   - Keep grammatical predicates such as **threads are broken** in `Check if` sentences. Never globally replace `breaking` when it concerns another component or an action.
+   - **Fraying** describes a separate defect; do not merge it into thread breakage.
+

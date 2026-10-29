@@ -11,7 +11,7 @@ const regexCache = new Map<string, RegExp>();
 function getCachedRegex(rawTerm: string): RegExp {
   let regex = regexCache.get(rawTerm);
   if (!regex) {
-    const escaped = escapeRegex(rawTerm);
+    const escaped = rawTerm.split(/\s+/).map(escapeRegex).join("\\s+");
     const hasAsciiEnd = /[a-zA-Z]$/.test(rawTerm);
     const pluralSuffix = hasAsciiEnd ? "(?:es|s)?" : "";
     const regexPattern = `(?<![\\p{L}\\p{N}])(${escaped}${pluralSuffix})(?![\\p{L}\\p{N}])`;
@@ -74,7 +74,7 @@ export function matchTerminology(
   const matchedSpans: { start: number; end: number }[] = [];
   const results: MatchedTerm[] = [];
 
-  const lowerText = sourceText.toLowerCase();
+  const lowerText = sourceText.toLowerCase().replace(/\s+/g, " ");
 
   for (const entry of sortedGlossary) {
     const rawTerm = entry.sourceTerm.trim();
@@ -87,7 +87,7 @@ export function matchTerminology(
 
     // Fast substring pre-filter: if text does not contain the term at all,
     // skip regex compilation completely (provides 1,000x+ speedup)
-    const lowerTerm = rawTerm.toLowerCase();
+    const lowerTerm = rawTerm.toLowerCase().replace(/\s+/g, " ");
     if (!lowerText.includes(lowerTerm)) continue;
 
     // Unicode-aware word boundaries (?<![\p{L}\p{N}]) and (?![\p{L}\p{N}]) to correctly handle

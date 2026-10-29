@@ -1,11 +1,13 @@
 import { TerminologyEntry } from "../database/types";
 
 export interface TranslationRequest {
+  unitId?: string;
   sourceText: string;
   sourceLanguage: string;
   targetLanguage: string;
   approvedTerminology: TerminologyEntry[];
   context?: string;
+  internalExamples?: import("./internal-sop").InternalSopExample[];
 }
 
 export interface AiStudioMetrics {
@@ -55,6 +57,7 @@ export interface BatchTranslationRequest {
   targetLanguage: string;
   approvedTerminology: TerminologyEntry[];
   context?: string;
+  internalExamples?: import("./internal-sop").InternalSopExample[];
 }
 
 export interface BatchTranslationResponse {

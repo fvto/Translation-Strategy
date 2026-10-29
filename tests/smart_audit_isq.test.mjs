@@ -80,10 +80,13 @@ test('Mixed emphasis keeps dominant font, size and color without making the whol
   assert.equal(canTranslateParagraphText('<a:p><a:fld id="x"><a:t>Kiểm tra</a:t></a:fld></a:p>'),false);
 });
 
-test('ISQ partial slide selection fails before spending translation requests',async()=>{
+test('ISQ partial slide selection respects explicitly skipped cells',async()=>{
   let calls=0;const provider={...mock,translateBatch:async req=>{calls++;return mock.translateBatch(req);}};
-  await assert.rejects(pptxTranslatorService.translate(await deck(box(mixed1)+box(mixed5)),{sourceLanguage:'vi',targetLanguage:'en',mode:'ipqc_bilingual',fileName:'ISQ-manual.pptx',provider,translateMissingOnly:true,selectedUnitIds:['s2_p1']}),/ISQ cần dịch đủ cả slide/);
-  assert.equal(calls,0);
+  const result=await pptxTranslatorService.translate(await deck(box(mixed1)+box(mixed5)),{sourceLanguage:'vi',targetLanguage:'en',mode:'ipqc_bilingual',fileName:'ISQ-manual.pptx',provider,translateMissingOnly:true,selectedUnitIds:['s2_p1']});
+  const zip=await JSZip.loadAsync(result.translatedBuffer);
+  const xml=await zip.file('ppt/slides/slide2.xml').async('string');
+  assert.ok(xml.includes(mixed5), 'The skipped cell must retain its exact original XML');
+  assert.ok(!paragraphText(xml).includes(ctq1));
 });
 
 test('An existing in-place EN/VI box becomes separate EN and VI slides without translating its approved counterpart again',async()=>{

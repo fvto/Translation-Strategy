@@ -4,11 +4,14 @@ import { saveToPrivateStorage, secureDeleteFile } from "@/services/security/stor
 import { db } from "@/services/database/db";
 import { verifySessionToken } from "@/services/security/auth";
 import { DataClassification, RetentionPolicy } from "@/services/database/types";
+import { validateFileSignature } from "@/services/security/validator";
 // Fix #8: Import session store to trigger opportunistic cleanup on each upload
 import { pptxSessionStore } from "@/services/documents/pptx-session-store";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
+  let temporaryPath: string | undefined;
+  let retainFile = false;
   // Fix #8: Opportunistically clean up stale PPTX sessions (> 2h old) on each upload
   // to prevent disk accumulation of .orig.pptx/.trans.pptx files.
   try { pptxSessionStore.cleanup(); } catch {}
@@ -33,8 +36,14 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    const validation = validateFileSignature(buffer, file.name);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
     // 1. Save temporarily to private, non-public storage
     const stored = saveToPrivateStorage(buffer, file.name);
+    temporaryPath = stored.filePath;
 
     // 2. Parse document and extract structure and term candidates
     const extracted = await documentProcessingService.processDocument(buffer, file.name);
@@ -93,6 +102,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    retainFile = retentionPolicy === "persist_until_manual";
+
     return NextResponse.json({
       success: true,
       document: docRecord,
@@ -111,5 +122,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ error: e.message || "Failed to process document" }, { status: 500 });
+  } finally {
+    if (temporaryPath && !retainFile) secureDeleteFile(temporaryPath);
   }
 }

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Session or translated file not found" }, { status: 404 });
     }
 
-    const downloadName = formatSopFileName(session.fileName);
+    const downloadName = formatSopFileName(session.fileName, session.targetLanguage);
 
     return new Response(session.translatedBuffer as any, {
       status: 200,
@@ -109,11 +109,15 @@ export async function POST(req: NextRequest) {
     }).map((p) => p.id);
 
     // Rebuild translated PPTX with latest slide texts and selected mode
+    let downloadAudit: { passed: boolean; remainingCount: number; terminologyConflictCount: number; qualityIssueCount: number } | undefined;
     const rebuiltBuffer = await pptxTranslatorService.rebuildWithTranslations(
       originalBuffer,
       slides,
       finalMode,
-      fileName
+      fileName,
+      targetLanguage,
+      undefined,
+      (report) => { downloadAudit = { passed: report.passed, remainingCount: report.untranslatedRemaining?.length || 0, terminologyConflictCount: report.terminologyConsistency?.groups.length || 0, qualityIssueCount: report.translationQuality?.issues.length || 0 }; }
     );
 
     // If session exists, update it
@@ -141,7 +145,7 @@ export async function POST(req: NextRequest) {
       console.warn("[DownloadPPTX] Failed to sync custom edits to TM:", tmErr);
     }
 
-    const downloadName = formatSopFileName(fileName);
+    const downloadName = formatSopFileName(fileName, targetLanguage);
 
     return new Response(rebuiltBuffer as any, {
       status: 200,
@@ -149,6 +153,11 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         "Content-Disposition": buildContentDisposition(downloadName),
         "Content-Length": rebuiltBuffer.length.toString(),
+        "X-Postflight-Passed": String(downloadAudit?.passed ?? false),
+        "X-Audit-Unhandled-Count": String(downloadAudit?.remainingCount ?? 0),
+        "X-Translation-Quality-Issue-Count": String(downloadAudit?.qualityIssueCount ?? 0),
+        "X-Terminology-Conflict-Count": String(downloadAudit?.terminologyConflictCount ?? 0),
+        "Access-Control-Expose-Headers": "X-Postflight-Passed, X-Audit-Unhandled-Count, X-Terminology-Conflict-Count, X-Translation-Quality-Issue-Count",
       },
     });
   } catch (err: any) {

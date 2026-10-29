@@ -8,6 +8,8 @@ import { AirGappedTranslationProvider } from "../translation/offline";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
 import { replaceParagraphTranslation } from "../documents/pptx-text";
 import { isVietnameseText } from "../translation/vietnamese-detector";
+import { repairKnownToleranceNote } from "../translation/quality-tolerance";
+import { PPTX_PARAGRAPH_PATTERN } from "../documents/pptx-text";
 
 /** Escapes XML special characters for safe injection into <a:t> nodes. */
 function escapeXmlText(text: string): string {
@@ -19,7 +21,7 @@ function escapeXmlText(text: string): string {
 
 export interface PostFlightIssue {
   slide: string;
-  type: "vi_leak" | "lost_bold" | "invalid_spi" | "inverted_phrase" | "typo_repair" | "rogue_heading";
+  type: "vi_leak" | "lost_bold" | "invalid_spi" | "inverted_phrase" | "typo_repair" | "rogue_heading" | "terminology" | "translation_quality";
   message: string;
   originalText?: string;
   targetText?: string;
@@ -27,12 +29,19 @@ export interface PostFlightIssue {
 }
 
 export interface PostFlightAuditReport {
+  translationQuality?: import("../translation/translation-quality").TranslationQualityReport;
+  terminologyConsistency?: import("../terminology/document-plan").DocumentTerminologyReport;
   passed: boolean;
   totalSlidesAudited: number;
   issues: PostFlightIssue[];
   repairedCount: number;
   auditedBuffer: Buffer;
   untranslatedRemaining?: { slide: string; text: string }[];
+}
+
+export interface PostFlightOptions {
+  /** Unselected source paragraphs must survive every repair byte for byte. */
+  protectedParagraphs?: Map<string, Set<string>>;
 }
 
 /**
@@ -50,7 +59,8 @@ export interface PostFlightAuditReport {
 export async function auditAndRepairPptxPostFlight(
   pptxBuffer: Buffer,
   mode: "replace_en" | "ipqc_bilingual" = "replace_en",
-  targetLanguage: string = "en"
+  targetLanguage: string = "en",
+  options: PostFlightOptions = {}
 ): Promise<PostFlightAuditReport> {
   const zip = await JSZip.loadAsync(pptxBuffer);
   const isqPairs = await readIsqSlidePairs(zip);
@@ -71,6 +81,16 @@ export async function auditAndRepairPptxPostFlight(
 
     let xml = await file.async("string");
     let xmlModified = false;
+    const preserved = new Map<string, string>();
+    const protectedInSlide = options.protectedParagraphs?.get(filename);
+    if (protectedInSlide) {
+      xml = xml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (paragraph) => {
+        if (!protectedInSlide.has(paragraph)) return paragraph;
+        const marker = `<a:p><a:r><a:t>__KEEP_REVIEW_PARAGRAPH_${preserved.size}__</a:t></a:r></a:p>`;
+        preserved.set(marker, paragraph);
+        return marker;
+      });
+    }
 
     // 1. Audit and Auto-Repair Inverted Noun Phrases (e.g. "Shape tip" -> "Tip shape")
     const invertedRules = [
@@ -216,7 +236,7 @@ export async function auditAndRepairPptxPostFlight(
       if (/\bCheck\s+if\s+nosew\s+bond\s+gap\/delaminate\s+on\s+upper\b/i.test(updated)) {
         const fixed = updated.replace(
           /\bCheck\s+if\s+nosew\s+bond\s+gap\/delaminate\s+on\s+upper\b/gi,
-          "Check upper for no nosew bond gap/delamination"
+          "Check if the upper is free of no-sew bond gaps and delamination"
         );
         if (fixed !== updated) {
           xmlModified = true;
@@ -224,7 +244,7 @@ export async function auditAndRepairPptxPostFlight(
           issues.push({
             slide: filename,
             type: "typo_repair",
-            message: `Auto-corrected 'Check if nosew bond gap/delaminate on upper' to 'Check upper for no nosew bond gap/delamination'`,
+            message: `Auto-corrected 'Check if nosew bond gap/delaminate on upper' to 'Check if the upper is free of no-sew bond gaps and delamination'`,
             targetText: fixed,
             autoRepaired: true,
           });
@@ -232,54 +252,13 @@ export async function auditAndRepairPptxPostFlight(
         }
       }
 
-      // Auto-Repair QA Tolerance sentence on Tip quarter uneven surface
-      const isTipQuarterTolerance =
-        /\bTip[- ]quarter\b/i.test(updated) ||
-        /\b(?:screen-printed|base\s+paint|chảy\s+sơn|in\s+sơn)\b/i.test(updated) ||
-        /\buneven\s+surface\b/i.test(updated);
-
-      if (
-        isTipQuarterTolerance &&
-        (/\bflat\s+does\s+not\s+accept\b/i.test(updated) ||
-          /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(updated) ||
-          /\baccept\s+the\s+quality\s+standard\s+level\b/i.test(updated) ||
-          (/\buneven\s+(?:surface\s+design\s+of\s+the\s+)?Tip[- ]quarter\b/i.test(updated) &&
-            !/\bquality\s+standard\s+are\s+acceptable\b/i.test(updated)))
-      ) {
-        const fixed =
-          "Due to the uneven surface design of the Tip-quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after no-sew, as shown in the updated QA manual";
-        if (fixed !== updated) {
-          xmlModified = true;
-          repairedCount++;
-          issues.push({
-            slide: filename,
-            type: "typo_repair",
-            message: "Auto-repaired Tip-quarter QA standard sentence to 'quality standard are acceptable'",
-            targetText: fixed,
-            autoRepaired: true,
-          });
-          updated = fixed;
-        }
-      } else if (
-        /\bflat\s+does\s+not\s+accept\b/i.test(updated) ||
-        /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(updated)
-      ) {
-        // Generic tolerance inversion without overwriting unrelated component sentences
-        const fixed = updated
-          .replace(/\bflat\s+does\s+not\s+accept\b/gi, "quality standard are acceptable")
-          .replace(/\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/gi, "quality standard are acceptable");
-        if (fixed !== updated) {
-          xmlModified = true;
-          repairedCount++;
-          issues.push({
-            slide: filename,
-            type: "typo_repair",
-            message: "Auto-repaired inverted tolerance phrasing to 'quality standard are acceptable'",
-            targetText: fixed,
-            autoRepaired: true,
-          });
-          updated = fixed;
-        }
+      // Only the complete, previously approved legacy sentence may change acceptance semantics.
+      const repairedTolerance = repairKnownToleranceNote(updated);
+      if (repairedTolerance !== updated) {
+        xmlModified = true;
+        repairedCount++;
+        issues.push({ slide: filename, type: "typo_repair", message: "Repaired approved legacy QA note", targetText: repairedTolerance, autoRepaired: true });
+        updated = repairedTolerance;
       }
 
       // Auto-Repair any remaining 'tolerances' in quality standard phrasing to match user QA standard
@@ -497,31 +476,6 @@ export async function auditAndRepairPptxPostFlight(
                 targetText: candidate,
                 autoRepaired: true,
               });
-            } else if (isqEnPaths.has(filename)) {
-              // On ISQ top EN slides:
-              // Only eliminate accidental leaked residual paragraphs that are NOT critical numbered steps.
-              // Critical numbered steps (1., 2., 3., etc.) must NEVER be erased to empty white boxes!
-              const isNumberedStep = /^\s*(?:\d+[.)]|#\d+|step\s*\d+|bước\s*\d+)/i.test(fullText);
-              if (!isNumberedStep) {
-                xml = xml.replace(pXml, "");
-                xmlModified = true;
-                repairedCount++;
-                issues.push({
-                  slide: filename,
-                  type: "vi_leak",
-                  message: `Auto-eliminated leaked Vietnamese paragraph on ISQ English slide: "${fullText.slice(0, 60)}..."`,
-                  targetText: "",
-                  autoRepaired: true,
-                });
-              } else if (fullText.length > 5) {
-                issues.push({
-                  slide: filename,
-                  type: "vi_leak",
-                  message: `Detected untranslated Vietnamese step instruction on ISQ English slide: "${fullText.slice(0, 60)}..."`,
-                  targetText: fullText,
-                  autoRepaired: false,
-                });
-              }
             } else if (fullText.length > 5) {
               issues.push({
                 slide: filename,
@@ -556,6 +510,7 @@ export async function auditAndRepairPptxPostFlight(
     });
 
     if (xmlModified) {
+      for (const [marker, original] of preserved) xml = xml.replace(marker, () => original);
       zip.file(filename, xml);
     }
   }

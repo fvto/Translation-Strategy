@@ -363,7 +363,7 @@ test("PPTX Translator - ignores glossary rows that collapse an instruction into 
   });
   const outZip = await JSZip.loadAsync(result.translatedBuffer);
   const outXml = await outZip.file("ppt/slides/slide1.xml")?.async("string");
-  assert.equal(providerCalls, 1, "Unsafe exact mappings must not bypass the translator");
+  assert.ok(providerCalls >= 1 && providerCalls <= 2, "Unsafe exact mappings must not bypass the translator; a bounded glossary repair may follow");
   assert.ok(outXml.includes("1. Use the approved PFC primer/cement within its shelf life."));
   assert.ok(!outXml.includes("*Upper priming/cementing"));
 });
@@ -992,6 +992,7 @@ test("DynamicDeckDetector & PPTX Translator - Inspection Strategy slides after H
     sourceLanguage: "vi",
     targetLanguage: "en",
     mode: "ipqc_bilingual",
+    provider: { name: "offline-fixture", translate: async ({ sourceText }) => ({ translatedText: sourceText.includes("rập") ? "Check cutting die quality against the standard pattern." : sourceText.includes("dao") ? "Check cutting die" : sourceText.includes("HFPA") ? "HFPA inspection item" : "Check cement and bonding of the finished product.", provider: "offline-fixture", durationMs: 0 }) },
   });
 
   const outZip = await JSZip.loadAsync(result.translatedBuffer);
@@ -1013,6 +1014,7 @@ test("DynamicDeckDetector & PPTX Translator - Inspection Strategy slides after H
     sourceLanguage: "vi",
     targetLanguage: "en",
     mode: "replace_en",
+    provider: { name: "offline-fixture", translate: async ({ sourceText }) => ({ translatedText: sourceText.includes("rập") ? "Check cutting die quality against the standard pattern." : sourceText.includes("dao") ? "Check cutting die" : sourceText.includes("HFPA") ? "HFPA inspection item" : "Check cement and bonding of the finished product.", provider: "offline-fixture", durationMs: 0 }) },
   });
   const outZipEnOnly = await JSZip.loadAsync(resultEnOnly.translatedBuffer);
   const outPresXmlEnOnly = await outZipEnOnly.file("ppt/presentation.xml")?.async("string");

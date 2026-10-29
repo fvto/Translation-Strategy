@@ -1,3 +1,7 @@
+import { refreshTranslationQuality, translationQualityGroups } from "./translation-quality";
+import { bilingualScopes, structuralScopePairs, modelSectionKey, isInstructionFragment } from "./bilingual-alignment";
+import { DocumentTerminologyPlan, TerminologyObservation } from "../terminology/document-plan";
+import { detectTerminologyStage } from "./document-stage";
 import fs from "fs";
 import path from "path";
 import JSZip from "jszip";
@@ -28,6 +32,9 @@ interface ScanOptions {
   mode?: string;
   customDocTM?: DocumentTranslationMemory;
   approvedGlossary?: TerminologyEntry[];
+  terminologyPlan?: DocumentTerminologyPlan;
+  terminologyScopeByPart?: Record<string, string>;
+  additionalTerminologyObservations?: TerminologyObservation[];
   historyPairs?: AuditMemoryPair[];
   expectedSuggestions?: { id: string; sourceText: string; suggestedTranslation: string }[];
   customTranslations?: Record<string, string>;
@@ -740,6 +747,17 @@ export async function scanPptxTranslationIntelligence(
   const glossary = rawGlossary.filter((e) => (e.status === "approved" || e.status === "review") && isSafeTerminologyEntry(e) &&
     !(sourceLang === "vi" && targetLang === "en" && hasViDiacritics(cleanTargetTerm(e.targetTerm))) &&
     auditTextForms(e.sourceTerm).compact !== auditTextForms(e.targetTerm).compact);
+  const stageBySlide = new Map<number | undefined, string>();
+  for (const raw of extracted.units) {
+    if (stageBySlide.has(raw.location.slideIndex)) continue;
+    stageBySlide.set(raw.location.slideIndex, detectTerminologyStage(extracted.units.filter(u => u.location.slideIndex === raw.location.slideIndex).map(u => u.text).join(" ")));
+  }
+  const terminologyPlan = options.terminologyPlan || new DocumentTerminologyPlan(glossary, extracted.units.map(raw => ({
+    id: raw.id, sourceText: raw.text, slideIndex: raw.location.slideIndex,
+    scope: stageBySlide.get(raw.location.slideIndex), context: stageBySlide.get(raw.location.slideIndex),
+  })));
+  const scopeFor = (raw: RawUnit) => options.terminologyScopeByPart?.[raw.location.partPath || ""] || (options.terminologyPlan
+    ? terminologyPlan.scopeFor(undefined, raw.text) : terminologyPlan.scopeFor(raw.id));
   const pairs: AuditMemoryPair[] = glossary.map((e) => ({ source: e.sourceTerm, target: cleanTargetTerm(e.targetTerm), origin: e.status === "approved" ? "approved" : "review" }));
   pairs.push(...(options.historyPairs || getAuditHistoryPairs(sourceLang, targetLang)));
   for (const entry of options.customDocTM?.getAllEntries() || []) pairs.push({ source: entry.sourceOriginal, target: entry.target,
@@ -805,7 +823,8 @@ export async function scanPptxTranslationIntelligence(
   };
 
   const isModelSectionHeading = (text: string): boolean => {
-    if (!text) return false;
+    if (!text || /[\r\n]/.test(text)) return false;
+    if (modelSectionKey(text)) return true;
     const clean = text.trim();
     if (/^\s*\*?\s*(?:model|mẫu)\s*[:\s\-]/i.test(clean)) return true;
     const m = clean.match(/^\s*\*?\s*(?:đối\s*với|for|áp\s*dụng\s*cho|apply\s*to|dành\s*cho)\s*(?:mẫu|model)?\s*[:\s\-]?\s*(.+)$/i);
@@ -823,6 +842,10 @@ export async function scanPptxTranslationIntelligence(
 
   const containers = new Map<string, RawUnit[]>();
   for (const unit of extracted.units) { if (!containers.has(unit.containerId)) containers.set(unit.containerId, []); containers.get(unit.containerId)!.push(unit); }
+  const scopedContainers = new Map([...containers].map(([id, members]) => [id, bilingualScopes(members, text => hasViDiacritics(text) || isVietnameseText(text) || languageEvidence(text).vi.length > 0)]));
+  const modelScopeById = new Map<string, string>();
+  for (const scopes of scopedContainers.values()) for (const scope of scopes) for (const unit of scope.units) modelScopeById.set(unit.id, scope.key);
+  const modelContainers = new Set([...scopedContainers].filter(([, scopes]) => scopes.some(scope => scope.model !== "general")).map(([id]) => id));
   const paired = new Map<string, string>();
   const pairedPartnerId = new Map<string, string>();
   const inlineBilingual = new Set<string>();
@@ -856,6 +879,16 @@ export async function scanPptxTranslationIntelligence(
 
     const isMeasurementOrUnitOnly = (str: string) =>
       /^(?:inch|inches|mm|cm|m|spi|stitches(?:\/inch)?|mũi(?:\/inch)?|kg(?:\/cm²)?|prs|hours?|\d+(?:-\d+)?|\d+(?:[.,]\d+)?\s*(?:mm|cm|inch|mũi|spi))$/i.test(str.trim());
+
+    if (parts.length > 2 && parts.some(part => modelSectionKey(part))) {
+      const inlineUnits = parts.map((text, index) => ({ id: `${raw.id}:line:${index}`, text }));
+      const scopes = bilingualScopes(inlineUnits, text => sourceEvidence(text, "vi"));
+      for (const scope of scopes) for (const [vi, en] of structuralScopePairs(scope, text => sourceEvidence(text, "vi"))) {
+        pairs.push({ source: sourceLang === "vi" ? vi.text : en.text, target: sourceLang === "vi" ? en.text : vi.text, origin: "presentation", slideIndex: raw.location.slideIndex });
+        inlineBilingual.add(raw.id);
+      }
+      continue; // Do not flatten repeated step numbers across model sections.
+    }
 
     if (parts.length === 2) {
       const s = parts.find((t) => sourceEvidence(t, sourceLang) && !isItemPrefixOrCode(t));
@@ -923,7 +956,11 @@ export async function scanPptxTranslationIntelligence(
     }
   }
   const known = new AuditMemoryIndex(pairs);
-  const addPair = (source: RawUnit, target: RawUnit) => {
+  const addPair = (source: RawUnit, target: RawUnit, structurallyAligned = false) => {
+    if (paired.has(source.id) || paired.has(target.id)) return;
+    if (isInstructionFragment(source.text) || isInstructionFragment(target.text)) return;
+    if (modelScopeById.get(source.id) !== modelScopeById.get(target.id)) return;
+    if (!structurallyAligned && (modelContainers.has(source.containerId) || modelContainers.has(target.containerId)) && !isSemanticBilingualPair(source.text, target.text, glossary).isPair) return;
     if (isNonTranslatable(source.text) || isNonTranslatable(target.text)) return;
     if (isInspectionStatusLabel(source.text) || isInspectionStatusLabel(target.text)) return;
     const sTrim = source.text.trim();
@@ -953,13 +990,13 @@ export async function scanPptxTranslationIntelligence(
     // Heading structure parity: A process heading (*Heading) cannot pair with body text
     const sIsHeading = /^[\*•#]/.test(realSTrim);
     const tIsHeading = /^[\*•#]/.test(realTTrim);
-    if (sIsHeading !== tIsHeading) return;
+    if (sIsHeading !== tIsHeading && !(modelSectionKey(realSTrim) && modelSectionKey(realSTrim) === modelSectionKey(realTTrim))) return;
 
     // Step number consistency guard: If both have step prefixes (e.g. 1. vs 2.), they must match
     const stepS = extractItemStepNumber(realSTrim);
     const stepT = extractItemStepNumber(realTTrim);
     if (stepS && stepT && stepS !== stepT) return;
-    if ((stepS && !stepT) || (!stepS && stepT)) {
+    if (!structurallyAligned && ((stepS && !stepT) || (!stepS && stepT))) {
       if (sIsHeading || tIsHeading || isHeadingLike(realSTrim) || isHeadingLike(realTTrim)) return;
     }
 
@@ -1023,26 +1060,15 @@ export async function scanPptxTranslationIntelligence(
   const modelSubScopeUnitIds = new Set<string>();
 
   for (const members of containers.values()) {
-    // Partition members into sub-scopes if there are model-specific section headings (*Đối với..., For...)
-    const subScopes: RawUnit[][] = [];
-    let currentScope: RawUnit[] = [];
-    let currentIsModel = false;
-
-    for (const u of members) {
-      if (isModelSectionHeading(u.text)) {
-        if (currentScope.length > 0) {
-          subScopes.push(currentScope);
-          currentScope = [];
-        }
-        currentIsModel = true;
+    // EN and VI maintain independent model cursors. This joins matching sections
+    // across the two language blocks without moving general instructions into the last EN model.
+    const scopes = scopedContainers.get(members[0]?.containerId) || [];
+    const subScopes = scopes.map(scope => scope.units);
+    for (const scope of scopes) {
+      if (scope.model !== "general") for (const unit of scope.units) modelSubScopeUnitIds.add(unit.id);
+      if (modelContainers.has(members[0]?.containerId)) {
+        for (const [vi, en] of structuralScopePairs(scope, text => sourceEvidence(text, "vi"))) addPair(vi, en, true);
       }
-      if (currentIsModel) {
-        modelSubScopeUnitIds.add(u.id);
-      }
-      currentScope.push(u);
-    }
-    if (currentScope.length > 0) {
-      subScopes.push(currentScope);
     }
 
     for (const scopeMembers of subScopes) {
@@ -1417,9 +1443,9 @@ export async function scanPptxTranslationIntelligence(
   const memo = new Map<string, ReturnType<AuditMemoryIndex["lookup"]>>();
   const decisionMemo = new Map<string, ReturnType<typeof chooseAuditMatch>>();
   const glossaryChecks = new Map<string, ReturnType<typeof checkGlossaryTranslation>>();
-  const checkCandidate = (source: string, target: string) => {
-    const key = JSON.stringify([source, target]);
-    if (!glossaryChecks.has(key)) glossaryChecks.set(key, checkGlossaryTranslation(source, target, glossary, sourceLang, targetLang));
+  const checkCandidate = (source: string, target: string, scope: string) => {
+    const key = JSON.stringify([source, target, scope]);
+    if (!glossaryChecks.has(key)) glossaryChecks.set(key, checkGlossaryTranslation(source, target, terminologyPlan.glossaryFor(scope), sourceLang, targetLang));
     return glossaryChecks.get(key)!;
   };
   const lookup = (index: AuditMemoryIndex, text: string, field: string) => {
@@ -1447,6 +1473,7 @@ export async function scanPptxTranslationIntelligence(
   }
 
   const units: ScannedTextUnit[] = extracted.units.map((raw) => {
+    const glossary = terminologyPlan.glossaryFor(scopeFor(raw));
     const language = languageEvidence(raw.text);
     const base = classifyTextUnit(raw.text, raw.location, { sourceLang, targetLang,
       existingTranslation: paired.has(raw.id) ? paired.get(raw.id) : undefined });
@@ -1515,7 +1542,7 @@ export async function scanPptxTranslationIntelligence(
       preservedIds.add(unit.id);
       unit.status = "ALREADY_TRANSLATED";
       unit.reason = isPureEnglish(raw.text)
-        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên, không cần dịch lại."
+        ? "Nội dung đã ở tiếng Anh; giữ nguyên. Chưa xác nhận độ đầy đủ và đúng nghĩa."
         : "Nội dung đã ở ngôn ngữ đích; giữ nguyên.";
       unit.requiresTranslation = false;
       unit.selectedForTranslation = false;
@@ -1627,7 +1654,7 @@ export async function scanPptxTranslationIntelligence(
       } else {
         const rawMatches = lookup(sourceIndex, raw.text, "source");
         const enforceGlossary = sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text, sourceLang);
-        const checked = enforceGlossary ? rawMatches.map(match => ({ match, check: checkCandidate(raw.text, match.target) })) : [];
+        const checked = enforceGlossary ? rawMatches.map(match => ({ match, check: checkCandidate(raw.text, match.target, scopeFor(raw)) })) : [];
         // Historical source similarity says nothing about glossary compliance.
         // Exclude unresolved targets before choosing, comparing or exposing a suggestion.
         const matches = enforceGlossary ? checked.filter(({ check }) => check.isValid && !hasViDiacritics(check.text)).map(({ match, check }) => ({ ...match, target: check.text })) : rawMatches;
@@ -1685,7 +1712,7 @@ export async function scanPptxTranslationIntelligence(
     // Also guard target-variant suggestions: corrupt history can contain VI
     // targets and otherwise bypass the source-memory branch above.
     if (sourceLang === "vi" && targetLang === "en" && sourceEvidence(raw.text, sourceLang) && unit.suggestedTranslation) {
-      const checked = checkCandidate(raw.text, unit.suggestedTranslation);
+      const checked = checkCandidate(raw.text, unit.suggestedTranslation, scopeFor(raw));
       if (!checked.isValid || hasViDiacritics(checked.text)) {
         unit.glossaryMismatches = checked.mismatches.map(({ sourceTerm, expectedTarget }) => ({ sourceTerm, expectedTarget }));
         delete unit.suggestedTranslation; unit.safeToApply = false; unit.status = "REVIEW_REQUIRED"; unit.confidence = 0.6;
@@ -1718,7 +1745,37 @@ export async function scanPptxTranslationIntelligence(
     }
     return unit;
   });
-  const groups = buildGroups(units, pairs, targetLang);
+  for (const unit of units) unit.pairedUnitId = pairedPartnerId.get(unit.id);
+  const observations: TerminologyObservation[] = [];
+  const coveredEnglish = new Set<string>();
+  for (const raw of extracted.units) {
+    if (!sourceEvidence(raw.text, sourceLang)) continue;
+    const target = paired.get(raw.id);
+    if (!target || !targetEvidence(target, targetLang)) continue;
+    observations.push({ id: raw.id, sourceText: raw.text, targetText: target, slideIndex: raw.location.slideIndex, scope: scopeFor(raw), protected: true });
+    const partnerId = pairedPartnerId.get(raw.id);
+    if (partnerId) coveredEnglish.add(partnerId);
+  }
+  // Inline bilingual paragraphs have no separate partner ID; keep their actual
+  // extracted source/target segments for the same terminology audit.
+  for (const pair of pairs.filter(pair => pair.origin === "presentation" && !pair.sourceUnitId)) {
+    const raw = extracted.units.find(raw => raw.location.slideIndex === pair.slideIndex && raw.text.includes(pair.source) && raw.text.includes(pair.target));
+    if (!raw || !sourceEvidence(pair.source, sourceLang) || !targetEvidence(pair.target, targetLang)) continue;
+    observations.push({ id: `${raw.id}:inline:${observations.length}`, sourceText: pair.source, targetText: pair.target, slideIndex: pair.slideIndex, scope: scopeFor(raw), protected: true });
+    coveredEnglish.add(raw.id);
+  }
+  for (const observation of options.additionalTerminologyObservations || []) {
+    const existing = observations.find(existing => existing.slideIndex === observation.slideIndex && existing.sourceText === observation.sourceText && existing.targetText === observation.targetText);
+    if (!existing) observations.push(observation);
+    else if (observation.protected !== undefined) existing.protected = observation.protected;
+    for (const raw of extracted.units) if (raw.text.trim() === observation.targetText.trim()) coveredEnglish.add(raw.id);
+  }
+  const englishOnlyUnitsWithoutSource = extracted.units.filter(raw => !coveredEnglish.has(raw.id) && !isNonTranslatable(raw.text) && targetEvidence(raw.text, targetLang) && !sourceEvidence(raw.text, sourceLang)).length;
+  const terminologyConsistency = terminologyPlan.audit(observations, englishOnlyUnitsWithoutSource);
+  const qualityShell = { units } as SmartAuditReport;
+  const translationQuality = refreshTranslationQuality(qualityShell, sourceLang, targetLang, observations);
+  const qualityGroups = translationQualityGroups(qualityShell);
+  const groups = [...buildGroups(units, pairs, targetLang).filter(group => !qualityGroups.some(quality => group.unitIds.every(id => quality.unitIds.includes(id)))), ...qualityGroups];
   // Consistency suggestions may change after grouping.
   const rawById = new Map(extracted.units.map((r) => [r.id, r]));
   for (const unit of units) {
@@ -1754,11 +1811,11 @@ export async function scanPptxTranslationIntelligence(
   return { fileName, fileType: "pptx", totalUnits: units.length, totalSlides: extracted.slides,
     alreadyTranslatedCount: count("ALREADY_TRANSLATED"), needsTranslationCount: pending.length, tmReusableCount: count("TM_REUSE"), lockedTerminologyCount: count("LOCKED_TERMINOLOGY"),
     untranslatedCount: units.filter((u) => u.requiresTranslation).length, translatableMissingCount: translatableMissing.length,
-    nonTranslatableCount: count("NON_TRANSLATABLE"), mixedLanguageCount: count("MIXED_LANGUAGE"), possibleTranslationCount: count("POSSIBLE_TRANSLATION"), reviewRequiredCount: count("REVIEW_REQUIRED"),
+    nonTranslatableCount: count("NON_TRANSLATABLE"), mixedLanguageCount: count("MIXED_LANGUAGE"), possibleTranslationCount: count("POSSIBLE_TRANSLATION"), reviewRequiredCount: units.filter(unit => unit.status === "REVIEW_REQUIRED" || unit.qualityStatus === "review_required").length,
     suspiciousTranslationCount: count("SUSPICIOUS_TRANSLATION"), translationConflictCount: count("TRANSLATION_CONFLICT"),
     attentionCount: groups.filter((g) => !g.safeToApply).length, safeFixCount: units.filter((u) => u.safeToApply).length,
     affectedSlides: [...new Set(units.filter((u) => !["ALREADY_TRANSLATED", "NON_TRANSLATABLE"].includes(u.status)).map((u) => u.location.slideIndex!))].sort((a, b) => a - b),
-    estimatedGeminiRequests: Math.ceil(uniquePending.size / 25), units, groups, slidePairs, visualLayouts: extracted.visualLayouts };
+    estimatedGeminiRequests: Math.ceil(uniquePending.size / 25), units, groups, slidePairs, visualLayouts: extracted.visualLayouts, terminologyConsistency, translationQuality };
 }
 
 /** Re-scan on the server and apply only the selected suggestions. Duplicates ISQ slides into EN and VI pairs. */
@@ -1807,7 +1864,7 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
   // Identify normal ISQ slides to duplicate (skip if user explicitly chose "overwrite")
   const isqSlideParts = new Set<string>();
   if (options.mode !== "replace_en") {
-    for (const u of report.units) {
+    for (const u of selected) {
       if (u.location.isIsq && u.location.partPath && !u.location.isIsqReference && !viRefSlidesToDuplicate.has(u.location.partPath)) {
         const sIndex = u.location.slideIndex || 0;
         const handling = options.slideViHandling?.[sIndex] || defaultViMode;
@@ -1827,6 +1884,14 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
     ...duplicatedPairs.map((p) => p.en),
     ...Array.from(viToEnMap.values()),
   ]);
+
+  const protectedParagraphs = new Map<string, Set<string>>();
+  for (const [part, entry] of Object.entries(zip.files)) {
+    if (!/^ppt\/slides\/slide[^/]+\.xml$/.test(part)) continue;
+    const allowed = new Set(selected.filter((u) => (viToEnMap.get(u.location.partPath!) || u.location.partPath) === part).map((u) => u.location.paragraphIndex));
+    const xml = await entry.async("string");
+    protectedParagraphs.set(part, new Set((xml.match(new RegExp(PPTX_PARAGRAPH_PATTERN)) || []).filter((_p, index) => !allowed.has(index))));
+  }
 
   const byPart = new Map<string, Map<number, ScannedTextUnit>>();
   for (const unit of selected) {
@@ -1859,33 +1924,8 @@ export async function applyPptxAuditSuggestions(buffer: Buffer, fileName: string
     zip.file(part, result);
   }
 
-  // On top English ISQ slides: strip paired Vietnamese counterparts & residual Vietnamese runs
-  for (const enPath of isqEnPaths) {
-    let enXml = await zip.file(enPath)?.async("string");
-    if (!enXml) continue;
-    const slideReportUnits = report.units.filter((u) => u.location.partPath === enPath);
-    const selectedIndices = new Set(selected.filter((u) => u.location.partPath === enPath).map((u) => u.location.paragraphIndex));
-    const viParagraphsWithEn = new Set(
-      slideReportUnits
-        .filter((u) => !selectedIndices.has(u.location.paragraphIndex) && u.existingTranslation && !hasViDiacritics(u.existingTranslation) && hasViDiacritics(u.sourceText))
-        .map((u) => u.location.paragraphIndex)
-    );
-    if (viParagraphsWithEn.size > 0) {
-      let pIdx = 0;
-      enXml = enXml.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (p) => (viParagraphsWithEn.has(pIdx++) ? "" : p));
-      // Schema Safety: Ensure no <p:txBody> is left completely empty without an <a:p>
-      enXml = enXml.replace(/<p:txBody\b([^>]*)>([\s\S]*?)<\/p:txBody>/g, (fullMatch, attrs, content) => {
-        if (!/<a:p\b/.test(content)) {
-          return `<p:txBody${attrs}>${content}<a:p><a:endParaRPr/></a:p></p:txBody>`;
-        }
-        return fullMatch;
-      });
-    }
-    zip.file(enPath, enXml);
-  }
-
   const rawBuffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
-  const postFlight = await auditAndRepairPptxPostFlight(rawBuffer, (options.mode || "ipqc_bilingual") as any);
+  const postFlight = await auditAndRepairPptxPostFlight(rawBuffer, (options.mode || "ipqc_bilingual") as any, options.targetLang || "en", { protectedParagraphs });
 
   // Compute remaining unhandled Vietnamese units and their slide locations
   const appliedIds = new Set(selected.map((u) => u.id));

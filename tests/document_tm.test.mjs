@@ -36,6 +36,7 @@ test("Document TM - 1. Exact repeated phrase on later slide (Slide 3 -> Slide 15
   const buffer = await zip.generateAsync({ type: "nodebuffer" });
 
   let geminiCallsForUpperMaterial = 0;
+  const translatedUnitIds = new Set();
   const mockGemini = {
     name: "gemini",
     async translateBatch(req) {
@@ -43,6 +44,7 @@ test("Document TM - 1. Exact repeated phrase on later slide (Slide 3 -> Slide 15
       for (const item of req.items) {
         if (item.sourceText === "Upper Material Inspection") {
           geminiCallsForUpperMaterial++;
+          translatedUnitIds.add(item.id);
           results.set(item.id, "Kiểm tra nguyên liệu mũ giày");
         } else {
           results.set(item.id, item.sourceText + " (trans)");
@@ -67,11 +69,8 @@ test("Document TM - 1. Exact repeated phrase on later slide (Slide 3 -> Slide 15
   assert.ok(outSlide15.includes("Kiểm tra nguyên liệu mũ giày"), "Slide 15 must contain approved translation");
 
   // PROOF: Gemini must NOT be called repeatedly for the identical phrase on Slide 15!
-  assert.equal(
-    geminiCallsForUpperMaterial,
-    1,
-    "Gemini must only be called ONCE for 'Upper Material Inspection'; Slide 15 MUST reuse TM"
-  );
+  assert.equal(translatedUnitIds.size, 1, "Slide 15 must reuse the same unit, including any glossary repair");
+  assert.ok(geminiCallsForUpperMaterial >= 1 && geminiCallsForUpperMaterial <= 2, "At most one bounded glossary repair may follow the original request");
 });
 
 test("Document TM - 2. Exact repeated sentence reuse across document", () => {

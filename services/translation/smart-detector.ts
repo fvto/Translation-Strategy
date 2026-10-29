@@ -106,6 +106,9 @@ export interface ScannedTextUnit {
   status: TextUnitStatus;
   location: TextUnitLocation;
   existingTranslation?: string;
+  pairedUnitId?: string;
+  qualityIssues?: import("./translation-quality").TranslationQualityIssue[];
+  qualityStatus?: "review_required" | "no_rule_issues" | "not_assessed";
   suggestedTranslation?: string;
   category?: "header" | "ctq" | "table_cell" | "acronym" | "code" | "body" | "notes";
   reason: string;
@@ -144,6 +147,8 @@ export interface SlidePairSummary {
 }
 
 export interface SmartAuditReport {
+  translationQuality?: import("./translation-quality").TranslationQualityReport;
+  terminologyConsistency?: import("../terminology/document-plan").DocumentTerminologyReport;
   fileName: string;
   fileType: "pptx" | "xlsx";
   totalUnits: number;
@@ -697,7 +702,7 @@ export function classifyTextUnit(
     return {
       status: "ALREADY_TRANSLATED",
       reason: isPureEnglish(text)
-        ? "Nội dung đã là tiếng Anh chuẩn; giữ nguyên không dịch lại."
+        ? "Nội dung đã ở tiếng Anh; giữ nguyên. Chưa xác nhận độ đầy đủ và đúng nghĩa."
         : isShoeModelName(text)
         ? "Tên thương hiệu, hình thể giày hoặc mã mẫu kỹ thuật; giữ nguyên."
         : "Thuật ngữ kỹ thuật/mã chuẩn/số liệu; giữ nguyên.",
@@ -887,6 +892,9 @@ export async function auditPptxGaps(
     mode?: string;
     customDocTM?: DocumentTranslationMemory;
     approvedGlossary?: TerminologyEntry[];
+    terminologyPlan?: import("../terminology/document-plan").DocumentTerminologyPlan;
+    terminologyScopeByPart?: Record<string, string>;
+    additionalTerminologyObservations?: import("../terminology/document-plan").TerminologyObservation[];
     apiKey?: string;
     autoAiCascade?: boolean;
   }

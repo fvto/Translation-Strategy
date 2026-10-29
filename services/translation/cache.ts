@@ -73,9 +73,9 @@ export class TranslationCacheService {
   private get misses(): number { return globalForCache._translationCacheMisses ?? 0; }
   private set misses(v: number) { globalForCache._translationCacheMisses = v; }
 
-  private generateKey(sourceText: string, sourceLang: string, targetLang: string): string {
+  private generateKey(sourceText: string, sourceLang: string, targetLang: string, namespace = ""): string {
     const normalized = sourceText.trim().replace(/\s+/g, " ").toLowerCase();
-    const hash = crypto.createHash("sha256").update(`${sourceLang}:${targetLang}:${normalized}`).digest("hex");
+    const hash = crypto.createHash("sha256").update(`${namespace ? namespace + ":" : ""}${sourceLang}:${targetLang}:${normalized}`).digest("hex");
     return hash;
   }
 
@@ -83,8 +83,8 @@ export class TranslationCacheService {
     return /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐ]/i.test(str);
   }
 
-  get(sourceText: string, sourceLang: string, targetLang: string): string | undefined {
-    const key = this.generateKey(sourceText, sourceLang, targetLang);
+  get(sourceText: string, sourceLang: string, targetLang: string, namespace = ""): string | undefined {
+    const key = this.generateKey(sourceText, sourceLang, targetLang, namespace);
     const result = this.cache.get(key);
     if (result !== undefined) {
       if (sourceLang === "vi" && targetLang === "en" && (this.hasViDiacritics(result) || (this.hasViDiacritics(sourceText) && sourceText.trim().toLowerCase() === result.trim().toLowerCase()))) {
@@ -99,12 +99,12 @@ export class TranslationCacheService {
     return undefined;
   }
 
-  set(sourceText: string, translatedText: string, sourceLang: string, targetLang: string): void {
+  set(sourceText: string, translatedText: string, sourceLang: string, targetLang: string, namespace = ""): void {
     if (!sourceText.trim() || !translatedText.trim()) return;
     if (sourceLang === "vi" && targetLang === "en" && (this.hasViDiacritics(translatedText) || (this.hasViDiacritics(sourceText) && sourceText.trim().toLowerCase() === translatedText.trim().toLowerCase()))) {
       return;
     }
-    const key = this.generateKey(sourceText, sourceLang, targetLang);
+    const key = this.generateKey(sourceText, sourceLang, targetLang, namespace);
     this.cache.set(key, translatedText.trim());
     this.scheduleSaveToDisk();
   }
@@ -119,7 +119,8 @@ export class TranslationCacheService {
     sourceLang: string,
     targetLang: string,
     bypassCacheTexts?: Set<string>,
-    bypassAllCache = false
+    bypassAllCache = false,
+    namespaceFor: (item: T) => string = () => ""
   ): {
     uniqueToTranslate: T[];
     resolveAll: (freshTranslations: Map<string, string>) => Map<string, string>;
@@ -135,18 +136,19 @@ export class TranslationCacheService {
       const normText = item.sourceText.trim();
       if (!normText) continue;
 
-      if (!textToAllIds.has(normText)) {
-        textToAllIds.set(normText, []);
+      const itemKey = JSON.stringify([namespaceFor(item), normText]);
+      if (!textToAllIds.has(itemKey)) {
+        textToAllIds.set(itemKey, []);
       }
-      textToAllIds.get(normText)!.push(item.id);
+      textToAllIds.get(itemKey)!.push(item.id);
 
       // Check if already in persistent memory cache
-      const cached = (bypassAllCache || bypassCacheTexts?.has(normText)) ? undefined : this.get(normText, sourceLang, targetLang);
+      const cached = (bypassAllCache || bypassCacheTexts?.has(normText)) ? undefined : this.get(normText, sourceLang, targetLang, namespaceFor(item));
       if (cached) {
         resolvedTranslations.set(item.id, cached);
         cachedHits++;
-      } else if (!uniqueMap.has(normText)) {
-        uniqueMap.set(normText, item);
+      } else if (!uniqueMap.has(itemKey)) {
+        uniqueMap.set(itemKey, item);
       }
     }
 
@@ -158,9 +160,9 @@ export class TranslationCacheService {
       for (const item of uniqueToTranslate) {
         const trans = freshTranslations.get(item.id);
         if (trans) {
-          this.set(item.sourceText, trans, sourceLang, targetLang);
+          this.set(item.sourceText, trans, sourceLang, targetLang, namespaceFor(item));
           // Broadcast to all duplicates in this deck
-          const siblingIds = textToAllIds.get(item.sourceText.trim()) || [];
+          const siblingIds = textToAllIds.get(JSON.stringify([namespaceFor(item), item.sourceText.trim()])) || [];
           for (const sId of siblingIds) {
             resolvedTranslations.set(sId, trans);
           }

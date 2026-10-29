@@ -100,6 +100,7 @@ interface SmartAuditSlideCanvasProps {
   onToggleUnit: (unitId: string) => void;
   onSelectAllInSlide: (slideNum: number) => void;
   onDeselectAllInSlide: (slideNum: number) => void;
+  onSkipUnits: (unitIds: string[]) => void;
   customEdits: Record<string, string>;
   onSaveCustomEdit: (unitId: string, text: string) => void;
   onResetCustomEdit: (unitId: string) => void;
@@ -272,6 +273,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   onToggleUnit,
   onSelectAllInSlide,
   onDeselectAllInSlide,
+  onSkipUnits,
   customEdits,
   onSaveCustomEdit,
   onResetCustomEdit,
@@ -1840,7 +1842,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       const uids = (el.unitIds && el.unitIds.length > 0)
         ? el.unitIds
         : el.unitId ? [el.unitId] : [];
-      allTargetUnitIds.push(...uids);
+      for (const uid of uids) if (!allTargetUnitIds.includes(uid)) allTargetUnitIds.push(uid);
     }
     if (allTargetUnitIds.length > 0) {
       const allSelected = allTargetUnitIds.every((uid) => selectedUnitIds.has(uid));
@@ -1860,6 +1862,15 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 1800);
     }
   }, [currentSlideElements, multiSelectedElementIds, selectedUnitIds, onToggleUnit]);
+
+  const handleSkipSelectedArea = useCallback(() => {
+    const elements = [...currentSlideElements, ...(report.visualLayouts || []).flatMap((layout) => layout.elements)];
+    const ids = new Set(elements.filter((el) => multiSelectedElementIds.has(el.id)).flatMap((el) => el.unitIds?.length ? el.unitIds : el.unitId ? [el.unitId] : []));
+    onSkipUnits([...ids]);
+    setQuickActionNotice(`Đã bỏ dịch ${multiSelectedElementIds.size} ô. Nội dung được giữ nguyên.`);
+    if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+    quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2200);
+  }, [currentSlideElements, report.visualLayouts, multiSelectedElementIds, onSkipUnits]);
 
   const handleLayerOrder = useCallback(
     (elId: string, direction: "forward" | "backward") => {
@@ -3091,6 +3102,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
 
     return (
       <div
+        data-document-content="true"
         className="relative rounded-lg shadow-2xl border border-slate-300 dark:border-slate-700 select-none bg-white shrink-0"
         onMouseDown={(e) => {
           if (e.button === 2 || (isAreaSelectMode && e.button === 0)) {
@@ -4470,6 +4482,19 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             {/* Area Selection Mode Toggle Button (Quét chọn vùng) */}
             <button
               type="button"
+              onClick={() => {
+                onDeselectAllInSlide(currentSlide);
+                setQuickActionNotice(`Đã bỏ dịch toàn bộ slide ${currentSlide}. Nội dung được giữ nguyên.`);
+                if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+                quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2200);
+              }}
+              className="px-2.5 py-1 rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
+              title="Bỏ dịch tất cả các ô trên slide đang xem, giữ nguyên các slide khác"
+            >
+              <Square className="w-3.5 h-3.5" /> Bỏ dịch slide này
+            </button>
+            <button
+              type="button"
               onClick={() => setIsAreaSelectMode((prev) => !prev)}
               className={`px-2 py-1 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 shrink-0 select-none ${
                 isAreaSelectMode
@@ -4510,6 +4535,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                   >
                     <Sparkles className="w-2.5 h-2.5" />
                     <span className="hidden sm:inline">Dịch cả vùng</span>
+                  </button>
+                  <button type="button" onClick={handleSkipSelectedArea}
+                    className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold shrink-0 cursor-pointer"
+                    title="Bỏ dịch tất cả các dòng trong vùng đã chọn; giữ nguyên nội dung">
+                    <span>Bỏ dịch các ô này</span>
                   </button>
                 </div>
               ) : activeFocusElement ? (
@@ -5883,6 +5913,13 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 </button>
               )}
 
+              {multiSelectedElementIds.size > 0 && (
+                <button type="button" onClick={() => { handleSkipSelectedArea(); setContextMenu(null); }}
+                  className="w-full px-2.5 py-2 rounded-lg text-left text-rose-700 bg-rose-50 hover:bg-rose-100 font-semibold cursor-pointer">
+                  Bỏ dịch các ô này ({multiSelectedElementIds.size} ô)
+                </button>
+              )}
+
               {/* Instant AI Translation */}
               <button
                 type="button"
@@ -6303,7 +6340,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         isHudCollapsed ? (
           /* Mini Collapsed Pill HUD */
           <div
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-2xl border border-indigo-500/60 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 select-none"
+            className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[90] flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-2xl border border-indigo-500/60 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 select-none"
             onMouseDown={(e) => e.stopPropagation()}
           >
             <span className="flex h-2 w-2 relative">
@@ -6323,6 +6360,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               <Sparkles className="w-3 h-3" />
               <span>Dịch</span>
             </button>
+                  <button type="button" onClick={handleSkipSelectedArea}
+                    className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold shrink-0 cursor-pointer"
+                    title="Bỏ dịch tất cả các dòng trong vùng đã chọn; giữ nguyên nội dung">
+                    <span>Bỏ dịch các ô này</span>
+                  </button>
 
             <div className="w-px h-3.5 bg-slate-700 mx-0.5" />
 
@@ -6347,7 +6389,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         ) : (
           /* Full Multi-Selection HUD Toolbar */
           <div
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-2xl border border-indigo-500/60 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 duration-200"
+            className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[90] flex flex-wrap justify-center max-w-[calc(100vw-24px)] w-max items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-2xl border border-indigo-500/60 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-3 duration-200"
             onMouseDown={(e) => e.stopPropagation()}
           >
             {/* Badge Count */}
@@ -6427,12 +6469,17 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               <button
                 type="button"
                 onClick={handleToggleBatchTranslate}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl whitespace-nowrap shrink-0 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
                 title="Chọn dịch tất cả các dòng trong các ô đang quét chọn"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Dịch cả vùng</span>
               </button>
+                  <button type="button" onClick={handleSkipSelectedArea}
+                    className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold shrink-0 cursor-pointer"
+                    title="Bỏ dịch tất cả các dòng trong vùng đã chọn; giữ nguyên nội dung">
+                    <span>Bỏ dịch các ô này</span>
+                  </button>
 
               {/* Thu nhỏ / Gập HUD */}
               <button

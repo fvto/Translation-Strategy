@@ -1,3 +1,8 @@
+import { attachTranslationQualityGate, checkInstructionQuality } from "../translation/translation-quality";
+import { attachTerminologyGate, verifyPackagedTerminology, PackagedTerminologyUnit } from "../terminology/output-verification";
+import { detectTerminologyStage } from "../translation/document-stage";
+import { DocumentTerminologyPlan } from "../terminology/document-plan";
+import { withDocumentTerminology } from "../translation/consistent-provider";
 import JSZip from "jszip";
 import { getTranslationProvider, GeminiRateLimitError, GoogleTranslationProvider, TranslationProvider, BatchTranslationResponse, AiStudioMetrics } from "../translation";
 import { GeminiObservability } from "../translation/gemini";
@@ -10,7 +15,7 @@ import { enforceTerminologyCompliance } from "../terminology/enforcer";
 import { checkGlossaryTranslation } from "../terminology/audit-compliance";
 import { isSafeTerminologyEntry } from "../terminology/safety";
 export { isSafeTerminologyEntry } from "../terminology/safety";
-import { auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
+import { PostFlightAuditReport, auditAndRepairPptxPostFlight } from "../qa/pptx-postflight-gate";
 import { translationCache } from "../translation/cache";
 import { DocumentTranslationMemory, TranslationUnitWithMeta, documentTM, DocumentTMConflict, canonicalizeText } from "../translation/document-tm";
 import { auditPptxGaps, SmartAuditReport, ScannedTextUnit, isNonTranslatable, isShoeModelName, isInspectionStatusLabel, isEnglishImmunityProtected } from "../translation/smart-detector";
@@ -21,36 +26,14 @@ import { polishSopText } from "../translation/sop-polisher";
 import { isVietnameseText, isSemanticBilingualPair } from "../translation/vietnamese-detector";
 import { AirGappedTranslationProvider } from "../translation/offline";
 import { mapAndBuildParagraphRuns } from "../translation/color-mapper";
+import { INTERNAL_SOP_EXAMPLES, shortenInternalSopPhrasing } from "../translation/internal-sop";
 
 /**
  * Automatically detects the manufacturing stage of a footwear presentation
  * based on keyword density across all slides.
  */
 export function detectPresentationStage(slides: PptxSlideData[]): string {
-  const combinedText = slides
-    .map((s) => s.paragraphs.map((p) => p.originalText).join(" "))
-    .join(" ")
-    .toLowerCase();
-
-  if (/\b(?:nosew|no-sew|ép\s+nhiệt|máy\s+nosew|pizza\s+pan|protective\s+film|màng\s+tpu|màng\s+bảo\s+vệ)\b/i.test(combinedText)) {
-    return "nosew";
-  }
-  if (/\b(?:may|đường\s+may|kim|chỉ|mũi\/inch|spi|mudguard|collar\s+lining|may\s+lót|may\s+vòng\s+cổ)\b/i.test(combinedText)) {
-    return "stitching";
-  }
-  if (/\b(?:chặt|dao\s+chặt|khuôn\s+dao|máy\s+chặt|cắt\s+laser|bàn\s+chặt)\b/i.test(combinedText)) {
-    return "cutting";
-  }
-  if (/\b(?:gò|dán\s+đế|quét\s+keo|quét\s+primer|sấy|lò\s+sấy|lực\s+ép\s+đế|ép\s+lạnh|ép\s+nóng|last|lasting)\b/i.test(combinedText)) {
-    return "assembly";
-  }
-  if (/\b(?:mài\s+đế|xử\s+lý\s+đế|phun\s+sơn\s+đế|đế\s+ngoài|outsole|midsole|stockfit)\b/i.test(combinedText)) {
-    return "stockfit";
-  }
-  if (/\b(?:kiểm\s+tra|lỗi|khuyết\s+tật|defect|ctq|isq|tiêu\s+chuẩn|qa\s+manual|mức\s+độ|ẩn\s+màu|lem\s+màu)\b/i.test(combinedText)) {
-    return "qa";
-  }
-  return "general";
+  return detectTerminologyStage(slides.map(s => s.paragraphs.map(p => p.originalText).join(" ")).join(" "));
 }
 
 export interface PptxParagraph {
@@ -108,6 +91,7 @@ export interface PptxTranslationResult {
   conflicts?: DocumentTMConflict[];
   auditReport?: SmartAuditReport;
   aiStudioMetrics?: AiStudioMetrics;
+  postFlight?: Omit<PostFlightAuditReport, "auditedBuffer">;
 }
 
 export type PptxTranslationMode = "ipqc_bilingual" | "isq_duplicate" | "replace_en";
@@ -118,19 +102,8 @@ export type PptxTranslationMode = "ipqc_bilingual" | "isq_duplicate" | "replace_
  * - If already ends with -EN, keep it.
  * - Otherwise append -EN (e.g. "SP22 AIR JORDAN 1 LOW QA IPQC manual" -> "SP22 AIR JORDAN 1 LOW QA IPQC manual-EN")
  */
-export function formatSopFileName(originalName: string): string {
-  if (!originalName) return "presentation-EN.pptx";
-  const baseName = originalName.replace(/\.pptx$/i, "").trim();
-  let enBaseName = baseName;
-  if (/[-_]VN$/i.test(baseName)) {
-    enBaseName = baseName.replace(/[-_]VN$/i, "-EN");
-  } else if (/[-_]VI$/i.test(baseName)) {
-    enBaseName = baseName.replace(/[-_]VI$/i, "-EN");
-  } else if (!/[-_]EN$/i.test(baseName)) {
-    enBaseName = `${baseName}-EN`;
-  }
-  return `${enBaseName}.pptx`;
-}
+import { formatSopFileName } from "./sop-filename";
+export { formatSopFileName } from "./sop-filename";
 
 /**
  * Escapes special XML characters for OpenXML text nodes (<a:t>).
@@ -573,8 +546,11 @@ export class PptxTranslatorService {
     const startTime = Date.now();
     const sourceLanguage = options?.sourceLanguage || "vi";
     const targetLanguage = options?.targetLanguage || "en";
-    const provider = options?.provider || getTranslationProvider();
+    let provider = options?.provider || getTranslationProvider();
     const mode: PptxTranslationMode = options?.mode || "ipqc_bilingual";
+    const internalExamples = options?.translateMissingOnly
+      ? [...db.getInternalSopExamples(sourceLanguage, targetLanguage), ...INTERNAL_SOP_EXAMPLES.filter((e) => e.sourceLanguage === sourceLanguage && e.targetLanguage === targetLanguage)]
+      : undefined;
 
     // Progress 1: Extracting structure
     options?.onProgress?.({
@@ -599,17 +575,37 @@ export class PptxTranslatorService {
       cutting: "Cutting & Die Cutting stage. 'Liệu' = material; 'Dao chặt' = cutting die; 'Độ bén' = sharpness.",
       assembly: "Assembly, Lasting & Bottom Cementing stage. 'Mặt' = upper; 'Đế' = sole/bottom; 'Quét keo' = apply cement; 'Quét xử lý' = apply primer.",
       stockfit: "Stockfit & Outsole Preparation stage. 'Mài đế' = buff outsole; 'Xử lý đế' = prime outsole; 'Đế ngoài' = outsole.",
-      qa: "QA Inspection & CTQ stage. Use concise inspection verbs ('Check if', 'Check', 'Ensure', 'Inspect') - NEVER use 'Verify'. Use noun adjunct defect phrasing."
+      qa: "QA Inspection & CTQ stage. Inspection instructions must use 'Check if' followed by a complete subject and predicate expressing the source condition. Keep 'if' when shortening. Do not replace this with 'Check' plus a noun, 'Verify', 'Ensure' or 'Inspect'. Keep defect headings as noun phrases."
     };
     const stageContext = STAGE_CONTEXT_MAP[effectiveStage.toLowerCase()] || "Ching Luh Footwear manufacturing SOP";
 
-    // Fetch approved & review terminology from Glossary Review, excluding corrupted imported rows
-    const rawApprovedGlossary = db.getGlossaryReviewTerminology(sourceLanguage, targetLanguage);
+    // Freeze approved terminology for this run; review suggestions are not mandatory.
+    const rawApprovedGlossary = db.getApprovedTerminology(sourceLanguage, targetLanguage);
     const approvedGlossary = rawApprovedGlossary.filter(isSafeTerminologyEntry);
     const blockedGlossaryCount = rawApprovedGlossary.length - approvedGlossary.length;
     if (blockedGlossaryCount > 0) {
       console.warn(`Ignored ${blockedGlossaryCount} unsafe glossary mappings for this translation run.`);
     }
+
+    const terminologyPlan = new DocumentTerminologyPlan(approvedGlossary, slides.flatMap(slide => {
+      const detected = detectPresentationStage([slide]);
+      const scope = options?.stage && options.stage !== "auto" ? options.stage : detected === "general" ? effectiveStage : detected;
+      const context = `${STAGE_CONTEXT_MAP[scope] || stageContext}\nSlide title: ${slide.title}`;
+      return [...slide.paragraphs.map(p => ({ id: p.id, sourceText: p.originalText, slideIndex: slide.slideIndex, scope, context })),
+        ...(slide.notes ? [{ id: `notes_s${slide.slideIndex}`, sourceText: slide.notes, slideIndex: slide.slideIndex, scope, context }] : [])];
+    }));
+    // Selective repair already owns a bounded corrective pass before packaging.
+    const wrapProvider = (candidate: TranslationProvider) => withDocumentTerminology(candidate, terminologyPlan, { retryTerminology: !options?.translateMissingOnly });
+    provider = wrapProvider(provider);
+    const terminologyScopeByPart: Record<string, string> = Object.fromEntries(slides.map(slide => [slide.slideFileName, terminologyPlan.scopeFor(slide.paragraphs[0]?.id)]));
+    const glossaryFor = (id: string) => terminologyPlan.glossaryFor(terminologyPlan.scopeFor(id));
+    const exactGlossaries = new Map<string, Map<string, string>>();
+    const exactGlossaryFor = (id: string) => {
+      const scope = terminologyPlan.scopeFor(id);
+      if (!exactGlossaries.has(scope)) exactGlossaries.set(scope, new Map(glossaryFor(id).map(e => [e.sourceTerm.trim().toLowerCase().replace(/\s+/g, " "), e.targetTerm])));
+      return exactGlossaries.get(scope)!;
+    };
+    const cacheNamespace = (item: { id: string }) => `sop-v2:${terminologyPlan.version}:${terminologyPlan.scopeFor(item.id)}`;
 
     // If editedSlides is provided, use those translations; otherwise translate automatically
     const editedMap = new Map<string, string>();
@@ -632,18 +628,6 @@ export class PptxTranslatorService {
     // Seed with pre-edited translations
     for (const [k, v] of editedMap.entries()) {
       translationMap.set(k, v);
-    }
-
-    // Build normalized lookup map for approved terminology (full sentences, headers, defect names)
-    // Approved entries take strict precedence over review entries
-    const approvedExactMap = new Map<string, string>();
-    for (const entry of approvedGlossary) {
-      if (entry.sourceTerm && entry.targetTerm) {
-        const key = entry.sourceTerm.trim().toLowerCase().replace(/\s+/g, " ");
-        if (!approvedExactMap.has(key)) {
-          approvedExactMap.set(key, entry.targetTerm.trim());
-        }
-      }
     }
 
     const effectiveSlideIndices = options?.selectedSlideIndices && options.selectedSlideIndices.length > 0
@@ -787,7 +771,7 @@ export class PptxTranslatorService {
           continue;
         }
 
-        if (p.isInspectionItem) {
+        if (p.isInspectionItem || editedMap.has(p.id) || options?.customTranslations?.[p.id] !== undefined) {
           const hybrid = splitBilingualText(p.originalText, true);
           if (hybrid) {
             // Hybrid bilingual: in replace_en/isq_duplicate keep only EN part; in bilingual keep as-is
@@ -842,6 +826,7 @@ export class PptxTranslatorService {
         // Direct check against approved domain glossary for exact matching paragraphs and headings
         const normKey = p.originalText.trim().toLowerCase().replace(/\s+/g, " ");
 
+        const approvedExactMap = exactGlossaryFor(p.id);
         if (approvedExactMap.has(normKey)) {
           translationMap.set(p.id, approvedExactMap.get(normKey)!);
           continue;
@@ -896,14 +881,22 @@ export class PptxTranslatorService {
       }
     }
 
-    // Phase 1 & 2: Document-Wide Translation Memory (TM) Pre-scan
-    const docTM = new DocumentTranslationMemory();
-    docTM.initializeDocumentTM(allUnitsWithMeta, approvedGlossary);
-
-    // Phase 3: Translation Planning - Pre-resolve exact matches from TM
-    const tmPlan = docTM.planTranslations(allUnitsWithMeta);
-    for (const [id, preTrans] of tmPlan.preResolved.entries()) {
-      translationMap.set(id, preTrans);
+    // Separate translation memory per manufacturing scope. No first-slide decision can
+    // lock a different meaning on a later stage; each scope uses the same frozen plan.
+    const memories = new Map<string, DocumentTranslationMemory>();
+    const tmFor = (id: string) => {
+      const scope = terminologyPlan.scopeFor(id);
+      let memory = memories.get(scope);
+      if (!memory) {
+        memory = new DocumentTranslationMemory();
+        memory.initializeDocumentTM(allUnitsWithMeta.filter(u => terminologyPlan.scopeFor(u.id) === scope), terminologyPlan.glossaryFor(scope));
+        memories.set(scope, memory);
+      }
+      return memory;
+    };
+    for (const unit of allUnitsWithMeta) {
+      const preResolved = tmFor(unit.id).planTranslations([unit]).preResolved.get(unit.id);
+      if (preResolved && !editedMap.has(unit.id)) translationMap.set(unit.id, preResolved);
     }
 
     const modifiedParagraphIds = new Set<string>();
@@ -925,70 +918,67 @@ export class PptxTranslatorService {
     }
 
     let auditReport: SmartAuditReport | undefined;
+    const qualityRepairSources = new Map<string, string>();
 
     if (options?.translateMissingOnly) {
       auditReport = await auditPptxGaps(buffer, options?.fileName || "presentation.pptx", {
         sourceLang: sourceLanguage,
         targetLang: targetLanguage,
         mode,
-        customDocTM: docTM,
-        approvedGlossary,
+        approvedGlossary, terminologyPlan, terminologyScopeByPart,
       });
 
       const allowedIds = options.selectedUnitIds ? new Set(options.selectedUnitIds) : null;
-      if (allowedIds) {
-        const isqUnits = auditReport.units.filter((u) => u.location.isIsq && u.selectedForTranslation);
-        if (isqUnits.length > 0) {
-          const isqBySlide = new Map<number, typeof isqUnits>();
-          for (const u of isqUnits) {
-            const sIdx = u.location.slideIndex ?? 0;
-            if (!isqBySlide.has(sIdx)) isqBySlide.set(sIdx, []);
-            isqBySlide.get(sIdx)!.push(u);
-          }
-          for (const [slideIdx, slideIsqUnits] of isqBySlide) {
-            const selectedCount = slideIsqUnits.filter((u) => allowedIds.has(u.id)).length;
-            if (selectedCount > 0 && selectedCount < slideIsqUnits.length) {
-              if (options?.fileName === "ISQ-manual.pptx" || /isq/i.test(options?.fileName || "")) {
-                throw new Error(`ISQ cần dịch đủ cả slide (slide ${slideIdx}) để đảm bảo nhân bản slide song ngữ hoàn chỉnh.`);
-              }
-              // User explicit selection must strictly be respected: never force-select units that the user unchecked
-            }
-          }
-        }
-      }
 
       const selected = auditReport.units.filter((u) =>
-        allowedIds ? allowedIds.has(u.id) : u.selectedForTranslation
+        (allowedIds ? allowedIds.has(u.id) : u.selectedForTranslation) &&
+        (!effectiveSlideIndices || effectiveSlideIndices.has(u.location.slideIndex || 0))
       );
+      // Explicitly selecting an existing EN quality defect repairs that EN slot
+      // using its VI counterpart, without touching the unselected VI paragraph.
+      if (allowedIds && sourceLanguage === "vi" && targetLanguage === "en") for (const unit of selected) {
+        if (hasViDiacritics(unit.sourceText) || isVietnameseText(unit.sourceText) || options?.customTranslations?.[unit.id] !== undefined) continue;
+        const sourceId = unit.qualityIssues?.find(issue => issue.sourceUnitId)?.sourceUnitId;
+        const source = auditReport.units.find(candidate => candidate.id === sourceId);
+        if (source && (hasViDiacritics(source.sourceText) || isVietnameseText(source.sourceText))) qualityRepairSources.set(unit.id, source.sourceText);
+      }
       const missingIdSet = new Set(selected.map((u) => u.id));
 
       // Exact IDs preserve the scope shown in the review. Never fan out by canonical text.
       for (const u of selected) modifiedParagraphIds.add(u.id);
       for (const u of selected.filter((u) => {
         if (options?.customTranslations?.[u.id]) return false; // PRESERVE approved/custom translations!
-        return u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined || (allowedIds && mode === "replace_en");
+        return qualityRepairSources.has(u.id) || u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined || (allowedIds && mode === "replace_en");
       })) translationMap.delete(u.id);
       for(const u of selected) if(u.existingTranslation && targetLanguage === "en" && !hasViDiacritics(u.existingTranslation) && (mode === "ipqc_bilingual" || mode === "isq_duplicate"))translationMap.set(u.id,u.existingTranslation);
       const queuedIds=new Set(allItemsToTranslate.map(item=>item.id));
       for(const u of selected){
+        // An orphan English defect has no recoverable VI source. Never ask AI
+        // to invent its missing condition; preserve it and keep the QA warning.
+        if (u.qualityIssues?.length && !hasViDiacritics(u.sourceText) && !isVietnameseText(u.sourceText) && !qualityRepairSources.has(u.id) && options?.customTranslations?.[u.id] === undefined) {
+          translationMap.set(u.id, u.sourceText); continue;
+        }
         // Source-language evidence from the audit also covers Vietnamese without
         // accents, which the older English pre-screen can mistakenly skip.
         if(translationMap.get(u.id)?.trim()===u.sourceText.trim())translationMap.delete(u.id);
         if(!translationMap.has(u.id) && !queuedIds.has(u.id)){
-          allItemsToTranslate.push({id:u.id,sourceText:unitMetaMap.get(u.id)?.sourceText || u.sourceText});queuedIds.add(u.id);
+          allItemsToTranslate.push({id:u.id,sourceText:qualityRepairSources.get(u.id) || unitMetaMap.get(u.id)?.sourceText || u.sourceText});queuedIds.add(u.id);
         }
       }
       allItemsToTranslate = allItemsToTranslate.filter((item) => missingIdSet.has(item.id) && !translationMap.has(item.id));
     }
 
     // 2. Pre-flight Deduplication & Cache Resolution across presentation
-    const bypassAllCache = Boolean(options?.provider);
+    // Smart Audit is an explicit correction request. Reuse duplicates within
+    // this run, but do not silently serve a previous run's verbose AI result.
+    const bypassAllCache = Boolean(options?.provider || options?.translateMissingOnly);
     const { uniqueToTranslate, resolveAll, stats: dedupStats } = translationCache.deduplicateItems(
       allItemsToTranslate,
       sourceLanguage,
       targetLanguage,
       options?.translateMissingOnly ? new Set(auditReport?.units.filter((u) => modifiedParagraphIds.has(u.id) && (u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined)).map((u) => u.sourceText.trim())) : undefined,
-      bypassAllCache
+      bypassAllCache,
+      cacheNamespace
     );
 
     // Populate pre-cached translations into translationMap
@@ -1056,7 +1046,7 @@ export class PptxTranslatorService {
       const activateQuotaFallback = (error: GeminiRateLimitError, currentProgress?: number) => {
         if (!geminiQuotaFallbackActive) {
           geminiQuotaFallbackActive = true;
-          activeProvider = new GoogleTranslationProvider();
+          activeProvider = wrapProvider(new GoogleTranslationProvider());
           quotaFallbackProgress = currentProgress ?? 30;
           console.warn(
             `Gemini quota reached${error.retryAfterSeconds ? ` (retry after ${error.retryAfterSeconds}s)` : ""}. ` +
@@ -1129,7 +1119,7 @@ export class PptxTranslatorService {
         }
 
         let batchRes: BatchTranslationResponse | null = null;
-        const docConstraints = docTM.getPromptConstraints(chunk);
+        const docConstraints = chunk.flatMap(item => tmFor(item.id).getPromptConstraints([item]));
         const effectiveGlossary = [...approvedGlossary, ...docConstraints];
 
         try {
@@ -1137,7 +1127,7 @@ export class PptxTranslatorService {
             items: chunk,
             sourceLanguage,
             targetLanguage,
-            approvedTerminology: effectiveGlossary,
+            approvedTerminology: effectiveGlossary, internalExamples,
             context: stageContext,
           });
           if (batchRes?.aiStudioMetrics) {
@@ -1156,7 +1146,7 @@ export class PptxTranslatorService {
                   items: chunk,
                   sourceLanguage,
                   targetLanguage,
-                  approvedTerminology: effectiveGlossary,
+                  approvedTerminology: effectiveGlossary, internalExamples,
                   context: stageContext,
                 });
                 if (batchRes?.aiStudioMetrics) {
@@ -1179,7 +1169,7 @@ export class PptxTranslatorService {
                 items: chunk.slice(0, half),
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: effectiveGlossary,
+                approvedTerminology: effectiveGlossary, internalExamples,
                 context: stageContext,
               });
               if (sub1?.results) {
@@ -1196,7 +1186,7 @@ export class PptxTranslatorService {
                 items: chunk.slice(half),
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: effectiveGlossary,
+                approvedTerminology: effectiveGlossary, internalExamples,
                 context: stageContext,
               });
               if (sub2?.results) {
@@ -1224,7 +1214,7 @@ export class PptxTranslatorService {
               `[ProviderFailover] Gemini failed for batch ${currentBatch}. ` +
               `Translating batch ${currentBatch} with Google NMT emergency fallback, preserving Gemini for subsequent batches.`
             );
-            const emergencyNmt = new GoogleTranslationProvider();
+            const emergencyNmt = wrapProvider(new GoogleTranslationProvider());
             options?.onProgress?.({
               stage: "translating",
               progress: progressPercent,
@@ -1239,7 +1229,7 @@ export class PptxTranslatorService {
                 items: chunk,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: effectiveGlossary,
+                approvedTerminology: effectiveGlossary, internalExamples,
                 context: stageContext,
               });
               hadRecentTransientError = false;
@@ -1256,8 +1246,8 @@ export class PptxTranslatorService {
               const normalized = normalizeSpiTerminology(trans.trim());
               const polished = polishSopText(normalized, { stage: effectiveStage });
               const meta = unitMetaMap.get(item.id);
-              const enforced = docTM.enforceDocumentTM(item.sourceText, polished, sourceLanguage, targetLanguage);
-              docTM.recordTranslation(
+              const enforced = tmFor(item.id).enforceDocumentTM(item.sourceText, polished, sourceLanguage, targetLanguage);
+              tmFor(item.id).recordTranslation(
                 item.sourceText,
                 enforced.text,
                 { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
@@ -1265,7 +1255,7 @@ export class PptxTranslatorService {
               );
               translationMap.set(item.id, enforced.text);
               newlyTranslatedMap.set(item.id, enforced.text);
-              translationCache.set(item.sourceText, enforced.text, sourceLanguage, targetLanguage);
+              translationCache.set(item.sourceText, enforced.text, sourceLanguage, targetLanguage, cacheNamespace(item));
             } else {
               translationMap.set(item.id, item.sourceText);
               newlyTranslatedMap.set(item.id, item.sourceText);
@@ -1340,21 +1330,21 @@ export class PptxTranslatorService {
         for (let s = 0; s < unresolvedItems.length; s += sweepChunkSize) {
           const sweepChunk = unresolvedItems.slice(s, s + sweepChunkSize);
           try {
-            const sweepConstraints = docTM.getPromptConstraints(sweepChunk);
+            const sweepConstraints = sweepChunk.flatMap(item => tmFor(item.id).getPromptConstraints([item]));
             const sweepGlossary = [...approvedGlossary, ...sweepConstraints];
             const sweepRes = await activeProvider.translateBatch!({
               items: sweepChunk,
               sourceLanguage,
               targetLanguage,
-              approvedTerminology: sweepGlossary,
+              approvedTerminology: sweepGlossary, internalExamples,
             });
             for (const item of sweepChunk) {
               const tr = sweepRes.results.get(item.id);
               if (!needsTranslationRecovery(item.sourceText, tr, sourceLanguage, targetLanguage)) {
                 const norm = normalizeSpiTerminology(tr!.trim());
                 const meta = unitMetaMap.get(item.id);
-                const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
-                docTM.recordTranslation(
+                const enforced = tmFor(item.id).enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                tmFor(item.id).recordTranslation(
                   item.sourceText,
                   enforced.text,
                   { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
@@ -1371,15 +1361,15 @@ export class PptxTranslatorService {
                   items: sweepChunk,
                   sourceLanguage,
                   targetLanguage,
-                  approvedTerminology: approvedGlossary,
+                  approvedTerminology: approvedGlossary, internalExamples,
                 });
                 for (const item of sweepChunk) {
                   const tr = fallbackRes.results.get(item.id);
                   if (!needsTranslationRecovery(item.sourceText, tr, sourceLanguage, targetLanguage)) {
                     const norm = normalizeSpiTerminology(tr!.trim());
                     const meta = unitMetaMap.get(item.id);
-                    const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
-                    docTM.recordTranslation(
+                    const enforced = tmFor(item.id).enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                    tmFor(item.id).recordTranslation(
                       item.sourceText,
                       enforced.text,
                       { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
@@ -1407,31 +1397,31 @@ export class PptxTranslatorService {
         );
         if (typeof activeProvider.translate === "function") {
           for (const item of unresolvedItems) {
-            const tmHit = docTM.lookup(item.sourceText);
+            const tmHit = tmFor(item.id).lookup(item.sourceText);
             if (tmHit && (tmHit.status === "LOCKED" || tmHit.status === "APPROVED" || tmHit.status === "ESTABLISHED")) {
               translationMap.set(item.id, tmHit.target);
               continue;
             }
             const lowerSrc = item.sourceText.trim().toLowerCase().replace(/\s+/g, " ");
-            const glossMatch = approvedExactMap.get(lowerSrc);
+            const glossMatch = exactGlossaryFor(item.id).get(lowerSrc);
             if (glossMatch) {
               translationMap.set(item.id, normalizeSpiTerminology(glossMatch));
               continue;
             }
             try {
-              const retryConstraints = docTM.getPromptConstraints([item]);
+              const retryConstraints = tmFor(item.id).getPromptConstraints([item]);
               const retryGlossary = [...approvedGlossary, ...retryConstraints];
               const retry = await activeProvider.translate({
-                sourceText: item.sourceText,
+                unitId: item.id, sourceText: item.sourceText,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: retryGlossary,
+                approvedTerminology: retryGlossary, internalExamples,
               });
               if (!needsTranslationRecovery(item.sourceText, retry.translatedText, sourceLanguage, targetLanguage)) {
                 const norm = normalizeSpiTerminology(retry.translatedText.trim());
                 const meta = unitMetaMap.get(item.id);
-                const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
-                docTM.recordTranslation(
+                const enforced = tmFor(item.id).enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                tmFor(item.id).recordTranslation(
                   item.sourceText,
                   enforced.text,
                   { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
@@ -1444,16 +1434,16 @@ export class PptxTranslatorService {
                 activateQuotaFallback(retryErr, 88);
                 try {
                   const fallback = await activeProvider.translate({
-                    sourceText: item.sourceText,
+                    unitId: item.id, sourceText: item.sourceText,
                     sourceLanguage,
                     targetLanguage,
-                    approvedTerminology: approvedGlossary,
+                    approvedTerminology: approvedGlossary, internalExamples,
                   });
                   if (!needsTranslationRecovery(item.sourceText, fallback.translatedText, sourceLanguage, targetLanguage)) {
                     const norm = normalizeSpiTerminology(fallback.translatedText.trim());
                     const meta = unitMetaMap.get(item.id);
-                    const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
-                    docTM.recordTranslation(
+                    const enforced = tmFor(item.id).enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                    tmFor(item.id).recordTranslation(
                       item.sourceText,
                       enforced.text,
                       { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
@@ -1481,14 +1471,14 @@ export class PptxTranslatorService {
           needsTranslationRecovery(it.sourceText, translationMap.get(it.id), sourceLanguage, targetLanguage)
         );
         if (unresolvedItems.length > 0 && activeProvider.name !== "google_translate") {
-          const nmtFallback = new GoogleTranslationProvider();
+          const nmtFallback = wrapProvider(new GoogleTranslationProvider());
           for (const item of unresolvedItems) {
             try {
               const fallback = await nmtFallback.translate({
-                sourceText: item.sourceText,
+                unitId: item.id, sourceText: item.sourceText,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: approvedGlossary,
+                approvedTerminology: approvedGlossary, internalExamples,
               });
               if (fallback.translatedText?.trim()) {
                 translationMap.set(item.id, normalizeSpiTerminology(fallback.translatedText.trim()));
@@ -1525,10 +1515,10 @@ export class PptxTranslatorService {
             chunk.map(async (item) => {
               try {
                 const res = await provider.translate({
-                  sourceText: item.sourceText,
+                  unitId: item.id, sourceText: item.sourceText,
                   sourceLanguage,
                   targetLanguage,
-                  approvedTerminology: approvedGlossary,
+                  approvedTerminology: approvedGlossary, internalExamples,
                 });
                 translationMap.set(item.id, normalizeSpiTerminology(res.translatedText));
               } catch (e) {
@@ -1563,27 +1553,27 @@ export class PptxTranslatorService {
           message: `Đang kích hoạt Google NMT khẩn cấp cho ${stillUntranslatedItems.length} đoạn chưa dịch được...`,
         });
 
-        const emergencyNmt = new GoogleTranslationProvider();
+        const emergencyNmt = wrapProvider(new GoogleTranslationProvider());
         if (typeof emergencyNmt.translateBatch === "function") {
           const emergencyChunkSize = 20;
           for (let e = 0; e < stillUntranslatedItems.length; e += emergencyChunkSize) {
             const chunk = stillUntranslatedItems.slice(e, e + emergencyChunkSize);
-            const emergencyConstraints = docTM.getPromptConstraints(chunk);
+            const emergencyConstraints = chunk.flatMap(item => tmFor(item.id).getPromptConstraints([item]));
             const emergencyGlossary = [...approvedGlossary, ...emergencyConstraints];
             try {
               const nmtRes = await emergencyNmt.translateBatch({
                 items: chunk,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: emergencyGlossary,
+                approvedTerminology: emergencyGlossary, internalExamples,
               });
               for (const item of chunk) {
                 const tr = nmtRes.results.get(item.id);
                 if (tr && tr.trim() && !needsTranslationRecovery(item.sourceText, tr, sourceLanguage, targetLanguage)) {
                   const norm = normalizeSpiTerminology(tr.trim());
                   const meta = unitMetaMap.get(item.id);
-                  const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
-                  docTM.recordTranslation(
+                  const enforced = tmFor(item.id).enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                  tmFor(item.id).recordTranslation(
                     item.sourceText,
                     enforced.text,
                     { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
@@ -1601,16 +1591,16 @@ export class PptxTranslatorService {
           for (const item of stillUntranslatedItems) {
             try {
               const res = await emergencyNmt.translate({
-                sourceText: item.sourceText,
+                unitId: item.id, sourceText: item.sourceText,
                 sourceLanguage,
                 targetLanguage,
-                approvedTerminology: approvedGlossary,
+                approvedTerminology: approvedGlossary, internalExamples,
               });
               if (res.translatedText && !needsTranslationRecovery(item.sourceText, res.translatedText, sourceLanguage, targetLanguage)) {
                 const norm = normalizeSpiTerminology(res.translatedText.trim());
                 const meta = unitMetaMap.get(item.id);
-                const enforced = docTM.enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
-                docTM.recordTranslation(
+                const enforced = tmFor(item.id).enforceDocumentTM(item.sourceText, norm, sourceLanguage, targetLanguage);
+                tmFor(item.id).recordTranslation(
                   item.sourceText,
                   enforced.text,
                   { slide: meta?.slideIndex, shape: meta?.shapeIndex, paragraph: meta?.paragraphIndex },
@@ -1639,21 +1629,28 @@ export class PptxTranslatorService {
     const finalizedSelective = new Map<string, string>();
     if (options?.translateMissingOnly && sourceLanguage === "vi" && targetLanguage === "en") {
       const selectedUnits = new Map(auditReport?.units.map(u => [u.id, u]));
+      // Only compact freshly translated items. Approved existing text and manual
+      // edits must never be rewritten merely to change their style.
+      const freshlyTranslatedIds = new Set(allItemsToTranslate.map((item) => item.id));
+      const conciseIfFresh = (id: string, text: string) => freshlyTranslatedIds.has(id) ? shortenInternalSopPhrasing(text) : text;
       const retryItems: { id: string; sourceText: string }[] = [];
       const required: string[] = [];
       for (const p of slides.flatMap(slide => slide.paragraphs)) {
-        if (!modifiedParagraphIds.has(p.id) || p.isInspectionItem) continue;
+        if (!modifiedParagraphIds.has(p.id) || p.isInspectionItem || editedMap.has(p.id) || options?.customTranslations?.[p.id] !== undefined) continue;
         const unit = selectedUnits.get(p.id);
+        if (unit?.qualityIssues?.length && !hasViDiacritics(p.originalText) && !isVietnameseText(p.originalText) && !qualityRepairSources.has(p.id)) continue;
         // Existing English counterparts are protected by the user's preference unless explicitly selected by user in replace_en mode.
         if (unit?.existingTranslation && !hasViDiacritics(unit.existingTranslation) && !(mode === "replace_en" && options?.selectedUnitIds?.includes(p.id))) continue;
+        const sourceText = qualityRepairSources.get(p.id) || p.originalText;
         const raw = translationMap.get(p.id) || p.originalText;
         const rejectedMemory = unit?.status === "TRANSLATION_CONFLICT" || unit?.glossaryMismatches !== undefined;
-        const remembered = rejectedMemory ? raw : docTM.enforceDocumentTM(p.originalText, raw, sourceLanguage, targetLanguage).text;
-        const checked = checkGlossaryTranslation(p.originalText, remembered, approvedGlossary, sourceLanguage, targetLanguage);
-        if (checked.isValid && checked.text && !hasViDiacritics(checked.text)) finalizedSelective.set(p.id, checked.text);
+        const remembered = rejectedMemory ? raw : tmFor(p.id).enforceDocumentTM(sourceText, raw, sourceLanguage, targetLanguage).text;
+        const checked = checkGlossaryTranslation(sourceText, remembered, glossaryFor(p.id), sourceLanguage, targetLanguage);
+        const qualityIssues = checkInstructionQuality(sourceText, checked.text || "");
+        if (checked.isValid && !qualityIssues.length && checked.text && !hasViDiacritics(checked.text)) finalizedSelective.set(p.id, conciseIfFresh(p.id, checked.text));
         else {
-          retryItems.push({ id: p.id, sourceText: p.originalText });
-          required.push(`${p.id}: ${checked.mismatches.map(m => `${m.sourceTerm} => ${m.expectedTarget}`).join('; ')}`);
+          retryItems.push({ id: p.id, sourceText });
+          required.push(`${p.id}: ${[...checked.mismatches.map(m => `${m.sourceTerm} => ${m.expectedTarget}`), ...qualityIssues.map(issue => issue.message)].join('; ')}`);
         }
       }
       for (let start = 0; start < retryItems.length; start += 25) {
@@ -1661,11 +1658,11 @@ export class PptxTranslatorService {
         options.onProgress?.({ stage: "translating", progress: 89, message: `Đang sửa ${items.length} đoạn chưa tuân thủ glossary...` });
         const context = "Translate each complete source instruction again. Use the approved glossary verbatim; preserve meaning, negation, numbers and prefixes. Do not append a list of terms. The previous output missed these required terms:\n" + required.slice(start, start + 25).join('\n');
         const results = provider.translateBatch
-          ? (await provider.translateBatch({ items, sourceLanguage, targetLanguage, approvedTerminology: approvedGlossary, context })).results
-          : new Map(await Promise.all(items.map(async item => [item.id, (await provider.translate({ sourceText: item.sourceText, sourceLanguage, targetLanguage, approvedTerminology: approvedGlossary, context })).translatedText] as const)));
+          ? (await provider.translateBatch({ items, sourceLanguage, targetLanguage, approvedTerminology: approvedGlossary, internalExamples, context })).results
+          : new Map(await Promise.all(items.map(async item => [item.id, (await provider.translate({ unitId: item.id, sourceText: item.sourceText, sourceLanguage, targetLanguage, approvedTerminology: approvedGlossary, internalExamples, context })).translatedText] as const)));
         for (const item of items) {
           // A fresh correction must never be overwritten by rejected document memory.
-          let checked = checkGlossaryTranslation(item.sourceText, results.get(item.id) || '', approvedGlossary, sourceLanguage, targetLanguage);
+          let checked = checkGlossaryTranslation(item.sourceText, results.get(item.id) || '', glossaryFor(item.id), sourceLanguage, targetLanguage);
           if (!checked.text || hasViDiacritics(checked.text) || !checked.isValid) {
             // Strictly guard synthetic test 'blocked.pptx'
             if (options?.fileName === 'blocked.pptx') {
@@ -1676,21 +1673,21 @@ export class PptxTranslatorService {
             const enforced = enforceTerminologyCompliance(
               item.sourceText,
               checked.text || results.get(item.id) || item.sourceText,
-              approvedGlossary,
+              glossaryFor(item.id),
               sourceLanguage,
               targetLanguage
             );
-            checked = checkGlossaryTranslation(item.sourceText, enforced.text, approvedGlossary, sourceLanguage, targetLanguage);
+            checked = checkGlossaryTranslation(item.sourceText, enforced.text, glossaryFor(item.id), sourceLanguage, targetLanguage);
 
             // If still missing valid text or has Vietnamese diacritics, use airgapped translation with glossary enforcement
             if (!checked.text || hasViDiacritics(checked.text)) {
               const airgapped = new AirGappedTranslationProvider();
-              const fallback = airgapped.translateVietnameseToEnglish(item.sourceText, approvedGlossary);
-              const fallbackEnforced = enforceTerminologyCompliance(item.sourceText, fallback, approvedGlossary, sourceLanguage, targetLanguage);
-              checked = checkGlossaryTranslation(item.sourceText, fallbackEnforced.text, approvedGlossary, sourceLanguage, targetLanguage);
+              const fallback = airgapped.translateVietnameseToEnglish(item.sourceText, glossaryFor(item.id));
+              const fallbackEnforced = enforceTerminologyCompliance(item.sourceText, fallback, glossaryFor(item.id), sourceLanguage, targetLanguage);
+              checked = checkGlossaryTranslation(item.sourceText, fallbackEnforced.text, glossaryFor(item.id), sourceLanguage, targetLanguage);
             }
           }
-          finalizedSelective.set(item.id, checked.text || results.get(item.id) || '');
+          finalizedSelective.set(item.id, conciseIfFresh(item.id, checked.text || results.get(item.id) || ''));
         }
       }
     }
@@ -1702,6 +1699,19 @@ export class PptxTranslatorService {
       if (sXml) slideXmlMap.set(s.slideFileName, sXml);
     }
     const zonePlan = dynamicDeckDetector.detectZones(slides, slideXmlMap, mode, options?.fileName);
+
+    const protectedParagraphs = new Map<string, Set<string>>();
+    if (options?.translateMissingOnly || effectiveSlideIndices) {
+      for (const slide of slides) {
+        const xml = slideXmlMap.get(slide.slideFileName) || "";
+        const paragraphs = xml.match(new RegExp(PPTX_PARAGRAPH_PATTERN)) || [];
+        const byIndex = new Map(slide.paragraphs.map((p) => [p.paragraphIndex, p]));
+        protectedParagraphs.set(slide.slideFileName, new Set(paragraphs.filter((_p, index) => {
+          const data = byIndex.get(index);
+          return options?.translateMissingOnly ? !data || !modifiedParagraphIds.has(data.id) : !effectiveSlideIndices?.has(slide.slideIndex);
+        })));
+      }
+    }
 
     let isqSlidePaths = new Set<string>();
     // Duplicates ISQ slides according to Ching Luh SOP (1 page EN on top, 1 page VI original below)
@@ -1753,6 +1763,7 @@ export class PptxTranslatorService {
 
     }
 
+    const packagedUnits: PackagedTerminologyUnit[] = [];
     // 3. Apply translations to slide objects and inject into OpenXML
     for (let sIdx = 0; sIdx < slides.length; sIdx++) {
       const slide = slides[sIdx];
@@ -1775,13 +1786,13 @@ export class PptxTranslatorService {
           continue;
         }
         const rawT = translationMap.get(p.id) || p.originalText;
-        if (p.isInspectionItem) {
+        if (p.isInspectionItem || editedMap.has(p.id) || options?.customTranslations?.[p.id] !== undefined) {
           p.translatedText = rawT;
         } else if (finalizedSelective.has(p.id)) {
           p.translatedText = normalizeSpiTerminology(finalizedSelective.get(p.id)!);
         } else {
           // Document memory may contain older wording. Glossary must be last.
-          const tmEnforced = docTM.enforceDocumentTM(
+          const tmEnforced = tmFor(p.id).enforceDocumentTM(
             p.originalText,
             rawT,
             sourceLanguage,
@@ -1790,22 +1801,22 @@ export class PptxTranslatorService {
           const enforced = enforceTerminologyCompliance(
             p.originalText,
             tmEnforced.text,
-            approvedGlossary,
+            glossaryFor(p.id),
             sourceLanguage,
             targetLanguage
           );
-          p.translatedText = normalizeSpiTerminology(enforced.text);
+          p.translatedText = terminologyPlan.repair(p.originalText, normalizeSpiTerminology(enforced.text), terminologyPlan.scopeFor(p.id), sourceLanguage, targetLanguage).text;
         }
       }
 
       const notesId = `notes_s${slide.slideIndex}`;
       if (slide.notes) {
         const rawN = translationMap.get(notesId) || slide.notes;
-        const tmEnforcedNotes = docTM.enforceDocumentTM(slide.notes, rawN, sourceLanguage, targetLanguage);
+        const tmEnforcedNotes = tmFor(notesId).enforceDocumentTM(slide.notes, rawN, sourceLanguage, targetLanguage);
         const enforcedNotes = enforceTerminologyCompliance(
           slide.notes,
           tmEnforcedNotes.text,
-          approvedGlossary,
+          glossaryFor(notesId),
           sourceLanguage,
           targetLanguage
         );
@@ -1837,6 +1848,17 @@ export class PptxTranslatorService {
         }
       }
 
+      if (targetSlideFileName !== slide.slideFileName && protectedParagraphs.has(slide.slideFileName)) {
+        protectedParagraphs.set(targetSlideFileName, protectedParagraphs.get(slide.slideFileName)!);
+      }
+      terminologyScopeByPart[targetSlideFileName] = terminologyScopeByPart[slide.slideFileName];
+      for (const p of slide.paragraphs) {
+        const sourceText = qualityRepairSources.get(p.id) || p.originalText;
+        if (p.translatedText && p.translatedText.trim() !== p.originalText.trim() && (sourceLanguage !== "vi" || hasViDiacritics(sourceText) || isVietnameseText(sourceText))) {
+          packagedUnits.push({ id: `output:${p.id}`, sourceText, targetText: p.translatedText, slideIndex: slide.slideIndex,
+            scope: terminologyPlan.scopeFor(p.id), partPath: targetSlideFileName, protected: editedMap.has(p.id) || options?.customTranslations?.[p.id] !== undefined });
+        }
+      }
       // Inject translated text back into slide XML
       const originalXml = await zip.file(targetSlideFileName)?.async("string");
       if (originalXml) {
@@ -1845,7 +1867,8 @@ export class PptxTranslatorService {
           slide.paragraphs,
           targetMode,
           options?.translateMissingOnly ? modifiedParagraphIds : undefined,
-          options?.customFontSizes
+          options?.customFontSizes,
+          new Set(qualityRepairSources.keys())
         );
 
         // Schema Safety: Ensure no <p:txBody> is left completely empty without an <a:p>
@@ -1896,13 +1919,16 @@ export class PptxTranslatorService {
     });
 
     // Run proactive post-flight gate across all modes (including translateMissingOnly)
-    const postFlight = await auditAndRepairPptxPostFlight(rawBuffer, mode as any, targetLanguage);
+    const postFlight = await auditAndRepairPptxPostFlight(rawBuffer, mode as any, targetLanguage, { protectedParagraphs });
     const translatedBuffer = postFlight.auditedBuffer;
-    if (options?.translateMissingOnly) {
-      auditReport = await auditPptxGaps(translatedBuffer, options.fileName || "presentation.pptx", {
-        sourceLang: sourceLanguage, targetLang: targetLanguage, mode, approvedGlossary,
-      });
-    }
+    const verified = await verifyPackagedTerminology(translatedBuffer, packagedUnits, postFlight.issues);
+    auditReport = await auditPptxGaps(translatedBuffer, options?.fileName || "presentation.pptx", {
+      sourceLang: sourceLanguage, targetLang: targetLanguage, mode, approvedGlossary, terminologyPlan, terminologyScopeByPart,
+      additionalTerminologyObservations: verified.observations, autoAiCascade: false,
+    });
+    const terminologyConsistency = auditReport.terminologyConsistency!;
+    attachTerminologyGate(postFlight, terminologyConsistency, verified.unverified);
+    attachTranslationQualityGate(postFlight, auditReport.translationQuality!);
 
     if (postFlight.repairedCount > 0) {
       console.log(`[PostFlightGate] Proactively auto-repaired ${postFlight.repairedCount} format/text issues before delivery.`);
@@ -1911,7 +1937,7 @@ export class PptxTranslatorService {
     options?.onProgress?.({
       stage: "done",
       progress: 100,
-      message: "Hoàn tất! Bài thuyết trình đã sẵn sàng xem & tải về.",
+      message: postFlight.passed ? "Hoàn tất! Bài thuyết trình đã sẵn sàng xem & tải về." : `Đã xử lý; còn ${postFlight.untranslatedRemaining?.length || 0} đoạn chưa dịch và ${terminologyConsistency.groups.length} nhóm thuật ngữ và ${postFlight.translationQuality?.issues.length || 0} cảnh báo chất lượng cần kiểm tra.`,
     });
 
     // Detect unmapped specialized footwear terms missing from Glossary Review
@@ -1929,10 +1955,11 @@ export class PptxTranslatorService {
       translatedBuffer,
       durationMs: Date.now() - startTime,
       unmappedTerms,
-      documentTMStats: docTM.getSummary(),
-      conflicts: docTM.getConflicts(),
+      documentTMStats: { scopes: [...memories].map(([scope, memory]) => ({ scope, ...memory.getSummary() })) },
+      conflicts: [...memories.values()].flatMap(memory => memory.getConflicts()),
       auditReport,
       aiStudioMetrics: latestAiStudioMetrics,
+      postFlight: { passed: postFlight.passed, issues: postFlight.issues, repairedCount: postFlight.repairedCount, totalSlidesAudited: postFlight.totalSlidesAudited, untranslatedRemaining: postFlight.untranslatedRemaining, terminologyConsistency, translationQuality: postFlight.translationQuality },
     };
   }
 
@@ -2001,9 +2028,19 @@ export class PptxTranslatorService {
     mode: PptxTranslationMode = "ipqc_bilingual",
     fileName?: string,
     targetLanguage: string = "en",
-    customFontSizes?: Record<string, number>
+    customFontSizes?: Record<string, number>,
+    onPostFlight?: (report: PostFlightAuditReport) => void
   ): Promise<Buffer> {
     const zip = await JSZip.loadAsync(originalBuffer);
+    const sourceLanguage = targetLanguage === "en" ? "vi" : "en";
+    const approvedGlossary = db.getApprovedTerminology(sourceLanguage, targetLanguage).filter(isSafeTerminologyEntry);
+    const terminologyPlan = new DocumentTerminologyPlan(approvedGlossary, slides.flatMap(slide => {
+      const scope = detectPresentationStage([slide]);
+      return slide.paragraphs.map(p => ({ id: p.id, sourceText: p.originalText, slideIndex: slide.slideIndex, scope, context: scope }));
+    }));
+    const terminologyScopeByPart: Record<string, string> = Object.fromEntries(slides.map(slide => [slide.slideFileName, terminologyPlan.scopeFor(slide.paragraphs[0]?.id)]));
+    const packagedUnits: PackagedTerminologyUnit[] = [];
+
 
     const slideXmlMap = new Map<string, string>();
     for (const s of slides) {
@@ -2033,6 +2070,10 @@ export class PptxTranslatorService {
           ? "replace_en"
           : "ipqc_bilingual";
 
+      for (const p of slide.paragraphs) if (p.translatedText && p.translatedText.trim() !== p.originalText.trim()) {
+        packagedUnits.push({ id: `output:${p.id}`, sourceText: p.originalText, targetText: p.translatedText, slideIndex: slide.slideIndex,
+          scope: terminologyPlan.scopeFor(p.id), partPath: slide.slideFileName, protected: true });
+      }
       const originalXml = await zip.file(slide.slideFileName)?.async("string");
       if (originalXml) {
         const updatedXml = this.replaceParagraphsInXml(originalXml, slide.paragraphs, targetMode, undefined, customFontSizes);
@@ -2065,6 +2106,14 @@ export class PptxTranslatorService {
       mode === "replace_en" ? "replace_en" : "ipqc_bilingual",
       targetLanguage
     );
+    const verified = await verifyPackagedTerminology(postFlight.auditedBuffer, packagedUnits, postFlight.issues);
+    const report = await auditPptxGaps(postFlight.auditedBuffer, fileName || "presentation.pptx", {
+      sourceLang: sourceLanguage, targetLang: targetLanguage, mode, approvedGlossary, terminologyPlan, terminologyScopeByPart,
+      additionalTerminologyObservations: verified.observations, autoAiCascade: false,
+    });
+    attachTerminologyGate(postFlight, report.terminologyConsistency!, verified.unverified);
+    attachTranslationQualityGate(postFlight, report.translationQuality!);
+    onPostFlight?.(postFlight);
     return postFlight.auditedBuffer;
   }
 
@@ -2482,7 +2531,8 @@ export class PptxTranslatorService {
     paragraphs: PptxParagraph[],
     mode: PptxTranslationMode = "ipqc_bilingual",
     modifiedParagraphIds?: Set<string>,
-    customFontSizes?: Record<string, number>
+    customFontSizes?: Record<string, number>,
+    replacementOnlyIds?: Set<string>
   ): string {
     // 1. Process shapes: Protect Title shape bodyPr from any arbitrary changes;
     // preserve original designer text wrap settings without force-overwriting wrap="none"
@@ -2520,11 +2570,39 @@ export class PptxTranslatorService {
 
       // If only specific paragraphs were modified (e.g. translateMissingOnly mode):
       // If none of the paragraphs in this container were modified, keep container 100% untouched!
-      if (modifiedParagraphIds && modifiedParagraphIds.size > 0) {
+      if (modifiedParagraphIds) {
         const hasModified = parsedItems.some((it) => it.pData && modifiedParagraphIds.has(it.pData.id));
         if (!hasModified) {
           return match;
         }
+        // A selective operation must never re-render an unselected paragraph in this cell.
+        // Keep its original runs, punctuation and whitespace byte for byte.
+        const english: string[] = [];
+        let paragraphIndex = 0;
+        const updatedBody = bodyContent.replace(new RegExp(PPTX_PARAGRAPH_PATTERN), (pXml: string) => {
+          const item = parsedItems[paragraphIndex++];
+          const data = item?.pData;
+          if (!data || !modifiedParagraphIds.has(data.id) || !data.translatedText?.trim()) return pXml;
+          const normalized = (text: string) => text.trim().replace(/\s+/g, " ").toLowerCase();
+          const target = data.translatedText.trim();
+          if (normalized(target) === normalized(data.originalText)) return pXml;
+          const existingCounterpart = parsedItems.some((other) => other !== item && normalized(paragraphText(other.pXml)) === normalized(target));
+          if (existingCounterpart) return mode === "replace_en" ? "" : pXml;
+          const translated = replaceParagraphTranslation(pXml, target, data.originalText, customFontSizes?.[data.id]);
+          if (mode === "replace_en" || replacementOnlyIds?.has(data.id)) return translated;
+          english.push(translated);
+          return pXml;
+        });
+        if (!english.length) return `${tagOpen}${updatedBody}${tagClose}`;
+        if (english.some((paragraph) => hasViDiacritics(paragraphText(paragraph)))) {
+          // Reverse translation still keeps English above Vietnamese.
+          const matches = [...updatedBody.matchAll(new RegExp(PPTX_PARAGRAPH_PATTERN))];
+          const last = matches[matches.length - 1];
+          const end = last ? last.index! + last[0].length : updatedBody.length;
+          return `${tagOpen}${updatedBody.slice(0, end)}${english.join("")}${updatedBody.slice(end)}${tagClose}`;
+        }
+        const firstParagraph = updatedBody.search(/<a:p(?:[\s>]|\/>)/);
+        return `${tagOpen}${updatedBody.slice(0, firstParagraph)}${english.join("")}${updatedBody.slice(firstParagraph)}${tagClose}`;
       }
 
       // =========================================================================
@@ -2719,10 +2797,7 @@ export class PptxTranslatorService {
         let enText = "";
         let viText = "";
 
-        if (modifiedParagraphIds && item.pData && !modifiedParagraphIds.has(item.pData.id)) {
-          enText = item.pData.originalText;
-          viText = item.pData.originalText;
-        } else if (hybrid) {
+        if (hybrid) {
           enText = hybrid.en;
           viText = hybrid.vi;
         } else if (isOriginalVi) {

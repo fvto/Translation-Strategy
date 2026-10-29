@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Zap, ShieldCheck, Filter, ArrowRight, RefreshCw, Pencil, Check, RotateCcw, BookOpen, Layers, CheckSquare, Square, SlidersHorizontal, ChevronDown, ChevronRight, Sparkles, Link2, AlertTriangle, Presentation, Maximize2, Minimize2, Loader2, CheckCircle2 } from "lucide-react";
 import type { SmartAuditReport, TextUnitStatus, TranslationAuditGroup, ScannedTextUnit } from "@/services/translation/smart-detector";
 import { SmartAuditSlideCanvas } from "./SmartAuditSlideCanvas";
@@ -32,6 +33,7 @@ interface SmartAuditModalProps {
   ) => Promise<void>;
   isLoading?: boolean;
   onScanComplete?: () => void;
+  onSelectionChange?: (selectedIds: string[], excludedIds: string[]) => void;
 }
 
 const LABELS: Record<TextUnitStatus, string> = {
@@ -42,12 +44,13 @@ const LABELS: Record<TextUnitStatus, string> = {
 };
 const ORIGINS: Record<string, string> = { approved: "Thuật ngữ đã duyệt", correction: "Người dùng đã sửa", presentation: "PowerPoint hiện tại", history: "Tài liệu trước" };
 
-export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslateMissingOnly, onApplySuggestions, isLoading = false, onScanComplete }: SmartAuditModalProps) {
+export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslateMissingOnly, onApplySuggestions, isLoading = false, onScanComplete, onSelectionChange }: SmartAuditModalProps) {
   const [tab, setTab] = useState<"visual" | "slides" | "summary" | "review" | "pairs">("visual");
   const [filter, setFilter] = useState("attention");
   const [slide, setSlide] = useState("all");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(new Set<string>());
+  const [excluded, setExcluded] = useState(new Set<string>());
   const [ignored, setIgnored] = useState(new Set<string>());
   const [preview, setPreview] = useState<string[] | null>(null);
   const [error, setError] = useState("");
@@ -89,6 +92,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
         .map((u) => u.id)
     );
     setSelected(initialSelected);
+    setExcluded(new Set());
     setIgnored(new Set());
     setCustomEdits({});
     setEditingGroupId(null);
@@ -165,6 +169,8 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     const units = slideMap.get(slideNum) || [];
     if (!units.length) return;
     const allSelected = units.every((u) => selected.has(u.id));
+    if (allSelected) { skipUnits(units.map((u) => u.id)); return; }
+    setExcluded((previous) => new Set([...previous].filter((id) => !units.some((u) => u.id === id))));
     setSelected((prev) => {
       const next = new Set(prev);
       for (const u of units) {
@@ -209,15 +215,17 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
 
   const selectAllSlides = () => {
     if (!report) return;
+    setExcluded(new Set());
     setSelected(new Set(report.units.map((u) => u.id)));
   };
 
   const deselectAllSlides = () => {
-    setSelected(new Set());
+    skipUnits(report?.units.map((u) => u.id) || []);
   };
 
   const selectOnlyPending = () => {
     if (!report) return;
+    setExcluded(new Set());
     setSelected(new Set(
       report.units
         .filter((u) => u.selectedForTranslation !== undefined ? u.selectedForTranslation : Boolean(u.requiresTranslation || u.status === "NEEDS_TRANSLATION"))
@@ -227,6 +235,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
 
   const selectHighConfidenceSafe = () => {
     if (!report) return;
+    setExcluded(new Set());
     const safeUnits = report.units.filter((u) => u.safeToApply || u.status === "LOCKED_TERMINOLOGY" || u.status === "TM_REUSE");
     setSelected(new Set(safeUnits.map((u) => u.id)));
   };
@@ -254,8 +263,8 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
 
   const selectedMissing = useMemo(() => {
     if (!report) return [];
-    return report.units.filter((u) => selected.has(u.id));
-  }, [report, selected]);
+    return report.units.filter((u) => selected.has(u.id) && !excluded.has(u.id));
+  }, [report, selected, excluded]);
 
   const selectedViRefUnits = useMemo(() => {
     return selectedMissing.filter(
@@ -263,11 +272,15 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
     );
   }, [selectedMissing, slidePairMap]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    onSelectionChange?.(selectedMissing.map((unit) => unit.id), [...excluded]);
+  }, [selectedMissing, excluded, onSelectionChange]);
+
+  if (!isOpen || typeof document === "undefined") return null;
 
   // Simple, elegant loading UI for Smart Audit
   if (isLoading || !report) {
-    return (
+    return createPortal(
       <div
         id="smart-audit-loading-backdrop"
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
@@ -318,20 +331,33 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
   const loading = isLoading || busy;
-  const safeIds = report.units.filter((u) => u.safeToApply && u.canApply && !(report.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
+  const safeIds = report.units.filter((u) => !excluded.has(u.id) && u.safeToApply && u.canApply && !(report.groups || []).some((g) => ignored.has(g.id) && g.unitIds.includes(u.id))).map((u) => u.id);
   const attention = (report.groups || []).filter((g) => !g.safeToApply && !ignored.has(g.id)).length || (report.groups ? 0 : report.needsTranslationCount);
 
-  const toggle = (id: string) => setSelected((previous) => {
+  const toggle = (id: string) => {
+    const wasSelected = selected.has(id);
+    setExcluded((previous) => { const next = new Set(previous); if (wasSelected) next.add(id); else next.delete(id); return next; });
+    setSelected((previous) => {
     const next = new Set(previous);
     if (next.has(id)) next.delete(id);
     else next.add(id);
     return next;
-  });
+    });
+  };
+
+  const skipUnits = (unitIds: string[]) => {
+    const ids = new Set(unitIds);
+    setSelected((previous) => new Set([...previous].filter((id) => !ids.has(id))));
+    setExcluded((previous) => new Set([...previous, ...ids]));
+    setCustomEdits((previous) => Object.fromEntries(Object.entries(previous).filter(([id]) => !ids.has(id))));
+    setPreview(null);
+  };
 
   const getEffectiveTranslation = (unit: ScannedTextUnit): string | undefined => {
     if (customEdits[unit.id] !== undefined) return customEdits[unit.id];
@@ -466,7 +492,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
       }
       if (data.auditReport) {
         setAiReport(data.auditReport);
-        setSelected(new Set(data.auditReport.units.filter((u: any) => u.selectedForTranslation).map((u: any) => u.id)));
+        setSelected(new Set(data.auditReport.units.filter((u: any) => u.selectedForTranslation && !excluded.has(u.id)).map((u: any) => u.id)));
         setAiAuditMsg(
           `AI Studio đã phân tích xong: Tự động ghép ${data.pairedCount || 0} cặp song ngữ và bảo toàn ${data.immuneCount || 0} thuật ngữ!`
         );
@@ -506,7 +532,8 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
   const card = "rounded-2xl border border-slate-200 bg-slate-50/50 p-4 shadow-2xs";
   const button = "px-4 py-2 rounded-full border border-slate-200 text-xs font-semibold hover:bg-slate-100 text-slate-700 disabled:opacity-40 cursor-pointer transition-all";
 
-  return (
+  // Keep the overlay outside animated tool panels, which create their own stacking context.
+  return createPortal(
     <div
       id="smart-audit-modal-backdrop"
       className={`fixed inset-0 z-50 flex items-center justify-center ${isMaximized ? "p-0" : "p-2 sm:p-3"} bg-black/50 backdrop-blur-xs animate-in fade-in duration-200 overscroll-contain`}
@@ -683,8 +710,10 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               report={report}
               selectedUnitIds={selected}
               onToggleUnit={toggle}
+              onSkipUnits={skipUnits}
               onSelectAllInSlide={(slideNum) => {
                 const units = slideMap.get(slideNum) || [];
+                setExcluded((previous) => new Set([...previous].filter((id) => !units.some((u) => u.id === id))));
                 setSelected((prev) => {
                   const next = new Set(prev);
                   for (const u of units) next.add(u.id);
@@ -693,14 +722,11 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               }}
               onDeselectAllInSlide={(slideNum) => {
                 const units = slideMap.get(slideNum) || [];
-                setSelected((prev) => {
-                  const next = new Set(prev);
-                  for (const u of units) next.delete(u.id);
-                  return next;
-                });
+                skipUnits(units.map((u) => u.id));
               }}
               customEdits={customEdits}
               onSaveCustomEdit={(unitId, text) => {
+                setExcluded((previous) => { const next = new Set(previous); next.delete(unitId); return next; });
                 setCustomEdits((prev) => ({
                   ...prev,
                   [unitId]: text.trim(),
@@ -1687,6 +1713,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               <button
                 type="button"
                 onClick={() => {
+                  setExcluded(new Set());
                   setSelected(new Set(report.units.filter((u) => u.selectedForTranslation).map((u) => u.id)));
                 }}
                 className="ml-2 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
@@ -1697,7 +1724,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
               {selected.size > 0 && (
                 <button
                   type="button"
-                  onClick={() => setSelected(new Set())}
+                  onClick={deselectAllSlides}
                   className="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                   title="Bỏ chọn toàn bộ"
                 >
@@ -1738,6 +1765,7 @@ export function SmartAuditModal({ isOpen, onClose, auditReport, file, onTranslat
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

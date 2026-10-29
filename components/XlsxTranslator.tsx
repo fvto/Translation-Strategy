@@ -155,14 +155,14 @@ export function XlsxTranslator() {
           <div className="flex items-center space-x-2">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
               <FileSpreadsheet className="w-6 h-6 text-emerald-600" />
-              Dịch Bảng Tính Excel (Tech Pack, BOM, IPQC)
+              Excel, rõ từng ô.
             </h1>
             <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-mono px-2.5 py-0.5 rounded-full flex items-center gap-1 font-semibold">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" /> Formula Protected
+              <ShieldCheck className="w-3 h-3 text-emerald-600" /> Giữ công thức
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Bảo toàn 100% công thức (=SUM, =VLOOKUP), bảng gộp cell và định dạng kỹ thuật nhà máy Ching Luh.
+            Dịch nội dung bảng tính, giữ công thức, ô gộp và định dạng gốc.
           </p>
         </div>
 
@@ -175,8 +175,8 @@ export function XlsxTranslator() {
             disabled={isTranslating}
             className="bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-full px-3 py-1.5 focus:outline-none cursor-pointer font-semibold shadow-2xs"
           >
-            <option value="gemini" className="bg-white text-slate-900">Google AI Studio (Gemini 3.5 ➔ 3.1 Fallback)</option>
-            <option value="google_translate" className="bg-white text-slate-900">Google NMT (Thuật ngữ chuẩn CAT)</option>
+            <option value="gemini" className="bg-white text-slate-900">Google AI Studio (Gemini)</option>
+            <option value="google_translate" className="bg-white text-slate-900">Google NMT</option>
           </select>
         </div>
       </div>

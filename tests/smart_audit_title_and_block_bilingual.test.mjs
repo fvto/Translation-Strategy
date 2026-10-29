@@ -271,12 +271,11 @@ test("Parallel Block Translation: Incomplete English placeholder '1.' is replace
     },
   ];
 
-  const modifiedIds = new Set(["s10_p2", "s10_p3"]);
+  // Full-deck repair may fill placeholders. Selective translation separately preserves every unselected paragraph.
   const resultXml = pptxTranslatorService.replaceParagraphsInXml(
     slideXml,
     paragraphs,
-    "ipqc_bilingual",
-    modifiedIds
+    "ipqc_bilingual"
   );
 
   const pMatches = Array.from(resultXml.matchAll(/<a:p(?:[\s>][\s\S]*?<\/a:p>|\/>)/g));

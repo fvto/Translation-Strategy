@@ -1,5 +1,16 @@
 [
   {
+    "sessionId": "pptx_1793094084439_bfdce56b",
+    "fileName": "FA24 AIR JORDAN 1 MID SE (MS-WS) QA IPQC -ISQ manual-EN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-10-27T09:44:20.100Z",
+    "slideCount": 131,
+    "totalPairs": 3028,
+    "harvestedCount": 0
+  },
+  {
     "sessionId": "pptx_1792718517628_b458f290",
     "fileName": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
     "mode": "ipqc_bilingual",
@@ -2187,16 +2198,5 @@
     "slideCount": 4,
     "totalPairs": 51,
     "harvestedCount": 2
-  },
-  {
-    "sessionId": "tm_zero_img_1792224297019",
-    "fileName": "Image_Check_SOP.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T08:04:57.019Z",
-    "slideCount": 1,
-    "totalPairs": 1,
-    "harvestedCount": 0
   }
 ]

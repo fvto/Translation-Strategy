@@ -48,7 +48,7 @@ test("Fix 2: Canned Tip-quarter tolerance does NOT overwrite other footwear comp
 
   assert.ok(!outXml.includes("Due to the uneven surface design of the Tip-quarter"), "Heel counter MUST NOT be overwritten with Tip-quarter text!");
   assert.ok(outXml.includes("Heel counter"), "Original component Heel counter must be preserved");
-  assert.ok(outXml.includes("quality standard are acceptable"), "Inverted tolerance phrasing must be fixed to acceptable");
+  assert.ok(outXml.includes("does not accept deformation or wrinkles"), "A rejection criterion must never become an acceptance criterion");
 });
 
 test("Fix 3: Vietnamese backstitching count is NOT converted to SPI and original VI slides are untouched", async () => {

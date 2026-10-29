@@ -194,26 +194,25 @@ export async function POST(req: NextRequest) {
           slideViHandling,
         });
 
-        // Truthful Postflight QA verification
-        const postFlight = await auditAndRepairPptxPostFlight(
-          translationResult.translatedBuffer,
-          mode,
-          targetLanguage
-        );
+        // The service already audited only the requested scope. A second full-deck repair
+        // would translate cells the user explicitly excluded.
+        const postFlight = translationResult.postFlight || { passed: false, untranslatedRemaining: [] };
         const unhandledSlides = [...new Set(postFlight.untranslatedRemaining?.map((u: { slide: string; text: string }) => u.slide) || [])];
 
         const outputFileName = file.name.replace(/\.pptx$/i, "-audited.pptx");
         const asciiFallback = outputFileName.replace(/[^\x20-\x7E]/g, "_").replace(/"/g, '\\"');
         const utf8Encoded = encodeURIComponent(outputFileName).replace(/['()]/g, escape).replace(/\*/g, "%2A");
 
-        return new Response(postFlight.auditedBuffer as any, {
+        return new Response(translationResult.translatedBuffer as any, {
           headers: {
             "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "X-Audit-Applied-Count": String(selectedUnitIds.length),
             "X-Audit-Unhandled-Count": String(postFlight.untranslatedRemaining?.length || 0),
             "X-Audit-Unhandled-Slides": JSON.stringify(unhandledSlides),
             "X-Postflight-Passed": String(postFlight.passed),
-            "Access-Control-Expose-Headers": "X-Audit-Applied-Count, X-Audit-Unhandled-Count, X-Audit-Unhandled-Slides, X-Postflight-Passed",
+            "X-Translation-Quality-Issue-Count": String(translationResult.postFlight?.translationQuality?.issues.length || 0),
+            "X-Terminology-Conflict-Count": String(translationResult.postFlight?.terminologyConsistency?.groups.length || 0),
+            "Access-Control-Expose-Headers": "X-Audit-Applied-Count, X-Audit-Unhandled-Count, X-Audit-Unhandled-Slides, X-Postflight-Passed, X-Terminology-Conflict-Count, X-Translation-Quality-Issue-Count",
             "Content-Disposition": `attachment; filename="${asciiFallback}"; filename*=UTF-8''${utf8Encoded}`,
           },
         });
@@ -339,7 +338,7 @@ export async function POST(req: NextRequest) {
               userId,
               userEmail,
               operation: "PPTX_TRANSLATED",
-              status: "SUCCESS",
+              status: translationResult.postFlight?.passed === false ? "WARNING" : "SUCCESS",
               durationMs: Date.now() - startTime,
               details: {
                 fileName: file.name,
@@ -393,6 +392,7 @@ export async function POST(req: NextRequest) {
               downloadUrl: `/api/documents/translate-pptx/download?id=${sessionId}`,
               auditReport: translationResult.auditReport,
               aiStudioMetrics: translationResult.aiStudioMetrics,
+              postFlight: translationResult.postFlight,
             });
             controller.close();
           } catch (err: any) {
@@ -449,7 +449,7 @@ export async function POST(req: NextRequest) {
       userId,
       userEmail,
       operation: "PPTX_TRANSLATED",
-      status: "SUCCESS",
+      status: translationResult.postFlight?.passed === false ? "WARNING" : "SUCCESS",
       durationMs: Date.now() - startTime,
       details: {
         fileName: file.name,
@@ -503,6 +503,7 @@ export async function POST(req: NextRequest) {
       downloadUrl: `/api/documents/translate-pptx/download?id=${sessionId}`,
       auditReport: translationResult.auditReport,
       aiStudioMetrics: translationResult.aiStudioMetrics,
+      postFlight: translationResult.postFlight,
     });
   } catch (error: any) {
     console.error("PPTX translation error:", error);

@@ -424,7 +424,6 @@ export class AirGappedTranslationProvider implements TranslationProvider {
       .replace(/\bcutting\s+line\s+laser\b/gi, "laser cutting line")
       // ─── QA Standard Safety Net ────────────────────────────────────────────
       // Ensure "flat does not accept" is replaced with "quality standard are acceptable"
-      .replace(/\bflat\s+does\s+not\s+accept\b[^\.\,\;\n]*/gi, "quality standard are acceptable")
       // Normalize any "quality standard tolerances are acceptable" to "quality standard are acceptable"
       .replace(/\bquality\s+standard\s+tolerances\s+are\s+acceptable\b/gi,
         "quality standard are acceptable")

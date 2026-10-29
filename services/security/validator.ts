@@ -107,5 +107,6 @@ export function sanitizeFilename(filename: string): string {
 export function isSafePath(baseDir: string, targetPath: string): boolean {
   const resolvedBase = path.resolve(baseDir);
   const resolvedTarget = path.resolve(targetPath);
-  return resolvedTarget.startsWith(resolvedBase);
+  const relative = path.relative(resolvedBase, resolvedTarget);
+  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
 }

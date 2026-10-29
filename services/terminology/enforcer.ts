@@ -1,7 +1,9 @@
 import { TerminologyEntry } from "../database/types";
 import { matchTerminology } from "./matcher";
+import { approvedTargetForms } from "./usage";
 import { adaptTermCasing, cleanTargetTerm, formatUppercaseStructure, normalizeSpiTerminology } from "../translation/casing";
 import { polishSopText } from "../translation/sop-polisher";
+import { isApprovedToleranceSource, APPROVED_TIP_QUARTER_NOTE } from "../translation/quality-tolerance";
 import { repairMistranslatedAcronyms } from "./acronym-resolver";
 import { hasVietnameseDiacritics, isVietnameseText } from "../translation/vietnamese-detector";
 
@@ -29,6 +31,7 @@ const KNOWN_SYNONYM_PATTERNS: { [canonicalTargetLower: string]: RegExp } = {
   "finished shoe": /\b(?:finished\s+shoes?|complete\s+shoes?|completed\s+shoes?)\b/gi,
   "material edge": /\b(?:edge\s+material|material\s+borders?|edge\s+of\s+material)\b/gi,
   "jig fitting": /\b(?:fit\s+jig|fitting\s+jig|match\s+jig|matching\s+jig)\b/gi,
+  "gauge marking line": /\bthreads?\s+lines?(?:\s+drawing)?\b/gi,
   // Footwear Defects VI -> EN
   "air bubble": /\b(?:air\s+)?bubbles?\b|\bblisters?\b|\bgas\s+bubbles?\b|\bfoaming\b/gi,
   "bond gap": /\b(?:open\s+glue|glue\s+opening|glue\s+open|glue\s+gap|gap\s+glue|unbonded|delamination|debonding|unglued|glue\s+separation|peeled\s+off\s+glue|loose\s+glue|un-bonded)\b/gi,
@@ -153,47 +156,44 @@ export function enforceTerminologyCompliance(
   let currentText = translatedText;
   const replacements: EnforcementReplacement[] = [];
 
-  // Proactive Auto-Repair for QA Tolerance & Uneven Surface Mistranslation
-  // In Vietnamese: "không bằng phẳng chấp nhận mức độ tiêu chuẩn..." means standard tolerances are acceptable due to uneven surface.
-  // Machine translation frequently inverts this into "[flat] does not accept quality standard...".
-  if (
-    /\bkhông\s+bằng\s+phẳng\b/i.test(sourceText) &&
-    /\bchấp\s+nhận\s+(?:mức\s+độ\s+)?tiêu\s+chuẩn\b/i.test(sourceText)
-  ) {
-    const isTipQuarter =
-      /\b(?:tip[- ]quarter|in\s+sơn|logo|chảy\s+sơn)\b/i.test(sourceText) ||
-      /\btip[- ]quarter\b/i.test(currentText);
+  // A confirmed thread defect has one label throughout the document. Do not
+  // confuse a noun label with the predicate in "threads are breaking/broken".
+  // Run this before the generic presence check: one correct occurrence must not
+  // hide another occurrence that still says "thread breakage".
+  const threadDefect = sourceLanguage === "vi" && targetLanguage === "en"
+    ? matchedTerms.find(({ entry }) => entry.status === "approved" &&
+      /đứt\s+chỉ/iu.test(entry.sourceTerm) && /^broken threads?$/i.test(cleanTargetTerm(entry.targetTerm)))?.entry
+    : undefined;
+  if (threadDefect) {
+    const target = cleanTargetTerm(threadDefect.targetTerm);
+    const replaceLabel = (originalText: string, offset: number, text: string) => {
+      const preceding = text.slice(0, offset);
+      const sentenceStart = /(?:^|\n)\s*[*•#-]*\s*(?:\d+[.)]\s*)?$/.test(preceding) || /[.!?]\s*$/.test(preceding);
+      const replacementText = adaptTermCasing(target, sentenceStart);
+      replacements.push({ sourceTerm: threadDefect.sourceTerm, expectedTarget: target, originalText, replacementText });
+      return replacementText;
+    };
+    const isDefectLabel = sourceText.length <= 100 &&
+      !/(?:kiểm tra|không|cần|phải|được|khi|nếu|lực|độ bền)/iu.test(sourceText);
+    if (isDefectLabel) {
+      currentText = currentText.replace(/\b(?:threads?\s+(?:breakage|breaking)|(?:breakage|breaking)\s+of\s+(?:the\s+)?threads?)\b/gi, replaceLabel);
+    }
+    // Bare "breaking" can also describe a needle/material. Only normalize a
+    // standalone item in a short VI defect list without another broken object.
+    const isThreadDefectList = isDefectLabel &&
+      !/(?:gãy|vỡ|nứt|đứt\s+(?!chỉ))/iu.test(sourceText);
+    if (isThreadDefectList) {
+      currentText = currentText.replace(/(^\s*|[,;/&]\s*|\band\s+)(breaking|breakage)(?=\s*(?:$|[,;/&]|\band\b))/gi,
+        (full, prefix: string, label: string, offset: number, text: string) => prefix + replaceLabel(label, offset + prefix.length, text));
+    }
+  }
 
-    if (isTipQuarter) {
-      if (
-        !/\bquality\s+standard\s+are\s+acceptable\b/i.test(currentText) ||
-        /\btolerances\b/i.test(currentText) ||
-        /\bflat\s+does\s+not\s+accept\b/i.test(currentText) ||
-        /\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/i.test(currentText) ||
-        /\baccept\s+the\s+quality\s+standard\b/i.test(currentText)
-      ) {
-        const fixedTolerance = "Due to the uneven surface design of the Tip-quarter, quality standard are acceptable for non-smooth screen-printed logos and base paint bleeding after no-sew, as shown in the updated QA manual";
-        replacements.push({
-          sourceTerm: "Do thiết kế bề mặt Tip quarter không bằng phẳng chấp nhận mức độ tiêu chuẩn...",
-          expectedTarget: "Due to the uneven surface design of the Tip-quarter, quality standard are acceptable...",
-          originalText: currentText,
-          replacementText: fixedTolerance,
-        });
-        currentText = fixedTolerance;
-      }
-    } else {
-      const fixed = currentText
-        .replace(/\bflat\s+does\s+not\s+accept\b/gi, "quality standard are acceptable")
-        .replace(/\bdoes\s+not\s+accept\s+(?:the\s+)?quality\s+standard\b/gi, "quality standard are acceptable");
-      if (fixed !== currentText) {
-        replacements.push({
-          sourceTerm: "không bằng phẳng chấp nhận mức độ tiêu chuẩn",
-          expectedTarget: "quality standard are acceptable",
-          originalText: currentText,
-          replacementText: fixed,
-        });
-        currentText = fixed;
-      }
+  // A sentence-level approved exception must never consume additional criteria or measurements.
+  if (sourceLanguage === "vi" && targetLanguage === "en" && isApprovedToleranceSource(sourceText)) {
+    const fixed = APPROVED_TIP_QUARTER_NOTE + (sourceText.trim().endsWith(".") ? "." : "");
+    if (currentText !== fixed) {
+      replacements.push({ sourceTerm: sourceText, expectedTarget: fixed, originalText: currentText, replacementText: fixed });
+      currentText = fixed;
     }
   }
 
@@ -221,8 +221,10 @@ export function enforceTerminologyCompliance(
   for (const entries of groupedMatchesMap.values()) {
     // If ANY of the approved polysemous targets is already present in the translation, proceed
     const isAnyPresent = entries.some((entry) => {
-      const clean = cleanTargetTerm(entry.targetTerm);
-      return clean && isTermPresentInTranslation(clean, currentText);
+      return approvedTargetForms(entry).some((target) => {
+        const clean = cleanTargetTerm(target);
+        return clean && isTermPresentInTranslation(clean, currentText);
+      });
     });
     if (isAnyPresent) {
       continue;

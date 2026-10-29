@@ -2,6 +2,13 @@ import { TerminologyEntry } from "../database/types";
 import { MatchedTerm, TerminologyMismatch, ValidationReport } from "./types";
 import { matchTerminology } from "./matcher";
 import { cleanTargetTerm } from "../translation/casing";
+import { approvedTargetForms } from "./usage";
+
+function containsTerm(text: string, term: string): boolean {
+  if (!term.trim()) return false;
+  const escaped = term.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?:s|es)?(?![\\p{L}\\p{N}])`, "iu").test(text);
+}
 
 function isApprovedTermPresent(expected: string, text: string): boolean {
   if (!expected || !text) return false;
@@ -10,20 +17,20 @@ function isApprovedTermPresent(expected: string, text: string): boolean {
   const cleanExpLower = cleanExp.toLowerCase();
 
   // 1. Direct case-insensitive substring
-  if (textLower.includes(cleanExpLower) || textLower.includes(expected.toLowerCase())) {
+  if (containsTerm(textLower, cleanExpLower) || containsTerm(textLower, expected)) {
     return true;
   }
 
   // 2. Slash variations: e.g. "Tip/toe"
   if (expected.includes("/")) {
     const variants = expected.split("/").map((v) => cleanTargetTerm(v).toLowerCase()).filter(Boolean);
-    if (variants.some((v) => textLower.includes(v))) return true;
+    if (variants.some((v) => containsTerm(textLower, v))) return true;
   }
 
   // 3. Hyphen vs space variation (e.g. "run-off stitching" vs "run off stitching")
   const normExpected = cleanExpLower.replace(/[-\s]+/g, " ");
   const normText = textLower.replace(/[-\s]+/g, " ");
-  if (normText.includes(normExpected)) return true;
+  if (containsTerm(normText, normExpected)) return true;
 
   // 4. Common morphological variations (e.g. "stitching" -> "stitch", "stitched")
   if ((cleanExpLower === "stitching" || cleanExpLower === "stitch") && /\bstitch(?:es|ed|ing)?\b/i.test(textLower)) {
@@ -52,7 +59,7 @@ function isApprovedTermPresent(expected: string, text: string): boolean {
   }
 
   // Plural endings (e.g. "top plate" -> "top plates")
-  if (textLower.includes(cleanExpLower + "s") || textLower.includes(cleanExpLower + "es")) {
+  if (containsTerm(textLower, cleanExpLower + "s") || containsTerm(textLower, cleanExpLower + "es")) {
     return true;
   }
 
@@ -124,7 +131,7 @@ export function validateTranslationTerminology(
     const expected = match.entry.targetTerm.trim();
 
     // Check if target term is in the translated text
-    const isPresent = isApprovedTermPresent(expected, translatedText);
+    const isPresent = approvedTargetForms(match.entry).some((target) => isApprovedTermPresent(target, translatedText));
 
     if (isPresent) {
       foundCount++;

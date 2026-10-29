@@ -181,7 +181,7 @@ export class DocumentTranslationMemory {
 
     // 1. Seed LOCKED entries from company glossary (Priority 1)
     for (const entry of approvedGlossary) {
-      if (!entry.sourceTerm || !entry.targetTerm) continue;
+      if (entry.status !== "approved" || !entry.sourceTerm || !entry.targetTerm) continue;
       const cleanSrc = entry.sourceTerm.trim();
       const cleanTgt = cleanTargetTerm(entry.targetTerm).trim();
       if (!cleanSrc || !cleanTgt) continue;
@@ -255,6 +255,8 @@ export class DocumentTranslationMemory {
   }
 
   private registerEntry(entry: DocumentTMEntry): void {
+    const existing = this.tmEntries.get(entry.sourceCanonical);
+    if (existing && !this.isHigherPriority(entry.status, existing.status)) return;
     this.tmEntries.set(entry.sourceCanonical, entry);
     if (isTechnicalTermCandidate(entry.sourceOriginal)) {
       // Keep sorted by source length descending for longest phrase matching

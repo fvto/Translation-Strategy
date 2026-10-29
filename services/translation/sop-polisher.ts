@@ -4,6 +4,8 @@
  * standard imperative English as used in Nike / Ching Luh SOP documentation.
  */
 
+import { repairKnownToleranceNote } from "./quality-tolerance";
+
 export interface PolishOptions {
   stage?: string; // e.g. "cutting" | "nosew" | "stitching" | "assembly" | "stockfit" | "qa"
 }
@@ -11,14 +13,12 @@ export interface PolishOptions {
 export function polishSopText(text: string, options: PolishOptions = {}): string {
   if (!text || !text.trim()) return text;
 
-  let polished = text;
+  let polished = repairKnownToleranceNote(text);
+  // Use the grammatical condition, rather than the glossary's bare verb "expose".
+  polished = polished.replace(/\b(minimi[sz]e|limit|reduce)\s+(?:the\s+)?thread\s+expose\b/gi, "$1 exposed threads");
 
   // 1. Technical Tolerance & Quality Standard Acceptance (Strict User Directive: No 'tolerances')
   // e.g. "flat does not accept the quality standard..." -> "quality standards are acceptable..."
-  polished = polished.replace(
-    /\b(?:flat\s+does\s+not\s+accept|flat\s+not\s+accept)\b[\s\S]*?\b(?:quality\s+standard|standard)\b/gi,
-    "quality standards are acceptable"
-  );
   polished = polished.replace(
     /\bquality\s+standard\s+tolerances\s+are\s+acceptable\b/gi,
     "quality standards are acceptable"
@@ -28,7 +28,7 @@ export function polishSopText(text: string, options: PolishOptions = {}): string
     "color migration is acceptable"
   );
 
-  // 2. Machine Adjustment & PFC Checking (Enforce "Check if" or "Check", strictly NO "Verify")
+  // 2. Machine Adjustment & PFC Checking (preserve the required "Check if" condition)
   polished = polished.replace(
     /\bCheck\s+machine\s+have\s+is\s+to\s+align\s+temperature\s*\/time\/\s*pressure\s+machine\s+nosew\s+correct\s+PFC\s*:/gi,
     "Check if no-sew machine temperature/time/pressure settings comply with PFC:"
@@ -93,10 +93,9 @@ export function polishSopText(text: string, options: PolishOptions = {}): string
   polished = polished.replace(/\bavoiding\s+a\s+wrinkle\s+upper\s+or\s+bulging\s+that\s+is\s+not\s+smooth\s+on\s+the\s+finished\s+shoe\b/gi, "to prevent upper wrinkles or bulging");
   polished = polished.replace(/\bAcceptance\s+quality\s+standard\s+for\s+hole\s+margin\s+deviation\s+is\s+0\.5mm\s+according\s+to\s+the\s+updated\s+QA\s+manual\b/gi, "Standard: Hole margin deviation <= 0.5mm per updated QA manual");
   polished = polished.replace(/\b(?:according\s+to\s+the\s+updated\s+QA\s+manual|according\s+to\s+QA\s+manual\s+update)\b/gi, "per updated QA manual");
-  polished = polished.replace(/\bCheck\s+that\s+the\s+finished\s+shoe\s+has\s+no\b/gi, "Ensure finished shoe has no");
+  polished = polished.replace(/\bCheck\s+that\s+the\s+finished\s+shoe\s+has\s+no\b/gi, "Check if the finished shoe has no");
   polished = polished.replace(/\bThe\s+backside\s+after\s+lasting\s+must\s+be\b/gi, "Lasting backside must be");
-  polished = polished.replace(/\bCheck\s+if\s+the\s+heel\s+seam\s+of\s+the\s+upper\s+is\s+centered\b/gi, "Check upper heel seam centering");
-  polished = polished.replace(/\bCheck\s+if\s+the\s+lasting\s+and\s+tip\s+lasting\s+are\s+aligned\s+with\b/gi, "Check lasting and tip lasting alignment with");
+  polished = polished.replace(/\bCheck\s+if\s+the\s+heel\s+seam\s+of\s+the\s+upper\s+is\s+centered\b/gi, "Check if the upper heel seam is centered");
   polished = polished.replace(/\bto\s+avoid\s+X-ray\s+at\s+the\s+tip\s+during\s+tip\s+lasting\b/gi, "to prevent tip bunion/X-ray during lasting");
   polished = polished.replace(/\bThe\s+notches\s+after\s+stitching\s+must\s+fit\s+tightly\s+together,\s+not\s+too\s+tight\s+or\s+too\s+loose\b/gi, "Ensure notches fit snugly without gap/tightness");
   polished = polished.replace(/\bthe\s+stitching\s+must\s+be\s+smoothly\s+and\s+evenly\s+applied\s+following\s+the\s+notches\b/gi, "stitch smoothly and evenly following notches");
@@ -138,7 +137,8 @@ export function polishSopText(text: string, options: PolishOptions = {}): string
   polished = polished.replace(/\bf\s+press\s+vamp\b/gi, "H/F upper pressing");
   polished = polished.replace(/\bf\s+press\b/gi, "H/F press");
 
-  // 4c. User Directive: Use "Check if" or "Check", NEVER "Verify"
+  // 4c. Inspection clauses use "Check if". Keep their subject and predicate.
+  polished = polished.replace(/\bCheck\s+(?:that|whether)\b/gi, "Check if");
   polished = polished.replace(/\bVerify\s+that\b/gi, "Check if");
   polished = polished.replace(/\bverify\s+that\b/gi, "check if");
   polished = polished.replace(/\bVerify\s+if\b/gi, "Check if");

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Settings,
@@ -30,6 +30,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [geminiModel, setGeminiModel] = useState<string>("gemini-3.5-flash-lite");
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const dialog = dialogRef.current;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (dialog && !dialog.open) dialog.showModal();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = overflow;
+      previousFocus?.focus();
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -89,8 +104,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <dialog ref={dialogRef} className="n-settings-backdrop fixed inset-0 z-50 flex items-center justify-center p-4" aria-labelledby="settings-title" onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="n-dialog-card bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/70">
           <div className="flex items-center space-x-2.5 text-white">
@@ -98,12 +113,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <Settings className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm tracking-tight text-white">Cấu Hình Engine Dịch Thuật</h3>
+              <h3 id="settings-title" className="font-bold text-sm tracking-tight text-white">Cài đặt dịch thuật</h3>
               <p className="text-[11px] text-slate-400">Chọn và thiết lập khóa API cho 2 Engine tiêu chuẩn</p>
             </div>
           </div>
           <button
             onClick={onClose}
+            aria-label="Đóng cài đặt"
             className="text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -323,7 +339,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   name="retention"
                   checked={retentionPolicy === "delete_immediately"}
                   onChange={() => setRetentionPolicy("delete_immediately")}
-                  className="hidden"
+                  className="sr-only"
                 />
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span className="text-xs">Xóa ngay sau khi dịch xong (Bảo mật cao)</span>
@@ -341,7 +357,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   name="retention"
                   checked={retentionPolicy === "persist_until_manual"}
                   onChange={() => setRetentionPolicy("persist_until_manual")}
-                  className="hidden"
+                  className="sr-only"
                 />
                 <HardDrive className="w-4 h-4 text-amber-400 shrink-0" />
                 <span className="text-xs">Lưu trữ cục bộ cho đến khi xóa thủ công</span>
@@ -350,7 +366,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+          <div className="n-settings-footer flex items-center justify-between pt-4 border-t border-slate-800">
             <span className="text-[11px] text-slate-500">
               API key được bảo mật ở server, không bao giờ gửi tới browser.
             </span>
@@ -383,6 +399,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 };

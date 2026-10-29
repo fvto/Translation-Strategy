@@ -93,6 +93,18 @@
       "status": "deleted",
       "storagePath": null,
       "createdAt": "2026-09-28T01:23:36.236Z"
+    },
+    {
+      "id": "doc_3ab6c049d0c9",
+      "ownerId": "anonymous",
+      "fileName": "S0396.pdf",
+      "fileType": "pdf",
+      "classification": "confidential",
+      "retentionPolicy": "delete_immediately",
+      "termCount": 363,
+      "status": "processed",
+      "storagePath": null,
+      "createdAt": "2026-10-27T08:00:54.519Z"
     }
   ],
   "terminology": [
@@ -551,122 +563,6 @@
         {
           "id": "hist_71402af4",
           "timestamp": "2026-10-05T09:08:58.752Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_cfe895e84505",
-      "sourceTerm": "Ép gót",
-      "targetTerm": "Seat lasting",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-23T01:32:18.084Z",
-      "editHistory": [
-        {
-          "id": "hist_ca7fd3b5",
-          "timestamp": "2026-10-23T01:32:18.084Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_bad49eee",
-          "timestamp": "2026-10-22T09:52:14.985Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_a2e40905",
-          "timestamp": "2026-10-22T04:54:19.926Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_df124a93",
-          "timestamp": "2026-10-22T02:47:32.749Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_5c23c645",
-          "timestamp": "2026-10-22T02:26:35.468Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_c4a4ee01",
-          "timestamp": "2026-10-21T09:34:42.178Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_90895c82",
-          "timestamp": "2026-10-21T08:50:21.749Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_97507581",
-          "timestamp": "2026-10-21T08:23:21.477Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_bc7c971c",
-          "timestamp": "2026-10-21T07:14:54.716Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_6349aabf",
-          "timestamp": "2026-10-21T02:49:22.698Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_f309c79e",
-          "timestamp": "2026-10-20T07:47:20.580Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_2e580d57",
-          "timestamp": "2026-10-19T09:31:42.229Z",
           "editedBy": "Auto-Harvester",
           "action": "auto_harvested",
           "note": "Tự động trích xuất từ tài liệu"
@@ -2772,34 +2668,6 @@
       ]
     },
     {
-      "id": "term_4fd5e7c2f64b",
-      "sourceTerm": "Gò mũi",
-      "targetTerm": "Toe lasting",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-21T08:23:21.477Z",
-      "updatedAt": "2026-10-21T08:23:21.477Z",
-      "editHistory": [
-        {
-          "id": "hist_fe46a929",
-          "timestamp": "2026-10-21T08:23:21.477Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
       "id": "term_f9423ff75093",
       "sourceTerm": "Polysemy_Test_1792568941787",
       "targetTerm": "ý nghĩa thứ nhất",
@@ -2880,62 +2748,6 @@
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_a526358ef303",
-      "sourceTerm": "Phun keo, dán mút",
-      "targetTerm": "Spray cement, attach cement foam",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-21T02:49:22.698Z",
-      "updatedAt": "2026-10-21T02:49:22.698Z",
-      "editHistory": [
-        {
-          "id": "hist_010cd47d",
-          "timestamp": "2026-10-21T02:49:22.698Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_1d2fcfac2ebd",
-      "sourceTerm": "Máy lạnh",
-      "targetTerm": "Cold shaping",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-21T02:49:22.698Z",
-      "updatedAt": "2026-10-21T02:49:22.698Z",
-      "editHistory": [
-        {
-          "id": "hist_a244178a",
-          "timestamp": "2026-10-21T02:49:22.698Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
         }
       ]
     },
@@ -3048,62 +2860,6 @@
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_301d33ba8832",
-      "sourceTerm": "Lộn vòng cổ, dập bằng",
-      "targetTerm": "Turn collar opening, hammering",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-20T07:47:20.580Z",
-      "updatedAt": "2026-10-20T07:47:20.580Z",
-      "editHistory": [
-        {
-          "id": "hist_f40dfa56",
-          "timestamp": "2026-10-20T07:47:20.580Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_d3fa3e743834",
-      "sourceTerm": "Kiểm tra thành phẩm",
-      "targetTerm": "Finished goods inspection",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-20T07:47:20.580Z",
-      "updatedAt": "2026-10-20T07:47:20.580Z",
-      "editHistory": [
-        {
-          "id": "hist_2939e0c4",
-          "timestamp": "2026-10-20T07:47:20.580Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
         }
       ]
     },
@@ -3377,314 +3133,6 @@
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_50026b51fa5d",
-      "sourceTerm": "Đối với thành hinh",
-      "targetTerm": "For lasting",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_79176dbc",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_647a61d33785",
-      "sourceTerm": "Ép nosew mặt giày",
-      "targetTerm": "No-sew upper pressing",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_80ec4d3e",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_d446156de731",
-      "sourceTerm": "Gò mũi bằng tay",
-      "targetTerm": "Hand lasting Tip",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_242037d2",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_753a13170a8f",
-      "sourceTerm": "Gò mũi bằng máy",
-      "targetTerm": "Toe lasting by machine",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_876071e0",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_ad70f63f0190",
-      "sourceTerm": "Vị trí đỉnh đế",
-      "targetTerm": "Outsole tip position",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_45b1ab3b",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_1eae27ed4346",
-      "sourceTerm": "Đối với in sơn",
-      "targetTerm": "For paint printing",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_ece2706c",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_29a5a9c38b3a",
-      "sourceTerm": "Dán đế trung",
-      "targetTerm": "Apply midsole",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_6b6c0b7a",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_c6e4ca1853d8",
-      "sourceTerm": "Dán đế lớn",
-      "targetTerm": "Bottom attaching",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_8e2a97ab",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_57fc8a489730",
-      "sourceTerm": "May ô dê",
-      "targetTerm": "Eyestay stitching",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_9d1a780c",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_2f5c5c4d6b56",
-      "sourceTerm": "Quét MEK",
-      "targetTerm": "Apply MEK",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_b1b487fa",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_632bd9bb95a9",
-      "sourceTerm": "Máy nóng",
-      "targetTerm": "Hot press",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "context": "SOP: SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 AIR MAX FEMME (MS-WS) QAIPQC manual-EN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T09:31:42.229Z",
-      "updatedAt": "2026-10-19T09:31:42.229Z",
-      "editHistory": [
-        {
-          "id": "hist_a948a89d",
-          "timestamp": "2026-10-19T09:31:42.229Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
         }
       ]
     },
@@ -3993,34 +3441,6 @@
       ]
     },
     {
-      "id": "term_3eb8813b19d9",
-      "sourceTerm": "Ép lạnh",
-      "targetTerm": "Cold pressing",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu Sample_Harvester_SOP.pptx",
-      "context": "SOP: Sample_Harvester_SOP.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "Sample_Harvester_SOP.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-19T07:08:44.627Z",
-      "updatedAt": "2026-10-19T07:08:44.627Z",
-      "editHistory": [
-        {
-          "id": "hist_fbc240d5",
-          "timestamp": "2026-10-19T07:08:44.627Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
       "id": "term_165abc7c8bed",
       "sourceTerm": "Polysemy_Test_1792228404163",
       "targetTerm": "ý nghĩa thứ nhất",
@@ -4045,34 +3465,6 @@
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_cacb0632806c",
-      "sourceTerm": "Kiểm tra không lem sơn",
-      "targetTerm": "Check no paint smudging",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu Sample_Harvester_SOP.pptx",
-      "context": "SOP: Sample_Harvester_SOP.pptx",
-      "category": "Lỗi chất lượng (Defect)",
-      "sourceDocument": "Sample_Harvester_SOP.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.95,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-17T08:40:07.439Z",
-      "updatedAt": "2026-10-17T08:40:07.439Z",
-      "editHistory": [
-        {
-          "id": "hist_b8882ed3",
-          "timestamp": "2026-10-17T08:40:07.439Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
         }
       ]
     },
@@ -4207,178 +3599,6 @@
       ]
     },
     {
-      "id": "term_705f12cbdbf7",
-      "sourceTerm": "Quét keo Airbag",
-      "targetTerm": "Cementing Airbag",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-15T08:57:00.849Z",
-      "updatedAt": "2026-10-15T09:39:51.618Z",
-      "editHistory": [
-        {
-          "id": "hist_0d01ae08",
-          "timestamp": "2026-10-15T09:39:51.618Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_2a168e2b",
-          "timestamp": "2026-10-15T09:39:35.357Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_efa391a1",
-          "timestamp": "2026-10-15T09:33:51.153Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_d051206b",
-          "timestamp": "2026-10-15T09:32:38.867Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_06c317f0",
-          "timestamp": "2026-10-15T08:57:00.849Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_45136f9469f9",
-      "sourceTerm": "Vẽ chỉ Airbag",
-      "targetTerm": "Thread line drawing Airbag",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-15T04:41:48.977Z",
-      "updatedAt": "2026-10-15T09:39:51.618Z",
-      "editHistory": [
-        {
-          "id": "hist_741ea290",
-          "timestamp": "2026-10-15T09:39:51.618Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_a0f34bd3",
-          "timestamp": "2026-10-15T09:39:35.357Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_958521f5",
-          "timestamp": "2026-10-15T09:33:51.153Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_2c3b8df7",
-          "timestamp": "2026-10-15T09:32:38.867Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_6bc3a29c",
-          "timestamp": "2026-10-15T08:57:00.849Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_a26fae42",
-          "timestamp": "2026-10-15T05:59:50.066Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_97383b50",
-          "timestamp": "2026-10-15T04:49:43.770Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_58de8d5e",
-          "timestamp": "2026-10-15T04:41:48.977Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_2e9580adef57",
-      "sourceTerm": "Hình dạng đế",
-      "targetTerm": "Bottom shape",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27  STOCKFIT  AIR MAX FEMME (MS-WS) QA IPQC mnaual-VN.pptx",
-      "context": "SOP: SP27  STOCKFIT  AIR MAX FEMME (MS-WS) QA IPQC mnaual-VN.pptx",
-      "category": "Tiêu chuẩn CTQ",
-      "sourceDocument": "SP27  STOCKFIT  AIR MAX FEMME (MS-WS) QA IPQC mnaual-VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.96,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-15T09:04:11.845Z",
-      "updatedAt": "2026-10-15T09:04:11.845Z",
-      "editHistory": [
-        {
-          "id": "hist_cc4ce245",
-          "timestamp": "2026-10-15T09:04:11.845Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
       "id": "term_b76beea286cb",
       "sourceTerm": "Polysemy_Test_1792045358255",
       "targetTerm": "ý nghĩa thứ nhất",
@@ -4403,78 +3623,6 @@
           "editedBy": "test@local",
           "action": "created",
           "note": "Khởi tạo thuật ngữ ban đầu"
-        }
-      ]
-    },
-    {
-      "id": "term_18c620f7f0d9",
-      "sourceTerm": "Vẽ chỉ Airbag",
-      "targetTerm": "Airbag gauge marking",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "context": "SOP: SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "category": "Quy trình (Process)",
-      "sourceDocument": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.98,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-15T03:13:09.571Z",
-      "updatedAt": "2026-10-15T04:15:13.173Z",
-      "editHistory": [
-        {
-          "id": "hist_c8f962d3",
-          "timestamp": "2026-10-15T04:15:13.173Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_92e59ba9",
-          "timestamp": "2026-10-15T04:14:58.684Z",
-          "editedBy": "Auto-Harvester",
-          "action": "updated",
-          "changes": [],
-          "note": "Cập nhật dữ liệu từ lần nhập mới"
-        },
-        {
-          "id": "hist_8f7f8656",
-          "timestamp": "2026-10-15T03:13:09.571Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
-        }
-      ]
-    },
-    {
-      "id": "term_b8eb20865a82",
-      "sourceTerm": "Hình dạng đế",
-      "targetTerm": "Outsole shape",
-      "sourceLanguage": "vi",
-      "targetLanguage": "en",
-      "definition": "Đề xuất thuật ngữ chuyên ngành từ tài liệu SP27  STOCKFIT  AIR MAX FEMME (MS-WS) QA IPQC mnaual-VN.pptx",
-      "context": "SOP: SP27  STOCKFIT  AIR MAX FEMME (MS-WS) QA IPQC mnaual-VN.pptx",
-      "category": "Tiêu chuẩn CTQ",
-      "sourceDocument": "SP27  STOCKFIT  AIR MAX FEMME (MS-WS) QA IPQC mnaual-VN.pptx",
-      "status": "review",
-      "priority": 1,
-      "confidence": 0.96,
-      "createdBy": "Auto-Harvester",
-      "approvedBy": null,
-      "version": "v1.0",
-      "createdAt": "2026-10-15T03:13:04.233Z",
-      "updatedAt": "2026-10-15T03:13:04.233Z",
-      "editHistory": [
-        {
-          "id": "hist_e9fb104a",
-          "timestamp": "2026-10-15T03:13:04.233Z",
-          "editedBy": "Auto-Harvester",
-          "action": "auto_harvested",
-          "note": "Tự động trích xuất từ tài liệu"
         }
       ]
     },
@@ -25171,6 +24319,461 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1793094260007_a6b3552c",
+      "timestamp": "2026-10-27T09:44:20.007Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "PPTX_TRANSLATED",
+      "documentId": null,
+      "status": "WARNING",
+      "durationMs": 175670,
+      "errorCode": null,
+      "details": {
+        "fileName": "FA24 AIR JORDAN 1 MID SE (MS-WS) QA IPQC -ISQ manual-EN.pptx",
+        "totalSlides": 131,
+        "totalParagraphs": 3028,
+        "totalImagesProtected": 460,
+        "imagesSentToAi": 0,
+        "sourceLanguage": "vi",
+        "targetLanguage": "en"
+      }
+    },
+    {
+      "id": "log_1793094082568_20e28e89",
+      "timestamp": "2026-10-27T09:41:22.568Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 2902,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 51,
+        "matchedTermsCount": 1,
+        "complianceScore": 100,
+        "qaScore": 100,
+        "terminologyVersion": "9a78b7894e0805bc",
+        "terminologyConflictCount": 0
+      }
+    },
+    {
+      "id": "log_1793094076837_8e37329e",
+      "timestamp": "2026-10-27T09:41:16.839Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1865,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 51,
+        "matchedTermsCount": 1,
+        "complianceScore": 100,
+        "qaScore": 100,
+        "terminologyVersion": "9a78b7894e0805bc",
+        "terminologyConflictCount": 0
+      }
+    },
+    {
+      "id": "log_1793088083044_a88fb783",
+      "timestamp": "2026-10-27T08:01:23.044Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_BATCH_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 5,
+      "errorCode": null,
+      "details": {
+        "count": 239
+      }
+    },
+    {
+      "id": "log_1793088054574_f974a34d",
+      "timestamp": "2026-10-27T08:00:54.574Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "DOCUMENT_PROCESSED",
+      "documentId": "doc_3ab6c049d0c9",
+      "status": "SUCCESS",
+      "durationMs": 3569,
+      "errorCode": null,
+      "details": {
+        "fileType": "pdf",
+        "termsExtracted": 363,
+        "classification": "confidential",
+        "retentionPolicy": "delete_immediately"
+      }
+    },
+    {
+      "id": "log_1793087518584_345e52a1",
+      "timestamp": "2026-10-27T07:51:58.584Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1158,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 119,
+        "matchedTermsCount": 4,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793087412890_863c58e8",
+      "timestamp": "2026-10-27T07:50:12.890Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 68,
+      "errorCode": null,
+      "details": {
+        "provider": "Mẫu nội bộ đã duyệt",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 204,
+        "matchedTermsCount": 6,
+        "complianceScore": 80,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793087310642_2397aec5",
+      "timestamp": "2026-10-27T07:48:30.642Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 130,
+      "errorCode": null,
+      "details": {
+        "provider": "Mẫu nội bộ đã duyệt",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 204,
+        "matchedTermsCount": 6,
+        "complianceScore": 80,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793086418681_e31e5f31",
+      "timestamp": "2026-10-27T07:33:38.681Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1217,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 205,
+        "matchedTermsCount": 6,
+        "complianceScore": 60,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793086086632_3ba48432",
+      "timestamp": "2026-10-27T07:28:06.632Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1479,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 36,
+        "matchedTermsCount": 2,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793085040924_6a0ebf62",
+      "timestamp": "2026-10-27T07:10:40.926Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1117,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 38,
+        "matchedTermsCount": 1,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074219814_1c98f9ce",
+      "timestamp": "2026-10-27T04:10:19.815Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1432,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 12,
+        "matchedTermsCount": 1,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074213246_1b40f547",
+      "timestamp": "2026-10-27T04:10:13.247Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 2600,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 43,
+        "matchedTermsCount": 2,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074203267_781ef1e3",
+      "timestamp": "2026-10-27T04:10:03.267Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3367,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 35,
+        "matchedTermsCount": 2,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074193330_736e5abc",
+      "timestamp": "2026-10-27T04:09:53.330Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 2054,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 64,
+        "matchedTermsCount": 3,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074182052_2ad6d7f2",
+      "timestamp": "2026-10-27T04:09:42.052Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1876,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 543,
+        "matchedTermsCount": 21,
+        "complianceScore": 92,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074175478_d4929f56",
+      "timestamp": "2026-10-27T04:09:35.478Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1317,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 125,
+        "matchedTermsCount": 3,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074109584_fe872d69",
+      "timestamp": "2026-10-27T04:08:29.584Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3897,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 65,
+        "matchedTermsCount": 3,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074096517_65dc451b",
+      "timestamp": "2026-10-27T04:08:16.517Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 4893,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 405,
+        "matchedTermsCount": 11,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074077313_3cd9aed4",
+      "timestamp": "2026-10-27T04:07:57.313Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 954,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 45,
+        "matchedTermsCount": 3,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074062356_9041070b",
+      "timestamp": "2026-10-27T04:07:42.357Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3511,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 223,
+        "matchedTermsCount": 11,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793074026301_a94e1a61",
+      "timestamp": "2026-10-27T04:07:06.302Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 853,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 18,
+        "matchedTermsCount": 1,
+        "complianceScore": 100,
+        "qaScore": 100
+      }
+    },
+    {
+      "id": "log_1793073987948_7c9d86f1",
+      "timestamp": "2026-10-27T04:06:27.948Z",
+      "userId": "anonymous",
+      "userEmail": "anonymous@secure.local",
+      "operation": "TRANSLATION_COMPLETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 1318,
+      "errorCode": null,
+      "details": {
+        "provider": "Google Gemini (gemini-3.5-flash-lite)",
+        "sourceLanguage": "vi",
+        "targetLanguage": "en",
+        "sourceCharCount": 196,
+        "matchedTermsCount": 8,
+        "complianceScore": 88,
+        "qaScore": 100
+      }
+    },
     {
       "id": "log_1792719138018_25414f89",
       "timestamp": "2026-10-23T01:32:18.018Z",

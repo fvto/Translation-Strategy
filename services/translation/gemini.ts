@@ -1,3 +1,4 @@
+import { mandatoryTerminologyPrompt } from "../terminology/document-plan";
 import {
   TranslationProvider,
   TranslationRequest,
@@ -7,6 +8,7 @@ import {
   AiStudioMetrics,
 } from "./types";
 import { buildStructuredPrompt } from "./context";
+import { internalSopInstructions } from "./internal-sop";
 import { normalizeSpiTerminology } from "./casing";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
 
@@ -364,35 +366,7 @@ export class GeminiTranslationProvider implements TranslationProvider {
     const observability = GeminiObservability.getInstance();
     observability.addInputItems(request.items.length);
 
-    // Build system instruction with glossary
-    let glossaryGuide = "";
-    if (request.approvedTerminology && request.approvedTerminology.length > 0) {
-      const combinedLower = request.items
-        .map((it) => it.sourceText)
-        .join(" ")
-        .toLowerCase();
-
-      const relevantTerms = request.approvedTerminology
-        .filter((t) => {
-          if (!t.sourceTerm || t.sourceTerm.trim().length < 2) return false;
-          return combinedLower.includes(t.sourceTerm.trim().toLowerCase());
-        })
-        .slice(0, 35);
-
-      const cleanTerms = relevantTerms
-        .map((t) => {
-          const cleanTarget = t.targetTerm.replace(/\s*\(.*?\)/g, "").replace(/\s*ex:.*$/i, "").trim();
-          return { sourceTerm: t.sourceTerm.trim(), targetTerm: cleanTarget };
-        })
-        .filter((t) => t.targetTerm && t.sourceTerm);
-
-      if (cleanTerms.length > 0) {
-        glossaryGuide = `\nDOMAIN GLOSSARY REFERENCE (GUIDELINE / THAM KHẢO - NOT 100% FORCED):
-The following approved footwear terminology should be used as a strong reference to ensure domain consistency:
-${cleanTerms.map((t) => `- "${t.sourceTerm}" -> "${t.targetTerm}"`).join("\n")}
-Apply these terms naturally according to the surrounding sentence structure and context. Do NOT force rigid word-for-word substitutions if the natural syntax or grammatical flow of the sentence requires an appropriate contextual variation. Preserve acronyms, dimensions, technical tolerances, numbers, and punctuation.`;
-      }
-    }
+    const glossaryGuide = mandatoryTerminologyPrompt(request.items.map(item => item.sourceText), request.approvedTerminology || []);
 
     const contextBlock = request.context ? `\nMANUFACTURING STAGE & CONTEXT:\n${request.context}\n` : "";
 
@@ -400,6 +374,7 @@ Apply these terms naturally according to the surrounding sentence structure and 
 Translate each provided item accurately from ${request.sourceLanguage.toUpperCase()} to ${request.targetLanguage.toUpperCase()}.
 ${contextBlock}
 ${glossaryGuide}
+${request.sourceLanguage === "vi" && request.targetLanguage === "en" ? internalSopInstructions(request.items.map((item) => item.sourceText).join("\n"), request.internalExamples) : ""}
 Key domain translation guidelines:
 - Footwear construction: "mặt trước" -> "vamp", "mặt giày" -> "upper", "lót vòng cổ" -> "collar lining", "vòng cổ" -> "collar opening", "lưỡi gà" -> "tongue", "gót" -> "heel", "ô dê" -> "eyestay", "eo ngoài" -> "lateral / lat", "eo trong" -> "medial / med", "phom" -> "last", "đế trung" -> "midsole", "đế ngoài" -> "outsole", "bộ vị" -> "component / part".
 - Quality Standards & Surface Unevenness: When text mentions "không bằng phẳng chấp nhận mức độ tiêu chuẩn...", it specifies that quality standards are acceptable due to component surface design (e.g. "Due to the uneven surface design of [component], quality standards are acceptable for [defect]..."). DO NOT use the word "tolerances" and NEVER translate as "[flat] does not accept".
@@ -408,7 +383,7 @@ Key domain translation guidelines:
 - Grammatical Noun-Phrase Ordering for Inspection Criteria / CTQ: In footwear inspection headings, attributes like "Hình dạng [bộ vị]" MUST be translated with English noun adjunct ordering "[Component] shape" (e.g. "Hình dạng mũi" -> "Tip shape" / "Toe shape", NEVER "Shape tip"; "Hình dạng gót" -> "Heel shape"; "Hình dạng vòng cổ" -> "Collar shape"). Do NOT invert noun phrases into imperative verb actions.
 - Lists & Headings: Process titles starting with '*' (e.g. *Lacing, *Buffing) mark top-level process sections; NEVER create or duplicate process headings inside numbered lists (e.g. never place *Lacing between step 2 and 3).
 - Line Break & Multi-line Preservation: If a sourceText item contains newline characters ('\\n') separating lines or numbered steps (e.g. '2. ...\\n3. ...'), you MUST strictly preserve the exact same line break structure in translatedText. Each line must remain on its own line separated by '\\n'. NEVER merge multiple numbered steps or lines into a single continuous sentence.
-- Lean Technical Phrasing (Nike Technical SOP Style): Keep inspection actions direct, concise, and telegraphic. For inspection instructions, strictly use "Check if [condition]..." or "Check [parameter]..." (e.g. "Check if oven temperature and time comply with PFC...", "Check toe lasting operation..."). NEVER use the word "Verify" — the SOP presentation standard strictly requires "Check if" or "Check". Use active action verbs for physical operations ("Trim excess outsole material...", "Hammer and flatten vamp wrinkles...", "Align outsole accurately..."). Strip conversational filler clauses like "The operator uses scissors to...", "The operator must use a hammer to...", "in order to avoid the situation where...", "the operation must be done so that...". Standard acceptance clauses must be concise: "Standard: Hole margin deviation <= 0.5mm per updated QA manual." Retain 100% of technical entities, numbers, measurements, defects, and components while eliminating 30-50% of wordy conversational filler.
+- Lean Technical Phrasing: Use direct factory SOP instructions. Remove verbal filler while preserving every action, reason, purpose, defect, location, specification and acceptance condition. Do not target a percentage reduction in length.
 - Strictly preserve all dimensions (mm, cm, kg/cm2), temperature ranges (e.g. 90-110oC), fractions (e.g. 1/2 size), acronyms (PFC, SPI, QAM, CTQ, CTP, ISQ, H/F, BPM), codes, and punctuation.
 IMPORTANT: You MUST translate every item that is in ${request.sourceLanguage.toUpperCase()} into accurate, fluent, technical English. Do NOT return the source Vietnamese text.
 Return strictly a valid JSON array of objects with keys "id" and "translatedText".`;

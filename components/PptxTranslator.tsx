@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Presentation,
   UploadCloud,
@@ -95,19 +95,8 @@ export interface TranslationProgressState {
 
 export type PptxTranslationMode = "ipqc_bilingual" | "isq_duplicate" | "replace_en";
 
-export function formatSopFileName(originalName: string): string {
-  if (!originalName) return "presentation-EN.pptx";
-  const baseName = originalName.replace(/\.pptx$/i, "").trim();
-  let enBaseName = baseName;
-  if (/[-_]VN$/i.test(baseName)) {
-    enBaseName = baseName.replace(/[-_]VN$/i, "-EN");
-  } else if (/[-_]VI$/i.test(baseName)) {
-    enBaseName = baseName.replace(/[-_]VI$/i, "-EN");
-  } else if (!/[-_]EN$/i.test(baseName)) {
-    enBaseName = `${baseName}-EN`;
-  }
-  return `${enBaseName}.pptx`;
-}
+import { formatSopFileName } from "@/services/documents/sop-filename";
+export { formatSopFileName } from "@/services/documents/sop-filename";
 
 export function downloadPptxBlob(blob: Blob, fileName: string): void {
   const pptxBlob = blob.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -145,7 +134,19 @@ export function downloadPptxBlob(blob: Blob, fileName: string): void {
 
 export const PptxTranslator: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
+  const [reviewSelection, setReviewSelection] = useState<{ selectedIds: string[]; excludedIds: string[] } | null>(null);
+  const handleReviewSelectionChange = useCallback((selectedIds: string[], excludedIds: string[]) => {
+    setReviewSelection({ selectedIds, excludedIds });
+  }, []);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [postFlightWarning, setPostFlightWarning] = useState("");
+  const updatePostFlightWarning = (report: { passed?: boolean; untranslatedRemaining?: unknown[]; remainingCount?: number } | undefined) => {
+    setPostFlightWarning(report?.passed === false ? `Hậu kiểm phát hiện ${report.untranslatedRemaining?.length ?? report.remainingCount ?? 0} đoạn còn cần xem lại. Nội dung được giữ để bạn chỉnh sửa; file chưa đạt kiểm tra hoàn chỉnh.` : "");
+  };
+  const checkDownloadedAudit = (response: Response) => {
+    const passed = response.headers.get("X-Postflight-Passed");
+    if (passed !== null) updatePostFlightWarning({ passed: passed === "true", remainingCount: Number(response.headers.get("X-Audit-Unhandled-Count") || 0) });
+  };
   const [processingStatus, setProcessingStatus] = useState<string>("");
   const [progressInfo, setProgressInfo] = useState<TranslationProgressState | null>(null);
   const [stats, setStats] = useState<PptxExtractionStats | null>(null);
@@ -362,6 +363,7 @@ export const PptxTranslator: React.FC = () => {
     }
     const response = await fetch("/api/documents/translate-pptx", { method: "POST", body: formData });
     if (!response.ok) { const data = await response.json(); throw new Error(data.error || "Không thể áp dụng gợi ý."); }
+    checkDownloadedAudit(response);
     const appliedCount = response.headers.get("X-Audit-Applied-Count") || String(unitIds.length);
     const unhandledCount = parseInt(response.headers.get("X-Audit-Unhandled-Count") || "0", 10);
     const unhandledSlidesHeader = response.headers.get("X-Audit-Unhandled-Slides");
@@ -385,6 +387,8 @@ export const PptxTranslator: React.FC = () => {
   };
 
   const handleFileSelect = (selectedFile: File) => {
+    setReviewSelection(null);
+    setPostFlightWarning("");
     if (!selectedFile.name.toLowerCase().endsWith(".pptx")) {
       alert("Vui lòng chọn file trình chiếu PowerPoint định dạng .pptx");
       return;
@@ -423,6 +427,10 @@ export const PptxTranslator: React.FC = () => {
     }
   ) => {
     if (!file) return;
+
+    if (action === "translate" && !options?.translateMissingOnly && reviewSelection?.excludedIds.length) {
+      options = { ...options, translateMissingOnly: true, selectedUnitIds: reviewSelection.selectedIds };
+    }
 
     setIsProcessing(true);
     setErrorMessage(null);
@@ -475,6 +483,7 @@ export const PptxTranslator: React.FC = () => {
     }
 
     const finishMissingTranslation = async (payload: any) => {
+      updatePostFlightWarning(payload.postFlight);
       if (!payload.sessionId) throw new Error("Không tìm thấy file đã sửa để tải về.");
       // GET serves the already packaged incremental result. Rebuilding through
       // the full-deck export path would change paragraphs outside the selection.
@@ -537,6 +546,7 @@ export const PptxTranslator: React.FC = () => {
                   }
                   setProcessingStatus(payload.message);
                 } else if (eventType === "complete") {
+                  updatePostFlightWarning(payload.postFlight);
                   if (payload.aiStudioMetrics) {
                     setAiStudioMetrics(payload.aiStudioMetrics);
                   } else {
@@ -581,7 +591,7 @@ export const PptxTranslator: React.FC = () => {
                   setProgressInfo({
                     stage: "done",
                     percent: 100,
-                    message: "Hoàn tất! File PowerPoint đã sẵn sàng xuất & tải về.",
+                    message: payload.postFlight?.passed === false ? "Đã xử lý; còn nội dung cần xem lại trong hậu kiểm." : "Hoàn tất! File PowerPoint đã sẵn sàng xuất & tải về.",
                   });
                 } else if (eventType === "error") {
                   throw new Error(payload.error || "Xử lý file PowerPoint thất bại");
@@ -594,6 +604,7 @@ export const PptxTranslator: React.FC = () => {
 
         // Fallback for non-streaming response
         const data = await res.json();
+        updatePostFlightWarning(data.postFlight);
         if (!res.ok) {
           throw new Error(data.error || "Xử lý file PowerPoint thất bại");
         }
@@ -704,8 +715,9 @@ export const PptxTranslator: React.FC = () => {
         throw new Error(errData.error || "Không thể tải file PowerPoint đã dịch");
       }
 
+      checkDownloadedAudit(res);
       const blob = await res.blob();
-      downloadPptxBlob(blob, formatSopFileName(file ? file.name : "presentation.pptx"));
+      downloadPptxBlob(blob, formatSopFileName(file ? file.name : "presentation.pptx", tgtLang));
     } catch (err: any) {
       alert("Lỗi tải file: " + err.message);
     } finally {
@@ -736,8 +748,9 @@ export const PptxTranslator: React.FC = () => {
         throw new Error(errJson.error || "Không thể xuất file PPTX với nội dung đã sửa.");
       }
 
+      checkDownloadedAudit(res);
       const blob = await res.blob();
-      downloadPptxBlob(blob, formatSopFileName(file ? file.name : "presentation.pptx"));
+      downloadPptxBlob(blob, formatSopFileName(file ? file.name : "presentation.pptx", tgtLang));
     } catch (err: any) {
       alert("Lỗi lưu và xuất file: " + err.message);
     } finally {
@@ -893,17 +906,17 @@ export const PptxTranslator: React.FC = () => {
               <Presentation className="w-5 h-5" />
             </div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-              Dịch PowerPoint Chuyên Sâu (AI PPTX Translator)
+              PowerPoint, nguyên vẹn.
             </h2>
             <span className="bg-rose-50 text-[#E60023] border border-rose-200 text-xs font-semibold px-3 py-0.5 rounded-full">
               {langDir === "vi-en" ? "VI ➔ EN" : "EN ➔ VI"}
             </span>
             <span className="bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold px-3 py-0.5 rounded-full flex items-center gap-1">
-              MS MarkItDown + Gemini 3.5 &amp; 3.1 Flash Lite
+              POWERPOINT / PPTX
             </span>
           </div>
           <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
-            Đọc cấu trúc bài thuyết trình bằng <b className="text-slate-700">Microsoft MarkItDown</b>, dịch chuẩn xác bằng <b className="text-slate-700">Google Gemini 3.5 &amp; 3.1 Flash Lite</b> và xuất file PowerPoint <b className="text-slate-700">giữ nguyên 100% sơ đồ, biểu đồ &amp; bố cục gốc</b>.
+            Chọn nội dung cần dịch. Giữ bố cục, màu sắc và định dạng của tài liệu.
           </p>
         </div>
 
@@ -914,11 +927,11 @@ export const PptxTranslator: React.FC = () => {
           </div>
           <div>
             <div className="font-semibold text-emerald-950 flex items-center gap-1.5">
-              <span>Image &amp; Diagram Shield</span>
+              <span>Giữ hình thức gốc</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
             </div>
             <div className="text-[11px] text-emerald-700/80">
-              0 hình ảnh gửi sang AI • 100% sơ đồ, biểu đồ, hình vẽ và layout được bảo vệ
+              Ảnh và sơ đồ được giữ lại trong tài liệu.
             </div>
           </div>
         </div>
@@ -951,10 +964,10 @@ export const PptxTranslator: React.FC = () => {
                 className="bg-transparent text-slate-800 font-semibold focus:outline-none cursor-pointer"
               >
                 <option value="gemini" className="bg-white text-slate-900">
-                  Google AI Studio (Gemini 3.5 &amp; 3.1 Flash Lite)
+                  Google AI Studio (Gemini)
                 </option>
                 <option value="google_translate" className="bg-white text-slate-900">
-                  Google NMT (Thuật ngữ chuẩn CAT)
+                  Google NMT
                 </option>
               </select>
             </div>
@@ -1269,7 +1282,7 @@ export const PptxTranslator: React.FC = () => {
                 className="flex items-center space-x-2.5 px-7 py-2.5 rounded-full bg-[#E60023] hover:bg-[#CC001F] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-rose-200" />
-                <span>Dịch &amp; Xuất File PowerPoint (.pptx)</span>
+                <span>{reviewSelection?.excludedIds.length ? `Dịch phần đã chọn (${reviewSelection.selectedIds.length}) & xuất PPTX` : "Dịch & Xuất File PowerPoint (.pptx)"}</span>
               </button>
             </div>
           </div>
@@ -1474,6 +1487,12 @@ export const PptxTranslator: React.FC = () => {
           </div>
         )}
 
+        {postFlightWarning && (
+          <div role="status" className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-800 text-xs flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{postFlightWarning}</span>
+          </div>
+        )}
         {errorMessage && (
           <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
             <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -1483,13 +1502,13 @@ export const PptxTranslator: React.FC = () => {
 
         {/* Google AI Studio Telemetry & Quota Guard for PPTX */}
         {file && (
-          <div className="pt-2">
+          <details className="n-service-details"><summary>Thông số dịch vụ · AI Studio</summary>
             <AiStudioTelemetry
               metrics={aiStudioMetrics}
               isLoading={isProcessing || isFetchingMetrics}
               onRefresh={fetchAiStudioMetrics}
             />
-          </div>
+          </details>
         )}
       </div>
 
@@ -1506,15 +1525,15 @@ export const PptxTranslator: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                      <span>Dịch Thành Công &amp; Sẵn Sàng Xuất File (.pptx)</span>
+                      <span>{postFlightWarning ? "Đã xử lý PPTX — Cần xem lại" : "Kết quả xử lý PowerPoint (.pptx)"}</span>
                       <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                        Hoàn tất 100%
+                        {postFlightWarning ? "Cần kiểm tra" : "Đã xử lý"}
                       </span>
                     </h3>
                   </div>
                 </div>
                 <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
-                  Toàn bộ văn bản thuyết trình đã được dịch sang Tiếng Anh. Toàn bộ hình ảnh, sơ đồ hình học, biểu đồ và bố cục slide gốc được bảo tồn nguyên vẹn 100%.
+                  Xem lại bản dịch trước khi xuất file. Những nội dung nằm ngoài phạm vi dịch được giữ nguyên; các mục hậu kiểm còn tồn tại sẽ được thông báo để bạn chỉnh sửa.
                 </p>
 
                 {/* Target File Info */}
@@ -1526,7 +1545,7 @@ export const PptxTranslator: React.FC = () => {
                   <span className="text-slate-400">➔</span>
                   <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-1.5 font-semibold">
                     <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    {file ? file.name.replace(/\.pptx$/i, "") : "presentation"}_translated_EN.pptx
+                    {file ? file.name.replace(/\.pptx$/i, "") : "presentation"}_translated_{tgtLang.toUpperCase()}.pptx
                   </span>
                   <span className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center gap-1.5 font-mono">
                     <Clock className="w-3.5 h-3.5 text-slate-500" />
@@ -2013,6 +2032,7 @@ export const PptxTranslator: React.FC = () => {
 
       {/* Smart Translation Audit Gap Modal */}
       <SmartAuditModal
+        onSelectionChange={handleReviewSelectionChange}
         isOpen={isAuditModalOpen}
         onClose={() => setIsAuditModalOpen(false)}
         auditReport={auditReport}
@@ -2063,10 +2083,10 @@ export const PptxTranslator: React.FC = () => {
 
             {/* Thông báo chính xác theo yêu cầu */}
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 mb-2 leading-snug">
-              Quét xong rồi đó onii-chan ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧
+              Đã quét xong.
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
-              Smart Audit đã quét toàn diện cấu trúc slide, phát hiện các khoảng trống dịch thuật và sẵn sàng tối ưu!
+              Các slide đã sẵn sàng để xem lại. Chọn vùng cần dịch hoặc giữ nguyên nội dung tham chiếu.
             </p>
 
             <button
@@ -2074,7 +2094,7 @@ export const PptxTranslator: React.FC = () => {
               className="px-6 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-semibold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center gap-2"
             >
               <Check className="w-4 h-4" />
-              <span>Cảm ơn em</span>
+              <span>Xong</span>
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Languages,
   ArrowLeftRight,
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { AiStudioTelemetry } from "@/components/AiStudioTelemetry";
 import { AiStudioMetrics } from "@/services/translation/types";
+import { insertPastedText, WorkspaceRequestGate } from "@/services/translation/workspace-input";
 
 interface MatchedTerm {
   entry: {
@@ -77,6 +78,34 @@ export const TranslationWorkspace: React.FC = () => {
   const [selectedEngine, setSelectedEngine] = useState<string>("default");
   const [aiStudioMetrics, setAiStudioMetrics] = useState<AiStudioMetrics | null>(null);
   const [isFetchingMetrics, setIsFetchingMetrics] = useState<boolean>(false);
+  const requestGate = useRef(new WorkspaceRequestGate());
+  const [exampleMessage, setExampleMessage] = useState("");
+  const [isSavingExample, setIsSavingExample] = useState(false);
+  const exampleVersion = useRef(0);
+
+  useEffect(() => () => { requestGate.current.cancel(); }, []);
+
+  const invalidateResult = () => {
+    requestGate.current.cancel();
+    setIsLoading(false);
+    setTranslatedText(""); setMatchedTerms([]); setMismatches([]);
+    setQaReport(null); setComplianceScore(null); setProviderUsed("");
+    setExampleMessage(""); exampleVersion.current++;
+  };
+
+  const changeSource = (text: string) => { invalidateResult(); setSourceText(text); };
+
+  const saveInternalExample = async () => {
+    const version = exampleVersion.current;
+    setIsSavingExample(true); setExampleMessage("");
+    try {
+      const response = await fetch("/api/translation-examples", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceText, translatedText, sourceLanguage: sourceLang, targetLanguage: targetLang }) });
+      const data = await response.json();
+      if (version === exampleVersion.current) setExampleMessage(response.ok ? "Đã lưu mẫu nội bộ" : data.error || "Chưa lưu được mẫu.");
+    } catch { if (version === exampleVersion.current) setExampleMessage("Chưa lưu được mẫu. Vui lòng thử lại."); }
+    finally { setIsSavingExample(false); }
+  };
 
   const fetchAiStudioMetrics = async () => {
     try {
@@ -149,7 +178,10 @@ export const TranslationWorkspace: React.FC = () => {
   const executeTranslate = async (overrideText?: string) => {
     const textToProcess = (overrideText !== undefined ? overrideText : sourceText).trim();
     if (!textToProcess) return;
+    const request = requestGate.current.begin();
     setIsLoading(true);
+    setTranslatedText(""); setMatchedTerms([]); setQaReport(null); setComplianceScore(null);
+    setExampleMessage(""); exampleVersion.current++;
     setMismatches([]);
 
     // Smart auto-detection of language direction
@@ -173,6 +205,7 @@ export const TranslationWorkspace: React.FC = () => {
 
     try {
       const res = await fetch("/api/translate", {
+        signal: request.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -184,6 +217,7 @@ export const TranslationWorkspace: React.FC = () => {
       });
 
       const data = await res.json();
+      if (!requestGate.current.isCurrent(request)) return;
       if (!res.ok) {
         alert(data.error || "Translation failed");
         return;
@@ -194,8 +228,10 @@ export const TranslationWorkspace: React.FC = () => {
       }
       setTranslatedText(data.translatedText);
       setMatchedTerms(data.matchedTerms || []);
-      setComplianceScore(data.validation?.complianceScore ?? 100);
-      setMismatches(data.validation?.mismatches || []);
+      // An approved sentence has higher authority than isolated word substitutions.
+      // Keep the API's word-level diagnostics, but never offer to rewrite the approved sentence.
+      setComplianceScore(data.approvedInternalExample ? null : data.validation?.complianceScore ?? 100);
+      setMismatches(data.approvedInternalExample ? [] : data.validation?.mismatches || []);
       setQaReport(data.qaReport || null);
       setProviderUsed(data.provider || "Local CAT Engine");
       if (data.aiStudioMetrics) {
@@ -204,9 +240,10 @@ export const TranslationWorkspace: React.FC = () => {
         fetchAiStudioMetrics();
       }
     } catch (err: any) {
+      if (!requestGate.current.isCurrent(request)) return;
       alert("Translation network error: " + err.message);
     } finally {
-      setIsLoading(false);
+      if (requestGate.current.isCurrent(request)) setIsLoading(false);
     }
   };
 
@@ -217,14 +254,16 @@ export const TranslationWorkspace: React.FC = () => {
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const pasted = e.clipboardData.getData("text");
     if (!pasted || !pasted.trim()) return;
+    e.preventDefault();
 
     const textarea = e.currentTarget;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const current = textarea.value;
-    const nextVal = current.substring(0, start) + pasted + current.substring(end);
+    const { text: nextVal, caret } = insertPastedText(current, pasted, start, end);
 
-    setSourceText(nextVal);
+    changeSource(nextVal);
+    requestAnimationFrame(() => textarea.setSelectionRange(caret, caret));
     // Auto translate immediately on paste without needing any action
     executeTranslate(nextVal);
   };
@@ -233,7 +272,7 @@ export const TranslationWorkspace: React.FC = () => {
     try {
       const text = await navigator.clipboard.readText();
       if (text && text.trim()) {
-        setSourceText(text);
+        changeSource(text);
         executeTranslate(text);
       }
     } catch {
@@ -277,6 +316,7 @@ export const TranslationWorkspace: React.FC = () => {
   };
 
   const handleClear = () => {
+    invalidateResult();
     setSourceText("");
     setTranslatedText("");
     setMatchedTerms([]);
@@ -431,7 +471,7 @@ function applySmartTerminologyFix(
   return (
     <div className="space-y-6">
       {/* Workspace Header Controls - Pinterest Pill Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#11141c] p-3.5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
+      <div className="n-editor-controls flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#11141c] p-3.5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs transition-colors">
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center space-x-1.5 bg-slate-100/90 dark:bg-slate-800/90 px-3.5 py-1.5 rounded-full border border-slate-200/80 dark:border-slate-700 text-xs">
             <span className="text-slate-500 dark:text-slate-400 font-medium">Nguồn:</span>
@@ -439,6 +479,7 @@ function applySmartTerminologyFix(
               value={sourceLang}
               onChange={(e) => {
                 const nextSrc = e.target.value;
+                invalidateResult();
                 setSourceLang(nextSrc);
                 setTargetLang(nextSrc === "vi" ? "en" : "vi");
               }}
@@ -452,6 +493,7 @@ function applySmartTerminologyFix(
           <button
             onClick={() => {
               const newSource = sourceLang === "en" ? "vi" : "en";
+              invalidateResult();
               const newTarget = targetLang === "vi" ? "en" : "vi";
               setSourceLang(newSource);
               setTargetLang(newTarget);
@@ -477,6 +519,7 @@ function applySmartTerminologyFix(
               value={targetLang}
               onChange={(e) => {
                 const nextTgt = e.target.value;
+                invalidateResult();
                 setTargetLang(nextTgt);
                 setSourceLang(nextTgt === "en" ? "vi" : "en");
               }}
@@ -491,12 +534,12 @@ function applySmartTerminologyFix(
             <span className="text-slate-500 dark:text-slate-400 font-medium">Engine:</span>
             <select
               value={selectedEngine}
-              onChange={(e) => setSelectedEngine(e.target.value)}
+              onChange={(e) => { invalidateResult(); setSelectedEngine(e.target.value); }}
               className="bg-transparent text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer"
             >
-              <option value="default" className="dark:bg-slate-900">Mặc định: Gemini 3.5 &amp; 3.1 Flash Lite</option>
-              <option value="gemini" className="dark:bg-slate-900">⚡ Google AI Studio (Gemini 3.5 &amp; 3.1 Flash Lite)</option>
-              <option value="google_translate" className="dark:bg-slate-900">🌐 Google NMT (Chuẩn thuật ngữ CAT)</option>
+              <option value="default" className="dark:bg-slate-900">Theo cài đặt</option>
+              <option value="gemini" className="dark:bg-slate-900">Google AI Studio (Gemini)</option>
+              <option value="google_translate" className="dark:bg-slate-900">Google NMT</option>
             </select>
           </div>
         </div>
@@ -540,13 +583,13 @@ function applySmartTerminologyFix(
       </div>
 
       {/* Dual Pane Editors - Clean White Porcelain Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="n-editor-grid grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Source Text Pane */}
-        <div className="flex flex-col bg-white dark:bg-[#11141c] rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all">
+        <div className="n-editor-card flex flex-col bg-white dark:bg-[#11141c] rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between px-5 py-3 bg-slate-50/80 dark:bg-[#161b26] border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500" />
-              <span>Văn bản gốc (Source)</span>
+              <span>01 / Văn bản gốc</span>
             </div>
             <div className="flex items-center space-x-2.5">
               <span className="flex items-center space-x-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2.5 py-0.5 rounded-full">
@@ -561,17 +604,18 @@ function applySmartTerminologyFix(
 
           <textarea
             value={sourceText}
-            onChange={(e) => setSourceText(e.target.value)}
+            onChange={(e) => changeSource(e.target.value)}
             onPaste={handlePaste}
-            placeholder="Dán văn bản (Ctrl+V) vào đây để hệ thống tự động dịch tức thì theo thuật ngữ..."
-            rows={12}
+            aria-label="Văn bản gốc"
+            placeholder="Dán văn bản cần dịch tại đây. Thuật ngữ chuyên ngành sẽ được đối chiếu tự động."
+            rows={10}
             className="w-full p-5 bg-white dark:bg-[#0c0f17] text-slate-900 dark:text-white text-sm leading-relaxed placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-y font-sans selection:bg-rose-100 selection:text-rose-900 dark:selection:bg-rose-900/60 dark:selection:text-white min-h-[280px]"
           />
 
           <div className="p-3 bg-slate-50/60 dark:bg-[#161b26] border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center space-x-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Chỉ xử lý trên bộ nhớ RAM tạm thời. Không lưu bên ngoài.</span>
+              <span>SOP nội bộ · Ngắn gọn, đủ ý</span>
             </div>
             <button
               onClick={handlePasteFromClipboard}
@@ -586,11 +630,11 @@ function applySmartTerminologyFix(
         </div>
 
         {/* Translation Output Pane */}
-        <div className="flex flex-col bg-white dark:bg-[#11141c] rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all">
+        <div className="n-editor-card flex flex-col bg-white dark:bg-[#11141c] rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between px-5 py-3 bg-slate-50/80 dark:bg-[#161b26] border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Kết quả dịch (Translation)</span>
+              <span>02 / Bản dịch</span>
             </div>
             <div className="flex items-center space-x-2">
               {aiStudioMetrics && (
@@ -614,9 +658,10 @@ function applySmartTerminologyFix(
 
           <textarea
             value={translatedText}
-            onChange={(e) => setTranslatedText(e.target.value)}
-            placeholder="Bản dịch sẽ hiển thị tại đây với kiểm soát thuật ngữ nghiêm ngặt..."
-            rows={12}
+            onChange={(e) => { requestGate.current.cancel(); setIsLoading(false); setTranslatedText(e.target.value); setQaReport(null); setComplianceScore(null); setMismatches([]); setProviderUsed(""); setExampleMessage(""); exampleVersion.current++; }}
+            aria-label="Bản dịch"
+            placeholder="Bản dịch sẽ xuất hiện tại đây."
+            rows={10}
             className="w-full p-5 bg-white dark:bg-[#0c0f17] text-slate-900 dark:text-white text-sm leading-relaxed placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-y font-sans selection:bg-emerald-100 selection:text-emerald-900 dark:selection:bg-emerald-900/60 dark:selection:text-white min-h-[280px]"
           />
 
@@ -624,6 +669,11 @@ function applySmartTerminologyFix(
             <div className="text-xs text-slate-400 dark:text-slate-500 font-mono">
               {translatedText ? `${translatedText.length} ký tự` : "Đang chờ dịch..."}
             </div>
+            <button type="button" onClick={saveInternalExample} disabled={!sourceText.trim() || !translatedText.trim() || isLoading || isSavingExample}
+              title="Chỉ lưu sau khi bạn đã duyệt nội dung. Câu giống hệt sẽ dùng lại bản này."
+              className="px-3 py-1 text-xs font-semibold rounded-full border border-slate-200 text-slate-700 bg-white disabled:opacity-40">
+              {isSavingExample ? "Đang lưu..." : "Lưu mẫu nội bộ"}
+            </button>
             <button
               onClick={handleCopy}
               disabled={!translatedText}
@@ -641,16 +691,20 @@ function applySmartTerminologyFix(
                 </>
               )}
             </button>
+            {exampleMessage && <p role="status" className="w-full text-xs text-slate-600">{exampleMessage}</p>}
           </div>
         </div>
       </div>
 
       {/* Google AI Studio Telemetry & Quota Guard Card */}
-      <AiStudioTelemetry
-        metrics={aiStudioMetrics}
-        isLoading={isLoading || isFetchingMetrics}
-        onRefresh={fetchAiStudioMetrics}
-      />
+      <details className="n-service-details">
+        <summary>Thông số dịch vụ · AI Studio</summary>
+        <AiStudioTelemetry
+          metrics={aiStudioMetrics}
+          isLoading={isLoading || isFetchingMetrics}
+          onRefresh={fetchAiStudioMetrics}
+        />
+      </details>
 
       {/* Terminology Mismatch Alert Banner */}
       {mismatches.length > 0 && (
@@ -709,7 +763,7 @@ function applySmartTerminologyFix(
             <div className="flex items-center space-x-2">
               <BookMarked className="w-4 h-4 text-slate-700 dark:text-slate-300" />
               <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                Thuật ngữ phát hiện &amp; áp dụng
+                Đối chiếu thuật ngữ
               </h3>
             </div>
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
@@ -768,7 +822,7 @@ function applySmartTerminologyFix(
             </div>
             {complianceScore !== null && (
               <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                {complianceScore}% Chuẩn
+                {complianceScore}% khớp thuật ngữ
               </span>
             )}
           </div>

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./nothing.css";
 import { LiveDebugHud } from "@/components/LiveDebugHud";
 
 export const metadata: Metadata = {
-  title: "Secure Translator — Enterprise Controlled Translation & CAT System",
-  description: "Security-first internal translation application with controlled terminology and rule-based QA validation.",
+  title: "Chingluh / Translation Workspace",
+  description: "Không gian dịch văn bản, PowerPoint và Excel với thuật ngữ chuyên ngành Ching Luh.",
 };
 
 export default function RootLayout({
@@ -20,8 +21,7 @@ export default function RootLayout({
             __html: `
               try {
                 const savedTheme = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                if (savedTheme === 'dark') {
                   document.documentElement.classList.add('dark');
                 } else {
                   document.documentElement.classList.remove('dark');
@@ -31,7 +31,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-[#f7f7f8] dark:bg-[#090b10] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col selection:bg-rose-500 selection:text-white antialiased transition-colors duration-150">
+      <body className="nothing-ui min-h-screen antialiased">
         {children}
         <LiveDebugHud />
       </body>

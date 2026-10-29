@@ -324,9 +324,11 @@ test('VI to EN audit preserves existing English without casing or historical con
     assert.equal(unit.status,'ALREADY_TRANSLATED');
     assert.equal(unit.selectedForTranslation,false);assert.equal(unit.canApply,false);assert.equal(unit.safeToApply,false);
     assert.equal(unit.suggestedTranslation,undefined);
-    assert.ok(!report.groups.some(g=>g.unitIds.includes(unit.id)));
+    assert.ok(!report.groups.some(g=>g.type !== 'language_quality' && g.unitIds.includes(unit.id)));
   }
   assert.equal(report.suspiciousTranslationCount,0);
+  assert.equal(report.units.find(u=>u.sourceText === current).qualityStatus, 'review_required');
+  assert.ok(report.translationQuality.issues.some(issue=>issue.type === 'check_if_required'));
 });
 
 test('Preserving English does not hide Vietnamese leftovers, including known accentless phrases',async()=>{
@@ -395,7 +397,7 @@ test('Independent multi-element font sizing: each hovered element gets its own c
     targetLanguage: 'en',
     mode: 'replace_en',
     fileName: 'multi-font-test.pptx',
-    provider: { name: 'mock', translate: async (text) => ({ translatedText: text.includes('1') ? 'Process 1: Hot shaping' : 'Process 2: Sole buffing' }) },
+    provider: { name: 'mock', translate: async ({ sourceText }) => ({ translatedText: sourceText.includes('1') ? 'Process 1: Hot shaping' : 'Process 2: Sole buffing' }) },
     translateMissingOnly: true,
     selectedUnitIds: [u1, u2],
     customFontSizes: {

@@ -775,8 +775,10 @@ const INITIAL_TERMINOLOGY: TerminologyEntry[] = [
   },
 ];
 
-class Database {
+export class Database {
   private inMemoryData: DatabaseSchema | null = null;
+  private savedSnapshot: DatabaseSchema | null = null;
+  private dataVersion = -1;
   private sqlite!: SqliteDatabase;
   private approvedTermCache = new Map<string, TerminologyEntry[]>();
 
@@ -792,6 +794,7 @@ class Database {
     this.sqlite = new DatabaseConstructor(SQLITE_FILE);
     this.sqlite.pragma("journal_mode = WAL");
     this.sqlite.pragma("synchronous = NORMAL");
+    this.sqlite.pragma("busy_timeout = 5000");
 
     this.sqlite.exec(`
       CREATE TABLE IF NOT EXISTS users (
@@ -857,6 +860,16 @@ class Database {
         key TEXT PRIMARY KEY,
         value TEXT
       );
+      CREATE TABLE IF NOT EXISTS internal_sop_examples (
+        id TEXT PRIMARY KEY,
+        sourceKey TEXT NOT NULL,
+        sourceText TEXT NOT NULL,
+        translatedText TEXT NOT NULL,
+        sourceLanguage TEXT NOT NULL,
+        targetLanguage TEXT NOT NULL,
+        updatedAt TEXT NOT NULL,
+        UNIQUE(sourceKey, sourceLanguage, targetLanguage)
+      );
     `);
 
     try {
@@ -867,7 +880,7 @@ class Database {
     const userCount = (this.sqlite.prepare("SELECT count(*) as c FROM users").get() as any).c;
     const termCount = (this.sqlite.prepare("SELECT count(*) as c FROM terminology").get() as any).c;
 
-    if (userCount === 0 || termCount === 0) {
+    if (userCount === 0 && termCount === 0) {
       let sourceData: DatabaseSchema;
       if (fs.existsSync(DB_FILE)) {
         try {
@@ -898,7 +911,8 @@ class Database {
     }
 
     this.inMemoryData = this.loadFromSqlite();
-    this.syncJsonBackup(this.inMemoryData);
+    this.savedSnapshot = structuredClone(this.inMemoryData);
+    this.dataVersion = this.sqlite.pragma("data_version", { simple: true }) as number;
   }
 
   private seedSqlite(data: DatabaseSchema): void {
@@ -1019,7 +1033,7 @@ class Database {
     return {
       users: users.length > 0 ? users : INITIAL_USERS,
       documents: documents || [],
-      terminology: terminology.length > 0 ? terminology : INITIAL_TERMINOLOGY,
+      terminology,
       auditLogs: auditLogs || [],
       savedTranslations: [],
       settings: {
@@ -1066,18 +1080,63 @@ class Database {
   }
 
   private readDb(): DatabaseSchema {
-    if (this.inMemoryData) {
-      return this.inMemoryData;
+    const version = this.sqlite.pragma("data_version", { simple: true }) as number;
+    if (!this.inMemoryData || version !== this.dataVersion) {
+      this.inMemoryData = this.sqlite.transaction(() => this.loadFromSqlite())();
+      this.savedSnapshot = structuredClone(this.inMemoryData);
+      this.dataVersion = version;
+      this.approvedTermCache.clear();
     }
-    this.inMemoryData = this.loadFromSqlite();
     return this.inMemoryData;
   }
 
+  /** Persist only the rows/fields changed by this operation, inside one write transaction. */
   private writeDb(data: DatabaseSchema): void {
-    this.inMemoryData = data;
+    const before = this.savedSnapshot!;
+    const persistRows = (table: string, oldRows: any[], rows: any[]) => {
+      const columns = (this.sqlite.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map((c) => c.name);
+      const serialize = (row: any) => columns.map((name) => {
+        const value = row[name];
+        return value === undefined ? null : typeof value === "object" && value !== null ? JSON.stringify(value) : value;
+      });
+      const previous = new Map(oldRows.map((row) => [row.id, row]));
+      const present = new Set(rows.map((row) => row.id));
+      for (const row of rows) {
+        const old = previous.get(row.id);
+        const values = serialize(row);
+        if (!old) {
+          this.sqlite.prepare(`INSERT INTO ${table} (${columns.join(",")}) VALUES (${columns.map(() => "?").join(",")})`).run(...values);
+        } else {
+          const oldValues = serialize(old);
+          const changed = columns.map((name, i) => ({ name, i })).filter(({ name, i }) => name !== "id" && values[i] !== oldValues[i]);
+          if (changed.length) {
+            this.sqlite.prepare(`UPDATE ${table} SET ${changed.map(({ name }) => `${name} = ?`).join(",")} WHERE id = ?`).run(...changed.map(({ i }) => values[i]), row.id);
+          }
+        }
+      }
+      for (const old of oldRows) {
+        if (!present.has(old.id)) this.sqlite.prepare(`DELETE FROM ${table} WHERE id = ?`).run(old.id);
+      }
+    };
+    try {
+      this.sqlite.transaction(() => {
+        persistRows("users", before.users, data.users);
+        persistRows("documents", before.documents, data.documents);
+        persistRows("terminology", before.terminology, data.terminology);
+        persistRows("audit_logs", before.auditLogs, data.auditLogs);
+        const changedSettings = Object.keys(data.settings).filter((key) => (data.settings as any)[key] !== (before.settings as any)[key]);
+        if (changedSettings.length) {
+          const row = this.sqlite.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined;
+          const settings = row ? JSON.parse(row.value) : {};
+          for (const key of changedSettings) settings[key] = (data.settings as any)[key];
+          this.sqlite.prepare("INSERT INTO settings (key, value) VALUES ('settings', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(JSON.stringify(settings));
+        }
+      }).immediate();
+    } finally {
+      this.inMemoryData = null;
+    }
     this.approvedTermCache.clear();
-    this.seedSqlite(data);
-    this.syncJsonBackup(data);
+    this.syncJsonBackup(this.readDb());
   }
 
   // Users
@@ -1162,6 +1221,7 @@ class Database {
     options?: { includeReview?: boolean }
   ): TerminologyEntry[] {
     const includeReview = options?.includeReview ?? false;
+    this.readDb(); // Detect commits from other processes before consulting the terminology cache.
     // Fix #6: Return cached result if available (invalidated on every write)
     const cacheKey = `${sourceLang}_${targetLang}_${includeReview ? "all_review" : "approved"}`;
     const cached = this.approvedTermCache.get(cacheKey);
@@ -1199,7 +1259,14 @@ class Database {
         isDirect: false,
       }));
 
-    const combined = [...direct, ...reversed];
+    // Interpret usage notes before the safety gate and alias expansion. Otherwise
+    // a short annotated term can be mistaken for a collapsed long instruction.
+    const combined = [...direct, ...reversed].map((item) => ({
+      ...item,
+      sourceTerm: item.sourceTerm.normalize("NFC")
+        .replace(/\([^)]*(?:\bsd\b|sử\s+dụng|dùng\s+cho|công\s+đoạn|dành\s+cho|ưu\s+tiên|tên\s+lỗi|trong\s+tiêu\s+chuẩn)[^)]*\)/giu, " ")
+        .replace(/\s+/g, " ").trim(),
+    }));
     const viRegex = /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/i;
     const validCombined = combined.filter((t) => {
       const src = t.sourceTerm?.trim() || "";
@@ -1566,11 +1633,6 @@ class Database {
     const index = db.terminology.findIndex((t) => t.id === id);
     if (index === -1) return false;
     db.terminology.splice(index, 1);
-    try {
-      this.sqlite.prepare("DELETE FROM terminology WHERE id = ?").run(id);
-    } catch (e) {
-      console.warn("Could not delete from SQLite:", e);
-    }
     this.writeDb(db);
     return true;
   }
@@ -1684,11 +1746,23 @@ class Database {
     return settings;
   }
 
+  getInternalSopExamples(sourceLanguage: string, targetLanguage: string) {
+    return this.sqlite.prepare("SELECT id, sourceText, translatedText, sourceLanguage, targetLanguage FROM internal_sop_examples WHERE sourceLanguage = ? AND targetLanguage = ? ORDER BY updatedAt DESC")
+      .all(sourceLanguage, targetLanguage) as import("../translation/internal-sop").InternalSopExample[];
+  }
+
+  saveInternalSopExample(example: Omit<import("../translation/internal-sop").InternalSopExample, "id">, sourceKey: string): void {
+    this.sqlite.prepare(`INSERT INTO internal_sop_examples (id, sourceKey, sourceText, translatedText, sourceLanguage, targetLanguage, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(sourceKey, sourceLanguage, targetLanguage)
+      DO UPDATE SET sourceText = excluded.sourceText, translatedText = excluded.translatedText, updatedAt = excluded.updatedAt`)
+      .run(crypto.randomUUID(), sourceKey, example.sourceText, example.translatedText, example.sourceLanguage, example.targetLanguage, new Date().toISOString());
+  }
+
   updateSettings(settings: Partial<AppSettings>): AppSettings {
     const db = this.readDb();
     db.settings = { ...db.settings, ...settings };
     this.writeDb(db);
-    return db.settings;
+    return this.getSettings();
   }
 
   reseedDatabase(data: DatabaseSchema): void {
@@ -1698,6 +1772,8 @@ class Database {
     this.inMemoryData = data;
     this.approvedTermCache.clear();
     this.seedSqlite(data);
+    this.inMemoryData = null;
+    this.readDb();
     this.syncJsonBackup(data);
   }
 }

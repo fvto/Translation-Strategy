@@ -1,3 +1,4 @@
+import { mandatoryTerminologyPrompt } from "../terminology/document-plan";
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -9,6 +10,7 @@ import {
   BatchTranslationResponse,
 } from "./types";
 import { buildStructuredPrompt } from "./context";
+import { internalSopInstructions } from "./internal-sop";
 import { normalizeSpiTerminology } from "./casing";
 import { enforceTerminologyCompliance } from "../terminology/enforcer";
 import { TerminologyEntry } from "../database/types";
@@ -376,19 +378,7 @@ Return ONLY a JSON object with this exact format:
       };
     }
 
-    // Filter relevant glossary terms
-    let glossaryGuide = "";
-    if (request.approvedTerminology && request.approvedTerminology.length > 0) {
-      const combinedLower = request.items.map((it) => it.sourceText).join(" ").toLowerCase();
-      const relevant = request.approvedTerminology
-        .filter((t) => t.sourceTerm && combinedLower.includes(t.sourceTerm.toLowerCase()))
-        .slice(0, 35);
-      if (relevant.length > 0) {
-        glossaryGuide = `DOMAIN GLOSSARY REFERENCE (GUIDELINE / THAM KHẢO - NOT 100% FORCED):\nUse the following approved footwear terminology as a reference for domain consistency:\n${relevant
-          .map((t) => `- "${t.sourceTerm}" -> "${t.targetTerm}"`)
-          .join("\n")}\nApply naturally according to sentence context without forcing rigid word-for-word replacement.\n`;
-      }
-    }
+    const glossaryGuide = mandatoryTerminologyPrompt(request.items.map(item => item.sourceText), request.approvedTerminology || []);
 
     const promptItems = request.items.map((it) => ({
       id: it.id,
@@ -398,6 +388,7 @@ Return ONLY a JSON object with this exact format:
     const batchPrompt = `You are a professional athletic footwear manufacturing quality assurance translator for Ching Luh / Nike production manuals (IPQC/ISQ).
 Translate each item accurately from ${request.sourceLanguage.toUpperCase()} to ${request.targetLanguage.toUpperCase()}.
 ${glossaryGuide}
+${request.sourceLanguage === "vi" && request.targetLanguage === "en" ? internalSopInstructions(request.items.map((item) => item.sourceText).join("\n"), request.internalExamples) : ""}
 Key domain translation guidelines:
 - Footwear construction: "mặt trước" -> "vamp", "mặt giày" -> "upper", "lót vòng cổ" -> "collar lining", "vòng cổ" -> "collar opening", "lưỡi gà" -> "tongue", "gót" -> "heel", "ô dê" -> "eyestay", "eo ngoài" -> "lateral / lat", "eo trong" -> "medial / med", "phom" -> "last", "đế trung" -> "midsole", "đế ngoài" -> "outsole", "bộ vị" -> "component / part".
 - Stitch density (SPI): "mũi/inch" or stitch count ranges MUST be translated as "SPI <number> stitches/inch" (e.g. "SPI 10-12 stitches/inch", "SPI 9-10 stitches/inch", "SPI 7-8 stitches/inch"). The strictly required format is "SPI <number> stitches/inch".
