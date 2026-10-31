@@ -15,6 +15,7 @@ import {
   Pencil,
   Check,
   RotateCcw,
+  RefreshCw,
   Sparkles,
   ShieldCheck,
   Layers,
@@ -312,6 +313,24 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     setLastActiveElementId(null);
   }, [currentSlide, onSlideChange]);
 
+  // Synchronize incoming translations from TranslationWorkspace
+  useEffect(() => {
+    const handleSyncFromWorkspace = (e: any) => {
+      const { unitId, translation, slideNum } = e?.detail || {};
+      if (unitId && translation) {
+        onSaveCustomEdit(unitId, translation);
+        if (slideNum && slideNum !== currentSlide) {
+          setCurrentSlide(slideNum);
+        }
+        setQuickActionNotice("Đã đồng bộ bản dịch từ Workspace!");
+        if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+        quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2500);
+      }
+    };
+    window.addEventListener("sync-workspace-to-smart-audit" as any, handleSyncFromWorkspace);
+    return () => window.removeEventListener("sync-workspace-to-smart-audit" as any, handleSyncFromWorkspace);
+  }, [onSaveCustomEdit, currentSlide]);
+
   // Display mode for text inside layers: "bilingual" | "target" | "source"
   const [viewMode, setViewMode] = useState<"bilingual" | "target" | "source">("source");
 
@@ -512,6 +531,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
     };
   }, [currentSlide, onSlideChange]);
+
+  
 
   useEffect(() => {
     if (activeSlideBtnRef.current) {
@@ -2841,7 +2862,58 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   }, []);
 
   // ==========================================================================
-  // TRANSLATION ACTIONS (SINGLE & BATCH)
+  // TRANSLATION ACTIONS (SINGLE & BATCH) & WORKSPACE SYNC
+  // ==========================================================================
+
+  const handleOpenInWorkspace = (unitToOpen: ScannedTextUnit) => {
+    if (!unitToOpen) return;
+    const syncPayload = {
+      unitId: unitToOpen.id,
+      sourceText: unitToOpen.sourceText,
+      currentTranslation: getTranslationText(unitToOpen),
+      slideNum: currentSlide,
+      elementId: activeFocusElement?.id,
+      timestamp: Date.now(),
+    };
+    try {
+      sessionStorage.setItem("smart_audit_workspace_sync_target", JSON.stringify(syncPayload));
+    } catch {}
+    window.dispatchEvent(new CustomEvent("sync-smart-audit-to-workspace", { detail: syncPayload }));
+    window.dispatchEvent(new CustomEvent("antigravity-switch-tab", { detail: { tab: "translate" } }));
+    setContextMenu(null);
+  };
+
+  const handleSyncAllFromWorkspace = async () => {
+    setIsTranslatingQuick(true);
+    try {
+      let matchedCount = 0;
+      for (const u of currentUnits) {
+        if (!customEdits[u.id]) {
+          const res = await fetch("/api/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sourceText: u.sourceText,
+              sourceLanguage: "vi",
+              targetLanguage: "en",
+            }),
+          });
+          const data = await res.json();
+          if (res.ok && data.translatedText) {
+            onSaveCustomEdit(u.id, polishSopText(data.translatedText));
+            matchedCount++;
+          }
+        }
+      }
+      setQuickActionNotice(`Đã đồng bộ ${matchedCount} câu từ Workspace!`);
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2500);
+    } catch {
+      setQuickActionNotice("Không thể đồng bộ từ Workspace");
+    } finally {
+      setIsTranslatingQuick(false);
+    }
+  };
   // ==========================================================================
 
   const handleTranslateUnits = async (unitsToTranslate: ScannedTextUnit[]) => {
@@ -2860,7 +2932,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         });
         const data = await res.json();
         if (res.ok && data.translatedText) {
-          onSaveCustomEdit(unit.id, data.translatedText);
+          onSaveCustomEdit(unit.id, polishSopText(data.translatedText));
         } else {
           alert("Dịch thất bại: " + (data.error || "Lỗi không xác định"));
           break;
@@ -2921,7 +2993,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         });
         const data = await res.json();
         if (res.ok && data.translatedText) {
-          onSaveCustomEdit(u.id, data.translatedText);
+          onSaveCustomEdit(u.id, polishSopText(data.translatedText));
         }
       }
     } catch (err: any) {
@@ -5096,6 +5168,15 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     <Pencil className="w-3 h-3" />
                     <span className="text-[10px] font-semibold">Sửa chữ</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenInWorkspace(activeFocusUnits[0])}
+                    className="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 cursor-pointer transition-colors shrink-0 flex items-center gap-1"
+                    title="Mở câu này sang Không gian làm việc (Workspace) để dịch chi tiết và đối chiếu thuật ngữ CAT"
+                  >
+                    <ExternalLink className="w-3 h-3 text-indigo-500" />
+                    <span className="text-[10px] font-semibold">Workspace</span>
+                  </button>
                 </>
               ) : (
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 italic hidden 2xl:inline-flex items-center gap-1 pl-1 font-normal select-none">
@@ -5126,6 +5207,18 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     </button>
                   </div>
                 )}
+
+                {/* Sync from Workspace Action Button */}
+                <button
+                  type="button"
+                  disabled={isTranslatingQuick}
+                  onClick={handleSyncAllFromWorkspace}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs shrink-0"
+                  title="Đồng bộ slide này với bộ nhớ dịch và các mẫu câu đã duyệt từ Không gian làm việc (Workspace)"
+                >
+                  <RefreshCw className={`w-3 h-3 text-indigo-600 dark:text-indigo-400 ${isTranslatingQuick ? "animate-spin" : ""}`} />
+                  <span className="hidden sm:inline">Sync Workspace</span>
+                </button>
 
                 {/* Language Segmented Pill */}
                 <div className="flex items-center bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
@@ -5946,6 +6039,23 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 </div>
                 <span className="text-[10px] text-sky-500 font-mono">AI</span>
               </button>
+
+              {/* Mở trong Workspace (Dịch CAT) */}
+              {contextMenu.unit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleOpenInWorkspace(contextMenu.unit!);
+                  }}
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Mở trong Workspace (Dịch CAT)</span>
+                  </div>
+                  <span className="text-[10px] text-indigo-500 font-mono">Workspace</span>
+                </button>
+              )}
 
               {/* Toggle translate selection */}
               {contextMenu.unit && (() => {

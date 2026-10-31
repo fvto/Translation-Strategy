@@ -9,6 +9,8 @@ import { db } from "../database/db";
 import type { TerminologyEntry } from "../database/types";
 import { DocumentTranslationMemory, canonicalizeText } from "./document-tm";
 import { cleanTargetTerm } from "./casing";
+import { INTERNAL_SOP_EXAMPLES } from "./internal-sop";
+import { polishSopText } from "./sop-polisher";
 import { isSafeTerminologyEntry } from "../terminology/safety";
 import { checkGlossaryTranslation } from "../terminology/audit-compliance";
 import { getAuditHistoryPairs } from "./translation-memory";
@@ -760,6 +762,17 @@ export async function scanPptxTranslationIntelligence(
     ? terminologyPlan.scopeFor(undefined, raw.text) : terminologyPlan.scopeFor(raw.id));
   const pairs: AuditMemoryPair[] = glossary.map((e) => ({ source: e.sourceTerm, target: cleanTargetTerm(e.targetTerm), origin: e.status === "approved" ? "approved" : "review" }));
   pairs.push(...(options.historyPairs || getAuditHistoryPairs(sourceLang, targetLang)));
+  const internalExamples = [
+    ...db.getInternalSopExamples(sourceLang, targetLang),
+    ...INTERNAL_SOP_EXAMPLES.filter((e) => e.sourceLanguage === sourceLang && e.targetLanguage === targetLang),
+  ];
+  for (const ex of internalExamples) {
+    pairs.push({
+      source: ex.sourceText,
+      target: polishSopText(ex.translatedText),
+      origin: "approved",
+    });
+  }
   for (const entry of options.customDocTM?.getAllEntries() || []) pairs.push({ source: entry.sourceOriginal, target: entry.target,
     origin: entry.status === "LOCKED" || entry.status === "APPROVED" ? "approved" : "presentation", slideIndex: entry.sourceLocation.slide });
 
@@ -955,6 +968,11 @@ export async function scanPptxTranslationIntelligence(
       }
     }
   }
+  for (const p of pairs) {
+    if (/\bcheck\s+with\b/i.test(p.target)) {
+      p.target = polishSopText(p.target);
+    }
+  }
   const known = new AuditMemoryIndex(pairs);
   const addPair = (source: RawUnit, target: RawUnit, structurallyAligned = false) => {
     if (paired.has(source.id) || paired.has(target.id)) return;
@@ -1039,8 +1057,9 @@ export async function scanPptxTranslationIntelligence(
     if (maxLen >= 15 && minLen < 5) return;
     if (maxLen >= 25 && minLen / maxLen < 0.25) return;
 
-    pairs.push({ source: realSource.text, target: realTarget.text, origin: "presentation", slideIndex: realSource.location.slideIndex, sourceUnitId: realSource.id, targetUnitId: realTarget.id });
-    paired.set(realSource.id, realTarget.text); paired.set(realTarget.id, realSource.text);
+    const effTargetText = (sourceLang === "vi" && targetLang === "en" && /\bcheck\s+with\b/i.test(realTarget.text)) ? polishSopText(realTarget.text) : realTarget.text;
+    pairs.push({ source: realSource.text, target: effTargetText, origin: "presentation", slideIndex: realSource.location.slideIndex, sourceUnitId: realSource.id, targetUnitId: realTarget.id });
+    paired.set(realSource.id, effTargetText); paired.set(realTarget.id, realSource.text);
     pairedPartnerId.set(realSource.id, realTarget.id); pairedPartnerId.set(realTarget.id, realSource.id);
 
     const cleanSrc = cleanStepPrefix(realSource.text);
@@ -1113,8 +1132,9 @@ export async function scanPptxTranslationIntelligence(
             sourceUnitId: u1.id,
             targetUnitId: targetUnit.id,
           });
-          paired.set(u1.id, targetUnit.text);
-          paired.set(u2.id, targetUnit.text);
+          const targetTextPolished = (sourceLang === "vi" && targetLang === "en" && /\bcheck\s+with\b/i.test(targetUnit.text)) ? polishSopText(targetUnit.text) : targetUnit.text;
+          paired.set(u1.id, targetTextPolished);
+          paired.set(u2.id, targetTextPolished);
           pairedPartnerId.set(u1.id, targetUnit.id);
           pairedPartnerId.set(u2.id, targetUnit.id);
           paired.set(targetUnit.id, combinedVi);
@@ -1476,7 +1496,7 @@ export async function scanPptxTranslationIntelligence(
     const glossary = terminologyPlan.glossaryFor(scopeFor(raw));
     const language = languageEvidence(raw.text);
     const base = classifyTextUnit(raw.text, raw.location, { sourceLang, targetLang,
-      existingTranslation: paired.has(raw.id) ? paired.get(raw.id) : undefined });
+      existingTranslation: paired.has(raw.id) ? (/\bcheck\s+with\b/i.test(paired.get(raw.id)!) ? polishSopText(paired.get(raw.id)!) : paired.get(raw.id)) : undefined });
     const unit: ScannedTextUnit = { id: raw.id, sourceText: raw.text, sourceHash: computeSourceHash(raw.text), canonicalText: canonicalizeText(raw.text),
       location: { ...raw.location }, ...base, selectedForTranslation: false, safeToApply: false, canApply: false };
 
@@ -1720,7 +1740,7 @@ export async function scanPptxTranslationIntelligence(
           ? "Gợi ý chưa tuân thủ glossary; cần dịch lại: " + unit.glossaryMismatches.map(m => `${m.sourceTerm} → ${m.expectedTarget}`).join("; ") + "."
           : "Gợi ý còn tiếng Việt; cần dịch lại sang tiếng Anh.";
       } else {
-        unit.suggestedTranslation = checked.text;
+        unit.suggestedTranslation = polishSopText(checked.text);
         if (checked.corrections.length) {
           unit.glossaryCorrections = checked.corrections.map(({ sourceTerm, expectedTarget }) => ({ sourceTerm, expectedTarget }));
           unit.reason += " Đã sửa theo glossary: " + unit.glossaryCorrections.map(c => `${c.sourceTerm} → ${c.expectedTarget}`).join("; ") + ".";

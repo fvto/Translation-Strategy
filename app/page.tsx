@@ -28,6 +28,14 @@ export default function Home() {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   };
+
+  useEffect(() => {
+    const handleSwitch = (e: any) => {
+      if (e?.detail?.tab) switchTab(e.detail.tab);
+    };
+    window.addEventListener("antigravity-switch-tab" as any, handleSwitch);
+    return () => window.removeEventListener("antigravity-switch-tab" as any, handleSwitch);
+  }, []);
   const toolPanel = (tab: WorkspaceTab, children: React.ReactNode) => <section id={`tool-panel-${tab}`} key={tab} data-tool={tab} role="tabpanel" aria-labelledby={`tool-tab-${tab}`} hidden={activeTab !== tab} className={`n-tool-panel ${activeTab !== tab ? "hidden" : ""}`}>{children}</section>;
 
   return <div className="n-app-shell">

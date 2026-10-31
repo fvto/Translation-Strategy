@@ -10,6 +10,8 @@ import {
   documentTM,
 } from "./document-tm";
 import { normalizeSpiTerminology, cleanTargetTerm } from "./casing";
+import { INTERNAL_SOP_EXAMPLES, findInternalSopExample } from "./internal-sop";
+import { polishSopText } from "./sop-polisher";
 import { scanPptxTranslationIntelligence } from "./pptx-smart-audit";
 import { runAiDeepAudit } from "./ai-deep-audit";
 import { saveAuditTrace } from "./audit-trace";
@@ -726,7 +728,7 @@ export function classifyTextUnit(
     return {
       status: "ALREADY_TRANSLATED",
       reason: "Text container already has bilingual pair (English & Vietnamese)",
-      suggestedTranslation: options.existingTranslation && options.existingTranslation.trim().toLowerCase() !== text.toLowerCase() ? options.existingTranslation : undefined,
+      suggestedTranslation: options.existingTranslation && options.existingTranslation.trim().toLowerCase() !== text.toLowerCase() ? polishSopText(options.existingTranslation) : undefined,
       confidence: 0.95,
     };
   }
@@ -738,7 +740,7 @@ export function classifyTextUnit(
       return {
         status: "ALREADY_TRANSLATED",
         reason: "Slide or cell already provides a distinct translated version",
-        suggestedTranslation: ext,
+        suggestedTranslation: polishSopText(ext),
         confidence: 0.95,
       };
     }
@@ -775,6 +777,23 @@ export function classifyTextUnit(
     }
   }
 
+  // 6.5. Internal SOP Approved Examples Check (Workspace & Database Sync)
+  try {
+    const internalExamples = [
+      ...(typeof db !== "undefined" && db.getInternalSopExamples ? db.getInternalSopExamples(sourceLang, targetLang) : []),
+      ...INTERNAL_SOP_EXAMPLES.filter((e) => e.sourceLanguage === sourceLang && e.targetLanguage === targetLang),
+    ];
+    const internalMatch = findInternalSopExample(text, internalExamples);
+    if (internalMatch) {
+      return {
+        status: "LOCKED_TERMINOLOGY",
+        reason: "Mẫu câu SOP nội bộ đã duyệt từ Không gian làm việc (Workspace)",
+        suggestedTranslation: polishSopText(internalMatch),
+        confidence: 1.0,
+      };
+    }
+  } catch {}
+
   // 7. Translation Memory (TM) Check (Priority 2)
   if (options.docTM) {
     const tmPlan = options.docTM.planTranslations([
@@ -794,7 +813,7 @@ export function classifyTextUnit(
       return {
         status: "TM_REUSE",
         reason: "Exact or canonical match in Document Translation Memory",
-        suggestedTranslation: match,
+        suggestedTranslation: polishSopText(match),
         confidence: 0.95,
       };
     }

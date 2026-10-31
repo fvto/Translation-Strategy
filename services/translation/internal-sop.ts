@@ -22,6 +22,30 @@ export const INTERNAL_SOP_EXAMPLES: InternalSopExample[] = [
     translatedText: "Due to material properties, Production need to control high cementing defects by correct cementing and attaching outsole strictly follow buffing line, not higher or lower.",
     sourceLanguage: "vi", targetLanguage: "en",
   },
+  {
+    id: "internal-hot-shaping-temp",
+    sourceText: "1. Kiểm tra nhiệt độ thực tế 80-90°C của định hình nóng, thời gian 30s, lực ép 4-6kg",
+    translatedText: "1. Check if hot mold temp is 80-90°C, time 30s, pressure 4-6kg.",
+    sourceLanguage: "vi", targetLanguage: "en",
+  },
+  {
+    id: "internal-hot-shaping-upper-even",
+    sourceText: "2. Kiểm tra đặt mặt giày vào khuôn định hình nóng phải bằng mí khuôn, đèn chiếu phải nằm ngay giữa gót. Khi ép đầu bò vừa ôm sát với mặt giày nhất là vị trí tiếp xúc với logo không được siết quá chặt gây cấn, trầy ,để lại dấu trên bề mặt logo. Điều chỉnh độ kéo vừa phải để tránh nứt rách gãy lớp lót bên trong mức độ dưới logo.",
+    translatedText: "2. Check if upper is edge-even with hot mold, projector light centered on heel. Upper mold fits closely with upper, especially at contact with logo, do not over-tighten to avoid marks/scratches on logo. Adjust pull to avoid cracking lining under logo.",
+    sourceLanguage: "vi", targetLanguage: "en",
+  },
+  {
+    id: "internal-upper-match-bpm",
+    sourceText: "3. Kiểm tra mặt giày khớp với khuôn ép, đặt định vị chữ thao trên máy tránh tình trạng ngắn logo",
+    translatedText: "3. Check if upper matches mold, mold mark matches machine to avoid mark on logo.",
+    sourceLanguage: "vi", targetLanguage: "en",
+  },
+  {
+    id: "internal-bpm-logo-inspection",
+    sourceText: "4. Kiểm tra sau khi dập BPM, logo không bị cấn, trầy, để lại dấu trên bề mặt logo.",
+    translatedText: "4. Check if logo has no marks, scratches, or under-paint cracks after BPM.",
+    sourceLanguage: "vi", targetLanguage: "en",
+  },
 ];
 
 export function internalSopKey(text: string): string {

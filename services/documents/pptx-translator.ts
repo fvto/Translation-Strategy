@@ -548,9 +548,9 @@ export class PptxTranslatorService {
     const targetLanguage = options?.targetLanguage || "en";
     let provider = options?.provider || getTranslationProvider();
     const mode: PptxTranslationMode = options?.mode || "ipqc_bilingual";
-    const internalExamples = options?.translateMissingOnly
-      ? [...db.getInternalSopExamples(sourceLanguage, targetLanguage), ...INTERNAL_SOP_EXAMPLES.filter((e) => e.sourceLanguage === sourceLanguage && e.targetLanguage === targetLanguage)]
-      : undefined;
+    const internalExamples = [
+      ...db.getInternalSopExamples(sourceLanguage, targetLanguage), ...INTERNAL_SOP_EXAMPLES.filter((e) => e.sourceLanguage === sourceLanguage && e.targetLanguage === targetLanguage)
+    ];
 
     // Progress 1: Extracting structure
     options?.onProgress?.({

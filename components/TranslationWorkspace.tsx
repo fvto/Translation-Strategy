@@ -19,10 +19,12 @@ import {
   ClipboardPaste,
   Gauge,
   Activity,
+  X,
 } from "lucide-react";
 import { AiStudioTelemetry } from "@/components/AiStudioTelemetry";
 import { AiStudioMetrics } from "@/services/translation/types";
 import { insertPastedText, WorkspaceRequestGate } from "@/services/translation/workspace-input";
+import { polishSopText } from "@/services/translation/sop-polisher";
 
 interface MatchedTerm {
   entry: {
@@ -82,6 +84,13 @@ export const TranslationWorkspace: React.FC = () => {
   const [exampleMessage, setExampleMessage] = useState("");
   const [isSavingExample, setIsSavingExample] = useState(false);
   const exampleVersion = useRef(0);
+  const [linkedAuditUnit, setLinkedAuditUnit] = useState<{
+    unitId: string;
+    sourceText: string;
+    currentTranslation?: string;
+    slideNum?: number;
+    elementId?: string;
+  } | null>(null);
 
   useEffect(() => () => { requestGate.current.cancel(); }, []);
 
@@ -174,6 +183,83 @@ export const TranslationWorkspace: React.FC = () => {
       sessionStorage.setItem("secure_translator_workspace_draft", JSON.stringify(payload));
     } catch {}
   }, [sourceText, translatedText, sourceLang, targetLang, matchedTerms, complianceScore, mismatches, qaReport, providerUsed]);
+
+  // Listen for Smart Audit units sent to Workspace for translation / editing
+  useEffect(() => {
+    const checkTarget = () => {
+      try {
+        const raw = sessionStorage.getItem("smart_audit_workspace_sync_target");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.unitId && parsed.sourceText) {
+            setLinkedAuditUnit(parsed);
+            changeSource(parsed.sourceText);
+            if (parsed.currentTranslation) {
+              setTranslatedText(parsed.currentTranslation);
+            }
+            executeTranslate(parsed.sourceText);
+          }
+        }
+      } catch {}
+    };
+
+    checkTarget();
+
+    const handleSyncEvent = (e: any) => {
+      if (e?.detail?.unitId && e?.detail?.sourceText) {
+        setLinkedAuditUnit(e.detail);
+        changeSource(e.detail.sourceText);
+        if (e.detail.currentTranslation) {
+          setTranslatedText(e.detail.currentTranslation);
+        }
+        executeTranslate(e.detail.sourceText);
+      }
+    };
+
+    window.addEventListener("sync-smart-audit-to-workspace" as any, handleSyncEvent);
+    return () => window.removeEventListener("sync-smart-audit-to-workspace" as any, handleSyncEvent);
+  }, []);
+
+  const handleSyncBackToSmartAudit = async () => {
+    if (!linkedAuditUnit || !translatedText) return;
+    const polished = polishSopText(translatedText);
+
+    // Save directly to Smart Audit custom edits
+    window.dispatchEvent(
+      new CustomEvent("sync-workspace-to-smart-audit", {
+        detail: {
+          unitId: linkedAuditUnit.unitId,
+          translation: polished,
+          slideNum: linkedAuditUnit.slideNum,
+        },
+      })
+    );
+
+    // Persist as internal SOP example
+    try {
+      await fetch("/api/translation-examples", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceText: linkedAuditUnit.sourceText,
+          translatedText: polished,
+          sourceLanguage: sourceLang,
+          targetLanguage: targetLang,
+        }),
+      });
+    } catch {}
+
+    sessionStorage.removeItem("smart_audit_workspace_sync_target");
+    setLinkedAuditUnit(null);
+
+    // Switch tab back to PPTX slide
+    window.dispatchEvent(new CustomEvent("antigravity-switch-tab", { detail: { tab: "pptx" } }));
+  };
+
+  const handleDismissAuditLink = () => {
+    sessionStorage.removeItem("smart_audit_workspace_sync_target");
+    setLinkedAuditUnit(null);
+  };
 
   const executeTranslate = async (overrideText?: string) => {
     const textToProcess = (overrideText !== undefined ? overrideText : sourceText).trim();
@@ -582,6 +668,50 @@ function applySmartTerminologyFix(
         </div>
       </div>
 
+      {/* Smart Audit Active Sync Banner */}
+      {linkedAuditUnit && (
+        <div className="flex items-center justify-between p-3.5 mb-4 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-950/40 dark:to-indigo-950/40 border border-sky-300 dark:border-sky-700/80 shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-2xs font-bold">
+              <Zap className="w-4 h-4 text-amber-300" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-sky-800 dark:text-sky-300 uppercase tracking-wider">
+                  Đang đồng bộ với Smart Audit
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-sky-200/70 dark:bg-sky-900/60 text-sky-900 dark:text-sky-200 font-mono text-[10px] font-bold">
+                  Slide {linkedAuditUnit.slideNum}
+                </span>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 truncate font-medium">
+                "{linkedAuditUnit.sourceText}"
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              disabled={!translatedText}
+              onClick={handleSyncBackToSmartAudit}
+              className="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors disabled:opacity-40"
+              title="Đưa bản dịch này vào ô của slide trong Smart Audit"
+            >
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Áp dụng vào Smart Audit & Quay lại Slide</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDismissAuditLink}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+              title="Hủy liên kết với Smart Audit"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Dual Pane Editors - Clean White Porcelain Cards */}
       <div className="n-editor-grid grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Source Text Pane */}
@@ -669,6 +799,17 @@ function applySmartTerminologyFix(
             <div className="text-xs text-slate-400 dark:text-slate-500 font-mono">
               {translatedText ? `${translatedText.length} ký tự` : "Đang chờ dịch..."}
             </div>
+            {translatedText && /\bcheck\s+with\b/i.test(translatedText) && (
+              <button
+                type="button"
+                onClick={() => setTranslatedText(polishSopText(translatedText))}
+                className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                title="Chuyển 'Check with' thành 'Check if' chuẩn xưởng ngắn gọn"
+              >
+                <Zap className="w-3 h-3 text-white" />
+                <span>Đổi sang Check if</span>
+              </button>
+            )}
             <button type="button" onClick={saveInternalExample} disabled={!sourceText.trim() || !translatedText.trim() || isLoading || isSavingExample}
               title="Chỉ lưu sau khi bạn đã duyệt nội dung. Câu giống hệt sẽ dùng lại bản này."
               className="px-3 py-1 text-xs font-semibold rounded-full border border-slate-200 text-slate-700 bg-white disabled:opacity-40">

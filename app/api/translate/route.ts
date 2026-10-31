@@ -13,6 +13,7 @@ import { normalizeSourcePunctuation } from "@/services/translation/casing";
 
 import { isVietnameseText, isPureEnglishText } from "@/services/translation/vietnamese-detector";
 import { INTERNAL_SOP_EXAMPLES, findInternalSopExample } from "@/services/translation/internal-sop";
+import { polishSopText } from "@/services/translation/sop-polisher";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -102,6 +103,7 @@ export async function POST(req: NextRequest) {
       effTarget
     );
     if (!internalText) translationResult.translatedText = enforcementResult.text;
+    translationResult.translatedText = polishSopText(translationResult.translatedText);
 
     // 5. Run post-translation Terminology Validation (Section 18)
     const validationReport = validateTranslationTerminology(
