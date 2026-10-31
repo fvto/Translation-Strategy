@@ -950,7 +950,7 @@ export class PptxTranslatorService {
         if (options?.customTranslations?.[u.id]) return false; // PRESERVE approved/custom translations!
         return qualityRepairSources.has(u.id) || u.status === "TRANSLATION_CONFLICT" || u.glossaryMismatches !== undefined || (allowedIds && mode === "replace_en");
       })) translationMap.delete(u.id);
-      for(const u of selected) if(u.existingTranslation && targetLanguage === "en" && !hasViDiacritics(u.existingTranslation) && (mode === "ipqc_bilingual" || mode === "isq_duplicate"))translationMap.set(u.id,u.existingTranslation);
+      for(const u of selected) if(u.existingTranslation && targetLanguage === "en" && !hasViDiacritics(u.existingTranslation) && !/\bcheck\s+with\b/i.test(u.existingTranslation) && !u.qualityIssues?.some(i => i.type === "check_if_required") && (mode === "ipqc_bilingual" || mode === "isq_duplicate"))translationMap.set(u.id,u.existingTranslation);
       const queuedIds=new Set(allItemsToTranslate.map(item=>item.id));
       for(const u of selected){
         // An orphan English defect has no recoverable VI source. Never ask AI

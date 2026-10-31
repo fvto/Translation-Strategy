@@ -15,7 +15,7 @@ export function withDocumentTerminology(provider: TranslationProvider, plan: Doc
     let checked = plan.repair(input.sourceText, result.translatedText, scope, input.sourceLanguage, input.targetLanguage);
     const qualityIssues = input.sourceLanguage === "vi" && input.targetLanguage === "en" ? checkInstructionQuality(input.sourceText, checked.text) : [];
     if ((!checked.validation.isValid || qualityIssues.length) && options.retryTerminology !== false) {
-      result = await provider.translate({ ...input, context: `${input.context}\nRepair the complete instruction using the required approved terms: ${checked.validation.mismatches.map((item) => `${item.sourceTerm} -> ${item.expectedTarget}`).join("; ")}. Repair these instruction defects: ${qualityIssues.map(issue => issue.message).join("; ")}. Preserve numbers, negation, locations and Check if with a complete subject and predicate. Do not append a term list.` });
+      result = await provider.translate({ ...input, context: `${input.context}\nRepair the complete instruction using the required approved terms: ${checked.validation.mismatches.map((item) => `${item.sourceTerm} -> ${item.expectedTarget}`).join("; ")}. Repair these instruction defects: ${qualityIssues.map(issue => issue.message).join("; ")}. Preserve numbers, negation, locations and Check if with a complete subject and predicate (never use Check with). Do not append a term list.` });
       checked = plan.repair(input.sourceText, result.translatedText, scope, input.sourceLanguage, input.targetLanguage);
     }
     return { ...result, translatedText: checked.text };
@@ -42,7 +42,7 @@ export function withDocumentTerminology(provider: TranslationProvider, plan: Doc
         if (!checked.validation.isValid || (input.sourceLanguage === "vi" && input.targetLanguage === "en" && checkInstructionQuality(item.sourceText, checked.text).length)) retry.push(item);
       }
       if (retry.length && options.retryTerminology !== false) {
-        last = await provider.translateBatch!({ ...input, items: retry, context: `${input.context}\nThe previous output missed approved terminology or complete instruction conditions. Translate each complete source again with the mandatory terms. Inspection instructions and yes/no criteria must use Check if plus a subject and finite verb. Preserve all numbers, negation, signed tolerances and acceptance conditions. Do not append terms or summaries.` });
+        last = await provider.translateBatch!({ ...input, items: retry, context: `${input.context}\nThe previous output missed approved terminology or complete instruction conditions. Translate each complete source again with the mandatory terms. Inspection instructions and yes/no criteria ("Kiểm tra ...") must use Check if plus a subject and finite verb, never Check with. Preserve all numbers, negation, signed tolerances and acceptance conditions. Do not append terms or summaries.` });
         for (const item of retry) {
           const target = last.results.get(item.id);
           if (target?.trim()) results.set(item.id, plan.repair(item.sourceText, target, scope, input.sourceLanguage, input.targetLanguage).text);

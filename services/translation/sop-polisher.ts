@@ -138,6 +138,44 @@ export function polishSopText(text: string, options: PolishOptions = {}): string
   polished = polished.replace(/\bf\s+press\b/gi, "H/F press");
 
   // 4c. Inspection clauses use "Check if". Keep their subject and predicate.
+  // Zero "Check with" Directive: "Kiểm tra" must ALWAYS use "Check if", NEVER "Check with"
+  // Lean Shop-Floor Conciseness & Zero "Check with" Directive:
+  // "Kiểm tra" must ALWAYS use "Check if", and clauses are polished to be lean and compact to fit slide cells.
+  polished = polished.replace(
+    /\bCheck\s+(?:with|if)\s+real\s+temp(?:erature)?\s+(\d+[-–]\d+(?:[-–]\d+)?°?\s*C?)\s+of\s+(?:hold|hot)\s+mold(?:,\s*time\s*(\d+s?)(?:,\s*pressure\s*([0-9\-]+(?:kg)?))?)?/gi,
+    (_m, temp, time, pres) => {
+      let res = `Check if hot mold temp is ${temp}`;
+      if (time) res += `, time ${time}`;
+      if (pres) res += `, pressure ${pres}`;
+      return res;
+    }
+  );
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+real\s+temp(?:erature)?\s+(\d+[-–]\d+(?:[-–]\d+)?°?\s*C?)\b/gi, "Check if actual temp is $1");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+real\s+temp(?:erature)?\b/gi, "Check if actual temp is");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+putting\s+upper\s+onto\s+hot\s+mold\s+must\s+edge-even\s+with\s+mold\b/gi, "Check if upper is edge-even with hot mold");
+  polished = polished.replace(/\bputting\s+upper\s+onto\s+hot\s+mold\s+must\s+edge-even\s+with\s+mold\b/gi, "upper is edge-even with hot mold");
+  polished = polished.replace(/\bBOM\s+sight\s+with\s+be\s+at\s+center\s+of\s+Heel\b/gi, "projector light centered on heel");
+  polished = polished.replace(/\bBOM\s+sight\s+with\s+be\s+at\s+center\b/gi, "projector light centered");
+  polished = polished.replace(/\bespecially\s+at\s+Qtr\s+not\s+to\s+tight\s+that\s+cause\s+scratch,\s*mark\s+on\s+logo\b/gi, "quarter not too tight to avoid logo marks/scratches");
+  polished = polished.replace(/\bAdjust\s+the\s+pull\s+to\s+avoid\s+crack\s+on\s+cosmetic\b/gi, "Adjust pull to avoid cracking under logo");
+  polished = polished.replace(/\bCheck\s+after\s+BPM,?\s*logo\s+is\s+not\s+scratch,\s*mark\s+on\s+logo,?\s*no\s+cracking\s+under\s+logo\b/gi, "Check if logo has no marks, scratches, or under-paint cracks after BPM");
+  polished = polished.replace(/\blogo\s+is\s+not\s+scratch,\s*mark\s+on\s+logo,?\s*no\s+cracking\s+under\s+logo\b/gi, "logo has no marks, scratches, or under-paint cracks");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+upper\s+match\s+with\s+BPM\b/gi, "Check if upper matches BPM");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+upper\s+match\b/gi, "Check if upper matches");
+  polished = polished.replace(/\bmark\s+on\s+mold\s+must\s+match\s+with\s+mark\s+on\s+machine\s+to\s+avoid\s+mark\s+on\s+logo\b/gi, "mold mark matches machine to avoid mark on logo");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+logo\s+and\s+Qtr\s+must\s+have\s+same\s+size\b/gi, "Check if logo and Qtr have same size");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+spraying\s+cement\s+on\s+upper\b/gi, "Check if cement is sprayed on upper");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+finished\s+shoe\s+must\s+not\s+have\b/gi, "Check if finished shoe has no");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+collar\s+shape\s+must\s+(?:be\s+)?consistent\b/gi, "Check if collar shape is consistent");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+([A-Za-z0-9\s\-_/]+?)\s+must\s+edge-even\s+with\b/gi, "Check if $1 is edge-even with");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+([A-Za-z0-9\s\-_/]+?)\s+must\s+be\s+/gi, "Check if $1 is ");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+([A-Za-z0-9\s\-_/]+?)\s+must\s+match\b/gi, "Check if $1 matches");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+([A-Za-z0-9\s\-_/]+?)\s+must\s+have\b/gi, "Check if $1 has");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+([A-Za-z0-9\s\-_/]+?)\s+must\s+not\s+have\b/gi, "Check if $1 does not have");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+([A-Za-z0-9\s\-_/]+?)\s+must\s+fit\b/gi, "Check if $1 fits");
+  polished = polished.replace(/\bCheck\s+(?:with|if)\s+([A-Za-z0-9\s\-_/]+?)\s+must\s+align\b/gi, "Check if $1 aligns");
+  polished = polished.replace(/\bCheck\s+with\b/g, "Check if");
+  polished = polished.replace(/\bcheck\s+with\b/g, "check if");
   polished = polished.replace(/\bCheck\s+(?:that|whether)\b/gi, "Check if");
   polished = polished.replace(/\bVerify\s+that\b/gi, "Check if");
   polished = polished.replace(/\bverify\s+that\b/gi, "check if");

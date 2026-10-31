@@ -35,6 +35,9 @@ export function checkInstructionQuality(source: string | undefined, target: stri
   const add = (type: TranslationQualityIssue["type"], message: string) => issues.push({ type, message });
   if (isInstructionFragment(target)) add("incomplete_instruction", "Câu EN bị cụt: chỉ có động từ, thiếu nội dung thao tác/điều kiện.");
   const body = stripInstructionPrefix(target);
+  if (/\bcheck\s+with\b/i.test(body)) {
+    add("check_if_required", "Câu dùng 'Check with' không đúng chuẩn; 'Kiểm tra' luôn luôn đi với 'Check if' + chủ thể + động từ + điều kiện đầy đủ (tuyệt đối không dùng Check with).");
+  }
   if (/^check\s+if\b/i.test(body)) {
     const clause = body.replace(/^check\s+if\s*/i, '').split(/[,;.!?]/)[0];
     const words = clause.match(/[\p{L}]+/gu) || [];
@@ -43,10 +46,19 @@ export function checkInstructionQuality(source: string | undefined, target: stri
     }
   }
   if (/\b(?:isn['’]t|is\s+not|aren['’]t|are\s+not)\s+(?:align|attach|stitch)\b/i.test(body)) add("incomplete_condition", "Cấu trúc động từ trong điều kiện EN chưa đúng; cần rà lại câu.");
+  if (/\b(?:must\s+edge-even|with\s+be\s+at\s+center|is\s+not\s+scratch\b)/i.test(body)) {
+    add("incomplete_condition", "Ngữ pháp sau Check if chưa đúng (VD: dùng 'must edge-even', 'is not scratch', 'with be at center'); cần điều chỉnh câu từ và động từ cho đúng ngữ pháp.");
+  }
+  if (/^check\s+if\s+(?:the\s+)?(?:upper|mold|machine|tool|part)\s+match\b/i.test(body)) {
+    add("incomplete_condition", "Lỗi chia động từ số ít sau Check if ('upper match' -> cần dùng 'upper matches').");
+  }
+  if (/^check\s+if\s+(?:the\s+)?(?:real\s+temp|temperature)\s+\d+/i.test(body)) {
+    add("incomplete_condition", "Sau Check if thiếu động từ to-be (VD: 'Check if real temp 80-90°C' -> cần dùng 'Check if actual temperature is 80-90°C').");
+  }
   if (!source) return issues;
   const sourceBody = stripInstructionPrefix(source);
   const inspection = /^kiểm\s+tra\b/iu.test(sourceBody) || /(?:^|\s)có\s+.+\s+không[?.!]?$/iu.test(sourceBody);
-  if (inspection && !/^check\s+if\b/i.test(body)) add("check_if_required", "Câu kiểm tra chưa dùng Check if + chủ thể + động từ + điều kiện đầy đủ.");
+  if (inspection && !/^check\s+if\b/i.test(body) && !issues.some(i => i.type === "check_if_required")) add("check_if_required", "Câu kiểm tra chưa dùng Check if + chủ thể + động từ + điều kiện đầy đủ (tuyệt đối không dùng Check with).");
   const targetMeasures = new Set(measurements(target));
   const missing = measurements(source).filter(value => !targetMeasures.has(value));
   if (missing.length) add("missing_measurement", `Thông số/dung sai trong nguồn chưa được giữ đúng: ${[...new Set(missing)].join(', ')}.`);

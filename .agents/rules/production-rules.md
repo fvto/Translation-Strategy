@@ -30,7 +30,20 @@ trigger: always_on
 
 6. **Worker-facing Inspection Wording — User Directive**:
    - Inspection instructions ("Kiểm tra ...") must use **"Check if" + subject + finite verb + the complete source condition** in English, in both text translation and Smart Audit.
-   - Shortening must preserve **if**, negation, measurements and acceptance conditions. Do not replace the instruction with "Check" plus a noun phrase, "Verify", "Ensure" or "Inspect".
+   - **Lean Shop-Floor Conciseness Principle (Càng ngắn gọn càng tốt để vừa bảng slide)**:
+     * Slide and table cell space is strictly constrained: keep English shop-floor instructions as short, direct, and telegraphic as possible without wordy fluff.
+     * Strip redundant articles (`the`, `a`), verbose connectors (`and the`, `it is necessary to`), and long explanatory relative clauses while strictly preserving numbers, units, defects, and the complete condition.
+     * Prefer: `Check if hot mold temp is 80-90°C, time 30s, pressure 4-6kg` over verbose prose.
+     * Prefer: `Check if upper is edge-even with hot mold, projector light centered on heel` over wordy relative clauses.
+     * Prefer: `Check if upper matches mold, mold mark matches machine to avoid mark on logo`.
+     * Prefer: `Check if logo has no marks, scratches, or under-paint cracks after BPM`.
+   - **Grammar & Context Co-Adjustment Directive**: Using "Check if" strictly requires co-adjusting the subsequent clause for correct English grammar and footwear shop-floor context:
+     * The clause following "Check if" MUST have a complete subject and finite verb (`is/are`, `matches`, `aligns with`, `is flush with / is edge-even with`, `has no / is free of`).
+     * Never mechanically prepend "Check if" to a bare noun phrase (e.g. NEVER `Check if real temp 80-90°C` -> use `Check if hot mold temp is 80-90°C, time 30s, pressure 4-6kg`).
+     * Never use a bare gerund without predicate (e.g. NEVER `Check if putting upper... must edge-even` -> use `Check if upper is edge-even with hot mold...`).
+     * Never leave broken pidgin verbs (e.g. replace `is not scratch` with `has no scratches/marks`; replace `BOM sight with be at center` with `projector light centered on heel`; replace `upper match` with `upper matches`).
+   - **Zero "Check with" Directive**: "Kiểm tra" ALWAYS pairs with **"Check if"**, NEVER **"Check with"**. NEVER translate "Kiểm tra ..." as "Check with ..." and strictly forbid "Check with" in all shop-floor inspection instructions.
+   - Shortening must preserve **if**, negation, measurements and acceptance conditions. Do not replace the instruction with "Check" plus a noun phrase, "Check with", "Verify", "Ensure" or "Inspect".
    - Do not mechanically prepend "Check if" to a bare noun phrase. Produce a complete grammatical condition without inventing a requirement.
    - Physical operation commands and descriptive facts retain their original function.
 

@@ -252,6 +252,23 @@ export async function auditAndRepairPptxPostFlight(
         }
       }
 
+      // Auto-Repair forbidden 'Check with' -> standard 'Check if' (Worker Directive: Kiểm tra luôn luôn đi với Check if)
+      if (/\bCheck\s+with\b/i.test(updated)) {
+        const fixed = polishSopText(updated);
+        if (fixed !== updated) {
+          xmlModified = true;
+          repairedCount++;
+          issues.push({
+            slide: filename,
+            type: "translation_quality",
+            message: `Auto-corrected forbidden 'Check with' to standard 'Check if': '${updated.trim()}' -> '${fixed.trim()}'`,
+            targetText: fixed,
+            autoRepaired: true,
+          });
+          updated = escapeXmlText(fixed);
+        }
+      }
+
       // Only the complete, previously approved legacy sentence may change acceptance semantics.
       const repairedTolerance = repairKnownToleranceNote(updated);
       if (repairedTolerance !== updated) {

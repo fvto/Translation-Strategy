@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { extractNumericParameters } from "@/services/translation/vietnamese-detector";
+import { polishSopText } from "@/services/translation/sop-polisher";
 import {
   Presentation,
   ChevronLeft,
@@ -2073,7 +2074,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     (unit: ScannedTextUnit): string => {
       if (customEdits[unit.id] !== undefined) return customEdits[unit.id];
       if (unit.suggestedTranslation && unit.suggestedTranslation.trim().toLowerCase() !== unit.sourceText.trim().toLowerCase()) {
-        return unit.suggestedTranslation;
+        const trans = unit.suggestedTranslation;
+        return /\bcheck\s+with\b/i.test(trans) ? polishSopText(trans) : trans;
       }
       if (unit.existingTranslation && unit.existingTranslation.trim().toLowerCase() !== unit.sourceText.trim().toLowerCase()) {
         // Defensive hygiene: reject corrupted legacy pairings where different shoe sizes or measurements were falsely linked
@@ -2092,7 +2094,8 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             return "";
           }
         }
-        return unit.existingTranslation;
+        const trans = unit.existingTranslation;
+        return /\bcheck\s+with\b/i.test(trans) ? polishSopText(trans) : trans;
       }
       return "";
     },

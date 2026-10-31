@@ -9234,7 +9234,7 @@
     {
       "id": "term_3dcf5f5e4c8d",
       "sourceTerm": "Rập lạng",
-      "targetTerm": "Skiving pallet",
+      "targetTerm": "Skiving jig",
       "sourceLanguage": "vi",
       "targetLanguage": "en",
       "definition": "Thuật ngữ chuyên ngành đề xuất từ bài trình chiếu PowerPoint",
@@ -9248,7 +9248,23 @@
       "approvedBy": "user@secure.local",
       "version": "v1.0",
       "createdAt": "2026-10-05T02:55:15.736Z",
-      "updatedAt": "2026-10-05T02:55:15.736Z"
+      "updatedAt": "2026-10-31T08:31:12.580Z",
+      "editHistory": [
+        {
+          "id": "hist_ed92837b",
+          "timestamp": "2026-10-31T08:31:12.538Z",
+          "editedBy": "user@secure.local",
+          "action": "updated",
+          "changes": [
+            {
+              "field": "targetTerm",
+              "oldValue": "Skiving pallet",
+              "newValue": "Skiving jig"
+            }
+          ],
+          "note": "Chỉnh sửa: targetTerm"
+        }
+      ]
     },
     {
       "id": "term_a0d4b10ceb84",
@@ -11776,25 +11792,6 @@
       "version": "v1.0",
       "createdAt": "2026-09-28T01:23:35.772Z",
       "updatedAt": "2026-09-28T01:38:37.067Z"
-    },
-    {
-      "id": "term_e34758a2327b",
-      "sourceTerm": "pallet",
-      "targetTerm": "rập (có 2 tấm gập lại)",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": "QA Stage Footwear Standard",
-      "category": "QA",
-      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
-      "status": "approved",
-      "priority": 2,
-      "confidence": 0.95,
-      "createdBy": "anonymous@secure.local",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-09-28T01:23:35.772Z",
-      "updatedAt": "2026-09-28T01:38:37.045Z"
     },
     {
       "id": "term_5baeb444f556",
@@ -16680,25 +16677,6 @@
       "updatedAt": "2026-09-28T01:38:31.203Z"
     },
     {
-      "id": "term_0fdc8ede7a82",
-      "sourceTerm": "plastic gauge",
-      "targetTerm": "rập nhựa/rập đo (sau khi may mũi)",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": "Stitching Stage Footwear Standard",
-      "category": "Stitching",
-      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
-      "status": "approved",
-      "priority": 2,
-      "confidence": 0.95,
-      "createdBy": "anonymous@secure.local",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-09-28T01:23:35.772Z",
-      "updatedAt": "2026-09-28T01:38:31.184Z"
-    },
-    {
       "id": "term_5d1b31bfd1e9",
       "sourceTerm": "perpendicular",
       "targetTerm": "vuông góc",
@@ -19074,25 +19052,6 @@
       "updatedAt": "2026-09-28T01:38:28.402Z"
     },
     {
-      "id": "term_41333e56936c",
-      "sourceTerm": "plastic template",
-      "targetTerm": "rập (mẫu)",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": "Assembly Stage Footwear Standard",
-      "category": "Assembly",
-      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
-      "status": "approved",
-      "priority": 2,
-      "confidence": 0.95,
-      "createdBy": "anonymous@secure.local",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-09-28T01:23:35.772Z",
-      "updatedAt": "2026-09-28T01:38:28.374Z"
-    },
-    {
       "id": "term_e4b2b6510173",
       "sourceTerm": "Paint peeled off",
       "targetTerm": "Tróc sơn",
@@ -20174,25 +20133,6 @@
       "version": "v1.0",
       "createdAt": "2026-09-28T01:23:35.772Z",
       "updatedAt": "2026-09-28T01:38:26.923Z"
-    },
-    {
-      "id": "term_865bc2e466c1",
-      "sourceTerm": "plastic pattern jig",
-      "targetTerm": "rập nhựa",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": "Assembly Stage Footwear Standard",
-      "category": "Assembly",
-      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
-      "status": "approved",
-      "priority": 2,
-      "confidence": 0.95,
-      "createdBy": "anonymous@secure.local",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-09-28T01:23:35.772Z",
-      "updatedAt": "2026-09-28T01:38:26.900Z"
     },
     {
       "id": "term_fda21e20c9c1",
@@ -22741,25 +22681,6 @@
       "updatedAt": "2026-09-28T01:38:23.895Z"
     },
     {
-      "id": "term_f9f21764d29b",
-      "sourceTerm": "Check if template same size with strap",
-      "targetTerm": "Kt rập chấm định vị&quai dép có cùng size ko",
-      "sourceLanguage": "en",
-      "targetLanguage": "vi",
-      "definition": null,
-      "context": "Stitching Stage Footwear Standard",
-      "category": "Stitching",
-      "sourceDocument": "Cuu-am-chan-kinh.xlsx",
-      "status": "approved",
-      "priority": 2,
-      "confidence": 0.95,
-      "createdBy": "anonymous@secure.local",
-      "approvedBy": "reviewer@secure.local",
-      "version": "v1.0",
-      "createdAt": "2026-09-28T01:23:35.772Z",
-      "updatedAt": "2026-09-28T01:38:23.864Z"
-    },
-    {
       "id": "term_5f053a52d278",
       "sourceTerm": "a stitch line missing up half a stitch",
       "targetTerm": "đường may hụt nửa mũi chỉ",
@@ -24319,6 +24240,76 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log_1793435540557_247d7aa4",
+      "timestamp": "2026-10-31T08:32:20.557Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_f9f21764d29b"
+      }
+    },
+    {
+      "id": "log_1793435525060_96d80979",
+      "timestamp": "2026-10-31T08:32:05.060Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_865bc2e466c1"
+      }
+    },
+    {
+      "id": "log_1793435523019_c74ee434",
+      "timestamp": "2026-10-31T08:32:03.019Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_41333e56936c"
+      }
+    },
+    {
+      "id": "log_1793435513922_efccde8a",
+      "timestamp": "2026-10-31T08:31:53.922Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_0fdc8ede7a82"
+      }
+    },
+    {
+      "id": "log_1793435489603_72da441e",
+      "timestamp": "2026-10-31T08:31:29.603Z",
+      "userId": "user",
+      "userEmail": "user@secure.local",
+      "operation": "TERMINOLOGY_DELETED",
+      "documentId": null,
+      "status": "SUCCESS",
+      "durationMs": 3,
+      "errorCode": null,
+      "details": {
+        "termId": "term_e34758a2327b"
+      }
+    },
     {
       "id": "log_1793094260007_a6b3552c",
       "timestamp": "2026-10-27T09:44:20.007Z",
