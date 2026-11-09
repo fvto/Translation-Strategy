@@ -2,7 +2,11 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { extractNumericParameters } from "@/services/translation/vietnamese-detector";
+import {
+  extractNumericParameters,
+  hasVietnameseDiacritics,
+  isVietnameseText,
+} from "@/services/translation/vietnamese-detector";
 import { polishSopText } from "@/services/translation/sop-polisher";
 import {
   Presentation,
@@ -3030,24 +3034,68 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
   };
 
   const handleTranslateCurrentSlide = async () => {
-    // 1. Chọn tất cả các ô trên slide đang xem
-    onSelectAllInSlide(currentSlide);
+    // 1. Quét thông minh trước (Smart Scan): Chỉ lọc các đoạn thực sự cần dịch,
+    // bỏ qua hoàn toàn các tiêu đề tiếng Anh, mã số thuần, số liệu và các ô đã đạt chuẩn tiếng Anh.
+    const isUnitNeedingTranslation = (u: ScannedTextUnit): boolean => {
+      if (u.status === "NON_TRANSLATABLE") return false;
 
-    // 2. Lọc các đoạn cần dịch trên slide hiện tại
-    const unitsToTranslate = currentUnits.filter(
-      (u) => u.status !== "NON_TRANSLATABLE" && u.sourceText && u.sourceText.trim().length > 0
-    );
+      // Đã có bản dịch tùy chỉnh hợp lệ trong customEdits (không còn tiếng Việt)
+      if (customEdits[u.id] && !hasVietnameseDiacritics(customEdits[u.id])) {
+        return false;
+      }
 
+      // Trạng thái hệ thống đã chỉ định cần dịch hoặc cần xem xét
+      if (
+        u.status === "NEEDS_TRANSLATION" ||
+        u.status === "MIXED_LANGUAGE" ||
+        u.status === "REVIEW_REQUIRED" ||
+        u.status === "TRANSLATION_CONFLICT" ||
+        u.status === "SUSPICIOUS_TRANSLATION"
+      ) {
+        return true;
+      }
+
+      // Nếu đoạn chứa dấu tiếng Việt hoặc từ vựng tiếng Việt
+      if (hasVietnameseDiacritics(u.sourceText) || isVietnameseText(u.sourceText)) {
+        const currentTrans = customEdits[u.id] || u.existingTranslation || "";
+        if (!currentTrans || hasVietnameseDiacritics(currentTrans) || isVietnameseText(currentTrans)) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    const unitsToTranslate = currentUnits.filter(isUnitNeedingTranslation);
+
+    // 2. Đồng bộ vùng chọn trực quan: CHỈ chọn đúng các ô/dòng được quét phát hiện cần dịch,
+    // bỏ chọn các ô đã chuẩn tiếng Anh để người dùng nhìn thấy rõ ràng trên slide.
+    for (const u of currentUnits) {
+      const shouldSelect = unitsToTranslate.some((target) => target.id === u.id);
+      const isCurrentlySelected = selectedUnitIds.has(u.id);
+      if (shouldSelect && !isCurrentlySelected) {
+        onToggleUnit(u.id);
+      } else if (!shouldSelect && isCurrentlySelected) {
+        onToggleUnit(u.id);
+      }
+    }
+
+    // 3. Nếu toàn bộ slide đã chuẩn tiếng Anh, không có vị trí nào cần dịch
     if (unitsToTranslate.length === 0) {
-      setQuickActionNotice(`Slide ${currentSlide} không có nội dung cần dịch.`);
+      setQuickActionNotice(
+        `Đã scan slide ${currentSlide}: Toàn bộ nội dung đã chuẩn tiếng Anh, không có vị trí nào cần dịch.`
+      );
       if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
-      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2500);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2800);
       return;
     }
 
+    // 4. Tiến hành dịch AI riêng cho các vị trí vừa quét được
     setIsTranslatingQuick(true);
     setBatchTranslateProgress({ current: 0, total: unitsToTranslate.length });
-    setQuickActionNotice(`Đang dịch toàn bộ slide ${currentSlide} (${unitsToTranslate.length} đoạn)...`);
+    setQuickActionNotice(
+      `Đã scan slide ${currentSlide}: Phát hiện ${unitsToTranslate.length} vị trí cần dịch. Đang dịch AI...`
+    );
 
     try {
       const CONCURRENCY = 3;
@@ -3081,9 +3129,11 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
         );
       }
 
-      // Tự động chuyển sang chế độ EN để người dùng thấy ngay kết quả
+      // Tự động chuyển sang chế độ EN để đối chiếu kết quả ngay lập tức
       setViewMode("target");
-      setQuickActionNotice(`Đã dịch xong toàn bộ slide ${currentSlide} (${unitsToTranslate.length} đoạn)!`);
+      setQuickActionNotice(
+        `Hoàn tất! Đã scan và dịch xong ${unitsToTranslate.length} vị trí cần dịch trên slide ${currentSlide}.`
+      );
     } catch (err: any) {
       console.error("Translate slide error:", err);
       setQuickActionNotice(`Lỗi khi dịch slide ${currentSlide}: ${err.message || "Vui lòng thử lại"}`);
@@ -3093,7 +3143,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
       quickActionTimerRef.current = setTimeout(() => {
         setQuickActionNotice(null);
         setBatchTranslateProgress(null);
-      }, 3000);
+      }, 3200);
     }
   };
 
