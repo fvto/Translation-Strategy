@@ -225,12 +225,36 @@ const STATUS_CONFIG: Record<
 
 function getElementTextColor(fill?: string, explicitColor?: string): string {
   const upperFill = fill?.toUpperCase() || "";
+
+  // If explicit text color is white, preserve it
+  if (explicitColor && explicitColor.toUpperCase() === "#FFFFFF") return "#FFFFFF";
+
+  // Check luminance for any 6-digit hex color
+  if (upperFill.startsWith("#") && upperFill.length === 7) {
+    const r = parseInt(upperFill.substring(1, 3), 16);
+    const g = parseInt(upperFill.substring(3, 5), 16);
+    const b = parseInt(upperFill.substring(5, 7), 16);
+    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      if (luminance < 0.52) {
+        // Dark background (e.g. #000000, #FF8810, #ED7D31, #002060, #FF0000, dark navy) -> Text MUST be white!
+        return "#FFFFFF";
+      }
+    }
+  }
+
   if (
     upperFill === "#FF8810" ||
     upperFill === "#ED7D31" ||
     upperFill === "#FF0000" ||
     upperFill === "#C00000" ||
-    upperFill === "#002060"
+    upperFill === "#002060" ||
+    upperFill === "#000000" ||
+    upperFill === "#0F172A" ||
+    upperFill === "#1E293B" ||
+    upperFill === "#334155" ||
+    upperFill === "#1E1B4B" ||
+    upperFill === "#172554"
   ) {
     return "#FFFFFF";
   }
@@ -3005,6 +3029,74 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
     }
   };
 
+  const handleTranslateCurrentSlide = async () => {
+    // 1. Chọn tất cả các ô trên slide đang xem
+    onSelectAllInSlide(currentSlide);
+
+    // 2. Lọc các đoạn cần dịch trên slide hiện tại
+    const unitsToTranslate = currentUnits.filter(
+      (u) => u.status !== "NON_TRANSLATABLE" && u.sourceText && u.sourceText.trim().length > 0
+    );
+
+    if (unitsToTranslate.length === 0) {
+      setQuickActionNotice(`Slide ${currentSlide} không có nội dung cần dịch.`);
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2500);
+      return;
+    }
+
+    setIsTranslatingQuick(true);
+    setBatchTranslateProgress({ current: 0, total: unitsToTranslate.length });
+    setQuickActionNotice(`Đang dịch toàn bộ slide ${currentSlide} (${unitsToTranslate.length} đoạn)...`);
+
+    try {
+      const CONCURRENCY = 3;
+      let completed = 0;
+
+      for (let i = 0; i < unitsToTranslate.length; i += CONCURRENCY) {
+        const batch = unitsToTranslate.slice(i, i + CONCURRENCY);
+        await Promise.all(
+          batch.map(async (u) => {
+            try {
+              const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  sourceText: u.sourceText,
+                  sourceLanguage: "vi",
+                  targetLanguage: "en",
+                }),
+              });
+              const data = await res.json();
+              if (res.ok && data.translatedText) {
+                onSaveCustomEdit(u.id, polishSopText(data.translatedText));
+              }
+            } catch (unitErr) {
+              console.error(`Error translating unit ${u.id}:`, unitErr);
+            } finally {
+              completed++;
+              setBatchTranslateProgress({ current: completed, total: unitsToTranslate.length });
+            }
+          })
+        );
+      }
+
+      // Tự động chuyển sang chế độ EN để người dùng thấy ngay kết quả
+      setViewMode("target");
+      setQuickActionNotice(`Đã dịch xong toàn bộ slide ${currentSlide} (${unitsToTranslate.length} đoạn)!`);
+    } catch (err: any) {
+      console.error("Translate slide error:", err);
+      setQuickActionNotice(`Lỗi khi dịch slide ${currentSlide}: ${err.message || "Vui lòng thử lại"}`);
+    } finally {
+      setIsTranslatingQuick(false);
+      if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
+      quickActionTimerRef.current = setTimeout(() => {
+        setQuickActionNotice(null);
+        setBatchTranslateProgress(null);
+      }, 3000);
+    }
+  };
+
   // ==========================================================================
   // MATHEMATICAL VISUAL-FIT CALCULATION (ZERO VERTICAL SCROLL GUARANTEE)
   // ==========================================================================
@@ -3561,9 +3653,10 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                     }}
                     style={{
                       fontSize: displayFontSizePt ? `${displayFontSizePt}pt` : undefined,
+                      lineHeight: (el.isTitle || el.fill === "#FF8810" || el.fill === "#ED7D31" || (pos && pos.top < 3 && size && size.width >= 75)) ? "1.18" : undefined,
                     }}
                     className={`group/line relative rounded px-1 -mx-1 ${
-                      elementUnits.length > 2 ? "py-0 leading-snug" : "py-0.5"
+                      (el.isTitle || el.fill === "#FF8810" || el.fill === "#ED7D31") ? "py-0 leading-tight" : elementUnits.length > 2 ? "py-0 leading-snug" : "py-0.5"
                     } transition-colors cursor-text hover:bg-sky-500/10 dark:hover:bg-sky-400/10 ${
                       isHeading ? "font-bold" : "font-normal"
                     } ${uIdx > 0 ? (elementUnits.length > 2 ? "mt-0" : "mt-0.5") : ""} break-words`}
@@ -3789,8 +3882,12 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                                 const isChecked = elementUnits.length > 0 && elementUnits.every((u) => selectedUnitIds.has(u.id));
                                 const isPartiallyChecked = !isChecked && elementUnits.some((u) => selectedUnitIds.has(u.id));
 
-                                const bgColor =
+                                let bgColor =
                                   style.fill || el.fill || (el.tableRow === 0 ? "#FFFFFF" : "#FFFFFF");
+                                // Phòng vệ: nếu cell fill là #000000 do tàn dư parse thì ép về #FFFFFF cho bảng SOP tiêu chuẩn
+                                if (bgColor === "#000000" && (!el.textColor || el.textColor === "#000000" || el.textColor === "#0f172a")) {
+                                  bgColor = "#FFFFFF";
+                                }
                                 const textColor = style.textColor || getElementTextColor(bgColor, el.textColor);
                                 const isBold = style.isBold !== undefined ? style.isBold : Boolean(el.isBold);
                                 const align = style.align || (el.tableRow === 0 || el.align === "center" || el.isTitle ? "center" : "left");
@@ -4192,12 +4289,15 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 const isOval =
                   el.shapeName?.toLowerCase().includes("oval") || el.shapeName?.toLowerCase().includes("circle");
                 const isTopBanner =
-                  el.fill === "#FF8810" || el.fill === "#ED7D31" || (pos.top < 3 && size.width >= 75);
+                  el.fill === "#FF8810" || el.fill === "#ED7D31" || (pos.top < 3 && size.width >= 75) || Boolean(el.isTitle && pos.top < 2);
                 const isCyanHeader = el.fill === "#00B0F0";
                 const isBadge = el.fill === "#92D050" || el.fill === "#FF0000" || el.fill === "#C00000";
 
-                const bgColor =
+                let bgColor =
                   style.fill || el.fill || (el.type === "cell" ? "#FFFFFF" : "transparent");
+                if (el.type === "cell" && bgColor === "#000000" && (!el.textColor || el.textColor === "#000000" || el.textColor === "#0f172a")) {
+                  bgColor = "#FFFFFF";
+                }
                 const textColor = style.textColor || getElementTextColor(bgColor, el.textColor);
 
                 const isBold = style.isBold !== undefined ? style.isBold : Boolean(el.isBold);
@@ -4272,7 +4372,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 const paddingStyle = isSmallMarker
                   ? "0"
                   : isTopBanner
-                  ? "3px 8px"
+                  ? "4px 12px 2px"
                   : isCyanHeader
                   ? "3px 6px"
                   : el.type === "cell"
@@ -4554,7 +4654,23 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
               </button>
             )}
 
-            {/* Area Selection Mode Toggle Button (Quét chọn vùng) */}
+            {/* Dịch toàn bộ slide đang xem */}
+            <button
+              type="button"
+              disabled={isTranslatingQuick}
+              onClick={handleTranslateCurrentSlide}
+              className="px-2.5 py-1 rounded-lg text-amber-800 dark:text-amber-200 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer border border-amber-300 dark:border-amber-700 shadow-2xs transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+              title="Dịch tất cả các ô trên slide đang xem sang tiếng Anh chuẩn SOP Nike/Ching Luh"
+            >
+              {isTranslatingQuick ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600 dark:text-amber-400" />
+              ) : (
+                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              )}
+              <span>Dịch slide này</span>
+            </button>
+
+            {/* Bỏ dịch toàn bộ slide đang xem */}
             <button
               type="button"
               onClick={() => {
@@ -4563,7 +4679,7 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
                 if (quickActionTimerRef.current) clearTimeout(quickActionTimerRef.current);
                 quickActionTimerRef.current = setTimeout(() => setQuickActionNotice(null), 2200);
               }}
-              className="px-2.5 py-1 rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
+              className="px-2.5 py-1 rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 font-semibold flex items-center gap-1 shrink-0 cursor-pointer border border-rose-200 dark:border-rose-800 shadow-2xs transition-colors"
               title="Bỏ dịch tất cả các ô trên slide đang xem, giữ nguyên các slide khác"
             >
               <Square className="w-3.5 h-3.5" /> Bỏ dịch slide này
@@ -5636,6 +5752,14 @@ export const SmartAuditSlideCanvas: React.FC<SmartAuditSlideCanvasProps> = ({
             <Type className="w-4 h-4 text-sky-400 shrink-0" />
             <span className="font-bold text-sky-300">Cỡ chữ: {fontSizeFeedback.sizePt}pt</span>
             <span className="text-slate-400 text-[10px] border-l border-slate-700 pl-2">Alt + Cuộn chuột</span>
+          </div>
+        )}
+
+        {/* Batch Translation Progress HUD Toast */}
+        {batchTranslateProgress !== null && (
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/98 backdrop-blur-md text-white font-mono text-xs px-4 py-2 rounded-full shadow-2xl pointer-events-none z-[120] flex items-center gap-2.5 border border-amber-400 animate-in fade-in zoom-in-95 duration-100">
+            <Loader2 className="w-4 h-4 animate-spin text-amber-400 shrink-0" />
+            <span className="font-bold text-amber-300">Đang dịch slide: ${batchTranslateProgress.current} / ${batchTranslateProgress.total} đoạn...</span>
           </div>
         )}
 

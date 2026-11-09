@@ -96,6 +96,11 @@ interface ParsedSlideShape {
 
 function parseXmlColor(chunk?: string): string | undefined {
   if (!chunk) return undefined;
+  // If alpha is explicitly 0 (or near 0), the fill is transparent / non-existent
+  const alphaMatch = chunk.match(/<a:alpha\b[^>]*\bval="(\d+)"/);
+  if (alphaMatch && parseInt(alphaMatch[1], 10) < 5000) {
+    return undefined;
+  }
   const srgb = chunk.match(/<a:srgbClr\b[^>]*\bval="([A-Fa-f0-9]{6})"/);
   if (srgb) return `#${srgb[1].toUpperCase()}`;
   const scheme = chunk.match(/<a:schemeClr\b[^>]*\bval="([^"]+)"/);
@@ -351,9 +356,15 @@ function parseSlideShapes(
 
             const tcPr = cellXml.match(/<a:tcPr[\s\S]*?<\/a:tcPr>/)?.[0] || "";
             // Strip line borders (<a:ln*...>) before checking solidFill/noFill so borders aren't mistaken for cell background
-            const tcPrNoLines = tcPr.replace(/<a:ln[A-Za-z0-9]*\b[\s\S]*?<\/a:ln[A-Za-z0-9]*>/g, "");
+            const tcPrNoLines = tcPr
+              .replace(/<a:ln[A-Za-z0-9]*\b[\s\S]*?<\/a:ln[A-Za-z0-9]*>/g, "")
+              .replace(/<a:ln[A-Za-z0-9]*\b[^>]*\/>/g, "");
             const isNoFill = /<a:noFill\/>/.test(tcPrNoLines);
-            const fill = isNoFill ? undefined : parseXmlColor(tcPrNoLines.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
+            let fill = isNoFill ? undefined : parseXmlColor(tcPrNoLines.match(/<a:solidFill[\s\S]*?<\/a:solidFill>/)?.[0]);
+            // Prevent unintended pitch-black cells in standard SOP data tables
+            if (fill === "#000000" && !cellXml.includes('val="000000"') && !/<a:srgbClr\b[^>]*\bval="000000"/.test(tcPrNoLines)) {
+              fill = undefined;
+            }
             const border = "1px solid #cbd5e1"; // Clean presentation table cell border
 
             const algnMatch = cellXml.match(/<a:pPr\b[^>]*\balgn="([^"]+)"/);
