@@ -75,6 +75,10 @@ export function adaptTermCasing(targetTerm: string, isSentenceStart: boolean): s
   const cleaned = cleanTargetTerm(targetTerm);
   if (!cleaned) return "";
 
+  if (cleaned.toLowerCase() === "x-ray") {
+    return "X-ray";
+  }
+
   // Standalone acronym or model/part code check (e.g. "SB-077-P-1", "ISO 27001", "PFC")
   if (
     KNOWN_ACRONYMS.has(cleaned.toUpperCase()) ||
@@ -91,7 +95,10 @@ export function adaptTermCasing(targetTerm: string, isSentenceStart: boolean): s
     const cased = words.map((w, idx) => {
       const upper = w.toUpperCase();
       if (KNOWN_ACRONYMS.has(upper)) return upper;
-      if (/\d/.test(w) || /^[A-Z0-9]+-[A-Z0-9\-]+$/i.test(w)) return w;
+      if (w.toLowerCase() === "no-sew") return idx === 0 ? "No-sew" : "no-sew";
+      if (w.toLowerCase() === "tip-quarter") return idx === 0 ? "Tip-quarter" : "tip-quarter";
+      if (w.toLowerCase() === "x-ray") return "X-ray";
+      if (/\d/.test(w) || /^[A-Z0-9]+-[A-Z0-9\-]+$/.test(w)) return w;
       if (idx === 0) return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
       return w.toLowerCase();
     });
@@ -101,7 +108,10 @@ export function adaptTermCasing(targetTerm: string, isSentenceStart: boolean): s
     const cased = words.map((w) => {
       const upper = w.toUpperCase();
       if (KNOWN_ACRONYMS.has(upper)) return upper;
-      if (/\d/.test(w) || /^[A-Z0-9]+-[A-Z0-9\-]+$/i.test(w)) return w;
+      if (w.toLowerCase() === "no-sew") return "no-sew";
+      if (w.toLowerCase() === "tip-quarter") return "tip-quarter";
+      if (w.toLowerCase() === "x-ray") return "X-ray";
+      if (/\d/.test(w) || /^[A-Z0-9]+-[A-Z0-9\-]+$/.test(w)) return w;
       return w.toLowerCase();
     });
     return cased.join(" ");
@@ -259,6 +269,83 @@ export function normalizeInvertedNounPhrases(text: string): string {
   return res;
 }
 
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Authoritative list of footwear domain terms, component names, tooling,
+ * and defects that should be lowercased when appearing in mid-sentence.
+ */
+export const MID_SENTENCE_LOWERCASE_TERMS = [
+  // Finished shoe & product terms
+  "finished shoe", "finished shoes", "finished shoe product", "finished goods",
+  // Color defects & variations
+  "color bleeding", "color migration", "color shade variation", "color shade", "color different", "color contamination",
+  // Footwear components & zones
+  "collar lining", "collar opening", "collar pad", "collar shape",
+  "heel shape", "heel counter", "heel seam",
+  "toe shape", "toe lasting", "toe curve", "toe cap", "toe box",
+  "vamp shape", "vamp component",
+  "tongue shape",
+  "shoelaces", "shoelace", "laces", "lace",
+  "eyestay", "eyestays", "mudguard", "mudguards", "foxing", "foxings",
+  // Tooling & molds
+  "hot mold", "cold mold", "hold mold", "top plate", "bottom plate", "press mold", "pressing mold",
+  "press machine", "pressing machine", "molding machine", "measuring jig", "marking line", "jig fitting",
+  // Stitching terms & processes
+  "strobel stitching", "strobel stitch", "strobel",
+  "stitch density", "stitch spacing",
+  "run-off stitching", "run off stitching", "crooked stitching", "uneven stitching",
+  "gathering stitching", "airbag thread line drawing", "thread line drawing",
+  // Defects & quality criteria
+  "projector light", "bond gap", "bond failure", "lack of cement",
+  "cement overflow", "glue overflow", "excess cement", "over cement", "cement line",
+  "visible mark", "visible marks", "demolding mark", "demolding marks", "indentation", "dent",
+  "material edge", "flashing", "scratches", "scratch", "marks", "mark",
+  "oil stain", "oil stains", "dirt", "dirty", "stain", "stains",
+  "broken thread", "broken threads", "thread breakage", "exposed threads", "thread expose",
+  "wrinkle upper", "deformation", "deformed",
+  "air bubble", "air bubbles", "rocking", "over buffing", "swapped feet", "pin holes",
+  "cosmetic layer", "perforation holes",
+  // Operations & inspection terms
+  "inspection quantity",
+  "hammering flat",
+  "sole heating", "stop line", "hot/cool shaping",
+  // Running material nouns
+  "upper", "uppers", "outsole", "outsoles", "midsole", "midsoles", "insole", "insoles"
+];
+
+/**
+ * Normalizes mid-sentence footwear terminology and component casing.
+ * - Mid-sentence occurrences of common footwear nouns/defects are normalized to lowercase.
+ * - Sentence starts, list item starts, headings, and acronyms retain proper casing.
+ */
+export function normalizeMidSentenceCasing(text: string): string {
+  if (!text) return "";
+  let res = text;
+  const sorted = [...MID_SENTENCE_LOWERCASE_TERMS].sort((a, b) => b.length - a.length);
+
+  for (const term of sorted) {
+    const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(term)}(?![\\p{L}\\p{N}])`, "giu");
+    res = res.replace(pattern, (matchedStr, offset, fullStr) => {
+      const preceding = fullStr.slice(0, offset);
+      const isSentenceStart =
+        /(?:^|\n)\s*[*•\-#]*\s*(?:\d+[.)]|[a-zA-Z][.)])?\s*["'(\[{]*$/.test(preceding) ||
+        /[.!?]\s*["')\]}]*\s*$/.test(preceding) ||
+        /[:(\-]\s*$/.test(preceding);
+
+      if (isSentenceStart) {
+        return matchedStr;
+      } else {
+        return term.toLowerCase();
+      }
+    });
+  }
+
+  return res;
+}
+
 /**
  * Complete Sentence & Uppercase Structure Normalizer.
  * Applies standard English typographical, capitalization, and punctuation rules.
@@ -278,16 +365,19 @@ export function formatUppercaseStructure(text: string): string {
   // 4. Normalize footwear hyphenation (No-sew, Tip-quarter per Production Rule #3)
   res = normalizeFootwearHyphenation(res);
 
-  // 5. Capitalize after sentence-ending punctuation (. ! ?)
+  // 5. Normalize mid-sentence casing of footwear domain terms and components
+  res = normalizeMidSentenceCasing(res);
+
+  // 6. Capitalize after sentence-ending punctuation (. ! ?)
   res = res.replace(/([.!?]\s+)([\p{Ll}])/gu, (m, p1, p2) => p1 + p2.toUpperCase());
 
-  // 5. Capitalize start of lines, section titles (*Title:), and numbered items (1. Check, 2. Verify)
+  // 7. Capitalize start of lines, section titles (*Title:), and numbered items (1. Check, 2. Verify)
   res = res.replace(
     /(^|\n)(\s*[*•\-#]*\s*(?:\d+[.)]|[a-zA-Z][.)])?\s*)([\p{Ll}])/gu,
     (m, p1, p2, p3) => p1 + p2 + p3.toUpperCase()
   );
 
-  // 6. Section headings like *Title: or # Title: -> Title Case
+  // 8. Section headings like *Title: or # Title: -> Title Case
   res = res.replace(/(^|\n)(\s*[\*•]\s*)([\p{Ll}])/gu, (m, p1, p2, p3) => p1 + p2 + p3.toUpperCase());
 
   return res;

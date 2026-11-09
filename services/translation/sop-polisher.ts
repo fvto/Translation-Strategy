@@ -5,6 +5,7 @@
  */
 
 import { repairKnownToleranceNote } from "./quality-tolerance";
+import { normalizeMidSentenceCasing } from "./casing";
 
 export interface PolishOptions {
   stage?: string; // e.g. "cutting" | "nosew" | "stitching" | "assembly" | "stockfit" | "qa"
@@ -232,6 +233,9 @@ export function polishSopText(text: string, options: PolishOptions = {}): string
     .replace(/\bNosew\b/g, "No-sew")
     .replace(/\bnosew\b/g, "no-sew")
     .replace(/\bNOSEW\b/g, "NO-SEW");
+
+  // 7. Normalize mid-sentence casing of footwear terminology & components
+  polished = normalizeMidSentenceCasing(polished);
 
   return polished;
 }

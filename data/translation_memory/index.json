@@ -1,5 +1,16 @@
 [
   {
+    "sessionId": "pptx_1794196755174_fbd68dd2",
+    "fileName": "SP20 AIR JORDAN 1 LOW (GS) QA IPQC manual-EN.pptx",
+    "mode": "ipqc_bilingual",
+    "sourceLanguage": "vi",
+    "targetLanguage": "en",
+    "createdAt": "2026-11-09T04:02:28.548Z",
+    "slideCount": 131,
+    "totalPairs": 2910,
+    "harvestedCount": 1
+  },
+  {
     "sessionId": "pptx_1793094084439_bfdce56b",
     "fileName": "FA24 AIR JORDAN 1 MID SE (MS-WS) QA IPQC -ISQ manual-EN.pptx",
     "mode": "ipqc_bilingual",
@@ -2186,17 +2197,6 @@
     "createdAt": "2026-10-17T08:40:07.371Z",
     "slideCount": 1,
     "totalPairs": 2,
-    "harvestedCount": 2
-  },
-  {
-    "sessionId": "pptx_1792224360285_12e2eee7",
-    "fileName": "SP27 STOCKFIT  AIR MAX FEMME (MS-WS) QA ISQ mnaual-VN.pptx",
-    "mode": "ipqc_bilingual",
-    "sourceLanguage": "vi",
-    "targetLanguage": "en",
-    "createdAt": "2026-10-17T08:07:03.158Z",
-    "slideCount": 4,
-    "totalPairs": 51,
     "harvestedCount": 2
   }
 ]

@@ -1,7 +1,7 @@
 import { TerminologyEntry } from "../database/types";
 import { matchTerminology } from "./matcher";
 import { approvedTargetForms } from "./usage";
-import { adaptTermCasing, cleanTargetTerm, formatUppercaseStructure, normalizeSpiTerminology } from "../translation/casing";
+import { adaptTermCasing, cleanTargetTerm, formatUppercaseStructure, KNOWN_ACRONYMS, normalizeSpiTerminology } from "../translation/casing";
 import { polishSopText } from "../translation/sop-polisher";
 import { isApprovedToleranceSource, APPROVED_TIP_QUARTER_NOTE } from "../translation/quality-tolerance";
 import { repairMistranslatedAcronyms } from "./acronym-resolver";
@@ -227,6 +227,24 @@ export function enforceTerminologyCompliance(
       });
     });
     if (isAnyPresent) {
+      // Normalize casing of the matched approved target in currentText
+      for (const entry of entries) {
+        for (const target of approvedTargetForms(entry)) {
+          const clean = cleanTargetTerm(target);
+          if (!clean || KNOWN_ACRONYMS.has(clean.toUpperCase()) || clean.toLowerCase() === "x-ray") continue;
+          const cleanLower = clean.toLowerCase();
+          const escaped = escapeRegex(cleanLower).replace(/\\\s+/g, "\\s+").replace(/-/g, "[-\\s]");
+          const termPattern = new RegExp(`(?<![\\p{L}\\p{N}])(${escaped})(?:es|s)?(?![\\p{L}\\p{N}])`, "giu");
+          currentText = currentText.replace(termPattern, (matchedStr, _p1, offset, fullStr) => {
+            const preceding = fullStr.slice(0, offset);
+            const isSentenceStart =
+              /(?:^|\n)\s*[*•\-#]*\s*(?:\d+[.)]|[a-zA-Z][.)])?\s*["'(]*$/.test(preceding) ||
+              /[.!?]\s*["')]*\s*$/.test(preceding) ||
+              /:\s*["'(]*\s*$/.test(preceding);
+            return adaptTermCasing(matchedStr, isSentenceStart);
+          });
+        }
+      }
       continue;
     }
 
@@ -309,12 +327,20 @@ export function enforceTerminologyCompliance(
       if (!isEnglishLoanword && (hasVietnameseDiacritics(entry.sourceTerm) || isVietnameseText(entry.sourceTerm))) {
         const leakedRegex = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegex(entry.sourceTerm)}(?![\\p{L}\\p{N}])`, "iu");
         if (leakedRegex.test(currentText)) {
-          currentText = currentText.replace(leakedRegex, cleanTarget);
-          replacements.push({
-            sourceTerm: entry.sourceTerm,
-            expectedTarget: cleanTarget,
-            originalText: entry.sourceTerm,
-            replacementText: cleanTarget,
+          currentText = currentText.replace(leakedRegex, (matchedStr, offset, fullStr) => {
+            const preceding = fullStr.slice(0, offset);
+            const isSentenceStart =
+              /(?:^|\n)\s*[*•\-#]*\s*(?:\d+[.)]|[a-zA-Z][.)])?\s*["'(]*$/.test(preceding) ||
+              /[.!?]\s*["')]*\s*$/.test(preceding) ||
+              /:\s*["'(]*\s*$/.test(preceding);
+            const adapted = adaptTermCasing(cleanTarget, isSentenceStart);
+            replacements.push({
+              sourceTerm: entry.sourceTerm,
+              expectedTarget: cleanTarget,
+              originalText: matchedStr,
+              replacementText: adapted,
+            });
+            return adapted;
           });
         }
       }
